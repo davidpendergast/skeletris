@@ -10,11 +10,10 @@ def resize(width, height):
     
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glViewport(0, 0, width, height)
-    # glOrtho(0.0, width, height, 0.0, 0.0, 1.0); 
+    # glOrtho(0, width, 0, height, 1, -1);
+    # glViewport(0, 0, width, height)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    glOrtho(0, width, 0, height, 1, -1);
 
 
 def init():
@@ -24,7 +23,7 @@ def init():
     
     
 def loadScene():
-    img = pygame.image.load("image.png")
+    img = pygame.image.load("src/image.png")
     textureData = pygame.image.tostring(img, "RGBA", 1)
     width = img.get_width()
     height = img.get_height()
@@ -48,16 +47,16 @@ def placeScene():
     w = 2 * TEXTURE_SIZE[0] / SCREEN_SIZE[0]
     h = 2 * TEXTURE_SIZE[1] / SCREEN_SIZE[1]
     glTexCoord2f(0,0)
-    glVertex2f(-1,-1)
+    glVertex2i(-1,-1)
     
     glTexCoord2f(0,1)
-    glVertex2f(-1, -1 + h)
+    glVertex2i(-1, int(-1 + h))
     
     glTexCoord2f(1,1)
-    glVertex2f(-1 + w,-1 + h)
+    glVertex2i(int(-1 + w), int(-1 + h))
     
     glTexCoord2f(1,0)
-    glVertex2f(-1 + w,-1)
+    glVertex2i(int(-1 + w),-1)
     glEnd()    
     
     
