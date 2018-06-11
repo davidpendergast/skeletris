@@ -2,7 +2,6 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 
-
 class RenderEngine:
     def __init__(self):
         self.image_bundles = {} # (int) id -> bundle

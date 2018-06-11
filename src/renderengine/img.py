@@ -53,21 +53,40 @@ class ImageBundle:
         return self._unique_id
 
 class ImageModel:
-    def __init__(self, x, y, w, h, sheet_size=(480, 240)):
-        self.x1 = x
-        self.y1 = sheet_size[1] - (y + h)
-        self.x2 = x + w
-        self.y2 = sheet_size[1] - y
+    def __init__(self, x, y, w, h):
+        # sheet coords, origin top left corner
+        self.x = x  
+        self.y = y
         self.w = w
         self.h = h
         
-        self.tx1 = self.x1 / sheet_size[0]
-        self.ty1 = self.y1 / sheet_size[1]
-        self.tx2 = self.x2 / sheet_size[0]
-        self.ty2 = self.y2 / sheet_size[1]
+        # texture coords, origin bottom left corner
+        self.x1 = 0
+        self.y1 = 0
+        self.x2 = 0
+        self.y2 = 0
+        
+        self.tx1 = 0
+        self.ty1 = 0
+        self.tx2 = 0
+        self.ty2 = 0
         
     def size(self):
-        return (self.x2 - self.x1, self.y2 - self.y1)
+        return (self.w, self.h)
+        
+    def set_sheet_size(self, size):
+        self.x1 = self.x
+        self.x2 = self.x + self.w
+        self.y1 = size[1] - (self.y + self.h)
+        self.y2 = size[1] - self.y
+        
+        self.tx1 = self.x1 / size[0]
+        self.ty1 = self.y1 / size[1]
+        self.tx2 = self.x2 / size[0]
+        self.ty2 = self.y2 / size[1]
+        
+    def __repr__(self):
+        return "ImageModel({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
         
     def draw_instant(self, x_pos, y_pos, scale=1):
         glBegin(GL_QUADS)
@@ -84,19 +103,5 @@ class ImageModel:
         glTexCoord2f(self.tx2, self.ty2)
         glVertex2i(x_pos + scale * self.w, y_pos)
         glEnd() 
-        
-        
-player_idle_0 = ImageModel(0, 0, 16, 32)
-player_idle_1 = ImageModel(16, 0, 16, 32)
-
-player_move_0 = ImageModel(32, 0, 16, 32)
-player_move_1 = ImageModel(48, 0, 16, 32)
-player_move_2 = ImageModel(64, 0, 16, 32)
-player_move_3 = ImageModel(80, 0, 16, 32)
-player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
-
-chest = ImageModel(0, 32, 16, 16)
-chest_open_1 = ImageModel(16, 32, 16, 16)
-chest_open_2 = ImageModel(32, 32, 16, 16)
 
 

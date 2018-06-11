@@ -2,10 +2,12 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import pygame
-import world.entities as entities
 
+import spriteref
+import world.entities as entities
 import renderengine.img as img
 from renderengine.engine import RenderEngine
+
 
 SCREEN_SIZE = (800, 600)
    
@@ -24,7 +26,7 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
     
-    img_model = img.chest_open_1
+    img_model = spriteref.chest_open_1
     render_eng.add(img.ImageBundle(img_model, 200, 200, True, scale=4))
     
     clock = pygame.time.Clock()    

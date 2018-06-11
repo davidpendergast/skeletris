@@ -24,7 +24,7 @@ class Entity:
         self._y = y
         self.rect[1] = int(y)
         
-    def get_image(self):
+    def get_image_bundles(self):
         return img.player_move_all[self._cur_img]
         
     def update(self, world, input_state):
@@ -37,5 +37,9 @@ class Entity:
         
     def should_remove_from_world(self):
         return False
+        
+        
+class Wall:
+    pass
         
     
