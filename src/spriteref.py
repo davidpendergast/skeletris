@@ -11,6 +11,7 @@ def make(x, y, w, h):
     
 player_idle_0 = make(0, 0, 16, 32)
 player_idle_1 = make(16, 0, 16, 32)
+player_idle_all = [player_idle_0, player_idle_1]
 
 player_move_0 = make(32, 0, 16, 32)
 player_move_1 = make(48, 0, 16, 32)
@@ -67,7 +68,7 @@ def build_spritesheet(raw_image):
         returns: Surface
     """
     global walls
-    sheet_size = (raw_image.get_width(), raw_image.get_height() + 128)
+    sheet_size = (raw_image.get_width(), raw_image.get_height() + 500)
     sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
     sheet.blit(raw_image, (0, 0))
     
@@ -76,8 +77,8 @@ def build_spritesheet(raw_image):
     draw_y = raw_image.get_height()
     
     for i in range(0, 256):
-        bools = [int(x) for x in list('{0:0b}'.format(i))]
-        bools.extend([0]*(8 - len(bools)))
+        bools = [int(x) for x in reversed(list('{0:0b}'.format(i)))]
+        bools= bools + [0]*(8 - len(bools))
         
         tl = _get_wall_corner_loc("TL", bools)
         tr = _get_wall_corner_loc("TR", bools)
@@ -103,12 +104,12 @@ def build_spritesheet(raw_image):
     for img in all_imgs:
         img.set_sheet_size(sheet_size)
     
+    pygame.image.save(sheet, "src/spritesheet.png")
+    
     return sheet
     
 if __name__ == "__main__":
-    raw = pygame.image.load("image.png")
+    raw = pygame.image.load("src/image.png")
     output = build_spritesheet(raw)
-    pygame.image.save(output, "spritesheet.png")
-    
-    print("walls[128] = {}".format(walls[128]))
+    pygame.image.save(output, "src/spritesheet.png")
     

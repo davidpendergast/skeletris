@@ -33,6 +33,22 @@ class Entity:
     def should_remove_from_world(self):
         return False
         
+
+class Player(Entity):
+    def __init__(self, x, y):
+        Entity.__init__(self, x, y, 24, 24)
+        self._needs_bun_update = True
+        self._bundle = img.ImageBundle(spriteref.player_idle_0, x, y, absolute=False, scale=2, depth=5)
+        
+    def get_updated_bundles(self):
+        if self._needs_bun_update:
+            self._needs_bun_update = False
+            return [self._bundle]
+        else:
+            return []
+            
+    def update(self, world, input_state):
+        pass 
             
             
         

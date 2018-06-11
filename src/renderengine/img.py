@@ -95,7 +95,7 @@ class ImageModel:
         glVertex2i(x_pos, y_pos)
         
         glTexCoord2f(self.tx1, self.ty1)
-        glVertex2i(x_pos, y_pos + scale * self.w)
+        glVertex2i(x_pos, y_pos + scale * self.h)
         
         glTexCoord2f(self.tx2, self.ty1)
         glVertex2i(x_pos + scale * self.w, y_pos + scale * self.h)

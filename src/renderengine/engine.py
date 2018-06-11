@@ -57,8 +57,10 @@ class RenderEngine:
         
     def render_scene(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        for uid in self.image_bundles:
-            bundle = self.image_bundles[uid]
+        to_draw = list(self.image_bundles.values())
+        to_draw.sort(key=lambda x: x.depth())
+        
+        for bundle in to_draw:
             x_pos = bundle.x() - (0 if bundle.absolute() else self.camera_pos[0])
             y_pos = bundle.y() - (0 if bundle.absolute() else self.camera_pos[1])
             bundle.model().draw_instant(x_pos, y_pos, scale=bundle.scale())

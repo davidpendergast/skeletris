@@ -2,6 +2,8 @@ import renderengine.img as img
 import spriteref
 
 
+CELLSIZE = 64
+
 class World:
 
     EMPTY = 0
@@ -62,11 +64,12 @@ class World:
             elif geo == World.FLOOR:
                 n_info = self.get_neighbor_info(grid_x, grid_y, 
                         mapping=lambda x: 1 if x == World.WALL or x == World.EMPTY else 0)
-                floor_img_id = n_info[0] + 2*n_info[1] + 4*n_info[7]
+                floor_img_id = 2*n_info[0] + 4*n_info[1] + 1*n_info[7]
                 model = spriteref.floors[floor_img_id]
             
             if model is not None:
-                return img.ImageBundle(model, grid_x*32, grid_y*32, absolute=False, scale=2)
+                return img.ImageBundle(model, grid_x*CELLSIZE, grid_y*CELLSIZE, 
+                        absolute=False, scale=int(CELLSIZE/model.w), depth=10)
             else:
                 return None
                 
