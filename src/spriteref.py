@@ -70,6 +70,7 @@ def build_spritesheet(raw_image):
     global walls
     sheet_size = (raw_image.get_width(), raw_image.get_height() + 500)
     sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
+    sheet.fill((255, 255, 255, 0))
     sheet.blit(raw_image, (0, 0))
     
     dupe_preventer = {}

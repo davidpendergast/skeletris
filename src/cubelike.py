@@ -4,6 +4,8 @@ from OpenGL.GLU import *
 import pygame
 
 import spriteref
+from globalstate import GlobalState
+from inputs import InputState
 
 from world.worldstate import World
 from world.entities import Player
@@ -31,6 +33,9 @@ def run():
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
     screen = pygame.display.set_mode(SCREEN_SIZE, mods)
     
+    input_state = InputState()
+    global_state = GlobalState()
+    
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
     
@@ -45,30 +50,43 @@ def run():
     
     for bun in world.get_all_bundles():
         render_eng.add(bun)
-        #pass
         
     player = Player(32, 32)
-    
-    render_eng.add(player.get_updated_bundles()[0])
-    
-    img_model = spriteref.chest_open_1
-    render_eng.add(img.ImageBundle(img_model, 200, 200, True, scale=4))
-    
-    
+    world.add(player)
     
     clock = pygame.time.Clock()    
     
     running = True
     
     while running:
-        render_eng.render_scene()
-        pygame.display.flip()
-        pygame.time.wait(100)
-        
+        global_state.update()
+        input_state.update(global_state)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 running = False
+            elif event.type == pygame.KEYDOWN:
+                input_state.set_key(event.key, True)
+            elif event.type == pygame.KEYUP:
+                input_state.set_key(event.key, False)
+            elif event.type == pygame.MOUSEMOTION:
+                input_state.set_mouse_pos(event.pos)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                input_state.set_mouse_down(True)
+            elif event.type == pygame.MOUSEBUTTONUP:
+                input_state.set_mouse_down(False)
+
+            if not pygame.mouse.get_focused():
+                input_state.set_mouse_pos(None)
+        
+        world.update_all(global_state, input_state, render_eng)
+        
+        render_eng.render_scene()
+        pygame.display.flip()
+        clock.tick(60)
+        if global_state.tick_counter % 5000 == 0:
+            print("fps: {}".format(clock.get_fps()))
+        
                 
 if __name__ == "__main__":
     run()

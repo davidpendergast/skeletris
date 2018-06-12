@@ -20,7 +20,10 @@ class World:
             
         self.entities = []
         
-    def set_geo(self, grid_x, grid_y, geo_id):
+    def add(self, entity):
+        self.entities.append(entity)
+        
+    def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
         if self.is_valid(grid_x, grid_y):
             self._level_geo[grid_x][grid_y] = geo_id
         elif geo_id != World.EMPTY:
@@ -83,6 +86,11 @@ class World:
                     res.append(bun)
                     
         return res
+      
+              
+    def update_all(self, global_state, input_state, render_eng):
+        for e in self.entities:
+            e.update(self, global_state, input_state, render_eng)
                 
                 
                 

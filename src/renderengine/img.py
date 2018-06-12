@@ -10,6 +10,7 @@ def gen_unique_id():
     
 
 class ImageBundle:
+
     def __init__(self, model, x, y, absolute=True, scale=1, depth=1, uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
@@ -18,10 +19,10 @@ class ImageBundle:
         self._absolute = absolute
         self._scale = scale
         self._depth = depth
-        
+            
     def update(self, new_model=None, new_x=None, new_y=None, 
                 new_absolute=None, new_scale=None, new_depth=None):
-        
+                
         model = self.model() if new_model is None else new_model
         x = self.x() if new_x is None else new_x
         y = self.y() if new_y is None else new_y
@@ -29,7 +30,16 @@ class ImageBundle:
         scale = self.scale() if new_scale is None else new_scale
         depth = self.depth() if new_depth is None else new_depth
         
-        return ImageBundle(model, x, y, absolute=absolute, scale=scale, depth=depth, uid=self.unique_id)
+        if (model == self.model() and 
+                x == self.x() and 
+                y == self.y() and
+                absolute == self.absolute() and
+                scale == self.scale() and
+                depth == self.depth()):
+            return self
+        else:
+            return ImageBundle(model, x, y, absolute=absolute, scale=scale, 
+                    depth=depth, uid=self.uid())
         
     def model(self):
         return self._model
@@ -52,7 +62,9 @@ class ImageBundle:
     def uid(self):
         return self._unique_id
 
+
 class ImageModel:
+
     def __init__(self, x, y, w, h):
         # sheet coords, origin top left corner
         self.x = x  
@@ -89,6 +101,7 @@ class ImageModel:
         return "ImageModel({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
         
     def draw_instant(self, x_pos, y_pos, scale=1):
+        # glDepthMask(GL_FALSE)
         glBegin(GL_QUADS)
     
         glTexCoord2f(self.tx1, self.ty2)
@@ -103,5 +116,6 @@ class ImageModel:
         glTexCoord2f(self.tx2, self.ty2)
         glVertex2i(x_pos + scale * self.w, y_pos)
         glEnd() 
+        # glDepthMask(GL_TRUE)
 
 
