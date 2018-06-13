@@ -46,8 +46,15 @@ class Entity:
     def update(self, world, global_state, input_state, render_engine):
         pass 
 
+    def get_depth(self):
+        """
+            returns: value in [4, 5]
+        """
+        return 5 - max(0, min(1, (self.y() + self.h()) / 100000))  
+    
     def is_player(self):
         return False
+        
              
 
 class Player(Entity):
@@ -55,7 +62,7 @@ class Player(Entity):
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 24)
         self._bundle = img.ImageBundle(spriteref.player_idle_0, x, y, 
-                absolute=False, scale=2, depth=5)
+                absolute=False, scale=2, depth=self.get_depth())
         self.is_moving = False
         self.facing_left = True
         self.move_speed = 2
@@ -68,7 +75,8 @@ class Player(Entity):
             model = spriteref.player_idle_all[(anim_tick // 2) % len(spriteref.player_idle_all)]
         x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y)
+        depth = self.get_depth()
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
         return self._bundle
             
             
@@ -93,7 +101,7 @@ class Player(Entity):
 class Enemy(Entity):
     def __init__(self, x, y, sprites):
         Entity.__init__(self, x, y, 32, 32)
-        self._bundle = img.ImageBundle(sprites[0], x, y, absolute=False, scale=2, depth=5)
+        self._bundle = img.ImageBundle(sprites[0], x, y, absolute=False, scale=2, depth=self.get_depth())
         self.facing_left = True
         self.sprites = sprites
         self.dir = [0, 0]
@@ -102,7 +110,8 @@ class Enemy(Entity):
         model = self.sprites[(anim_tick // 2) % len(self.sprites)]
         x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y)
+        depth = self.get_depth()
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
         return self._bundle
         
     def update(self, world, global_state, input_state, render_engine):
@@ -140,9 +149,9 @@ class Enemy(Entity):
 class ChestEntity(Entity):
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 24)
-        self.ticks_to_open = 30
+        self.ticks_to_open = 60
         self.current_cooldown = self.ticks_to_open
-        self._bundle = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=5)
+        self._bundle = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
     
     def _regen_bundle(self):
         if self.is_open():
@@ -154,7 +163,8 @@ class ChestEntity(Entity):
             
         x = self.x() - (model.width() * self._bundle.scale() - self.w())
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y)
+        depth = self.get_depth()
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
         return self._bundle
         
     def is_open(self):
@@ -209,7 +219,8 @@ class PotionEntity(Entity):
         model = self._bundle.model()
         x = self.x() - (model.width() * self._bundle.scale() - self.w())
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y)   
+        depth = self.get_depth()
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)   
         return self._bundle
         
     def can_pickup(self):
