@@ -40,7 +40,6 @@ class World:
             if e.is_player():
                 return e
         return None
-        
                 
         
     def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
@@ -111,9 +110,13 @@ class World:
         return res
       
               
-    def update_all(self, global_state, input_state, render_eng):
+    def update_all(self, global_state, input_state, render_engine):
         for e in self.entities:
-            e.update(self, global_state, input_state, render_eng)
+            e.update(self, global_state, input_state, render_engine)
+        
+        p = self.get_player()
+        if p is not None:
+            render_engine.set_camera_pos(*p.center(), center=True)
                 
                 
                 

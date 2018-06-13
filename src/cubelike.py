@@ -30,7 +30,6 @@ def build_me_a_world(width, height):
                     w.add(e, gridcell=(x, y))
                 elif random.random() < 0.05:
                     w.add(ChestEntity(0, 0), gridcell=(x, y))
-                
     return w
    
     

@@ -6,6 +6,7 @@ class RenderEngine:
     def __init__(self):
         self.image_bundles = {} # (int) id -> bundle
         self.camera_pos = [0, 0]
+        self.size = (0, 0)
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
@@ -13,13 +14,14 @@ class RenderEngine:
         glOrtho(0, width, height, 0, 1, -1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+        self.size = (width, height)
 
 
     def init(self, w, h):
         self.resize(w, h)
         # glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
-        glClearColor(1.0, 0.0, 0.0, 0.0);
+        glClearColor(0.5, 0.5, 0.5, 0.0);
 
 
     def set_texture(self, img_data, width, height):
@@ -36,9 +38,9 @@ class RenderEngine:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 
                 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
         
-    def set_camera_pos(self, x, y):
-        self.camera_pos[0] = x
-        self.camera_pos[1] = y
+    def set_camera_pos(self, x, y, center=False):
+        self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
+        self.camera_pos[1] = y - (self.size[1] // 2) if center else 0
         
     def add(self, img_bundle):
         uid = img_bundle.uid()
