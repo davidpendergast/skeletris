@@ -20,7 +20,6 @@ class RenderEngine:
         # glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
         glClearColor(1.0, 0.0, 0.0, 0.0);
-        #glClearColor(1.0, 0.65, 1.0, 0.2)
 
 
     def set_texture(self, img_data, width, height):
@@ -34,7 +33,8 @@ class RenderEngine:
         glEnable(GL_TEXTURE_2D)    
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 
+                0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
         
     def set_camera_pos(self, x, y):
         self.camera_pos[0] = x

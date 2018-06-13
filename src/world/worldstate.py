@@ -20,8 +20,28 @@ class World:
             
         self.entities = []
         
-    def add(self, entity):
+    def cellsize(self):
+        return CELLSIZE
+        
+    def add(self, entity, gridcell=None):
+        """
+            gridcell: (grid_x, grid_y) or None
+        """
+        if gridcell is not None:
+            x = gridcell[0] * self.cellsize() + (self.cellsize() - entity.w()) // 2
+            y = gridcell[1] * self.cellsize() + (self.cellsize() - entity.h()) // 2
+            entity.set_x(x)
+            entity.set_y(y)
+            
         self.entities.append(entity)
+        
+    def get_player(self):
+        for e in self.entities:
+            if e.is_player():
+                return e
+        return None
+        
+                
         
     def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
         if self.is_valid(grid_x, grid_y):
@@ -34,7 +54,10 @@ class World:
         if self.is_valid(grid_x, grid_y):
             return self._level_geo[grid_x][grid_y]
         else:
-            return 
+            return World.EMPTY
+            
+    def get_geo_at(self, pixel_x, pixel_y):
+        return self.get_geo(pixel_x // self.cellsize(), pixel_y // self.cellsize())
             
     def is_valid(self, grid_x, grid_y):
         return (grid_x >= 0 and grid_x < self.size()[0] 

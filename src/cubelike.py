@@ -8,7 +8,7 @@ from globalstate import GlobalState
 from inputs import InputState
 
 from world.worldstate import World
-from world.entities import Player
+from world.entities import Player, Enemy, ChestEntity
 import renderengine.img as img
 from renderengine.engine import RenderEngine
 
@@ -24,6 +24,12 @@ def build_me_a_world(width, height):
                 w.set_geo(x, y, World.WALL)
             else:
                 w.set_geo(x, y, World.FLOOR)
+                if random.random() < 0.05:
+                    i = int(random.random() * len(spriteref.enemies_all))
+                    e = Enemy(0, 0, spriteref.enemies_all[i])
+                    w.add(e, gridcell=(x, y))
+                elif random.random() < 0.05:
+                    w.add(ChestEntity(0, 0), gridcell=(x, y))
                 
     return w
    
@@ -46,7 +52,7 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
     
-    world = build_me_a_world(30, 20)
+    world = build_me_a_world(15, 10)
     
     for bun in world.get_all_bundles():
         render_eng.add(bun)

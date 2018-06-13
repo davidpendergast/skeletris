@@ -86,6 +86,12 @@ class ImageModel:
     def size(self):
         return (self.w, self.h)
         
+    def width(self):
+        return self.w
+        
+    def height(self):
+        return self.h
+        
     def set_sheet_size(self, size):
         self.x1 = self.x
         self.x2 = self.x + self.w
@@ -101,7 +107,6 @@ class ImageModel:
         return "ImageModel({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)
         
     def draw_instant(self, x_pos, y_pos, scale=1):
-        # glDepthMask(GL_FALSE)
         glBegin(GL_QUADS)
     
         glTexCoord2f(self.tx1, self.ty2)
@@ -116,6 +121,5 @@ class ImageModel:
         glTexCoord2f(self.tx2, self.ty2)
         glVertex2i(x_pos + scale * self.w, y_pos)
         glEnd() 
-        # glDepthMask(GL_TRUE)
 
 

@@ -19,9 +19,25 @@ player_move_2 = make(64, 0, 16, 32)
 player_move_3 = make(80, 0, 16, 32)
 player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
-chest = make(0, 32, 16, 16)
-chest_open_1 = make(16, 32, 16, 16)
-chest_open_2 = make(32, 32, 16, 16)
+chest_closed = make(0, 32, 16, 16)
+chest_open_0 = make(16, 32, 16, 16)
+chest_open_1 = make(32, 32, 16, 16)
+chest_open_all = [chest_open_0, chest_open_1]
+
+enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
+enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
+enemy_dicel_all = [make(64, 144, 32, 32), make(64, 176, 32, 32)]
+enemy_flappum_all = [make(96, 144, 32, 32), make(96, 176, 32, 32)]
+enemy_muncher_all = [make(128, 144, 32, 32), make(128, 176, 32, 32)]
+enemy_muncher_alt_all = [make(160, 144, 32, 32), make(160, 176, 32, 32)]
+enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
+        enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all]
+        
+potion_small = make(64, 32, 8, 8)
+potion_big = make(48, 32, 16, 16)
+
+item_piece_small = make(72, 32, 4, 4)
+
 
 """Lookup table for wall sprites:   
        0    1    2
