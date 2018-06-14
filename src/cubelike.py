@@ -1,6 +1,3 @@
-from OpenGL.GL import *
-from OpenGL.GLU import *
-
 import pygame
 
 import spriteref
@@ -11,6 +8,9 @@ from world.worldstate import World
 from world.entities import Player, Enemy, ChestEntity
 import renderengine.img as img
 from renderengine.engine import RenderEngine
+
+print("launching Cubelike...")
+print("running pygame version: " + pygame.version.ver)
 
 
 SCREEN_SIZE = (800, 600)
@@ -89,8 +89,9 @@ def run():
         render_eng.render_scene()
         pygame.display.flip()
         clock.tick(60)
-        if global_state.tick_counter % 5000 == 0:
-            print("fps: {}".format(clock.get_fps()))
+        if global_state.tick_counter % 60 == 0:
+            if clock.get_fps() < 59:
+                print("fps: {}".format(clock.get_fps()))
         
                 
 if __name__ == "__main__":

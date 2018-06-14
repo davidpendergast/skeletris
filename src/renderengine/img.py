@@ -1,6 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import random
+
 UNIQUE_ID_CTR = 0
 def gen_unique_id():
     """Note: this ain't threadsafe"""
@@ -61,6 +63,27 @@ class ImageBundle:
         
     def uid(self):
         return self._unique_id
+        
+    def add_urself(self, camera, vertices, texts, indices):
+        x = self.x() - (0 if self.absolute() else camera[0])
+        y = self.y() - (0 if self.absolute() else camera[1])
+        model = self.model()
+        w = model.w * self.scale()
+        h = model.h * self.scale()
+        
+        vertices.extend([
+                    x, y,
+                    x, y + h,
+                    x + w, y + h,
+                    x + w, y])
+        
+        texts.extend([model.tx1, model.ty2,
+                    model.tx1, model.ty1,
+                    model.tx2, model.ty1,
+                    model.tx2, model.ty2])
+        
+        i = 0 if len(indices) == 0 else indices[-1] + 1
+        indices.extend([i, i+1, i+2, i, i+2, i+3])
 
 
 class ImageModel:
@@ -113,13 +136,37 @@ class ImageModel:
         glVertex2i(x_pos, y_pos)
         
         glTexCoord2f(self.tx1, self.ty1)
-        glVertex2i(x_pos, y_pos + scale * self.h)
+        glVertex2i(x_pos, y_pos + int(scale * self.h))
         
         glTexCoord2f(self.tx2, self.ty1)
-        glVertex2i(x_pos + scale * self.w, y_pos + scale * self.h)
+        glVertex2i(x_pos + int(scale * self.w), y_pos + int(scale * self.h))
         
         glTexCoord2f(self.tx2, self.ty2)
-        glVertex2i(x_pos + scale * self.w, y_pos)
+        glVertex2i(x_pos + int(scale * self.w), y_pos)
+        
         glEnd() 
+        
+    def draw_instant_tri(self, x_pos, y_pos, scale=1):
+        vertices = [x_pos, y_pos,
+                    x_pos, y_pos + scale * self.h,
+                    x_pos + scale * self.w, y_pos + scale * self.h,
+                    x_pos + scale * self.w, y_pos]
+        
+        text_crd = [self.tx1, self.ty2,
+                    self.tx1, self.ty1,
+                    self.tx2, self.ty1,
+                    self.tx2, self.ty2]
+                    
+        indices = [0, 1, 2, 0, 2, 3]
+        
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, vertices)
+        glTexCoordPointer(2, GL_FLOAT, 0, text_crd)
+        glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, indices)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY);
+        
+        
 
 

@@ -1,12 +1,13 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
-
+    
 
 class RenderEngine:
     def __init__(self):
         self.image_bundles = {} # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
+
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
@@ -22,6 +23,10 @@ class RenderEngine:
         # glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
         glClearColor(0.5, 0.5, 0.5, 0.0);
+        
+        vstring = glGetString(GL_VERSION)
+        vstring = vstring.decode() if vstring is not None else None
+        print ("running OpenGL version: {}".format(vstring))
 
 
     def set_texture(self, img_data, width, height):
@@ -62,14 +67,25 @@ class RenderEngine:
             return key.uid() in self.image_bundles
         except ValueError:
             return False
-        
+                
     def render_scene(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         to_draw = list(self.image_bundles.values())
         to_draw.sort(key=lambda x: -x.depth())
         
+        vertices = []
+        text_coords = []
+        indices = []
+        
         for bundle in to_draw:
-            x_pos = bundle.x() - (0 if bundle.absolute() else self.camera_pos[0])
-            y_pos = bundle.y() - (0 if bundle.absolute() else self.camera_pos[1])
-            bundle.model().draw_instant(x_pos, y_pos, scale=bundle.scale())
+             bundle.add_urself(self.camera_pos, vertices, text_coords, indices)
+        
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, vertices)
+        glTexCoordPointer(2, GL_FLOAT, 0, text_coords)
+        glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, indices)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY);
+            
     
