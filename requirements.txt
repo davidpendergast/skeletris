@@ -1,0 +1,2 @@
+PyOpenGl==3.1.0
+pygame==1.9.3
