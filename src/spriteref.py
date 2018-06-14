@@ -1,6 +1,6 @@
 import pygame
 
-from renderengine.img import ImageModel 
+from src.renderengine.img import ImageModel 
 
 all_imgs = []
 

@@ -1,13 +1,13 @@
 import pygame
 
-import spriteref
-from globalstate import GlobalState
-from inputs import InputState
+import src.spriteref as spriteref
+from src.globalstate import GlobalState
+from src.inputs import InputState
 
-from world.worldstate import World
-from world.entities import Player, Enemy, ChestEntity
-import renderengine.img as img
-from renderengine.engine import RenderEngine
+from src.world.worldstate import World
+from src.world.entities import Player, Enemy, ChestEntity
+import src.renderengine.img as img
+from src.renderengine.engine import RenderEngine
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
@@ -44,7 +44,7 @@ def run():
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
     
-    raw_sheet = pygame.image.load("src/image.png")
+    raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
@@ -93,7 +93,4 @@ def run():
             if clock.get_fps() < 59:
                 print("fps: {}".format(clock.get_fps()))
         
-                
-if __name__ == "__main__":
-    run()
     

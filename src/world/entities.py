@@ -2,10 +2,10 @@ import pygame
 import random
 import math
 
-import renderengine.img as img
-import spriteref
-import inputs
-from world.worldstate import World
+import src.renderengine.img as img
+import src.spriteref as spriteref
+import src.inputs as inputs
+from src.world.worldstate import World
 
 class Entity:
 
