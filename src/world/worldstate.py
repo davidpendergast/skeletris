@@ -11,6 +11,8 @@ class World:
     DOOR = 2
     FLOOR = 3 
     
+    SOLIDS = [WALL, DOOR]
+    
     def __init__(self, width, height):
         self._size = (width, height)
         self._level_geo = []
@@ -57,6 +59,10 @@ class World:
             
     def get_geo_at(self, pixel_x, pixel_y):
         return self.get_geo(pixel_x // self.cellsize(), pixel_y // self.cellsize())
+        
+    def is_solid_at(self, pixel_x, pixel_y):
+        geo = self.get_geo_at(pixel_x, pixel_y)
+        return geo in World.SOLIDS
             
     def is_valid(self, grid_x, grid_y):
         return (grid_x >= 0 and grid_x < self.size()[0] 

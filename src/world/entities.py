@@ -37,11 +37,55 @@ class Entity:
         self._y = y
         self.rect[1] = int(y)
         
-    def move(self, dx, dy, avoid_solids_in_world=None):
+    def _can_move(self, dx, dy, world):
+        x1 = int(self._x + dx)
+        x2 = int(self._x + self.w() + dx) 
+        y1 = int(self._y + dy)
+        y2 = int(self._y + self.h() + dy)
+        return not (world.is_solid_at(x1, y1) or world.is_solid_at(x2-1, y1)
+                or world.is_solid_at(x2-1, y2-1) or world.is_solid_at(x1, y2-1))
+    
+    def move(self, dx, dy, world=None, and_search=False):
         """
-            returns: True if collided with something solid, else False
+            returns: True if move was successful
         """
-        pass
+        if dx == 0 and dy == 0:
+            return True
+        
+        if world is not None and not self._can_move(dx, dy, world):
+            if not and_search:
+                return False
+            else:    
+                self.set_x(self.x()) # elim decimal points
+                self.set_y(self.y())             
+                
+                x_can_move = True
+                y_can_move = True
+                
+                x_dir = 1 if dx > 0 else -1 if dx < 0 else 0
+                y_dir = 1 if dy > 0 else -1 if dy < 0 else 0
+                
+                did_move = False
+                
+                while x_can_move or y_can_move:
+                    if x_can_move:
+                        x_can_move = self.move(x_dir, 0, world=world, and_search=False)
+                        did_move = did_move or x_can_move
+                        dx -= x_dir
+                        if dx == 0 or dx*x_dir < 0:
+                            x_can_move = False     
+                    if y_can_move:
+                        y_can_move = self.move(0, y_dir, world=world, and_search=False)
+                        did_move = did_move or y_can_move
+                        dy -= y_dir
+                        if dy == 0 or dy*y_dir < 0:
+                            y_can_move = False
+                
+                return did_move
+                    
+        self.set_x(self._x + dx)
+        self.set_y(self._y + dy)
+        return True
         
     def update(self, world, gs, input_state, render_engine):
         pass 
@@ -90,9 +134,16 @@ class Player(Entity):
             move_x /= 1.4142 
             move_y /= 1.4142   
         
-        self.set_x(self._x + move_x * self.move_speed)
-        self.set_y(self._y + move_y * self.move_speed)
+        move_x *= self.move_speed
+        move_y *= self.move_speed
+        
+        if move_x != 0 or move_y != 0:
+            self.move(move_x, move_y, world=world, and_search=True)
+            
         render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
+        
+        if input_state.was_pressed(inputs.INTERACT):
+            print("player_pos={}, ({}, {})".format(self.rect, self._x, self._y))
         
     def is_player(self):
         return True
@@ -139,9 +190,10 @@ class Enemy(Entity):
         elif self.dir[1] < 0:
             if world.get_geo_at(x1, y1 - 1) == World.WALL or world.get_geo_at(x2, y1 - 1) == World.WALL:
                 self.dir[1] = 1
-                
-        self.set_x(self._x + self.dir[0] * 0.65)
-        self.set_y(self._y + self.dir[1] * 0.65)   
+        
+        move_x = self.dir[0] * 0.65
+        move_y = self.dir[1] * 0.65
+        self.move(move_x, move_y, world=world, and_search=True)
 
         render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
         
@@ -231,12 +283,12 @@ class PotionEntity(Entity):
             self.pickup_delay -= 1
               
         if self.vel[0] != 0:
-            self.set_x(self._x + self.vel[0])
             self.vel[0] = 0 if abs(self.vel[0]) < 0.05 else self.vel[0] * self.fric 
            
         if self.vel[1] != 0:
-            self.set_y(self._y + self.vel[1])
             self.vel[1] = 0 if abs(self.vel[1]) < 0.05 else self.vel[1] * self.fric
+            
+        self.move(*self.vel, world=world, and_search=True)
             
         render_engine.update(self._regen_bundle(), layer_id=gs.ENTITY_LAYER) 
         

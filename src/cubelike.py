@@ -20,16 +20,21 @@ def build_me_a_world(width, height):
     w = World(width, height)
     for x in range(0, width):
         for y in range(0, height):
-            if random.random() < 0.33:
-                w.set_geo(x, y, World.WALL)
-            else:
+            if x == 0 or y == 0 or x == width-1 or y == height-1:
+                w.set_geo(x, y, World.WALL)    
+            elif x < 3 and y < 3:
                 w.set_geo(x, y, World.FLOOR)
-                if random.random() < 0.05:
-                    i = int(random.random() * len(spriteref.enemies_all))
-                    e = Enemy(0, 0, spriteref.enemies_all[i])
-                    w.add(e, gridcell=(x, y))
-                elif random.random() < 0.05:
-                    w.add(ChestEntity(0, 0), gridcell=(x, y))
+            else:
+                if random.random() < 0.33:
+                    w.set_geo(x, y, World.WALL)
+                else:
+                    w.set_geo(x, y, World.FLOOR)
+                    if random.random() < 0.05:
+                        i = int(random.random() * len(spriteref.enemies_all))
+                        e = Enemy(0, 0, spriteref.enemies_all[i])
+                        w.add(e, gridcell=(x, y))
+                    elif random.random() < 0.05:
+                        w.add(ChestEntity(0, 0), gridcell=(x, y))
     return w
    
     
@@ -62,7 +67,7 @@ def run():
     for bun in world.get_all_bundles():
         render_eng.update(bun, layer_id=gs.WALL_LAYER)
         
-    player = Player(32, 32)
+    player = Player(80, 80)
     world.add(player)
     
     clock = pygame.time.Clock()    
