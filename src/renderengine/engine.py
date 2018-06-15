@@ -1,13 +1,97 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
+ 
+ 
+class _Layer:
+    def __init__(self, name, z_order, sort_sprites, absolute):
+        self.name = name
+        self.images = [] # ordered list of image ids
+        self._image_set = set()
+        self.absolute = absolute
+        self._z_order = z_order
+        self.sort_sprites = sort_sprites
+        self.vertices = []
+        self.tex_coords = []
+        self.indices = []
+        
+        self._dirty_sprites = []
+        self._to_remove = []
+        self._to_add = []
     
+    def update(self, bundle_id):
+        if bundle_id in self._image_set:
+            self._dirty_sprites.append(bundle_id)
+        else:
+            self._image_set.add(bundle_id)
+            self._to_add.append(bundle_id)
+        
+    def remove(self, bundle_id):
+        if bundle_id in self._image_set:
+            self._image_set.remove(bundle_id)
+            self._to_remove.append(bundle_id)
+    
+    def is_absolute(self):
+        return self.absolute
+        
+    def is_dirty(self):
+        return len(self._dirty_sprites) + len(self._to_add) + len(self._to_remove) > 0
+        
+    def rebuild(self, bundle_lookup): 
+        if len(self._to_remove) > 0:
+            rem_set = set(self._to_remove)
+            self.images = [img for img in self.images if img not in rem_set]
+            self._to_remove = []
+        
+        if len(self._to_add) > 0:
+            self.images.extend(self._to_add)
+            print("layer {} size increased to: {}".format(self.name, len(self.images)))
+            self._to_add = []
+            
+        # todo: smarter update
+        self._dirty_sprites = []
+        
+        if self.sort_sprites:
+            self.images.sort(key=lambda x: -bundle_lookup[x].depth())
+        
+        self.vertices = []
+        self.tex_coords = []
+        self.indices = []
+        
+        for img in self.images:
+            bundle = bundle_lookup[img]
+            bundle.add_urself((0, 0), self.vertices, self.tex_coords, self.indices)
+            
+    def render(self):  
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glVertexPointer(2, GL_FLOAT, 0, self.vertices)
+        glTexCoordPointer(2, GL_FLOAT, 0, self.tex_coords)
+        glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, self.indices)
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+        glDisableClientState(GL_VERTEX_ARRAY);
+        
+    def __len__(self):
+        return len(self.images)   
+        
+    def __contains__(self, uid):
+        return uid in self._image_set
+        
+    def z_order(self):
+        return self._z_order
 
 class RenderEngine:
     def __init__(self):
-        self.image_bundles = {} # (int) id -> bundle
+        self.bundles = {} # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
-
+        self.layers = {} # layer_id -> layer
+        
+    def add_layer(self, layer_id, layer_name, z_order, sort_sprites, absolute):
+        l = _Layer(layer_name, z_order, sort_sprites, absolute)
+        self.layers[layer_id] = l
+        
+    def remove_layer(self, layer_id):
+        del self.layers[layer_id]
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
@@ -47,30 +131,31 @@ class RenderEngine:
         self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
         self.camera_pos[1] = y - (self.size[1] // 2) if center else 0
         
-    def add(self, img_bundle):
+    def remove(self, img_bundle, layer_id=None):
         uid = img_bundle.uid()
-        if uid in self.image_bundles:
-            raise ValueError("Image bundle is already in engine: uid=" + str(uid))
-        self.image_bundles[img_bundle.uid()] = img_bundle
+        if uid in self.bundles:
+            del self.bundles[img_bundle.uid()]
+            
+        if layer_id is not None:
+            self.layers[layer_id].remove(uid)
         
-    def remove(self, img_bundle):
+    def update(self, img_bundle, layer_id=None):
         uid = img_bundle.uid()
-        if uid in self.image_bundles:
-            del self.image_bundles[img_bundle.uid()]
+        self.bundles[uid] = img_bundle
         
-    def update(self, img_bundle):
-        self.remove(img_bundle)
-        self.add(img_bundle)
+        if layer_id is not None:
+            layer = self.layers[layer_id]
+            layer.update(uid)
         
     def __contains__(self, key):
         try:
-            return key.uid() in self.image_bundles
+            return key.uid() in self.bundles
         except ValueError:
             return False
                 
     def render_scene(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        to_draw = list(self.image_bundles.values())
+        to_draw = list(self.bundles.values())
         to_draw.sort(key=lambda x: -x.depth())
         
         vertices = []
@@ -87,5 +172,30 @@ class RenderEngine:
         glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, indices)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
         glDisableClientState(GL_VERTEX_ARRAY);
+        
+    def render_layers(self):
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        layers_to_draw = list(self.layers.values())
+        layers_to_draw.sort(key=lambda x: x.z_order())
+        
+        for layer in layers_to_draw:
+            if layer.is_dirty():
+                layer.rebuild(self.bundles)
+            
+            if layer.is_absolute():
+                # todo : set uniform camera pos
+                pass
+                
+            layer.render()
+            
+         
+        
+        
+        
+        
+        
+        
+        
+        
             
     

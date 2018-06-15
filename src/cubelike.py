@@ -39,10 +39,16 @@ def run():
     screen = pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = InputState()
-    global_state = GlobalState()
+    gs = GlobalState()
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
+    render_eng.add_layer(gs.FLOOR_LAYER, "floors", 0, False, True)
+    render_eng.add_layer(gs.BW_WALL_AND_FLOOR_LAYER, "between wall and floor", 5, False, True)
+    render_eng.add_layer(gs.WALL_LAYER, "walls", 10, False, True)
+    render_eng.add_layer(gs.ENTITY_LAYER, "entities", 15, True, True)
+    render_eng.add_layer(gs.UI_0_LAYER, "ui_0", 20, False, False)
+    render_eng.add_layer(gs.UI_1_LAYER, "ui_1", 25, False, False)
     
     raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
@@ -51,10 +57,10 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
     
-    world = build_me_a_world(15, 10)
+    world = build_me_a_world(15, 15)
     
     for bun in world.get_all_bundles():
-        render_eng.add(bun)
+        render_eng.update(bun, layer_id=gs.WALL_LAYER)
         
     player = Player(32, 32)
     world.add(player)
@@ -64,8 +70,8 @@ def run():
     running = True
     
     while running:
-        global_state.update()
-        input_state.update(global_state)
+        gs.update()
+        input_state.update(gs)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -84,12 +90,12 @@ def run():
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
         
-        world.update_all(global_state, input_state, render_eng)
+        world.update_all(gs, input_state, render_eng)
         
-        render_eng.render_scene()
+        render_eng.render_layers()
         pygame.display.flip()
         clock.tick(60)
-        if global_state.tick_counter % 60 == 0:
+        if gs.tick_counter % 60 == 0:
             if clock.get_fps() < 59:
                 print("fps: {}".format(clock.get_fps()))
         

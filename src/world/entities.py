@@ -43,7 +43,7 @@ class Entity:
         """
         pass
         
-    def update(self, world, global_state, input_state, render_engine):
+    def update(self, world, gs, input_state, render_engine):
         pass 
 
     def get_depth(self):
@@ -80,7 +80,7 @@ class Player(Entity):
         return self._bundle
             
             
-    def update(self, world, global_state, input_state, render_engine):
+    def update(self, world, gs, input_state, render_engine):
         move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
         move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
         
@@ -92,7 +92,7 @@ class Player(Entity):
         
         self.set_x(self._x + move_x * self.move_speed)
         self.set_y(self._y + move_y * self.move_speed)
-        render_engine.update(self._regen_bundle(global_state.anim_tick)) 
+        render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
         
     def is_player(self):
         return True
@@ -114,7 +114,7 @@ class Enemy(Entity):
         self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
         return self._bundle
         
-    def update(self, world, global_state, input_state, render_engine):
+    def update(self, world, gs, input_state, render_engine):
         if random.random() < 0.01:
             i = int(10 * random.random())
             if i >= 4:
@@ -143,7 +143,7 @@ class Enemy(Entity):
         self.set_x(self._x + self.dir[0] * 0.65)
         self.set_y(self._y + self.dir[1] * 0.65)   
 
-        render_engine.update(self._regen_bundle(global_state.anim_tick)) 
+        render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
         
 
 class ChestEntity(Entity):
@@ -180,7 +180,7 @@ class ChestEntity(Entity):
             world.add(PotionEntity(c[0], c[1], vel=vel))
             
     
-    def update(self, world, global_state, input_state, render_engine):
+    def update(self, world, gs, input_state, render_engine):
         
         if not self.is_open():
             player_nearby = False
@@ -198,7 +198,7 @@ class ChestEntity(Entity):
             if self.is_open():
                 self._do_open(world)           
              
-        render_engine.update(self._regen_bundle()) 
+        render_engine.update(self._regen_bundle(), layer_id=gs.ENTITY_LAYER) 
         
         
 class ItemEntity(Entity):
@@ -226,7 +226,7 @@ class PotionEntity(Entity):
     def can_pickup(self):
         return self.pickup_delay <= 0
         
-    def update(self, world, global_state, input_state, render_engine):
+    def update(self, world, gs, input_state, render_engine):
         if self.pickup_delay > 0:
             self.pickup_delay -= 1
               
@@ -238,6 +238,6 @@ class PotionEntity(Entity):
             self.set_y(self._y + self.vel[1])
             self.vel[1] = 0 if abs(self.vel[1]) < 0.05 else self.vel[1] * self.fric
             
-        render_engine.update(self._regen_bundle()) 
+        render_engine.update(self._regen_bundle(), layer_id=gs.ENTITY_LAYER) 
         
     
