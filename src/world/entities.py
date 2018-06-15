@@ -3,8 +3,8 @@ import random
 import math
 
 import src.renderengine.img as img
-import src.spriteref as spriteref
-import src.inputs as inputs
+import src.game.spriteref as spriteref
+import src.game.inputs as inputs
 from src.world.worldstate import World
 
 class Entity:

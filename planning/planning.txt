@@ -1,0 +1,278 @@
+
+
+                                   ~ Cubelike ~                                  
+                                   Planning Doc  
+
+1. Stats + Attributes
+
+        Core Stats:
+            Attack (ATT)  
+                - range 10-255
+                - determines damage dealt by a successful hit
+                - E(damage_dealt) = ATT
+                    - (expected value of dmg == ATT, distribution TBD)
+            Defense (DEF)    
+                - range 10-255
+                - determines chance to be hit and chance to get hit
+                - chance_to_hit = max(1.0, 2 * DEF / (DEF + enemy_def))
+            Vitality (VIT)    
+                - range 10-255
+                - determines max hp
+                - HP = 4.0 * vit * (1 + 0.1*level)
+            Level (LVL)
+                - range 0-63
+                
+        Attributes:
+            - obtained via armor
+            ATT:
+                +X% Attack Radius    (Envy)
+                +X% Movement Speed while Attacking   (Haste)
+                +X% Attack Speed (Fury)
+                +X% Attack Damage (Wrath)
+                -X% Movespeed to enemies in attack radius (Sloth)
+            DEF:
+                +X% Movement Speed (Pride)
+                +X% Dodge (Evasion)
+                +X% Accuracy (Truth)
+            VIT:
+                Regenerate X life per second (Regrowth)
+                Heal X life on hit (Feeding)
+                Heal X% of damage dealt (Lust)
+                +X% Max Health (Gluttony)
+                +X healing to potions (Renewal)
+                -X% potion cooldowns (Drinkspeed)  
+                
+            Special:
+                Hole Bonus: +100% to each attribute on piece (Holy) 
+                    - armor must have a hole in it 
+
+                
+2. Controls 
+
+    Game:
+        [WASD] to move
+        [Space] to attack
+        [E] drink potion
+        [I] open inventory
+        [Tab] to inspect items on ground
+            - [Space] (or walk out of range) to exit inspection mode
+        [esc] pause
+    
+    Inventory:
+        [I] or [esc] to exit inventory/replace held item
+        [left click] to pick up/place down equipment
+        [left release] place item if dragging and position is valid
+        [right click] to rotate (cw) held equipment
+        [shift right click] to rotate (ccw) held equipment
+        
+        (game continues running while inventory is open, so those controls
+        still do the same things)
+        
+    Menus:
+        [WASD] or [mouse] to navigate menus
+        [ENTER], [Space], or [click] 
+        [esc] return, where applicable
+        
+    - all remappable via a config file.
+           
+                  
+3. Combat System
+    
+    a. Ready to Attack Mode (RTAM)
+        - initiated by pressing [Space]
+        - shows a visual indicator of the player's attack range
+            - red outline of the attack radius
+    
+    b. Attacking Mode
+        - shows a different visual indicator
+            - translucent red circle that pulses outward with each attack
+        - initiated by a target entering attack radius of RTAM
+        - player and enemy speed is reduced 
+        - first attack lands instantly, subsequent ones are delivered on a timer
+        - if multiple targets are in radius, attack is applied randomly
+            - with priority given to living targets (non-chests and non-doors)
+        - visual effect to show which target was hit + sound played
+        - Attack Mode becomes RTAM if all targets die or leave radius
+        - Attack Mode ends if [Space] is released
+
+    
+4. Equipment System
+
+        - equipment is made of 5, 6, or 7 "cubes"
+        - arrangement must fit within a 5x5 grid
+        - cubes must touch each other via edges, not diagonals
+        - cube color determined by stat ratio
+        - visual distinction for bonus stats
+        - appears on ground as "Cuboid of Haste (6, +2)"
+        
+        Randomized attributes:
+            Level:
+                - range (1-64)
+                - determined by dungeon level, affects stat ranges
+            # of cubes:
+                - range (5-7)
+                - 60% for 5, 30% for 6, and 10% for 7
+            Primary Stat:
+                - ATT, DEF, or VIT
+                - determines primary color of equipment
+                - determines primary stat or equipment
+                - determines prefix (Cube, Tetra, or Quadra)
+            Secondary Stat:
+                - ATT, DEF, or VIT
+                - determines secondary color of equipment
+                - determines secondary stat or equipment
+                - determines suffix (-cube, -oid, or -shape)
+                - may match primary stat
+            Bonus Stat 1:
+                - chooses a random attribute
+                - 50% chance of appearing
+                - determines end of item name (e.g. "of Haste")
+            Bonus Stat 2:
+                - must have 6+ cubes and Bonus Stat 1
+                - 33% chance of appearing (cumm. 16.7%)
+            Bonus Stat 3:
+                - must have 7+ cubes and a Bonus Stat 2
+                - 25% chance of appearing (cumm 4.2%)
+            Special Stat:
+                - determined by shape of equipment.
+                - always added to pieces that match the requirements
+                - determines leading adjective in name (e.g. "Holy")
+
+5. Potion System
+
+    - potions are collectable consumables that heal the player when used
+    - base healing is 10 (can be additively increased via attributes)
+    - base cooldown is 3 seconds (reducible via attributes)
+    - play sound when consumed
+    - enemies and chests have a chance to drop (1-3) potions when destroyed
+    - icon in corner shows number of potions + cooldown
+    
+6. Inventory System
+    - picture of player
+    - player base stats
+        - hover for all stats
+    - backpack 5 by X with tabs
+    - equipment slots (5x5 grid)
+    - takes up half the screen 
+        -the other half keeps displaying the game which is still running
+
+7. Dungeon
+    - dungeon is a series of rooms connected by doors
+    - rooms are not visible until an adjacent room is opened
+    - the interior of rooms (enemies) is not revealed until the room is opened
+        - chests inside rooms are revealed
+    - opening a room:
+        - enemies are spawned (number and strength depends on dungeon level)
+        - 0-3 enemy groups per room (bigger rooms, higher DLVL -> more groups)
+        - chests are filled
+        - adjacent unrevealed rooms are revealed  
+    - dungeon rooms are produced with group spawn pads
+        - number of spawn pads determine number of groups per room
+
+8. Enemy Spawning
+    - spawn in groups of 1-7
+        - higher DLVL -> bigger groups 
+        - more enemies in group -> weaker enemies
+        
+        
+9. Enemy Generation
+    - exact same stats + attack system as player
+        - except -30% base movement speed
+    - enemies have a level and a type
+        - level determines:
+            - stats
+                - f(level) = total_stats -> distributed to (ATT, DEF, VIT)
+        - type determines: 
+            - stats per level (aka difficulty of enemy)
+            - art (colorized based on stats ofc)
+            - fixed attributes
+            - # of random attributes
+        Example:
+            Wild Hornbeast (LVL 10)
+                ATT: 120
+                DEF: 130
+                VIT: 75
+                +25% Movement speed while attacking
+                
+10. Enemy AI
+    - enemies have states: IDLE, PROVOKING, CHASING, ATTACKING
+    
+    IDLE:
+        - wandering around
+        - but tend to stay grouped
+        - they may pass through each other but prefer not to
+        - every enemy has a provoke radius (shared per-group, determined by lvl)
+            - when player enters an IDLE enemy's provoke radius:
+                - that enemy becomes PROVOKING
+    
+    PROVOKING: 
+        - pauses for a sec
+        - plays an animation (exclamation mark probably)
+        - all IDLE enemies (from group) in provoke radius become PROVOKING 
+        - state changes to CHASING
+             
+    CHASING:
+        - enemy pathfinds towards player
+            - softly trying to avoid other enemies but no hard restrictions
+        - every enemy has a follow radius (determined by level)
+            - an enemy stops chasing both are true:
+                - the player has left its follow radius
+                - a certain (random per-enemy) time period has passed
+        - when player enters 2x attack radius, enters combat mode
+            - same as player's, red circle shows, etc
+        - when player leaves 2x attack radius, leaves combat mode
+        
+10. Enemy Loot
+    - each enemy has a chance to drop an item upon death
+    - item level will match enemy level
+    - chances should be tuned to give about:
+        - 1 equipment per room 
+        - 1-2 ish potions per room 
+
+11. Doors
+    - all rooms are connected by doors
+    - doors are opened by the player walking into it for a bit
+    
+12. Chests
+    - slightly smaller than wall size
+    - nudged against adjacent walls if there are any
+    - block movement
+    - can't be opened until room's enemies are cleared
+    - opened by walking into it
+    - opening has a low delay and progress bar - for suspense
+        - interruptable by enemy attacks
+    - drops 1-4 items, same item level as dungeon
+    - drops 1-3 potions
+    - items/potions are strewn on floor as if an enemy died
+    - items have increased chances of being higher number of cubes 
+
+13. Dungeon Generation
+    - ok this is where it gets hard
+    Goals:
+        - big rooms connected by medium size rooms
+        - different "feels" of rooms to add variety
+            - rectangular
+            - organic
+        - narrow hallways should denote optional paths <- gud idea
+        
+14. Art
+    - player 
+        - idle (2)
+        - walking (4)
+        - attacking (3?)
+    - wall
+    - ground  
+    - door (2)
+    - chest (3)
+    - potion
+        - big
+        - small
+    - enemies (6 to start)
+        - two frames each
+    - armor (6? types)
+    - armor on ground
+        
+
+7. Menus + UI
+    Graphical Effects
+                

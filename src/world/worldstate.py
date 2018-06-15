@@ -1,5 +1,5 @@
 import src.renderengine.img as img   
-import src.spriteref as spriteref
+import src.game.spriteref as spriteref
 
 
 CELLSIZE = 64
