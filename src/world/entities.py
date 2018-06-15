@@ -108,7 +108,7 @@ class Player(Entity):
         self._bundle = img.ImageBundle(spriteref.player_idle_0, x, y, 
                 absolute=False, scale=2, depth=self.get_depth())
         self.is_moving = False
-        self.facing_left = True
+        self.facing_right = True
         self.move_speed = 2
             
                
@@ -120,7 +120,9 @@ class Player(Entity):
         x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
         depth = self.get_depth()
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
+        xflip = not self.facing_right
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, 
+                new_depth=depth, new_xflip=xflip)
         return self._bundle
             
             
@@ -137,8 +139,10 @@ class Player(Entity):
         move_x *= self.move_speed
         move_y *= self.move_speed
         
-        if move_x != 0 or move_y != 0:
-            self.move(move_x, move_y, world=world, and_search=True)
+        self.move(move_x, move_y, world=world, and_search=True)
+        
+        if move_x != 0:
+            self.facing_right = move_x > 0
             
         render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
         
@@ -162,7 +166,9 @@ class Enemy(Entity):
         x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
         y = self.y() - (model.height() * self._bundle.scale() - self.h())
         depth = self.get_depth()
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
+        xflip = not self.facing_left
+        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, 
+                new_depth=depth, new_xflip=xflip)
         return self._bundle
         
     def update(self, world, gs, input_state, render_engine):
@@ -194,6 +200,9 @@ class Enemy(Entity):
         move_x = self.dir[0] * 0.65
         move_y = self.dir[1] * 0.65
         self.move(move_x, move_y, world=world, and_search=True)
+        
+        if move_x != 0:
+            self.facing_left = move_x < 0 
 
         render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
         
