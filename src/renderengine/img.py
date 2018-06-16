@@ -13,25 +13,23 @@ def gen_unique_id():
 
 class ImageBundle:
 
-    def __init__(self, model, x, y, absolute=True, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
+    def __init__(self, model, x, y, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
         self._y = y
-        self._absolute = absolute
         self._scale = scale
         self._depth = depth
         self._xflip = xflip
         self._color = color
             
     def update(self, new_model=None, new_x=None, new_y=None, 
-                new_absolute=None, new_scale=None, new_depth=None,
+                new_scale=None, new_depth=None,
                 new_xflip=None, new_color=None):
                 
         model = self.model() if new_model is None else new_model
         x = self.x() if new_x is None else new_x
         y = self.y() if new_y is None else new_y
-        absolute = self.absolute() if new_absolute is None else new_absolute
         scale = self.scale() if new_scale is None else new_scale
         depth = self.depth() if new_depth is None else new_depth
         xflip = self.xflip() if new_xflip is None else new_xflip
@@ -40,14 +38,13 @@ class ImageBundle:
         if (model == self.model() and 
                 x == self.x() and 
                 y == self.y() and
-                absolute == self.absolute() and
                 scale == self.scale() and
                 depth == self.depth() and 
                 xflip == self.xflip() and
                 color == self.color()):
             return self
         else:
-            return ImageBundle(model, x, y, absolute=absolute, scale=scale, 
+            return ImageBundle(model, x, y, scale=scale, 
                     depth=depth, xflip=xflip, color=color, uid=self.uid())
         
     def model(self):
@@ -58,9 +55,6 @@ class ImageBundle:
         
     def y(self):
         return self._y
-        
-    def absolute(self):
-        return self._absolute
         
     def scale(self):
         return self._scale
@@ -77,9 +71,9 @@ class ImageBundle:
     def uid(self):
         return self._unique_id
         
-    def add_urself(self, camera, vertices, texts, colors, indices):
-        x = self.x() - (0 if self.absolute() else camera[0])
-        y = self.y() - (0 if self.absolute() else camera[1])
+    def add_urself(self, vertices, texts, colors, indices):
+        x = self.x()
+        y = self.y()
         model = self.model()
         w = model.w * self.scale()
         h = model.h * self.scale()

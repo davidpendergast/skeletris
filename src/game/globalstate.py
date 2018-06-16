@@ -9,6 +9,12 @@ class GlobalState:
         self.ENTITY_LAYER = 15
         self.UI_0_LAYER = 20
         self.UI_1_LAYER = 25
+        
+        self.screen_size = [800, 600]
+        
+        """Layers that follow the player"""
+        self.world_layers = (self.FLOOR_LAYER, self.SHADOW_LAYER, 
+                self.WALL_LAYER, self.ENTITY_LAYER)
     
         self.tick_counter = 0
         self.anim_tick = 0

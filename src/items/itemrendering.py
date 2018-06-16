@@ -29,7 +29,7 @@ class TextImage:
                 else:
                     sprite = spriteref.alphabet[c]
                     img = ImageBundle(sprite, self.x + xpos, self.y + ypos, 
-                            absolute=False, scale=self.scale, color=self.color)
+                            scale=self.scale, color=self.color)
                     self._letter_images.append(img)  
                     xpos += (self.kerning + a_sprite.width()) * self.scale
                     

@@ -3,18 +3,17 @@ from OpenGL.GLU import *
  
  
 class _Layer:
-    def __init__(self, name, z_order, sort_sprites, use_color, absolute):
+    def __init__(self, name, z_order, sort_sprites, use_color):
         """
             name: str -- used for logging
             z_order: number -- used to decide layer draw order
             sort_sprites: bool -- true if layer should sort sprites by depth
             use_color: bool -- true if layer respects sprites' color value
-            absolute: bool -- true if layer should ignore world camera position 
         """
         self.name = name
         self.images = [] # ordered list of image ids
         self._image_set = set()
-        self.absolute = absolute
+        self._offset = (0, 0)
         self._z_order = z_order
         self.sort_sprites = sort_sprites
         
@@ -27,6 +26,12 @@ class _Layer:
         self._to_remove = []
         self._to_add = []
     
+    def set_offset(self, x, y):
+        self._offset = (x, y)
+        
+    def offset(self):
+        return self._offset
+    
     def update(self, bundle_id):
         if bundle_id in self._image_set:
             self._dirty_sprites.append(bundle_id)
@@ -38,9 +43,6 @@ class _Layer:
         if bundle_id in self._image_set:
             self._image_set.remove(bundle_id)
             self._to_remove.append(bundle_id)
-    
-    def is_absolute(self):
-        return self.absolute
         
     def is_dirty(self):
         return len(self._dirty_sprites) + len(self._to_add) + len(self._to_remove) > 0
@@ -73,7 +75,7 @@ class _Layer:
         
         for img in self.images:
             bundle = bundle_lookup[img]
-            bundle.add_urself((0, 0), 
+            bundle.add_urself( 
                     self.vertices, 
                     self.tex_coords, 
                     self.colors, 
@@ -162,12 +164,15 @@ class RenderEngine:
         self.layers = {} # layer_id -> layer
         self.shader = None
         
-    def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color, absolute):
-        l = _Layer(layer_name, z_order, sort_sprites, use_color, absolute)
+    def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color):
+        l = _Layer(layer_name, z_order, sort_sprites, use_color)
         self.layers[layer_id] = l
         
     def remove_layer(self, layer_id):
         del self.layers[layer_id]
+        
+    def set_layer_offset(self, layer_id, offs_x, offs_y):
+        self.layers[layer_id].set_offset(offs_x, offs_y)
         
     def clear_all_sprites(self):
         for uid in self.bundles:
@@ -287,13 +292,13 @@ class RenderEngine:
         for layer in layers_to_draw:
             if layer.is_dirty():
                 layer.rebuild(self.bundles)
-            
-            if layer.is_absolute():
-                # todo : set uniform camera pos
-                pass
 
             glMatrixMode(GL_MODELVIEW)
             glLoadIdentity()
+            
+            offs = layer.offset()
+            if offs != (0, 0):
+                glTranslatef(offs[0], offs[1], 0.0)
             
             layer.render()
         

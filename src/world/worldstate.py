@@ -110,7 +110,7 @@ class World:
             
             if model is not None:
                 return img.ImageBundle(model, grid_x*CELLSIZE, grid_y*CELLSIZE, 
-                        absolute=False, scale=int(CELLSIZE/model.w), depth=10)
+                        scale=int(CELLSIZE/model.w), depth=10)
             else:
                 return None
                 
@@ -127,13 +127,18 @@ class World:
         return res
       
               
-    def update_all(self, global_state, input_state, render_engine):
+    def update_all(self, gs, input_state, render_engine):
         for e in self.entities:
-            e.update(self, global_state, input_state, render_engine)
+            e.update(self, gs, input_state, render_engine)
         
         p = self.get_player()
         if p is not None:
-            render_engine.set_camera_pos(*p.center(), center=True)
+            for w_layer in gs.world_layers:
+                p_center = p.center()
+                offs_x = -(p_center[0] - gs.screen_size[0] // 2)
+                offs_y = -(p_center[1] - gs.screen_size[1] // 2)
+                
+                render_engine.set_layer_offset(w_layer, offs_x, offs_y)
                 
                 
                 

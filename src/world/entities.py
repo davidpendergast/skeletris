@@ -97,7 +97,7 @@ class Entity:
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
             self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0,
-                absolute=False, scale=2, depth=-1)
+                scale=2, depth=-1)
         
         if self._shadow is not None:    
             sh_model = self._shadow.model()    
@@ -130,7 +130,7 @@ class Player(Entity):
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 12)
         self._img = img.ImageBundle(spriteref.player_idle_0, x, y, 
-                absolute=False, scale=2, depth=self.get_depth())
+                scale=2, depth=self.get_depth())
         self.is_moving = False
         self.facing_right = True
         self.move_speed = 2
@@ -186,7 +186,7 @@ class Player(Entity):
 class Enemy(Entity):
     def __init__(self, x, y, sprites):
         Entity.__init__(self, x, y, 32, 32)
-        self._img = img.ImageBundle(sprites[0], x, y, absolute=False, scale=2, depth=self.get_depth())
+        self._img = img.ImageBundle(sprites[0], x, y, scale=2, depth=self.get_depth())
         self.facing_left = True
         self.sprites = sprites
         self.dir = [0, 0]
@@ -249,7 +249,7 @@ class ChestEntity(Entity):
         Entity.__init__(self, x, y, 24, 24)
         self.ticks_to_open = 60
         self.current_cooldown = self.ticks_to_open
-        self._img = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
+        self._img = img.ImageBundle(spriteref.chest_closed, x, y, scale=2, depth=self.get_depth())
         
     def is_chest(self):
         return True
@@ -347,7 +347,7 @@ class ItemEntity(Entity):
         if len(self._cube_imgs) == 0:
             for c in self.item.cubes:
                 c_img = img.ImageBundle(spriteref.item_piece_small, 0, 0, 
-                        absolute=False, scale=2, color=self.item.color)
+                        scale=2, color=self.item.color)
                 self._cube_imgs.append(c_img)
         
         bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
@@ -425,7 +425,7 @@ class PotionEntity(Entity):
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
         self._img = img.ImageBundle(spriteref.potion_small, x, y, 
-                absolute=False, scale=2, depth=5)
+               scale=2, depth=5)
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]]
         self.fric = 0.90

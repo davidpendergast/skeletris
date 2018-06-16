@@ -62,32 +62,31 @@ def run():
     render_eng.init(*SCREEN_SIZE)
     
     COLOR = True
-    ABSOL = True
     SORTS = True
     render_eng.add_layer(
             gs.FLOOR_LAYER, 
             "floors", 0, 
-            False, False, True)
+            False, False)
     render_eng.add_layer(
             gs.SHADOW_LAYER, 
             "shadow_layer", 5, 
-            False, False, False)
+            False, False)
     render_eng.add_layer(
             gs.WALL_LAYER, 
             "walls", 10, 
-            False, False, False)
+            False, False)
     render_eng.add_layer(
             gs.ENTITY_LAYER, 
             "entities", 15, 
-            SORTS, COLOR, False)
+            SORTS, COLOR)
     render_eng.add_layer(
             gs.UI_0_LAYER, 
             "ui_0", 20, 
-            False, COLOR, ABSOL)
+            False, COLOR)
     render_eng.add_layer(
             gs.UI_1_LAYER, 
             "ui_1", 25, 
-            False, False, ABSOL)
+            False, False)
     
     raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
