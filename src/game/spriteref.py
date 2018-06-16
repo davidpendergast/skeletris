@@ -46,12 +46,13 @@ medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 chest_shadow = make(96, 40, 32, 8)
 
-item_panel_top = make(272, 0, 208, 128)
-item_panel_middle = make(272, 128, 208, 16)
-item_panel_botton = make(272, 144, 208, 16)
+item_panel_top = make(256, 0, 224, 128)
+item_panel_middle = make(256, 128, 224, 16)
+item_panel_bottom_0 = make(256, 144, 224, 16)
+item_panel_bottom_1 = make(256, 160, 224, 16) # if no bonus attributes
 
 _chars = [letter for letter in string.ascii_lowercase]
-_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "="])
+_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":"])
 _qmark = make(160, 115, 5, 5)
 alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):

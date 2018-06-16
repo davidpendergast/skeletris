@@ -1,5 +1,6 @@
 from enum import Enum
 import random
+import collections
 
 
 class StatType(Enum):
@@ -19,11 +20,13 @@ class StatType(Enum):
     LIFE_LEECH = "LIFE_LEECH",
     MAX_HEALTH = "MAX_HEALTH",
     POTION_HEALING = "POTION_HEALING",
-    POTION_COOLDOWN = "POTION_COOLDOWN"
+    POTION_COOLDOWN = "POTION_COOLDOWN",
 
     HOLE_BONUS = "HOLE_BONUS"
+    
+CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]  
  
-DESCRIPTIONS = {
+STAT_DESCRIPTIONS = {
     StatType.ATT:"+{} ATT",
     StatType.DEF:"+{} DEF",
     StatType.VIT:"+{} VIT",
@@ -43,6 +46,13 @@ DESCRIPTIONS = {
     StatType.POTION_COOLDOWN:"-X% Potion Cooldowns"
 }    
 
+STAT_COLORS = collections.defaultdict(lambda: (1, 1, 1))
+STAT_COLORS.update({
+        StatType.ATT: (1, 0.65, 0.65),
+        StatType.DEF: (0.65, 0.65, 1),
+        StatType.VIT: (0.65, 1, 0.65),
+})
+
 
 class ItemStat:
     """Stat that is attached to an item"""
@@ -51,10 +61,13 @@ class ItemStat:
         self.value = value
 
     def __repr__(self):
-        if self.stat_type in DESCRIPTIONS:
-            return DESCRIPTIONS[self.stat_type].format(self.value)
+        if self.stat_type in STAT_DESCRIPTIONS:
+            return STAT_DESCRIPTIONS[self.stat_type].format(self.value)
         else:
             return "{}: {}".format(self.stat_type, self.value)
+            
+    def color(self):
+        return STAT_COLORS[self.stat_type]
 
 
 class Item:
@@ -73,6 +86,9 @@ class Item:
         self.cubes = cubes
         self.color = color
         self.cube_art = {} if cube_art is None else cube_art
+    
+    def level_string(self):
+        return "lvl:{}".format(self.level)
         
     def w(self):
         return max([c[0] for c in self.cubes]) + 1
@@ -80,9 +96,15 @@ class Item:
     def h(self):
         return max([c[1] for c in self.cubes]) + 1
         
+    def core_stats(self):
+        return [s for s in self.stats if s.stat_type in CORE_STATS]
+        
+    def non_core_stats(self):
+        return [s for s in self.stats if s.stat_type not in CORE_STATS]
+        
     def __str__(self):
         res = "[{}]".format(self.name)
-        res += "\n  " + "lvl: " + str(self.level)
+        res += "\n  " + self.level_string()
         for stat in self.stats:
             res += "\n  " + str(stat)
         res += "\n"
@@ -143,8 +165,8 @@ class ItemFactory:
         return tuple(res)
         
     def gen_item():
-        name = "Cubey Cubeboy"
-        stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.POTION_HEALING, 32),
+        name = "Cube of Hate"
+        stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.DEF, 32), ItemStat(StatType.VIT, 3), ItemStat(StatType.POTION_HEALING, 32),
                 ItemStat(StatType.MAX_HEALTH, 23)]
         cubes = ItemFactory.gen_cubes(6)
         color = [1, random.random(), random.random()]

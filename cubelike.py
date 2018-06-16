@@ -8,6 +8,8 @@ from src.world.worldstate import World
 from src.world.entities import Player, Enemy, ChestEntity
 import src.renderengine.img as img
 from src.renderengine.engine import RenderEngine
+
+from src.items.item import ItemFactory
 from src.items.itemrendering import TextImage, ItemImage, ItemInfoPane
 
 print("launching Cubelike...")
@@ -95,12 +97,14 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
         
-    world = build_me_a_world(15, 15, render_eng, gs)
+    world = build_me_a_world(1, 1, render_eng, gs)
     
-    text_img = TextImage(15, 15, "also i still wanna see \nthe incredibles\nso hmu", color=(0.5, 0.8, 1))
-    for bun in text_img.all_bundles():
-        render_eng.update(bun, layer_id=gs.UI_0_LAYER)
-    
+    item = ItemFactory.gen_item()
+    print(item)
+    item_panel = ItemInfoPane(item)
+    for b in item_panel.all_bundles():
+        render_eng.update(b, layer_id=gs.UI_0_LAYER)
+        
     clock = pygame.time.Clock()    
     
     running = True

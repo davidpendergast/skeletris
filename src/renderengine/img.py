@@ -56,6 +56,12 @@ class ImageBundle:
     def y(self):
         return self._y
         
+    def width(self):
+        return self.model().width() * self.scale()
+        
+    def height(self):
+        return self.model().height() * self.scale()
+        
     def scale(self):
         return self._scale
         
