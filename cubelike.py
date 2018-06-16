@@ -15,7 +15,7 @@ print("running pygame version: " + pygame.version.ver)
 
 SCREEN_SIZE = (800, 600)
 
-def build_me_a_world(width, height):
+def build_me_a_world(width, height, render_eng, gs):
     import random
     w = World(width, height)
     for x in range(0, width):
@@ -35,6 +35,17 @@ def build_me_a_world(width, height):
                         w.add(e, gridcell=(x, y))
                     elif random.random() < 0.05:
                         w.add(ChestEntity(0, 0), gridcell=(x, y))
+    
+    render_eng.clear_all_sprites()
+                        
+    for bun in w.get_all_bundles(World.WALL):
+        render_eng.update(bun, layer_id=gs.WALL_LAYER)
+        
+    for bun in w.get_all_bundles(World.FLOOR):
+        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
+        
+    player = Player(80, 80)
+    w.add(player)
     return w
    
     
@@ -84,16 +95,7 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
     
-    world = build_me_a_world(15, 15)
-    
-    for bun in world.get_all_bundles(World.WALL):
-        render_eng.update(bun, layer_id=gs.WALL_LAYER)
-        
-    for bun in world.get_all_bundles(World.FLOOR):
-        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
-        
-    player = Player(80, 80)
-    world.add(player)
+    world = build_me_a_world(15, 15, render_eng, gs)
     
     clock = pygame.time.Clock()    
     
@@ -119,6 +121,9 @@ def run():
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
+                
+        if input_state.was_pressed(pygame.K_RETURN):
+            world = build_me_a_world(15, 15, render_eng, gs)
         
         world.update_all(gs, input_state, render_eng)
         

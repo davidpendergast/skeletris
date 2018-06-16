@@ -335,6 +335,7 @@ class ItemEntity(Entity):
         # for moving away from other stuff
         self.push_radius = 20
         self.situated = False
+        self.unsituated_time = 0
         
     def get_shadow_sprite(self):
         return spriteref.small_shadow
@@ -373,18 +374,30 @@ class ItemEntity(Entity):
     def _handle_pushes(self, world):
           if not self.situated:
             nearby_ents = world.entities_in_circle(self.center(), self.push_radius)
-            other_items = [i for i in nearby_ents if i.is_item() and i is not self]
+            other_items = [i for i in nearby_ents if (i.is_item() or i.is_chest()) and i is not self]
             if len(other_items) > 0 and Utils.mag(self.vel) < 2:
                 for i in other_items:
-                    i.situated = False # 'wake up' the other items too
+                    if i.is_item() and i.can_unsituate():
+                        i.situated = False # 'wake up' the other items too
                 i = other_items[int(random.random()*len(other_items))] 
                 direction = Utils.sub(self.center(), i.center())
                 push = Utils.set_length(direction, 0.25)
                 self.vel[0] += push[0]
                 self.vel[1] += push[1]
-                
-            elif self.vel == [0, 0]:
+            
+            if len(other_items) == 0:
                 self.situated = True
+                self.unsituated_time = 0
+            elif not self.can_unsituate():
+                self.situated = True 
+                # means it's probably crammed in a corner,
+                # don't reset unsituated_time so other items
+                # will stop waking it up 
+                   
+    def can_unsituate(self):
+        return self.unsituated_time < 500      
+                
+        
                     
     def update(self, world, gs, input_state, render_engine):
         if self.pickup_delay > 0:

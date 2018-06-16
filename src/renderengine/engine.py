@@ -119,6 +119,12 @@ class RenderEngine:
         
     def remove_layer(self, layer_id):
         del self.layers[layer_id]
+        
+    def clear_all_sprites(self):
+        for uid in self.bundles:
+            for l in self.layers.values():
+                l.remove(uid)
+        self.bundles.clear()
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
