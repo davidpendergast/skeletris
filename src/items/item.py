@@ -74,6 +74,12 @@ class Item:
         self.color = color
         self.cube_art = {} if cube_art is None else cube_art
         
+    def w(self):
+        return max([c[0] for c in self.cubes]) + 1
+        
+    def h(self):
+        return max([c[1] for c in self.cubes]) + 1
+        
     def __str__(self):
         res = "[{}]".format(self.name)
         res += "\n  " + "lvl: " + str(self.level)
@@ -127,16 +133,26 @@ class ItemFactory:
                 choices = rejects
                 random.shuffle(choices)
                 rejects = []
+        
+        # push cubes to top left
+        min_x = min([c[0] for c in res])
+        min_y = min([c[1] for c in res])
+        if min_x > 0 or min_y > 0:
+            res = [(c[0] - min_x, c[1] - min_y) for c in res]
                 
-        return res
+        return tuple(res)
+        
+    def gen_item():
+        name = "Cubey Cubeboy"
+        stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.POTION_HEALING, 32),
+                ItemStat(StatType.MAX_HEALTH, 23)]
+        cubes = ItemFactory.gen_cubes(6)
+        color = [1, random.random(), random.random()]
+        random.shuffle(color)
+        color = tuple(color)
+        return Item(name, 15, stats, cubes, color)
 
      
 if __name__ == "__main__":
-     name = "Cubey Cubeboy"
-     stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.POTION_HEALING, 32),
-            ItemStat(StatType.MAX_HEALTH, 23)]
-     cubes = ItemFactory.gen_cubes(6)
-     color = (0.3, 1.0, 0.6)
-     item = Item(name, 15, stats, cubes, color)
-     print(item)
+     print(ItemFactory.gen_item())
 

@@ -6,6 +6,8 @@ import src.renderengine.img as img
 import src.game.spriteref as spriteref
 import src.game.inputs as inputs
 from src.world.worldstate import World
+from src.items.item import ItemFactory
+from src.utils.util import Utils
 
 class Entity:
 
@@ -114,6 +116,12 @@ class Entity:
         return 5 - max(0, min(1, (self.y() + self.h()) / 100000))  
     
     def is_player(self):
+        return False
+        
+    def is_item(self):
+        return False
+        
+    def is_chest(self):
         return False
         
 
@@ -242,6 +250,9 @@ class ChestEntity(Entity):
         self.ticks_to_open = 60
         self.current_cooldown = self.ticks_to_open
         self._img = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
+        
+    def is_chest(self):
+        return True
     
     def get_shadow_sprite(self):
         return spriteref.chest_shadow
@@ -262,7 +273,8 @@ class ChestEntity(Entity):
         super().update_images(anim_tick)
         sh_x = self._shadow.x()
         sh_y = self._shadow.y()
-        self._shadow = self._shadow.update(new_x=(sh_x + 14), new_y=(sh_y - 4))
+        sh_s = self._shadow.scale()
+        self._shadow = self._shadow.update(new_x=(sh_x + 7*sh_s), new_y=(sh_y - 2*sh_s))
         
           
     def is_open(self):
@@ -276,6 +288,14 @@ class ChestEntity(Entity):
             speed = 2 + random.random() * 3
             vel = (speed*math.cos(angle), speed*math.sin(angle))
             world.add(PotionEntity(c[0], c[1], vel=vel))
+            
+        for _ in range(0, 3):
+            c = self.center()
+            angle = random.random() * 6.28 # 2pi-ish
+            speed = 2 + random.random() * 3
+            vel = (speed*math.cos(angle), speed*math.sin(angle))
+            item = ItemFactory.gen_item()
+            world.add(ItemEntity(item, c[0], c[1], vel=vel))
             
     def update(self, world, gs, input_state, render_engine):
         
@@ -306,13 +326,86 @@ class ItemEntity(Entity):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
-        self._cubes = []
+        self._cube_imgs = []
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]]
         self.fric = 0.90
+        self.bounce_offset = int(random.random() * 100)
         
-    def update_images(self):
-        pass
+        # for moving away from other stuff
+        self.push_radius = 20
+        self.situated = False
+        
+    def get_shadow_sprite(self):
+        return spriteref.small_shadow
+        
+    def is_item(self):
+        return True
+        
+    def update_images(self, anim_tick):
+        if len(self._cube_imgs) == 0:
+            for c in self.item.cubes:
+                c_img = img.ImageBundle(spriteref.item_piece_small, 0, 0, 
+                        absolute=False, scale=2, color=self.item.color)
+                self._cube_imgs.append(c_img)
+        
+        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
+        
+        item_w = self.item.w()
+        item_h = self.item.h()
+        
+        for i in range(0, len(self._cube_imgs)):
+            cube = self.item.cubes[i]
+            c_img = self._cube_imgs[i]
+            
+            model = c_img.model()
+            c_w = model.width() * c_img.scale()
+            c_h = model.height() * c_img.scale()
+
+            x = (self.x() + self.w() // 2) - (c_w * item_w // 2) + cube[0] * c_w
+            y = (self.y() + self.h()) - c_h * item_h + cube[1] * c_h - (2 - bounce)
+            depth = self.get_depth()
+            self._cube_imgs[i] = c_img.update(new_model=model, 
+                    new_x=x, new_y=y, new_depth=depth)   
+                    
+        super().update_images(anim_tick)
+                    
+    def _handle_pushes(self, world):
+          if not self.situated:
+            nearby_ents = world.entities_in_circle(self.center(), self.push_radius)
+            other_items = [i for i in nearby_ents if i.is_item() and i is not self]
+            if len(other_items) > 0 and Utils.mag(self.vel) < 2:
+                for i in other_items:
+                    i.situated = False # 'wake up' the other items too
+                i = other_items[int(random.random()*len(other_items))] 
+                direction = Utils.sub(self.center(), i.center())
+                push = Utils.set_length(direction, 0.25)
+                self.vel[0] += push[0]
+                self.vel[1] += push[1]
+                
+            elif self.vel == [0, 0]:
+                self.situated = True
+                    
+    def update(self, world, gs, input_state, render_engine):
+        if self.pickup_delay > 0:
+            self.pickup_delay -= 1
+        
+        self._handle_pushes(world)
+               
+        if self.vel[0] != 0:
+            self.vel[0] = 0 if abs(self.vel[0]) < 0.05 else self.vel[0] * self.fric 
+           
+        if self.vel[1] != 0:
+            self.vel[1] = 0 if abs(self.vel[1]) < 0.05 else self.vel[1] * self.fric
+            
+        self.move(*self.vel, world=world, and_search=True)
+            
+        self.update_images(gs.anim_tick)
+        for c_img in self._cube_imgs:
+            render_engine.update(c_img, layer_id=gs.ENTITY_LAYER) 
+        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+        
+            
     
     
 class PotionEntity(Entity):
@@ -320,7 +413,8 @@ class PotionEntity(Entity):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
-        self._img = img.ImageBundle(spriteref.potion_small, x, y, absolute=False, scale=2, depth=5)
+        self._img = img.ImageBundle(spriteref.potion_small, x, y, 
+                absolute=False, scale=2, depth=5)
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]]
         self.fric = 0.90

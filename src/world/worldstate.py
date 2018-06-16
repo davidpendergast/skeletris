@@ -42,7 +42,17 @@ class World:
             if e.is_player():
                 return e
         return None
-                
+    
+    def entities_in_circle(self, center, radius):
+        r2 = radius*radius
+        res = []
+        for e in self.entities:
+            e_c = e.center()
+            dx = e_c[0] - center[0]
+            dy = e_c[1] - center[1]
+            if dx*dx + dy*dy <= r2:
+                res.append(e)
+        return res       
         
     def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
         if self.is_valid(grid_x, grid_y):
