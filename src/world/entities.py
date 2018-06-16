@@ -243,7 +243,10 @@ class ChestEntity(Entity):
         self.current_cooldown = self.ticks_to_open
         self._img = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
     
-    def update_images(self):
+    def get_shadow_sprite(self):
+        return spriteref.chest_shadow
+        
+    def update_images(self, anim_tick):
         if self.is_open():
             model = spriteref.chest_open_1
         elif self.current_cooldown < self.ticks_to_open:
@@ -255,6 +258,12 @@ class ChestEntity(Entity):
         y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
+        
+        super().update_images(anim_tick)
+        sh_x = self._shadow.x()
+        sh_y = self._shadow.y()
+        self._shadow = self._shadow.update(new_x=(sh_x + 14), new_y=(sh_y - 4))
+        
           
     def is_open(self):
         return self.current_cooldown <= 0
@@ -286,8 +295,9 @@ class ChestEntity(Entity):
             if self.is_open():
                 self._do_open(world)           
              
-        self.update_images()
+        self.update_images(gs.anim_tick)
         render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
+        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
         
         
 class ItemEntity(Entity):

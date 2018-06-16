@@ -41,6 +41,7 @@ item_piece_small = make(72, 32, 4, 4)
 small_shadow = make(80, 32, 16, 8)
 medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
+chest_shadow = make(96, 40, 32, 8)
 
 
 """Lookup table for wall sprites:   
