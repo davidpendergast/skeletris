@@ -13,7 +13,7 @@ def gen_unique_id():
 
 class ImageBundle:
 
-    def __init__(self, model, x, y, absolute=True, scale=1, depth=1, xflip=False, uid=None):
+    def __init__(self, model, x, y, absolute=True, scale=1, depth=1, xflip=False, color=(0.5, 1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
@@ -22,9 +22,11 @@ class ImageBundle:
         self._scale = scale
         self._depth = depth
         self._xflip = xflip
+        self._color = color
             
     def update(self, new_model=None, new_x=None, new_y=None, 
-                new_absolute=None, new_scale=None, new_depth=None, new_xflip=None):
+                new_absolute=None, new_scale=None, new_depth=None,
+                new_xflip=None, new_color=None):
                 
         model = self.model() if new_model is None else new_model
         x = self.x() if new_x is None else new_x
@@ -33,6 +35,7 @@ class ImageBundle:
         scale = self.scale() if new_scale is None else new_scale
         depth = self.depth() if new_depth is None else new_depth
         xflip = self.xflip() if new_xflip is None else new_xflip
+        color = self.color() if new_color is None else new_color
         
         if (model == self.model() and 
                 x == self.x() and 
@@ -40,11 +43,12 @@ class ImageBundle:
                 absolute == self.absolute() and
                 scale == self.scale() and
                 depth == self.depth() and 
-                xflip == self.xflip()):
+                xflip == self.xflip() and
+                color == self.color()):
             return self
         else:
             return ImageBundle(model, x, y, absolute=absolute, scale=scale, 
-                    depth=depth, xflip=xflip, uid=self.uid())
+                    depth=depth, xflip=xflip, color=color, uid=self.uid())
         
     def model(self):
         return self._model
@@ -67,30 +71,39 @@ class ImageBundle:
     def xflip(self):
         return self._xflip
         
+    def color(self):
+        return self._color
+        
     def uid(self):
         return self._unique_id
         
-    def add_urself(self, camera, vertices, texts, indices):
+    def add_urself(self, camera, vertices, texts, colors, indices):
         x = self.x() - (0 if self.absolute() else camera[0])
         y = self.y() - (0 if self.absolute() else camera[1])
         model = self.model()
         w = model.w * self.scale()
         h = model.h * self.scale()
+        color = self.color()
         
         vertices.extend([
-                    x, y,
-                    x, y + h,
-                    x + w, y + h,
-                    x + w, y])
+                x, y,
+                x, y + h,
+                x + w, y + h,
+                x + w, y])
+        
+        if colors is not None:            
+            colors.extend([
+                    color, color, color, color   
+            ])
         
         tx1 = model.tx1 if not self.xflip() else model.tx2
         tx2 = model.tx2 if not self.xflip() else model.tx1
         
         texts.extend([
-                    tx1, model.ty2,
-                    tx1, model.ty1,
-                    tx2, model.ty1,
-                    tx2, model.ty2])
+                tx1, model.ty2,
+                tx1, model.ty1,
+                tx2, model.ty1,
+                tx2, model.ty2])
         
         i = 0 if len(indices) == 0 else indices[-1] + 1
         indices.extend([i, i+1, i+2, i, i+2, i+3])

@@ -3,16 +3,25 @@ from OpenGL.GLU import *
  
  
 class _Layer:
-    def __init__(self, name, z_order, sort_sprites, absolute):
+    def __init__(self, name, z_order, sort_sprites, use_color, absolute):
+        """
+            name: str -- used for logging
+            z_order: number -- used to decide layer draw order
+            sort_sprites: bool -- true if layer should sort sprites by depth
+            use_color: bool -- true if layer respects sprites' color value
+            absolute: bool -- true if layer should ignore world camera position 
+        """
         self.name = name
         self.images = [] # ordered list of image ids
         self._image_set = set()
         self.absolute = absolute
         self._z_order = z_order
         self.sort_sprites = sort_sprites
+        
         self.vertices = []
         self.tex_coords = []
         self.indices = []
+        self.colors = [] if use_color else None
         
         self._dirty_sprites = []
         self._to_remove = []
@@ -36,6 +45,9 @@ class _Layer:
     def is_dirty(self):
         return len(self._dirty_sprites) + len(self._to_add) + len(self._to_remove) > 0
         
+    def uses_color(self):
+        return self.colors is not None
+        
     def rebuild(self, bundle_lookup): 
         if len(self._to_remove) > 0:
             rem_set = set(self._to_remove)
@@ -56,19 +68,34 @@ class _Layer:
         self.vertices = []
         self.tex_coords = []
         self.indices = []
+        if self.colors is not None:
+            self.colors = []
         
         for img in self.images:
             bundle = bundle_lookup[img]
-            bundle.add_urself((0, 0), self.vertices, self.tex_coords, self.indices)
+            bundle.add_urself((0, 0), 
+                    self.vertices, 
+                    self.tex_coords, 
+                    self.colors, 
+                    self.indices)
             
     def render(self):  
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+        if self.uses_color():
+            glEnableClientState(GL_COLOR_ARRAY)
+            
         glVertexPointer(2, GL_FLOAT, 0, self.vertices)
         glTexCoordPointer(2, GL_FLOAT, 0, self.tex_coords)
+        if self.uses_color():
+            glColorPointer(3, GL_FLOAT, 0, self.colors)
+        
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, self.indices)
+        
+        if self.uses_color():
+            glDisableClientState(GL_COLOR_ARRAY)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY)
         
     def __len__(self):
         return len(self.images)   
@@ -86,8 +113,8 @@ class RenderEngine:
         self.size = (0, 0)
         self.layers = {} # layer_id -> layer
         
-    def add_layer(self, layer_id, layer_name, z_order, sort_sprites, absolute):
-        l = _Layer(layer_name, z_order, sort_sprites, absolute)
+    def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color, absolute):
+        l = _Layer(layer_name, z_order, sort_sprites, use_color, absolute)
         self.layers[layer_id] = l
         
     def remove_layer(self, layer_id):

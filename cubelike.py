@@ -48,12 +48,34 @@ def run():
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
-    render_eng.add_layer(gs.FLOOR_LAYER, "floors", 0, False, True)
-    render_eng.add_layer(gs.BW_WALL_AND_FLOOR_LAYER, "between wall and floor", 5, False, True)
-    render_eng.add_layer(gs.WALL_LAYER, "walls", 10, False, True)
-    render_eng.add_layer(gs.ENTITY_LAYER, "entities", 15, True, True)
-    render_eng.add_layer(gs.UI_0_LAYER, "ui_0", 20, False, False)
-    render_eng.add_layer(gs.UI_1_LAYER, "ui_1", 25, False, False)
+    
+    COLOR = True
+    ABSOL = True
+    SORTS = True
+    render_eng.add_layer(
+            gs.FLOOR_LAYER, 
+            "floors", 0, 
+            False, False, True)
+    render_eng.add_layer(
+            gs.SHADOW_LAYER, 
+            "shadow_layer", 5, 
+            False, False, False)
+    render_eng.add_layer(
+            gs.WALL_LAYER, 
+            "walls", 10, 
+            False, False, False)
+    render_eng.add_layer(
+            gs.ENTITY_LAYER, 
+            "entities", 15, 
+            SORTS, COLOR, False)
+    render_eng.add_layer(
+            gs.UI_0_LAYER, 
+            "ui_0", 20, 
+            False, False, ABSOL)
+    render_eng.add_layer(
+            gs.UI_1_LAYER, 
+            "ui_1", 25, 
+            False, False, ABSOL)
     
     raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
@@ -64,8 +86,11 @@ def run():
     
     world = build_me_a_world(15, 15)
     
-    for bun in world.get_all_bundles():
+    for bun in world.get_all_bundles(World.WALL):
         render_eng.update(bun, layer_id=gs.WALL_LAYER)
+        
+    for bun in world.get_all_bundles(World.FLOOR):
+        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
         
     player = Player(80, 80)
     world.add(player)

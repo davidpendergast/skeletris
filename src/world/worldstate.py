@@ -105,13 +105,14 @@ class World:
                 return None
                 
     
-    def get_all_bundles(self):
+    def get_all_bundles(self, geo_id):
         res = []
         for x in range(0, self.size()[0]):
             for y in range(0, self.size()[1]):
-                bun = self.get_geo_bundle(x, y)
-                if bun is not None:
-                    res.append(bun)
+                if self.get_geo(x, y) == geo_id:
+                    bun = self.get_geo_bundle(x, y)
+                    if bun is not None:
+                        res.append(bun)
                     
         return res
       

@@ -4,7 +4,7 @@ class GlobalState:
 
     def __init__(self):
         self.FLOOR_LAYER = 0
-        self.BW_WALL_AND_FLOOR_LAYER = 5
+        self.SHADOW_LAYER = 5
         self.WALL_LAYER = 10
         self.ENTITY_LAYER = 15
         self.UI_0_LAYER = 20

@@ -13,6 +13,8 @@ class Entity:
         self._x = x
         self._y = y
         self.rect = pygame.Rect(int(x), int(y), w, h)
+        self._img = None     # main image: ImageBundle
+        self._shadow = None  # shadow image: ImageBundle
         
     def x(self):
         return self.rect[0]
@@ -90,6 +92,21 @@ class Entity:
     def update(self, world, gs, input_state, render_engine):
         pass 
 
+    def update_images(self, anim_tick):
+        if self._shadow is None and self.get_shadow_sprite() is not None:
+            self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0,
+                absolute=False, scale=2, depth=-1)
+        
+        if self._shadow is not None:    
+            sh_model = self._shadow.model()    
+            sh_scale = self._shadow.scale()    
+            sh_x = self.x() - (sh_model.width() * sh_scale - self.w()) // 2
+            sh_y = self.y() + self.h() - (sh_model.height() * sh_scale // 2)
+            self._shadow = self._shadow.update(new_x=sh_x, new_y=sh_y)
+    
+    def get_shadow_sprite(self):
+        return None
+
     def get_depth(self):
         """
             returns: value in [4, 5]
@@ -99,32 +116,35 @@ class Entity:
     def is_player(self):
         return False
         
-             
 
 class Player(Entity):
 
     def __init__(self, x, y):
-        Entity.__init__(self, x, y, 24, 24)
-        self._bundle = img.ImageBundle(spriteref.player_idle_0, x, y, 
+        Entity.__init__(self, x, y, 24, 12)
+        self._img = img.ImageBundle(spriteref.player_idle_0, x, y, 
                 absolute=False, scale=2, depth=self.get_depth())
         self.is_moving = False
         self.facing_right = True
         self.move_speed = 2
-            
+        
+    def get_shadow_sprite(self):
+        return spriteref.medium_shadow    
                
-    def _regen_bundle(self, anim_tick):
+    def update_images(self, anim_tick):
         if self.is_moving:
             model = spriteref.player_move_all[anim_tick % len(spriteref.player_move_all)]
         else:
             model = spriteref.player_idle_all[(anim_tick // 2) % len(spriteref.player_idle_all)]
-        x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
-        y = self.y() - (model.height() * self._bundle.scale() - self.h())
+        
+        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         xflip = not self.facing_right
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, 
+        self._img = self._img.update(new_model=model, new_x=x, new_y=y, 
                 new_depth=depth, new_xflip=xflip)
-        return self._bundle
-            
+        
+        super().update_images(anim_tick) # get the shadow
+  
             
     def update(self, world, gs, input_state, render_engine):
         move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
@@ -143,8 +163,10 @@ class Player(Entity):
         
         if move_x != 0:
             self.facing_right = move_x > 0
-            
-        render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
+        
+        self.update_images(gs.anim_tick)
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
+        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER) 
         
         if input_state.was_pressed(inputs.INTERACT):
             print("player_pos={}, ({}, {})".format(self.rect, self._x, self._y))
@@ -156,20 +178,25 @@ class Player(Entity):
 class Enemy(Entity):
     def __init__(self, x, y, sprites):
         Entity.__init__(self, x, y, 32, 32)
-        self._bundle = img.ImageBundle(sprites[0], x, y, absolute=False, scale=2, depth=self.get_depth())
+        self._img = img.ImageBundle(sprites[0], x, y, absolute=False, scale=2, depth=self.get_depth())
         self.facing_left = True
         self.sprites = sprites
         self.dir = [0, 0]
+        
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow 
     
-    def _regen_bundle(self, anim_tick):
+    def update_images(self, anim_tick):
         model = self.sprites[(anim_tick // 2) % len(self.sprites)]
-        x = self.x() - (model.width() * self._bundle.scale() - self.w()) // 2
-        y = self.y() - (model.height() * self._bundle.scale() - self.h())
+        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         xflip = not self.facing_left
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, 
+        self._img = self._img.update(new_model=model, new_x=x, new_y=y, 
                 new_depth=depth, new_xflip=xflip)
-        return self._bundle
+                
+        super().update_images(anim_tick)
+        
         
     def update(self, world, gs, input_state, render_engine):
         if random.random() < 0.01:
@@ -204,7 +231,9 @@ class Enemy(Entity):
         if move_x != 0:
             self.facing_left = move_x < 0 
 
-        render_engine.update(self._regen_bundle(gs.anim_tick), layer_id=gs.ENTITY_LAYER) 
+        self.update_images(gs.anim_tick)
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
+        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
         
 
 class ChestEntity(Entity):
@@ -212,9 +241,9 @@ class ChestEntity(Entity):
         Entity.__init__(self, x, y, 24, 24)
         self.ticks_to_open = 60
         self.current_cooldown = self.ticks_to_open
-        self._bundle = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
+        self._img = img.ImageBundle(spriteref.chest_closed, x, y, absolute=False, scale=2, depth=self.get_depth())
     
-    def _regen_bundle(self):
+    def update_images(self):
         if self.is_open():
             model = spriteref.chest_open_1
         elif self.current_cooldown < self.ticks_to_open:
@@ -222,12 +251,11 @@ class ChestEntity(Entity):
         else:
             model = spriteref.chest_closed
             
-        x = self.x() - (model.width() * self._bundle.scale() - self.w())
-        y = self.y() - (model.height() * self._bundle.scale() - self.h())
+        x = self.x() - (model.width() * self._img.scale() - self.w())
+        y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
-        return self._bundle
-        
+        self._img = self._img.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
+          
     def is_open(self):
         return self.current_cooldown <= 0
     
@@ -240,7 +268,6 @@ class ChestEntity(Entity):
             vel = (speed*math.cos(angle), speed*math.sin(angle))
             world.add(PotionEntity(c[0], c[1], vel=vel))
             
-    
     def update(self, world, gs, input_state, render_engine):
         
         if not self.is_open():
@@ -259,11 +286,23 @@ class ChestEntity(Entity):
             if self.is_open():
                 self._do_open(world)           
              
-        render_engine.update(self._regen_bundle(), layer_id=gs.ENTITY_LAYER) 
+        self.update_images()
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
         
         
 class ItemEntity(Entity):
-    pass
+    def __init__(self, item, cx, cy, vel=(0, 0)):
+        self.item = item
+        x = cx - 8
+        y = cy - 8
+        Entity.__init__(self, x, y, 16, 16)
+        self._cubes = []
+        self.pickup_delay = 45
+        self.vel = [vel[0], vel[1]]
+        self.fric = 0.90
+        
+    def update_images(self):
+        pass
     
     
 class PotionEntity(Entity):
@@ -271,18 +310,17 @@ class PotionEntity(Entity):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
-        self._bundle = img.ImageBundle(spriteref.potion_small, x, y, absolute=False, scale=2, depth=5)
+        self._img = img.ImageBundle(spriteref.potion_small, x, y, absolute=False, scale=2, depth=5)
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]]
         self.fric = 0.90
     
-    def _regen_bundle(self):
-        model = self._bundle.model()
-        x = self.x() - (model.width() * self._bundle.scale() - self.w())
-        y = self.y() - (model.height() * self._bundle.scale() - self.h())
+    def update_images(self):
+        model = self._img.model()
+        x = self.x() - (model.width() * self._img.scale() - self.w())
+        y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        self._bundle = self._bundle.update(new_model=model, new_x=x, new_y=y, new_depth=depth)   
-        return self._bundle
+        self._img = self._img.update(new_model=model, new_x=x, new_y=y, new_depth=depth)   
         
     def can_pickup(self):
         return self.pickup_delay <= 0
@@ -299,6 +337,7 @@ class PotionEntity(Entity):
             
         self.move(*self.vel, world=world, and_search=True)
             
-        render_engine.update(self._regen_bundle(), layer_id=gs.ENTITY_LAYER) 
+        self.update_images()
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
         
     
