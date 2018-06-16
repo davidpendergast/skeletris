@@ -46,7 +46,7 @@ STAT_DESCRIPTIONS = {
     StatType.POTION_COOLDOWN:"-X% Potion Cooldowns"
 }    
 
-STAT_COLORS = collections.defaultdict(lambda: (1, 1, 1))
+STAT_COLORS = collections.defaultdict(lambda: (0.85, 0.85, 0.85))
 STAT_COLORS.update({
         StatType.ATT: (1, 0.65, 0.65),
         StatType.DEF: (0.65, 0.65, 1),
@@ -167,7 +167,7 @@ class ItemFactory:
     def gen_item():
         name = "Cube of Hate"
         stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.DEF, 32), ItemStat(StatType.VIT, 3), ItemStat(StatType.POTION_HEALING, 32),
-                ItemStat(StatType.MAX_HEALTH, 23)]
+                ItemStat(StatType.MAX_HEALTH, 23), ItemStat(StatType.LIFE_LEECH, 0.5)]
         cubes = ItemFactory.gen_cubes(6)
         color = [1, random.random(), random.random()]
         random.shuffle(color)

@@ -81,6 +81,7 @@ class ItemInfoPane:
         self.item_image = None
         self.title_text = None
         self.core_texts = []
+        self.non_core_texts = []
         
         self._build_images()
         
@@ -102,16 +103,25 @@ class ItemInfoPane:
         
         self.title_text = TextImage(16*sc, 12*sc, self.item.name, scale=2*sc)
         
-        h = 38*sc
+        line_spacing = 3*sc
+        
+        h = 32*sc + line_spacing
         lvl_txt = TextImage((1 + 112)*sc, h, self.item.level_string(), scale=2*sc)
         self.core_texts.append(lvl_txt)
         h += lvl_txt.line_height()
 
         for stat in self.item.core_stats():
+            h += line_spacing
             stat_txt = TextImage(112*sc, h, str(stat), color=stat.color(), scale=2*sc)
             self.core_texts.append(stat_txt)
-            h += stat_txt.line_height()     
-                   
+            h += stat_txt.line_height()   
+         
+        h = 128*sc    
+        for stat in self.item.non_core_stats():
+            h += line_spacing
+            stat_txt = TextImage(16*sc, h, str(stat), color=stat.color(), scale=2*sc)
+            self.non_core_texts.append(stat_txt)
+            h += stat_txt.line_height()         
                     
     def all_bundles(self):
         yield self.top_panel
@@ -122,6 +132,10 @@ class ItemInfoPane:
             yield bun
             
         for text in self.core_texts:
+            for bun in text.all_bundles():
+                yield bun
+                
+        for text in self.non_core_texts:
             for bun in text.all_bundles():
                 yield bun
         
