@@ -1,5 +1,8 @@
 import pygame
 
+import string
+import collections
+
 from src.renderengine.img import ImageModel 
 
 all_imgs = []
@@ -42,6 +45,21 @@ small_shadow = make(80, 32, 16, 8)
 medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 chest_shadow = make(96, 40, 32, 8)
+
+item_panel_top = make(272, 0, 208, 128)
+item_panel_middle = make(272, 128, 208, 16)
+item_panel_botton = make(272, 144, 208, 16)
+
+_chars = [letter for letter in string.ascii_lowercase]
+_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "="])
+_qmark = make(160, 115, 5, 5)
+alphabet = collections.defaultdict(lambda: _qmark)
+for i in range(0, len(_chars)):
+    alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
+for i in range(0, 10):
+    c = "0123456789"[i]
+    alphabet[c] = make(5*i, 120, 5, 5)
+    
 
 
 """Lookup table for wall sprites:   

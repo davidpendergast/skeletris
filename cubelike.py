@@ -8,6 +8,7 @@ from src.world.worldstate import World
 from src.world.entities import Player, Enemy, ChestEntity
 import src.renderengine.img as img
 from src.renderengine.engine import RenderEngine
+from src.items.itemrendering import TextImage, ItemImage, ItemInfoPane
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
@@ -82,7 +83,7 @@ def run():
     render_eng.add_layer(
             gs.UI_0_LAYER, 
             "ui_0", 20, 
-            False, False, ABSOL)
+            False, COLOR, ABSOL)
     render_eng.add_layer(
             gs.UI_1_LAYER, 
             "ui_1", 25, 
@@ -94,8 +95,12 @@ def run():
     width = img_surface.get_width()
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
-    
+        
     world = build_me_a_world(15, 15, render_eng, gs)
+    
+    text_img = TextImage(15, 15, "also i still wanna see \nthe incredibles\nso hmu")
+    for bun in text_img.all_bundles():
+        render_eng.update(bun, layer_id=gs.UI_0_LAYER)
     
     clock = pygame.time.Clock()    
     

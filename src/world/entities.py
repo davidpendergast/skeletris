@@ -396,9 +396,7 @@ class ItemEntity(Entity):
                    
     def can_unsituate(self):
         return self.unsituated_time < 500      
-                
-        
-                    
+          
     def update(self, world, gs, input_state, render_engine):
         if self.pickup_delay > 0:
             self.pickup_delay -= 1

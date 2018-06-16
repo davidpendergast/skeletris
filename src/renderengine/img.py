@@ -13,7 +13,7 @@ def gen_unique_id():
 
 class ImageBundle:
 
-    def __init__(self, model, x, y, absolute=True, scale=1, depth=1, xflip=False, color=(0.5, 1, 1), uid=None):
+    def __init__(self, model, x, y, absolute=True, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
