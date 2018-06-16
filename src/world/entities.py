@@ -137,6 +137,10 @@ class Player(Entity):
         
     def get_shadow_sprite(self):
         return spriteref.medium_shadow    
+    
+    def raw_center(self):
+        """returns: unrounded center coordinates"""
+        return (self._x + self.w(), self._y + self.h())
                
     def update_images(self, anim_tick):
         if self.is_moving:

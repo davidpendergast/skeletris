@@ -134,7 +134,7 @@ class World:
         p = self.get_player()
         if p is not None:
             for w_layer in gs.world_layers:
-                p_center = p.center()
+                p_center = p.raw_center() # use float-valued center for smoothness
                 offs_x = -(p_center[0] - gs.screen_size[0] // 2)
                 offs_y = -(p_center[1] - gs.screen_size[1] // 2)
                 

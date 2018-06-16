@@ -219,6 +219,10 @@ class RenderEngine:
                 gl_FragColor = texture2D(tex0, vTexCoord) * gl_Color;
             }
             ''')
+            
+        self.shader.begin()    
+        texLoc = glGetUniformLocation(self.shader.program, "tex0")
+        glUniform1i(texLoc, 0)
 
     def set_texture(self, img_data, width, height):
         """
@@ -284,10 +288,6 @@ class RenderEngine:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         layers_to_draw = list(self.layers.values())
         layers_to_draw.sort(key=lambda x: x.z_order())
-        
-        self.shader.begin()    
-        texLoc = glGetUniformLocation(self.shader.program, "tex0")
-        glUniform1i(texLoc, 0)
 
         for layer in layers_to_draw:
             if layer.is_dirty():
@@ -301,7 +301,9 @@ class RenderEngine:
                 glTranslatef(offs[0], offs[1], 0.0)
             
             layer.render()
-        
+    
+    
+    def cleanup(self):
         self.shader.end()
             
          
