@@ -106,12 +106,61 @@ class _Layer:
     def z_order(self):
         return self._z_order
 
+
+def printOpenGLError():
+    err = glGetError()
+    if (err != GL_NO_ERROR):
+        print('GLERROR: ', gluErrorString(err))
+
+
+class Shader:
+
+    def initShader(self, vertex_shader_source, fragment_shader_source):
+        # create program
+        self.program=glCreateProgram()
+        print('create program')
+        printOpenGLError()
+
+        # vertex shader
+        print('compile vertex shader...')
+        self.vs = glCreateShader(GL_VERTEX_SHADER)
+        glShaderSource(self.vs, [vertex_shader_source])
+        glCompileShader(self.vs)
+        glAttachShader(self.program, self.vs)
+        printOpenGLError()
+        print(glGetShaderInfoLog(self.vs))
+
+        # fragment shader
+        print('compile fragment shader...')
+        self.fs = glCreateShader(GL_FRAGMENT_SHADER)
+        glShaderSource(self.fs, [fragment_shader_source])
+        glCompileShader(self.fs)
+        glAttachShader(self.program, self.fs)
+        printOpenGLError()
+        print(glGetShaderInfoLog(self.fs))
+
+        print('link...')
+        glLinkProgram(self.program)
+        printOpenGLError()
+
+    def get_program(self):
+        return self.program
+
+    def begin(self):
+        if glUseProgram(self.program):
+            printOpenGLError()
+
+    def end(self):
+        glUseProgram(0)
+
+
 class RenderEngine:
     def __init__(self):
         self.bundles = {} # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
         self.layers = {} # layer_id -> layer
+        self.shader = None
         
     def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color, absolute):
         l = _Layer(layer_name, z_order, sort_sprites, use_color, absolute)
@@ -144,14 +193,34 @@ class RenderEngine:
         vstring = glGetString(GL_VERSION)
         vstring = vstring.decode() if vstring is not None else None
         print ("running OpenGL version: {}".format(vstring))
+        
+        self.tex_id = None
+        
+        self.shader=Shader()
+        self.shader.initShader('''
+            varying vec2 vTexCoord;
 
+            void main() {
+	            vTexCoord = gl_MultiTexCoord0.st;
+	            gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+                gl_FrontColor = gl_Color;
+            }
+            ''','''
+            uniform sampler2D tex0;
+
+            varying vec2 vTexCoord;
+
+            void main() {
+                gl_FragColor = texture2D(tex0, vTexCoord) * gl_Color;
+            }
+            ''')
 
     def set_texture(self, img_data, width, height):
         """
             img_data: image data in string RGBA format.
         """
-        bgImgGL = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, bgImgGL)
+        self.tex_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.tex_id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glEnable(GL_TEXTURE_2D)    
@@ -211,6 +280,10 @@ class RenderEngine:
         layers_to_draw = list(self.layers.values())
         layers_to_draw.sort(key=lambda x: x.z_order())
         
+        self.shader.begin()    
+        texLoc = glGetUniformLocation(self.shader.program, "tex0")
+        glUniform1i(texLoc, 0)
+
         for layer in layers_to_draw:
             if layer.is_dirty():
                 layer.rebuild(self.bundles)
@@ -218,8 +291,13 @@ class RenderEngine:
             if layer.is_absolute():
                 # todo : set uniform camera pos
                 pass
-                
+
+            glMatrixMode(GL_MODELVIEW)
+            glLoadIdentity()
+            
             layer.render()
+        
+        self.shader.end()
             
          
         

@@ -98,7 +98,7 @@ def run():
         
     world = build_me_a_world(15, 15, render_eng, gs)
     
-    text_img = TextImage(15, 15, "also i still wanna see \nthe incredibles\nso hmu")
+    text_img = TextImage(15, 15, "also i still wanna see \nthe incredibles\nso hmu", color=(0.5, 0.8, 1))
     for bun in text_img.all_bundles():
         render_eng.update(bun, layer_id=gs.UI_0_LAYER)
     
