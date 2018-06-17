@@ -25,6 +25,8 @@ class StatType(Enum):
     HOLE_BONUS = "HOLE_BONUS"
     
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]  
+SPECIAL_STATS = [StatType.HOLE_BONUS]
+NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
  
 STAT_DESCRIPTIONS = {
     StatType.ATT:"+{} ATT",
@@ -164,15 +166,37 @@ class ItemFactory:
                 
         return tuple(res)
         
+    def gen_core_stats():
+        res = []
+        for stat in CORE_STATS:
+            if random.random() < 0.333:
+                res.append(ItemStat(stat, int(random.random()*30)))
+        return res
+        
+    def gen_non_core_stats(n):
+        choices = list(NON_CORE_STATS)
+        res = []
+        while len(res) < n and len(choices) > 0:
+            choice = choices[int(len(choices)*random.random())]
+            value = 1 + int(random.random() * 16)
+            res.append(ItemStat(choice, value))
+            
+        return res
+        
     def gen_item():
         name = "Cube of Hate"
-        stats = [ItemStat(StatType.ATT, 14), ItemStat(StatType.DEF, 32), ItemStat(StatType.VIT, 3), ItemStat(StatType.POTION_HEALING, 32),
-                ItemStat(StatType.MAX_HEALTH, 23), ItemStat(StatType.LIFE_LEECH, 0.5)]
-        cubes = ItemFactory.gen_cubes(6)
-        color = [1, random.random(), random.random()]
+        stats = ItemFactory.gen_core_stats() 
+        stats.extend(ItemFactory.gen_non_core_stats(int(4*random.random())))
+        cubes = ItemFactory.gen_cubes(5 + int(2 * random.random()))
+        color = [1, 0.5 + random.random()/2, 0.5 + random.random()/2]
         random.shuffle(color)
         color = tuple(color)
-        return Item(name, 15, stats, cubes, color)
+        cube_art = {}
+        for c in cubes:
+            if random.random() < 0.15:
+                cube_art[c] = int(6*random.random())
+        level = 1 + int(63 * random.random())   
+        return Item(name, level, stats, cubes, color, cube_art)
 
      
 if __name__ == "__main__":

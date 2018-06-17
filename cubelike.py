@@ -49,6 +49,12 @@ def build_me_a_world(width, height, render_eng, gs):
         
     player = Player(80, 80)
     w.add(player)
+    
+    item = ItemFactory.gen_item()
+    item_panel = ItemInfoPane(item)
+    for b in item_panel.all_bundles():
+        render_eng.update(b, layer_id=gs.UI_0_LAYER)
+    
     return w
    
     
@@ -98,12 +104,6 @@ def run():
     render_eng.set_texture(texture_data, width, height)
         
     world = build_me_a_world(1, 1, render_eng, gs)
-    
-    item = ItemFactory.gen_item()
-    print(item)
-    item_panel = ItemInfoPane(item)
-    for b in item_panel.all_bundles():
-        render_eng.update(b, layer_id=gs.UI_0_LAYER)
         
     clock = pygame.time.Clock()    
     

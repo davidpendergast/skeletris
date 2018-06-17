@@ -64,16 +64,38 @@ class TextImage:
         
 
 class ItemImage:
-    def __init__(self, item, scale):
+    
+    def __init__(self, x, y, item, scale):
+        self.x = x
+        self.y = y
         self.item = item
         self.scale = scale
         self._cube_images = []
+        
+        self._build_images()
+        
+    def _build_images(self):
+        for cube in self.item.cubes:
+            art = 0 if cube not in self.item.cube_art else self.item.cube_art[cube]
+            sprite = spriteref.item_piece_bigs[art]
+            xpos = self.x + sprite.width()*self.scale*cube[0]
+            ypos = self.y + sprite.height()*self.scale*cube[1]
+            img = ImageBundle(sprite, xpos, ypos, scale=self.scale, color=self.item.color)
+            self._cube_images.append(img)
+            
+    def all_bundles(self):
+        for b in self._cube_images:
+            yield b
+            
+    def calc_size(item, scale):
+        sprite = spriteref.item_piece_bigs[0]
+        return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
+        
 
 class ItemInfoPane:
+    
     def __init__(self, item):
-        self.item = item
-        self.x = 0
-        self.y = 0
+        self.item = item        
         
         self.top_panel = None
         self.mid_panels = []
@@ -82,6 +104,7 @@ class ItemInfoPane:
         self.title_text = None
         self.core_texts = []
         self.non_core_texts = []
+        self.item_image = None
         
         self._build_images()
         
@@ -99,6 +122,7 @@ class ItemInfoPane:
             bot_sprite = spriteref.item_panel_bottom_0
         else:
             bot_sprite = spriteref.item_panel_bottom_1
+            h -= bot_sprite.height() * sc  # covers up part of the top 
         self.bot_panel = ImageBundle(bot_sprite, 0, h, scale=sc)
         
         self.title_text = TextImage(16*sc, 12*sc, self.item.name, scale=2*sc)
@@ -121,7 +145,13 @@ class ItemInfoPane:
             h += line_spacing
             stat_txt = TextImage(16*sc, h, str(stat), color=stat.color(), scale=2*sc)
             self.non_core_texts.append(stat_txt)
-            h += stat_txt.line_height()         
+            h += stat_txt.line_height()   
+        
+        item_img_sc = sc    
+        item_img_size = ItemImage.calc_size(self.item, item_img_sc)
+        item_img_x = 16*sc + 80*sc // 2 - item_img_size[0] // 2
+        item_img_y = 32*sc + 80*sc // 2 - item_img_size[1] // 2
+        self.item_image = ItemImage(item_img_x, item_img_y, self.item, item_img_sc)
                     
     def all_bundles(self):
         yield self.top_panel
@@ -138,6 +168,9 @@ class ItemInfoPane:
         for text in self.non_core_texts:
             for bun in text.all_bundles():
                 yield bun
+                
+        for bun in self.item_image.all_bundles():
+            yield bun
         
         
         

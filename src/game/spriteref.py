@@ -40,6 +40,7 @@ potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 
 item_piece_small = make(72, 32, 4, 4)
+item_piece_bigs = [make(i*16, 96, 16, 16) for i in range(0, 6)]
 
 small_shadow = make(80, 32, 16, 8)
 medium_shadow = make(80, 40, 16, 8)
