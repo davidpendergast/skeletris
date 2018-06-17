@@ -202,7 +202,8 @@ class RenderEngine:
         self.tex_id = None
         
         self.shader=Shader()
-        self.shader.initShader('''
+        self.shader.initShader(
+            '''
             varying vec2 vTexCoord;
 
             void main() {
@@ -210,13 +211,23 @@ class RenderEngine:
 	            gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
                 gl_FrontColor = gl_Color;
             }
-            ''','''
+            ''',
+            '''
             uniform sampler2D tex0;
 
             varying vec2 vTexCoord;
 
             void main() {
-                gl_FragColor = texture2D(tex0, vTexCoord) * gl_Color;
+                vec4 tcolor = texture2D(tex0, vTexCoord);
+                for (int i = 0; i < 3; i++) {
+                    if (tcolor[i] >= 0.99) {
+                        gl_FragColor[i] = tcolor[i] * gl_Color[i];
+                    } else {
+                        gl_FragColor[i] = tcolor[i] * gl_Color[i] * gl_Color[i];                    
+                    }
+                }
+                gl_FragColor.w = tcolor.w * gl_Color.w;
+                
             }
             ''')
             
