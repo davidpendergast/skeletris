@@ -25,6 +25,41 @@ class StatType(Enum):
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]  
 SPECIAL_STATS = [StatType.HOLE_BONUS]
 NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
+
+ITEM_CORE_NAME = {
+    (): "Vessel",
+    tuple([StatType.ATT]): "Cube",
+    tuple([StatType.DEF]): "Tetroid",
+    tuple([StatType.VIT]): "Quadshape",
+    (StatType.ATT, StatType.ATT): "Cube",
+    (StatType.ATT, StatType.DEF): "Cuboid",
+    (StatType.ATT, StatType.VIT): "Cubeshape",
+    (StatType.DEF, StatType.ATT): "Tetra",
+    (StatType.DEF, StatType.DEF): "Tetroid",
+    (StatType.DEF, StatType.VIT): "Tetrashape",
+    (StatType.VIT, StatType.ATT): "Quadracube",
+    (StatType.VIT, StatType.DEF): "Quadroid",
+    (StatType.VIT, StatType.VIT): "Quadshape"
+}
+     
+ITEM_NAME_END = {
+    StatType.ATTACK_RADIUS:" of Envy",
+    StatType.ATTACK_SPEED:" of Haste",
+    StatType.ATTACK_DAMAGE:" of Fury",
+    StatType.MOVEMENT_SPEED:" of Pride",
+    StatType.DODGE:" of Evasion",
+    StatType.ACCURACY:" of Truth",
+    StatType.LIFE_REGEN:" of Regrowth",
+    StatType.LIFE_ON_HIT:" of Feeding",
+    StatType.LIFE_LEECH:" of Lust",
+    StatType.MAX_HEALTH:" of Gluttony",
+    StatType.POTION_HEALING:" of Renewal",
+    StatType.POTION_COOLDOWN:" of Wetness"
+}
+
+ITEM_NAME_SPECIAL_MODIFIER = {
+    StatType.HOLE_BONUS: "Holy {}"
+}
  
 STAT_DESCRIPTIONS = {
     StatType.ATT:"+{} ATT",
@@ -179,11 +214,34 @@ class ItemFactory:
             
         return res
         
+    def get_special_stats(cubes):
+        return []
+        
+    def get_name(core_types, non_core_types, special_types):
+        if len(core_types) > 2:
+            core_types = core_types[:2]
+        name = ITEM_CORE_NAME[tuple(core_types)]
+        
+        if len(non_core_types) > 0:
+            name += ITEM_NAME_END[non_core_types[0]]
+        
+        if len(special_types) > 0:
+            name = ITEM_NAME_SPECIAL_MODIFIER[special_types[0]].format(name)
+            
+        return name
+
     def gen_item():
-        name = "Cube of Hate"
-        stats = ItemFactory.gen_core_stats() 
-        stats.extend(ItemFactory.gen_non_core_stats(int(4*random.random())))
+        core_stats = ItemFactory.gen_core_stats() 
+        non_core_stats = ItemFactory.gen_non_core_stats(int(4*random.random()))
         cubes = ItemFactory.gen_cubes(5 + int(2 * random.random()))
+        special_stats = ItemFactory.get_special_stats(cubes)
+        
+        name = ItemFactory.get_name(
+                list(map(lambda x: x.stat_type, core_stats)),
+                list(map(lambda x: x.stat_type, non_core_stats)),
+                list(map(lambda x: x.stat_type, special_stats)))
+        
+        stats = core_stats + non_core_stats + special_stats
         color = [1, 0.5 + random.random()/2, 0.5 + random.random()/2]
         random.shuffle(color)
         color = tuple(color)
@@ -192,7 +250,9 @@ class ItemFactory:
             if random.random() < 0.15:
                 cube_art[c] = int(6*random.random())
         level = 1 + int(63 * random.random())   
+        
         return Item(name, level, stats, cubes, color, cube_art)
+        
 
      
 if __name__ == "__main__":
