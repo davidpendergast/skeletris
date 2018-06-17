@@ -18,6 +18,9 @@ class Utils:
             
     def mag(v):
         return math.sqrt(v[0]*v[0] + v[1]*v[1])
+        
+    def dist(v1, v2):
+        return Utils.mag(Utils.sub(v1, v2))
             
     def rand_vec(length=1):
         angle = 6.2832 * random.random()

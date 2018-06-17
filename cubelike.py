@@ -3,6 +3,7 @@ import pygame
 import src.game.spriteref as spriteref
 from src.game.globalstate import GlobalState
 from src.game.inputs import InputState
+from src.game.ui import UiState
 
 from src.world.worldstate import World
 from src.world.entities import Player, Enemy, ChestEntity
@@ -50,10 +51,10 @@ def build_me_a_world(width, height, render_eng, gs):
     player = Player(80, 80)
     w.add(player)
     
-    item = ItemFactory.gen_item()
-    item_panel = ItemInfoPane(item)
-    for b in item_panel.all_bundles():
-        render_eng.update(b, layer_id=gs.UI_0_LAYER)
+    #item = ItemFactory.gen_item()
+    #item_panel = ItemInfoPane(item)
+    #for b in item_panel.all_bundles():
+    #    render_eng.update(b, layer_id=gs.UI_0_LAYER)
     
     return w
    
@@ -65,6 +66,7 @@ def run():
     
     input_state = InputState()
     gs = GlobalState()
+    ui_state = UiState()
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
@@ -92,9 +94,9 @@ def run():
             "ui_0", 20, 
             False, COLOR)
     render_eng.add_layer(
-            gs.UI_1_LAYER, 
-            "ui_1", 25, 
-            False, False)
+            gs.UI_TOOLTIP_LAYER, 
+            "ui_tooltips", 25, 
+            False, COLOR)
     
     raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
@@ -131,9 +133,15 @@ def run():
                 input_state.set_mouse_pos(None)
                 
         if input_state.was_pressed(pygame.K_RETURN):
-            world = build_me_a_world(15, 15, render_eng, gs)
+            world = build_me_a_world(7, 7, render_eng, gs)
         
         world.update_all(gs, input_state, render_eng)
+        
+        ui_state.update(world, gs, input_state, render_eng)
+        
+        camera = gs.get_world_camera()
+        for layer_id in gs.world_layers:
+            render_eng.set_layer_offset(layer_id, *camera)
         
         render_eng.render_layers()
         pygame.display.flip()

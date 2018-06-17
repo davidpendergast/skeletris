@@ -343,6 +343,9 @@ class ItemEntity(Entity):
         
     def get_shadow_sprite(self):
         return spriteref.small_shadow
+    
+    def get_item(self):
+        return self.item
         
     def is_item(self):
         return True

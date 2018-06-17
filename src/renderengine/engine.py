@@ -162,14 +162,21 @@ class RenderEngine:
         self.camera_pos = [0, 0]
         self.size = (0, 0)
         self.layers = {} # layer_id -> layer
+        self.ordered_layers = []
         self.shader = None
         
     def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color):
         l = _Layer(layer_name, z_order, sort_sprites, use_color)
         self.layers[layer_id] = l
         
+        self.ordered_layers = list(self.layers.values())
+        self.ordered_layers.sort(key=lambda x: x.z_order())
+        
     def remove_layer(self, layer_id):
         del self.layers[layer_id]
+        
+        self.ordered_layers = list(self.layers.values())
+        self.ordered_layers.sort(key=lambda x: x.z_order())
         
     def set_layer_offset(self, layer_id, offs_x, offs_y):
         self.layers[layer_id].set_offset(offs_x, offs_y)
@@ -179,6 +186,10 @@ class RenderEngine:
             for l in self.layers.values():
                 l.remove(uid)
         self.bundles.clear()
+        
+    def clear_bundles(self, bundles, layer_id):
+        for bun in bundles:
+            self.remove(bun, layer_id=layer_id)
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
@@ -274,33 +285,11 @@ class RenderEngine:
             return key.uid() in self.bundles
         except ValueError:
             return False
-                
-    def render_scene(self):
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        to_draw = list(self.bundles.values())
-        to_draw.sort(key=lambda x: -x.depth())
-        
-        vertices = []
-        text_coords = []
-        indices = []
-        
-        for bundle in to_draw:
-             bundle.add_urself(self.camera_pos, vertices, text_coords, indices)
-        
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glVertexPointer(2, GL_FLOAT, 0, vertices)
-        glTexCoordPointer(2, GL_FLOAT, 0, text_coords)
-        glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, indices)
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY);
         
     def render_layers(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        layers_to_draw = list(self.layers.values())
-        layers_to_draw.sort(key=lambda x: x.z_order())
 
-        for layer in layers_to_draw:
+        for layer in self.ordered_layers:
             if layer.is_dirty():
                 layer.rebuild(self.bundles)
 
@@ -309,7 +298,7 @@ class RenderEngine:
             
             offs = layer.offset()
             if offs != (0, 0):
-                glTranslatef(offs[0], offs[1], 0.0)
+                glTranslatef(-offs[0], -offs[1], 0.0)
             
             layer.render()
     

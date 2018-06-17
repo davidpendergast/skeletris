@@ -1,5 +1,6 @@
 import src.renderengine.img as img   
 import src.game.spriteref as spriteref
+from src.utils.util import Utils
 
 
 CELLSIZE = 64
@@ -44,6 +45,9 @@ class World:
         return None
     
     def entities_in_circle(self, center, radius):
+        """
+            returns: list of entities in circle, sorted by distance from center 
+        """
         r2 = radius*radius
         res = []
         for e in self.entities:
@@ -52,6 +56,9 @@ class World:
             dy = e_c[1] - center[1]
             if dx*dx + dy*dy <= r2:
                 res.append(e)
+        
+        res.sort(key=lambda e: Utils.dist(center, e.center()))
+        
         return res       
         
     def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
@@ -133,12 +140,8 @@ class World:
         
         p = self.get_player()
         if p is not None:
-            for w_layer in gs.world_layers:
-                p_center = p.raw_center() # use float-valued center for smoothness
-                offs_x = -(p_center[0] - gs.screen_size[0] // 2)
-                offs_y = -(p_center[1] - gs.screen_size[1] // 2)
-                
-                render_engine.set_layer_offset(w_layer, offs_x, offs_y)
+            # raw center for scrolling smoothness
+            gs.set_world_camera_center(*p.raw_center())
                 
                 
                 
