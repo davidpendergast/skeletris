@@ -93,6 +93,9 @@ class Entity:
         
     def update(self, world, gs, input_state, render_engine):
         pass 
+        
+    def cleanup(self, gs, render_engine):
+        pass
 
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
@@ -325,14 +328,14 @@ class ChestEntity(Entity):
         
         
 class ItemEntity(Entity):
-    def __init__(self, item, cx, cy, vel=(0, 0)):
+    def __init__(self, item, cx, cy, vel=None):
         self.item = item
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
         self._cube_imgs = []
         self.pickup_delay = 45
-        self.vel = [vel[0], vel[1]]
+        self.vel = [vel[0], vel[1]] if vel is not None else self.rand_vel()
         self.fric = 0.90
         self.bounce_offset = int(random.random() * 100)
         
@@ -340,6 +343,11 @@ class ItemEntity(Entity):
         self.push_radius = 20
         self.situated = False
         self.unsituated_time = 0
+        
+    def rand_vel(self):
+        angle = random.random() * 6.28 # 2pi-ish
+        speed = 2 + random.random() * 3
+        return [speed*math.cos(angle), speed*math.sin(angle)]
         
     def get_shadow_sprite(self):
         return spriteref.small_shadow
@@ -349,7 +357,7 @@ class ItemEntity(Entity):
         
     def is_item(self):
         return True
-        
+            
     def update_images(self, anim_tick):
         if len(self._cube_imgs) == 0:
             for c in self.item.cubes:
@@ -422,6 +430,11 @@ class ItemEntity(Entity):
         for c_img in self._cube_imgs:
             render_engine.update(c_img, layer_id=gs.ENTITY_LAYER) 
         render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+        
+    def cleanup(self, gs, render_eng):
+        for c_img in self._cube_imgs:
+            render_eng.remove(c_img, layer_id=gs.ENTITY_LAYER) 
+        render_eng.remove(self._shadow, layer_id=gs.SHADOW_LAYER)
         
             
     

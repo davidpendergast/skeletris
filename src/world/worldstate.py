@@ -22,6 +22,7 @@ class World:
         self._geo_bundle_lookup = {} # x,y -> bundle id
             
         self.entities = []
+        self._ents_to_remove = []
         
     def cellsize(self):
         return CELLSIZE
@@ -37,6 +38,9 @@ class World:
             entity.set_y(y)
             
         self.entities.append(entity)
+        
+    def remove(self, entity):
+        self._ents_to_remove.append(entity)
         
     def get_player(self):
         for e in self.entities:
@@ -135,6 +139,11 @@ class World:
       
               
     def update_all(self, gs, input_state, render_engine):
+        for e in self._ents_to_remove:
+            self.entities.remove(e) # n^2 but whatever
+            e.cleanup(gs, render_engine)
+        self._ents_to_remove.clear()
+            
         for e in self.entities:
             e.update(self, gs, input_state, render_engine)
         

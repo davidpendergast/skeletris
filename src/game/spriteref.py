@@ -52,6 +52,10 @@ item_panel_middle = make(256, 128, 224, 16)
 item_panel_bottom_0 = make(256, 144, 224, 16)
 item_panel_bottom_1 = make(256, 160, 224, 16) # if no bonus attributes
 
+inv_panel_top = make(480, 0, 160, 128)
+inv_panel_mid = make(480, 128, 160, 16)
+inv_panel_bot = make(480, 144, 160, 16)
+
 _chars = [letter for letter in string.ascii_lowercase]
 _chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":"])
 _qmark = make(160, 115, 5, 5)

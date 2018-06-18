@@ -113,7 +113,6 @@ def run():
     
     while running:
         gs.update()
-        input_state.update(gs)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -131,6 +130,7 @@ def run():
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
+        input_state.update(gs)
                 
         if input_state.was_pressed(pygame.K_RETURN):
             world = build_me_a_world(7, 7, render_eng, gs)
