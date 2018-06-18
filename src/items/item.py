@@ -29,32 +29,32 @@ NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECI
 ITEM_CORE_NAME = {
     (): "Vessel",
     tuple([StatType.ATT]): "Cube",
-    tuple([StatType.DEF]): "Tetroid",
-    tuple([StatType.VIT]): "Quadshape",
-    (StatType.ATT, StatType.ATT): "Cube",
+    tuple([StatType.DEF]): "Tetra",
+    tuple([StatType.VIT]): "Quad",
+    (StatType.ATT, StatType.ATT): "Cubes",
     (StatType.ATT, StatType.DEF): "Cuboid",
-    (StatType.ATT, StatType.VIT): "Cubeshape",
-    (StatType.DEF, StatType.ATT): "Tetra",
-    (StatType.DEF, StatType.DEF): "Tetroid",
-    (StatType.DEF, StatType.VIT): "Tetrashape",
-    (StatType.VIT, StatType.ATT): "Quadracube",
+    (StatType.ATT, StatType.VIT): "Cubit",
+    (StatType.DEF, StatType.ATT): "Tetrit",
+    (StatType.DEF, StatType.DEF): "Tetras",
+    (StatType.DEF, StatType.VIT): "Tetrit",
+    (StatType.VIT, StatType.ATT): "Quadcube",
     (StatType.VIT, StatType.DEF): "Quadroid",
-    (StatType.VIT, StatType.VIT): "Quadshape"
+    (StatType.VIT, StatType.VIT): "Quads"
 }
      
 ITEM_NAME_END = {
-    StatType.ATTACK_RADIUS:" of Envy",
-    StatType.ATTACK_SPEED:" of Haste",
-    StatType.ATTACK_DAMAGE:" of Fury",
-    StatType.MOVEMENT_SPEED:" of Pride",
-    StatType.DODGE:" of Evasion",
-    StatType.ACCURACY:" of Truth",
-    StatType.LIFE_REGEN:" of Regrowth",
-    StatType.LIFE_ON_HIT:" of Feeding",
-    StatType.LIFE_LEECH:" of Lust",
-    StatType.MAX_HEALTH:" of Gluttony",
-    StatType.POTION_HEALING:" of Renewal",
-    StatType.POTION_COOLDOWN:" of Wetness"
+    StatType.ATTACK_RADIUS:"{} of Envy",
+    StatType.ATTACK_SPEED:"Haste {}",
+    StatType.ATTACK_DAMAGE:"{} of Fury",
+    StatType.MOVEMENT_SPEED:"Pride {}",
+    StatType.DODGE:"Hiding {}",
+    StatType.ACCURACY:"Truth {}",
+    StatType.LIFE_REGEN:"Growth {}",
+    StatType.LIFE_ON_HIT:"{} of Feed",
+    StatType.LIFE_LEECH:"{} of Lust",
+    StatType.MAX_HEALTH:"Gluttony {}",
+    StatType.POTION_HEALING:"Renewal {}",
+    StatType.POTION_COOLDOWN:"Wetness {}"
 }
 
 ITEM_NAME_SPECIAL_MODIFIER = {
@@ -223,7 +223,7 @@ class ItemFactory:
         name = ITEM_CORE_NAME[tuple(core_types)]
         
         if len(non_core_types) > 0:
-            name += ITEM_NAME_END[non_core_types[0]]
+            name = ITEM_NAME_END[non_core_types[0]].format(name)
         
         if len(special_types) > 0:
             name = ITEM_NAME_SPECIAL_MODIFIER[special_types[0]].format(name)
