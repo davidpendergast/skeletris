@@ -206,26 +206,35 @@ class UiState:
         
     def _update_item_panel(self, world, gs, input_state, render_eng):
         should_destroy = True
-            
+        item_to_display = None
+           
         if input_state.mouse_in_window() and self.item_on_cursor is None: 
             screen_pos = input_state.mouse_pos()
-            world_pos = gs.screen_to_world_coords(screen_pos)
-            item_entity = self._get_item_entity_at_world_coords(world, world_pos)
-            if item_entity is not None:
-                closest = item_entity.get_item()
-                if self.item_panel is not None and self.item_panel.item is not closest:
-                    self._destroy_panel(self.item_panel, gs.UI_TOOLTIP_LAYER, render_eng)
-                    self.item_panel = None
+            
+            if self.in_inventory_panel(screen_pos):
+                grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
+                if grid_n_cell is not None:
+                    grid, cell = grid_n_cell
+                    item_to_display = grid.item_at_position(cell)
+            else:   
+                world_pos = gs.screen_to_world_coords(screen_pos)
+                item_entity = self._get_item_entity_at_world_coords(world, world_pos)
+                if item_entity is not None:
+                    item_to_display = item_entity.get_item()
                     
-                if self.item_panel is None:
-                    self.item_panel = ItemInfoPane(closest)
-                    for bun in self.item_panel.all_bundles():
-                        render_eng.update(bun, layer_id = gs.UI_TOOLTIP_LAYER)
+        if item_to_display is not None:
+            if self.item_panel is not None and self.item_panel.item is not item_to_display:
+                self._destroy_panel(self.item_panel, gs.UI_TOOLTIP_LAYER, render_eng)
+                self.item_panel = None
                 
-                offs = (-screen_pos[0], -screen_pos[1])
-                render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, *offs)
-                should_destroy = False
-                    
+            if self.item_panel is None:
+                self.item_panel = ItemInfoPane(item_to_display)
+                for bun in self.item_panel.all_bundles():
+                    render_eng.update(bun, layer_id = gs.UI_TOOLTIP_LAYER)
+            
+            offs = (-screen_pos[0], -screen_pos[1])
+            render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, *offs)
+            should_destroy = False            
         
         if should_destroy and self.item_panel is not None:
             self._destroy_panel(self.item_panel, gs.UI_TOOLTIP_LAYER, render_eng)
@@ -337,9 +346,7 @@ class UiState:
             self.inventory_panel = InventoryPanel(gs.get_inventory_state())
             for bun in self.inventory_panel.all_bundles():
                 render_eng.update(bun, layer_id=gs.UI_0_LAYER)
-                
-                
-            
+                  
         if self.item_on_cursor_image is not None:
             screen_pos = input_state.mouse_pos()
             if screen_pos is not None:
