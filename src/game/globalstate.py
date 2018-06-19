@@ -20,6 +20,13 @@ class GlobalState:
         self.anim_tick = 0
         
         self._world_camera_center = [0, 0]
+        self.inventory_state = None
+        
+    def set_inventory_state(self, state):
+        self.inventory_state = state
+        
+    def get_inventory_state(self):
+        return self.inventory_state
     
     def set_world_camera_center(self, x, y):
         self._world_camera_center = (x, y)
@@ -37,3 +44,6 @@ class GlobalState:
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
             self.anim_tick += 1
+            
+            
+        

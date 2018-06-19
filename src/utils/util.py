@@ -26,3 +26,7 @@ class Utils:
         angle = 6.2832 * random.random()
         return [length*math.cos(angle), length*math.sin(angle)]
         
+    def rect_contains(rect, v):
+        return (v[0] >= rect[0] and v[0] < rect[0] + rect[2]
+                and v[1] >= rect[1] and v[1] < rect[1] + rect[3])
+        
