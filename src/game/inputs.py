@@ -7,6 +7,7 @@ RIGHT = [pygame.K_d, pygame.K_RIGHT]
 DOWN = [pygame.K_s, pygame.K_DOWN]
 CROUCH = DOWN + [pygame.K_LSHIFT, pygame.K_RSHIFT]
 SHOOT = [pygame.K_j, pygame.K_x]
+INVENTORY = [pygame.K_r]
 INTERACT = [pygame.K_k, pygame.K_z, pygame.K_RETURN]
 EXIT = [pygame.K_ESCAPE]
 

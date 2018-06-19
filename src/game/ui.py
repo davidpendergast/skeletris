@@ -4,6 +4,9 @@ from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.game.inputs as inputs
 from src.world.entities import ItemEntity
+from src.items.itemrendering import TextImage
+import src.items.item as item_module
+
 
 class InventoryState:
     def __init__(self):
@@ -15,11 +18,25 @@ class InventoryPanel:
         self.top_img = None
         self.mid_imgs = []
         self.bot_img = None
+        self.title_text = None
         
-        self._build_images()
-        
-    def _build_images(self):
         sc = 2
+        
+        self.equip_grid_rect = [8*sc, 24*sc, 80*sc, 80*sc]
+        self.inv_grid_rect = [8*sc, 12*sc, 144*sc, 16*self.state.rows*sc]
+        self.info_rect = [96*sc, 24*sc, 56*sc, 32*sc]
+        self.stats_rect = [96*sc, 64*sc, 56*sc, 40*sc]
+        
+        self.info_text = None
+        self.att_text = None
+        self.def_text = None
+        self.vit_text = None
+        self.hp_text = None
+        self.dps_text = None 
+        
+        self._build_images(sc)
+        
+    def _build_images(self, sc):
         self.top_img = ImageBundle(spriteref.inv_panel_top, 0, 0, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
@@ -27,12 +44,50 @@ class InventoryPanel:
         y = (128 + self.state.rows*16 - 16)*sc
         self.bot_img = ImageBundle(spriteref.inv_panel_bot, 0, y, scale=sc) 
         
+        self.title_text = TextImage(8*sc, 8*sc, "Inventory", scale=int(sc*3/2))
+        
+        i_xy = [self.info_rect[0], self.info_rect[1]]
+        self.info_text = TextImage(*i_xy, "Ghast\n\nLVL: 18\nROOM:8\nKILL:405", scale=sc)
+        
+        s_xy = [self.stats_rect[0], self.stats_rect[1]]
+        self.att_text = TextImage(*s_xy, "ATT:95", scale=sc, 
+                color=item_module.STAT_COLORS[item_module.StatType.ATT])
+        s_xy[1] += self.att_text.line_height()
+        
+        self.def_text = TextImage(*s_xy, "DEF:17", scale=sc, 
+                color=item_module.STAT_COLORS[item_module.StatType.DEF])
+        s_xy[1] += self.def_text.line_height()
+        
+        self.vit_text = TextImage(*s_xy, "VIT:35", scale=sc, 
+                color=item_module.STAT_COLORS[item_module.StatType.VIT])
+        s_xy[1] += 2 * self.def_text.line_height()
+        
+        self.hp_text = TextImage(*s_xy, "HP: 192", scale=sc, 
+                color=item_module.STAT_COLORS[None])
+        s_xy[1] += self.hp_text.line_height()
+        
+        self.dps_text = TextImage(*s_xy, "DPS:79.3", scale=sc, 
+                color=item_module.STAT_COLORS[None])
+        
     def all_bundles(self):
         yield self.top_img
         for img in self.mid_imgs:
             yield img
         yield self.bot_img
-
+        for bun in self.title_text.all_bundles():
+            yield bun
+        for bun in self.info_text.all_bundles():
+            yield bun
+        for bun in self.att_text.all_bundles():
+            yield bun
+        for bun in self.def_text.all_bundles():
+            yield bun
+        for bun in self.vit_text.all_bundles():
+            yield bun
+        for bun in self.hp_text.all_bundles():
+            yield bun
+        for bun in self.dps_text.all_bundles():
+            yield bun
 class UiState:
 
     def __init__(self):
@@ -84,7 +139,7 @@ class UiState:
             self.item_panel = None
             
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(inputs.INTERACT):
+        if input_state.was_pressed(inputs.INVENTORY):
             if self.inventory_panel == None: 
                 self.inventory_panel = InventoryPanel(InventoryState())
                 

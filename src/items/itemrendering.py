@@ -13,14 +13,15 @@ class TextImage:
         self.color = color
         self.scale = scale
         self._letter_images = []
-        self.kerning = 1
+        self.x_kerning = 1
+        self.y_kerning = 1
         
         self._build_images()
         
     def _calc_width(self):
         max_line_w = 0
         cur_line_w = 0
-        char_w = (spriteref.alphabet["a"].width() + self.kerning) * self.scale
+        char_w = (spriteref.alphabet["a"].width() + self.x_kerning) * self.scale
         for c in self.text:
             if c == "\n":
                 cur_line_w = 0
@@ -30,15 +31,17 @@ class TextImage:
         return max_line_w
         
     def line_height(self):
-        return (spriteref.alphabet["a"].height() + self.kerning) * self.scale
+        return (spriteref.alphabet["a"].height() + self.y_kerning) * self.scale
         
     def _build_images(self):
-        ypos = 0
+        ypos = self.y_kerning
         
         x_shift = 0
         if self.center_w is not None:
             true_width = self._calc_width()
             x_shift = self.x + self.center_w // 2 - true_width // 2     
+        else:
+            x_shift = self.x_kerning
             
         xpos = x_shift
             
@@ -46,16 +49,16 @@ class TextImage:
         for i in range(0, len(self.text)):
             c = self.text[i]
             if c == " ":
-                xpos += (self.kerning + a_sprite.width()) * self.scale
+                xpos += (self.x_kerning + a_sprite.width()) * self.scale
             elif c == "\n":
                 xpos = x_shift
-                ypos += (self.kerning + a_sprite.height()) * self.scale
+                ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
                 sprite = spriteref.alphabet[c]
                 img = ImageBundle(sprite, self.x + xpos, self.y + ypos, 
                         scale=self.scale, color=self.color)
                 self._letter_images.append(img)  
-                xpos += (self.kerning + a_sprite.width()) * self.scale
+                xpos += (self.x_kerning + a_sprite.width()) * self.scale
                     
     def all_bundles(self):
         for b in self._letter_images:
