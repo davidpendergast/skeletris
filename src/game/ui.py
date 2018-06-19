@@ -7,10 +7,70 @@ from src.world.entities import ItemEntity
 from src.items.itemrendering import TextImage
 import src.items.item as item_module
 
+class ItemGrid:
+    def __init__(self, size):
+        self.size = size
+        self.items = {} # coords -> item
+    
+    def can_place(self, item, pos):
+        if (item.w() + pos[0] > self.size[0] or 
+                item.h() + pos[1] > self.size[1]):
+            return False
+            
+        for cell in self._cells_occupied(item, pos):
+            if self.item_at_position(cell) is not None:
+                return False
+                
+        return True
+        
+    def place(self, item, pos):
+        if self.can_place(item, pos):
+            self.items[pos] = item
+            
+    def remove(self, item):
+        for pos in self.items:
+            if self.items[pos] is item:
+                del self.items[pos]
+                return True
+        return False
+        
+    def item_at_position(self, pos):
+        for origin in self.items:
+            for cell in self._cells_occupied(self.items[origin], origin):
+                if cell == pos:
+                    return self.items[origin]
+        return None
+        
+    def _cells_occupied(self, item, pos):
+        for cube in item.cubes:
+            yield (pos[0] + cube[0], pos[1] + cube[1])
+        
+    def all_items(self):
+        return self.items.values()
+        
+class ItemGridImage:
+    def __init__(self, x, y, scale, grid):
+        self.x = x
+        self.y = y
+        self.grid = grid
+        self.scale = scale
+        
+        self.item_images = []
+        
+    def build_images(self):
+        pass
+        
+    def all_images(self):
+        pass
+        
 
 class InventoryState:
     def __init__(self):
         self.rows = 7
+        self.cols = 8
+        self.equip_grid = ItemGrid((5, 5))
+        self.inv_grid = ItemGrid((self.rows, self.cols))
+        
 
 class InventoryPanel:
     def __init__(self, state):
@@ -68,6 +128,7 @@ class InventoryPanel:
         
         self.dps_text = TextImage(*s_xy, "DPS:79.3", scale=sc, 
                 color=item_module.STAT_COLORS[None])
+        
         
     def all_bundles(self):
         yield self.top_img
