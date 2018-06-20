@@ -129,6 +129,9 @@ class Item:
     def h(self):
         return max([c[1] for c in self.cubes]) + 1
         
+    def all_stats(self):
+        return self.stats
+        
     def core_stats(self):
         return [s for s in self.stats if s.stat_type in CORE_STATS]
         

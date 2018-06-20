@@ -6,54 +6,10 @@ import src.game.inputs as inputs
 from src.world.entities import ItemEntity
 from src.items.itemrendering import TextImage
 import src.items.item as item_module
+from src.items.item import StatType
 from src.utils.util import Utils
+from src.game.inventory import InventoryState, PlayerStatType
 
-class ItemGrid:
-    def __init__(self, size):
-        self.size = size
-        self.items = {} # coords -> item
-    
-    def can_place(self, item, pos):
-        if (item.w() + pos[0] > self.size[0] or 
-                item.h() + pos[1] > self.size[1]):
-            return False
-            
-        for cell in self._cells_occupied(item, pos):
-            if self.item_at_position(cell) is not None:
-                return False
-                
-        return True
-        
-    def place(self, item, pos):
-        if self.can_place(item, pos):
-            self.items[pos] = item
-            
-    def remove(self, item):
-        for pos in self.items:
-            if self.items[pos] is item:
-                del self.items[pos]
-                return True
-        return False
-        
-    def item_at_position(self, pos):
-        for origin in self.items:
-            for cell in self._cells_occupied(self.items[origin], origin):
-                if cell == pos:
-                    return self.items[origin]
-        return None
-        
-    def _cells_occupied(self, item, pos):
-        for cube in item.cubes:
-            yield (pos[0] + cube[0], pos[1] + cube[1])
-        
-    def all_items(self):
-        return self.items.values()
-        
-    def get_pos(self, item):
-        for pos in self.items:  # inefficient but whatever
-            if self.items[pos] is item:
-                return pos
-        return None
         
         
 class ItemGridImage:
@@ -79,18 +35,12 @@ class ItemGridImage:
         for item_img in self.item_images:
             for bun in item_img.all_bundles():
                 yield bun   
-
-class InventoryState:
-    def __init__(self):
-        self.rows = 7
-        self.cols = 9
-        self.equip_grid = ItemGrid((5, 5))
-        self.inv_grid = ItemGrid((self.cols, self.rows))
         
 
 class InventoryPanel:
-    def __init__(self, state):
-        self.state = state
+    def __init__(self, player_state):
+        self.player_state = player_state
+        self.state = self.player_state.inventory()
         self.top_img = None
         self.mid_imgs = []
         self.bot_img = None
@@ -127,27 +77,35 @@ class InventoryPanel:
         
         self.title_text = TextImage(8*sc, 8*sc, "Inventory", scale=int(sc*3/2))
         
+        name_str = self.player_state.name()
+        lvl_str = self.player_state.level()
+        info_txt = "{}\n\nLVL: {}\nROOM:8\nKILL:405".format(name_str, lvl_str)
         i_xy = [self.info_rect[0], self.info_rect[1]]
-        self.info_text = TextImage(*i_xy, "Ghast\n\nLVL: 18\nROOM:8\nKILL:405", scale=sc)
+        self.info_text = TextImage(*i_xy, info_txt, scale=sc)
         
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
-        self.att_text = TextImage(*s_xy, "ATT:95", scale=sc, 
+        att_str = "ATT:{}".format(self.player_state.stat_value(StatType.ATT))
+        self.att_text = TextImage(*s_xy, att_str, scale=sc, 
                 color=item_module.STAT_COLORS[item_module.StatType.ATT])
         s_xy[1] += self.att_text.line_height()
         
-        self.def_text = TextImage(*s_xy, "DEF:17", scale=sc, 
+        def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
+        self.def_text = TextImage(*s_xy, def_str, scale=sc, 
                 color=item_module.STAT_COLORS[item_module.StatType.DEF])
         s_xy[1] += self.def_text.line_height()
         
-        self.vit_text = TextImage(*s_xy, "VIT:35", scale=sc, 
+        vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
+        self.vit_text = TextImage(*s_xy, vit_str, scale=sc, 
                 color=item_module.STAT_COLORS[item_module.StatType.VIT])
         s_xy[1] += 2 * self.def_text.line_height()
         
-        self.hp_text = TextImage(*s_xy, "HP: 192", scale=sc, 
+        hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))
+        self.hp_text = TextImage(*s_xy, hp_str, scale=sc, 
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
-        self.dps_text = TextImage(*s_xy, "DPS:79.3", scale=sc, 
+        dps_str = "DPS:{}".format(self.player_state.stat_value(PlayerStatType.DPS))
+        self.dps_text = TextImage(*s_xy, dps_str, scale=sc, 
                 color=item_module.STAT_COLORS[None])
         
         e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
@@ -242,11 +200,8 @@ class UiState:
             
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
         if input_state.was_pressed(inputs.INVENTORY):
-            if self.inventory_panel == None: 
-                self.inventory_panel = InventoryPanel(gs.get_inventory_state())
-                
-                for bun in self.inventory_panel.all_bundles():
-                    render_eng.update(bun, layer_id=gs.UI_0_LAYER)
+            if self.inventory_panel is None: 
+                self.rebuild_inventory(gs, render_eng)
             else:
                 self._destroy_panel(self.inventory_panel, gs.UI_0_LAYER, render_eng)
                 self.inventory_panel = None
@@ -290,7 +245,6 @@ class UiState:
             
         elif input_state.mouse_was_pressed():
             screen_pos = input_state.mouse_pos()
-            world_pos = gs.screen_to_world_coords(screen_pos)
             
             if self.in_inventory_panel(screen_pos):
                 clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
@@ -313,8 +267,8 @@ class UiState:
                             create_image = True
                             rebuild_inventory = True
                     
-            else:
-                # we clicked in world
+            else: # we clicked in world
+                world_pos = gs.screen_to_world_coords(screen_pos)
                 if self.item_on_cursor is None:
                     clicked_item = self._get_item_entity_at_world_coords(world, world_pos)
                     if clicked_item is not None:
@@ -341,18 +295,21 @@ class UiState:
                 render_eng.update(bun, gs.UI_TOOLTIP_LAYER)
                 
         if rebuild_inventory:
-            for bun in self.inventory_panel.all_bundles():
-                render_eng.remove(bun, layer_id=gs.UI_0_LAYER)
-            self.inventory_panel = InventoryPanel(gs.get_inventory_state())
-            for bun in self.inventory_panel.all_bundles():
-                render_eng.update(bun, layer_id=gs.UI_0_LAYER)
+            self.rebuild_inventory(gs, render_eng)
                   
         if self.item_on_cursor_image is not None:
             screen_pos = input_state.mouse_pos()
             if screen_pos is not None:
                 render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, -screen_pos[0], -screen_pos[1])
-                    
-           
+     
+    def rebuild_inventory(self, gs, render_eng):                
+        if self.inventory_panel is not None:
+            for bun in self.inventory_panel.all_bundles():
+                render_eng.remove(bun, layer_id=gs.UI_0_LAYER)
+                
+        self.inventory_panel = InventoryPanel(gs.player_state())
+        for bun in self.inventory_panel.all_bundles():
+            render_eng.update(bun, layer_id=gs.UI_0_LAYER)      
         
     
     def update(self, world, gs, input_state, render_eng):

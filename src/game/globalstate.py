@@ -20,13 +20,13 @@ class GlobalState:
         self.anim_tick = 0
         
         self._world_camera_center = [0, 0]
-        self.inventory_state = None
+        self._player_state = None
         
-    def set_inventory_state(self, state):
-        self.inventory_state = state
+    def set_player_state(self, state):
+        self._player_state = state
         
-    def get_inventory_state(self):
-        return self.inventory_state
+    def player_state(self):
+        return self._player_state
     
     def set_world_camera_center(self, x, y):
         self._world_camera_center = (x, y)

@@ -4,7 +4,7 @@ import src.game.spriteref as spriteref
 from src.game.globalstate import GlobalState
 from src.game.inputs import InputState
 from src.game.ui import UiState
-from src.game.ui import InventoryState
+from src.game.inventory import PlayerState, InventoryState
 
 from src.world.worldstate import World
 from src.world.entities import Player, Enemy, ChestEntity
@@ -67,7 +67,7 @@ def run():
     
     input_state = InputState()
     gs = GlobalState()
-    gs.set_inventory_state(InventoryState())
+    gs.set_player_state(PlayerState("ghast", InventoryState()))
     ui_state = UiState()
     
     render_eng = RenderEngine()
