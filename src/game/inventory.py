@@ -26,7 +26,7 @@ class ItemGrid:
     def try_to_replace(self, item, pos):
         if (item.w() + pos[0] > self.size[0] or 
                 item.h() + pos[1] > self.size[1]):
-            return False
+            return None
         
         hit_item = None    
         for cell in self._cells_occupied(item, pos):

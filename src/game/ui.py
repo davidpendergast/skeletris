@@ -146,6 +146,7 @@ class UiState:
         self.inventory_panel = None
         
         self.item_on_cursor = None
+        self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
         
     def _destroy_panel(self, panel, layer_id, render_eng):
@@ -247,7 +248,14 @@ class UiState:
             screen_pos = input_state.mouse_pos()
             
             if self.in_inventory_panel(screen_pos):
-                clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
+                if self.item_on_cursor is not None:
+                    # when holding an item, gotta offset the click to the top left corner
+                    grid_click_pos = Utils.add(screen_pos, self.item_on_cursor_offs)
+                    grid_click_pos = Utils.add(grid_click_pos, (16, 16)) # plus some fudge XXX
+                else:
+                    grid_click_pos = screen_pos    
+                    
+                clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(grid_click_pos)
                 if clicked_grid_n_cell is not None:
                     grid = clicked_grid_n_cell[0]
                     cell = clicked_grid_n_cell[1]
@@ -295,7 +303,9 @@ class UiState:
             self.item_on_cursor_image = None
         
         elif create_image:
+            size = ItemImage.calc_size(self.item_on_cursor, 2)
             self.item_on_cursor_image = ItemImage(0, 0, self.item_on_cursor, 2)
+            self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
             for bun in self.item_on_cursor_image.all_bundles():
                 render_eng.update(bun, gs.UI_TOOLTIP_LAYER)
                 
@@ -305,7 +315,9 @@ class UiState:
         if self.item_on_cursor_image is not None:
             screen_pos = input_state.mouse_pos()
             if screen_pos is not None:
-                render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, -screen_pos[0], -screen_pos[1])
+                x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
+                y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
+                render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, x_offs, y_offs)
      
     def rebuild_inventory(self, gs, render_eng):                
         if self.inventory_panel is not None:
