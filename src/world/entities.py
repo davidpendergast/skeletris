@@ -335,7 +335,7 @@ class ItemEntity(Entity):
         Entity.__init__(self, x, y, 16, 16)
         self._cube_imgs = []
         self.pickup_delay = 45
-        self.vel = [vel[0], vel[1]] if vel is not None else self.rand_vel()
+        self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.90
         self.bounce_offset = int(random.random() * 100)
         
@@ -344,10 +344,12 @@ class ItemEntity(Entity):
         self.situated = False
         self.unsituated_time = 0
         
-    def rand_vel(self):
-        angle = random.random() * 6.28 # 2pi-ish
-        speed = 2 + random.random() * 3
-        return [speed*math.cos(angle), speed*math.sin(angle)]
+    def rand_vel(speed=None, direction=None):
+        speed = speed if speed is not None else 2 + random.random() * 3
+        if direction is None:
+            direction = (0, 0) # becomes random
+        direction = Utils.set_length(direction, 1.0)
+        return [speed*direction[0], speed*direction[1]]
         
     def get_shadow_sprite(self):
         return spriteref.small_shadow

@@ -292,7 +292,9 @@ class UiState:
                     p = world.get_player()
                     if p is not None:
                         p_center = p.center() # drop position
-                        item_entity = ItemEntity(self.item_on_cursor, *p_center)
+                        drop_dir = Utils.sub(world_pos, p_center)
+                        vel = ItemEntity.rand_vel(direction=drop_dir)
+                        item_entity = ItemEntity(self.item_on_cursor, *p_center, vel=vel)
                         world.add(item_entity)
                         destroy_image = True
                         self.item_on_cursor = None
