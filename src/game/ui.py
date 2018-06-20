@@ -298,13 +298,17 @@ class UiState:
                         world.add(item_entity)
                         destroy_image = True
                         self.item_on_cursor = None
-                    
+        
+        if input_state.was_pressed(inputs.INTERACT) and self.item_on_cursor is not None:
+            self.item_on_cursor = item_module.ItemFactory.rotate_item(self.item_on_cursor) 
+            create_image = True
+            destroy_image = True
                                      
         if destroy_image:
             self._destroy_panel(self.item_on_cursor_image, gs.UI_TOOLTIP_LAYER, render_eng)
             self.item_on_cursor_image = None
         
-        elif create_image:
+        if create_image:
             size = ItemImage.calc_size(self.item_on_cursor, 2)
             self.item_on_cursor_image = ItemImage(0, 0, self.item_on_cursor, 2)
             self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)

@@ -155,7 +155,17 @@ class Item:
         return res
         
         
-class ItemFactory:
+class ItemFactory:   
+    
+    def rotate_item(item):
+        new_cubes = []
+        for cube in item.cubes:
+            new_cubes.append((5 - cube[1], cube[0]))
+        new_cubes = ItemFactory._push_to_origin(new_cubes)
+        
+        return Item(item.name, item.level, item.stats, 
+                new_cubes, item.color, cube_art=item.cube_art)
+    
     def do_seed(seed):
         if seed is not None:
             random.seed(seed)
@@ -192,14 +202,18 @@ class ItemFactory:
                 random.shuffle(choices)
                 rejects = []
         
-        # push cubes to top left
-        min_x = min([c[0] for c in res])
-        min_y = min([c[1] for c in res])
-        if min_x > 0 or min_y > 0:
-            res = [(c[0] - min_x, c[1] - min_y) for c in res]
+        res = ItemFactory._push_to_origin(res)
                 
         return tuple(res)
-        
+    
+    def _push_to_origin(cubes):
+        min_x = min([c[0] for c in cubes])
+        min_y = min([c[1] for c in cubes])
+        if min_x > 0 or min_y > 0:
+            return [(c[0] - min_x, c[1] - min_y) for c in cubes]
+        else:
+            return cubes
+    
     def gen_core_stats():
         res = []
         for stat in CORE_STATS:
