@@ -251,14 +251,19 @@ class UiState:
                 if clicked_grid_n_cell is not None:
                     grid = clicked_grid_n_cell[0]
                     cell = clicked_grid_n_cell[1]
-                    print("clicked grid cell {}".format(cell))
                     if self.item_on_cursor is not None:
                         if grid.can_place(self.item_on_cursor, cell):
                             grid.place(self.item_on_cursor, cell)
                             self.item_on_cursor = None
                             destroy_image = True
                             rebuild_inventory = True
-                            print("placed item at {}".format(cell))
+                        else:
+                            replaced_with = grid.try_to_replace(self.item_on_cursor, cell)
+                            if replaced_with is not None:
+                                self.item_on_cursor = replaced_with
+                                destroy_image = True
+                                create_image = True
+                                rebuild_inventory = True
                     else:
                         clicked_item = grid.item_at_position(cell)
                         if clicked_item is not None:

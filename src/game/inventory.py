@@ -23,6 +23,30 @@ class ItemGrid:
         if self.can_place(item, pos):
             self.items[pos] = item
             
+    def try_to_replace(self, item, pos):
+        if (item.w() + pos[0] > self.size[0] or 
+                item.h() + pos[1] > self.size[1]):
+            return False
+        
+        hit_item = None    
+        for cell in self._cells_occupied(item, pos):
+            item_at_cell = self.item_at_position(cell)
+            if item_at_cell is not None:
+                if hit_item is not None and hit_item is not item_at_cell:
+                    # we're hitting two items, can't replace
+                    return None
+                else:
+                    hit_item = item_at_cell
+        
+        if hit_item is not None:
+            # we hit exactly one thing, so we can replace
+            self.remove(hit_item)
+            self.place(item, pos)
+            return hit_item
+        else:
+            return None
+                
+            
     def remove(self, item):
         for pos in self.items:
             if self.items[pos] is item:
