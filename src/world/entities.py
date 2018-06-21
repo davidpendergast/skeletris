@@ -131,6 +131,9 @@ class Entity:
         
     def is_chest(self):
         return False
+        
+    def is_enemy(self):
+        return False
 
 
 class AttackCircleArt(Entity):
@@ -147,7 +150,6 @@ class AttackCircleArt(Entity):
     def update_images(self): 
         progress = min(1, max(0, 1 - self.duration / self.initial_duration))
         idx = int(progress * len(spriteref.att_circles))
-        print("idx = " + str(idx))
         sprite = spriteref.att_circles[idx]
         x = self.x() - (sprite.width() * 2 - self.w()) // 2
         y = self.y() - (sprite.height() * 2 - self.h()) // 2
@@ -206,65 +208,38 @@ class Player(Entity):
  
  
 class Enemy(Entity):
-    def __init__(self, x, y, state, sprites):
+
+    def __init__(self, x, y, state):
         Entity.__init__(self, x, y, 32, 32)
         self.state = state
-        self._img = img.ImageBundle(sprites[0], x, y, scale=2, depth=self.get_depth())
-        self.facing_left = True
-        self.sprites = sprites
-        self.dir = [0, 0]
+        self._img = None
         
     def get_shadow_sprite(self):
         return spriteref.large_shadow 
     
-    def update_images(self, anim_tick):
-        model = self.sprites[(anim_tick // 2) % len(self.sprites)]
-        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (model.height() * self._img.scale() - self.h())
+    def update_images(self, sprite, facing_left, color=(1, 1, 1)):
+        if self._img is None:
+            self._img = img.ImageBundle(sprite, 0, 0, scale=2)
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        xflip = not self.facing_left
-        self._img = self._img.update(new_model=model, new_x=x, new_y=y, 
-                new_depth=depth, new_xflip=xflip)
-                
-        super().update_images(anim_tick)
+        xflip = not facing_left
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, 
+                new_depth=depth, new_xflip=xflip, new_color=color)
         
+    def cleanup(self, gs, render_engine):
+        render_engine.remove(self._img, layer_id=gs.ENTITY_LAYER)
+        render_engine.remove(self._shadow, layer_id=gs.SHADOW_LAYER)
         
     def update(self, world, gs, input_state, render_engine):
-        if random.random() < 0.01:
-            i = int(10 * random.random())
-            if i >= 4:
-                self.dir = [0, 0]
-            else:
-                self.dir = [[-1, 0], [1, 0], [0, 1], [0, -1]][i]
+        self.state.update(self, world, gs, input_state)
+        super().update_images(gs.anim_tick) # TODO - shadows are dumb
         
-        x1 = self.x()
-        x2 = self.x() + self.w()
-        y1 = self.y()
-        y2 = self.y() + self.h()
-        
-        if self.dir[0] < 0:
-            if world.get_geo_at(x1 - 1, y1) == World.WALL or world.get_geo_at(x1 - 1, y2) == World.WALL:
-                self.dir[0] = 1
-        elif self.dir[0] > 0:
-            if world.get_geo_at(x2 + 1, y1) == World.WALL or world.get_geo_at(x2 + 1, y2) == World.WALL:
-                self.dir[0] = -1
-        elif self.dir[1] > 0:
-            if world.get_geo_at(x1, y2 + 1) == World.WALL or world.get_geo_at(x2, y2 + 1) == World.WALL:
-                self.dir[1] = -1
-        elif self.dir[1] < 0:
-            if world.get_geo_at(x1, y1 - 1) == World.WALL or world.get_geo_at(x2, y1 - 1) == World.WALL:
-                self.dir[1] = 1
-        
-        move_x = self.dir[0] * 0.65
-        move_y = self.dir[1] * 0.65
-        self.move(move_x, move_y, world=world, and_search=True)
-        
-        if move_x != 0:
-            self.facing_left = move_x < 0 
-
-        self.update_images(gs.anim_tick)
         render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
         render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+        
+    def is_enemy(self):
+        return True
         
 
 class ChestEntity(Entity):
@@ -458,14 +433,14 @@ class ItemEntity(Entity):
     
     
 class PotionEntity(Entity):
-    def __init__(self, cx, cy, vel=(0, 0)):
+    def __init__(self, cx, cy, vel=None):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
         self._img = img.ImageBundle(spriteref.potion_small, x, y, 
                scale=2, depth=5)
         self.pickup_delay = 45
-        self.vel = [vel[0], vel[1]]
+        self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.90
     
     def update_images(self):

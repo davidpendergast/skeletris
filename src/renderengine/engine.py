@@ -265,6 +265,9 @@ class RenderEngine:
         self.camera_pos[1] = y - (self.size[1] // 2) if center else 0
         
     def remove(self, img_bundle, layer_id=None):
+        if img_bundle is None:
+            return
+            
         uid = img_bundle.uid()
         if uid in self.bundles:
             del self.bundles[img_bundle.uid()]
@@ -273,6 +276,9 @@ class RenderEngine:
             self.layers[layer_id].remove(uid)
         
     def update(self, img_bundle, layer_id=None):
+        if img_bundle is None:
+            return
+            
         uid = img_bundle.uid()
         self.bundles[uid] = img_bundle
         

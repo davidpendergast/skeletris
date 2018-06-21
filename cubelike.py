@@ -143,9 +143,10 @@ def run():
         input_state.update(gs)
                 
         if input_state.was_pressed(pygame.K_RETURN):
-            world = build_me_a_world(7, 7, render_eng, gs)
+            world = build_me_a_world(10, 10, render_eng, gs)
         
-        gs.player_state().update(world, gs, input_state)
+        player = world.get_player()
+        gs.player_state().update(player, world, gs, input_state)
         
         world.update_all(gs, input_state, render_eng)
         

@@ -92,7 +92,8 @@ class PlayerStatType(Enum):
     HP = "HP",
     DPS = "DPS",
     MOVESPEED = "MOVE_SPEED",
-    TICKS_PER_ATTACK = "TICKS_PER_ATTACK"
+    TICKS_PER_ATTACK = "TICKS_PER_ATTACK",
+    ATTACK_RADIUS = "ATTACK_RADIUS",
     
 class ActorState:
     def __init__(self, name, level, base_values):
@@ -100,6 +101,9 @@ class ActorState:
         self._level = level
         self._base_values = base_values
         self.current_hp = self.stat_value(PlayerStatType.HP)
+    
+    def update(self, entity, world, gs, input_state):
+        pass
     
     def name(self):
         return self._name
@@ -142,6 +146,10 @@ class ActorState:
         elif stat_type is PlayerStatType.MOVESPEED:
             base = self._base_values[stat_type]
             return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED))
+            
+        elif stat_type is PlayerStatType.ATTACK_RADIUS:
+            base = self._base_values[stat_type]
+            return round(base * (1 + self.stat_value(StatType.ATTACK_RADIUS)))
         
     def stat_value(self, stat_type):
         return 0
@@ -156,7 +164,8 @@ class PlayerState(ActorState):
             StatType.DEF: 10,
             StatType.VIT: 10,
             PlayerStatType.TICKS_PER_ATTACK: 30,
-            PlayerStatType.MOVESPEED: 2
+            PlayerStatType.MOVESPEED: 2,
+            PlayerStatType.ATTACK_RADIUS: 64
         })
         
         self.current_sprite = spriteref.player_idle_0
@@ -193,8 +202,18 @@ class PlayerState(ActorState):
     def _can_begin_attack(self):
         return self.delay_tick <= 0 and self.attack_tick <= 0
         
-    def update(self, world, gs, input_state):
-        player_entity = world.get_player()
+    def _activate_attack(self, player_entity, world):
+        pos = player_entity.center()
+        circle = AttackCircleArt(*pos, 60)
+        world.add(circle)
+        att_range = self.stat_value(PlayerStatType.ATTACK_RADIUS)
+        
+        hit_enemies = world.entities_in_circle(pos, att_range)
+        for e in hit_enemies:
+            if e.is_enemy():
+                e.state.deal_damage(15)
+        
+    def update(self, player_entity, world, gs, input_state):
         if player_entity is None:
             return
             
@@ -208,9 +227,7 @@ class PlayerState(ActorState):
         elif self.attack_tick > 0:
             self.attack_tick -= 1
             if self.attack_tick <= 0:
-                # TODO - dealing damage
-                circle = AttackCircleArt(*player_entity.center(), 60)
-                world.add(circle)
+                self._activate_attack(player_entity, world)
                 
                 self.attack_tick = 0
                 self.cur_attack_dur = 1
