@@ -63,6 +63,9 @@ def build_me_a_world(width, height, render_eng, gs):
 def run():
     pygame.init()
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
+    
+    pygame.display.set_caption("Cubelike")
+    
     screen = pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = InputState()
@@ -102,6 +105,11 @@ def run():
     
     raw_sheet = pygame.image.load("assets/image.png")
     img_surface = spriteref.build_spritesheet(raw_sheet)
+    
+    window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
+    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
+    pygame.display.set_icon(window_icon)
+    
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
     height = img_surface.get_height()

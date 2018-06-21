@@ -117,6 +117,7 @@ class ImageModel:
         self.y = y
         self.w = w
         self.h = h
+        self._rect = (x, y, w, h)
         
         # texture coords, origin bottom left corner
         self.x1 = 0
@@ -128,6 +129,9 @@ class ImageModel:
         self.ty1 = 0
         self.tx2 = 0
         self.ty2 = 0
+        
+    def rect(self):
+        return self._rect
         
     def size(self):
         return (self.w, self.h)
