@@ -3,6 +3,7 @@ from enum import Enum
 from src.items.item import StatType
 import src.game.spriteref as spriteref
 import src.game.inputs as inputs
+from src.world.entities import AttackCircleArt
 
 
 class ItemGrid:
@@ -189,6 +190,9 @@ class PlayerState(ActorState):
                     
         return value
         
+    def _can_begin_attack(self):
+        return self.delay_tick <= 0 and self.attack_tick <= 0
+        
     def update(self, world, gs, input_state):
         player_entity = world.get_player()
         if player_entity is None:
@@ -196,38 +200,46 @@ class PlayerState(ActorState):
             
         if self.delay_tick > 0:
             self.delay_tick -= 1
-        else:  
-            if self.attack_tick <= 0 and input_state.is_held(inputs.ATTACK):
-                self.cur_attack_dur = self.stat_value(PlayerStatType.TICKS_PER_ATTACK)
-                self.attack_tick = self.cur_attack_dur
-            
-            elif self.attack_tick > 0:
-                self.attack_tick -= 1
-                if self.attack_tick <= 0:
-                    # TODO deliver attack
-                    self.attack_tick = 0
-                    self.cur_attack_dur = 1
-                    self.delay_tick = 10
-            
-            # you can keep moving during the attack windup    
-            if self.delay_tick <= 0:
-                move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
-                move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
+             
+        if input_state.is_held(inputs.ATTACK) and self._can_begin_attack():
+            self.cur_attack_dur = self.stat_value(PlayerStatType.TICKS_PER_ATTACK)
+            self.attack_tick = self.cur_attack_dur
                 
-                self.is_moving = move_x != 0 or move_y != 0
+        elif self.attack_tick > 0:
+            self.attack_tick -= 1
+            if self.attack_tick <= 0:
+                # TODO - dealing damage
+                circle = AttackCircleArt(*player_entity.center(), 60)
+                world.add(circle)
                 
-                if move_x != 0 and move_y != 0:
-                    move_x /= 1.4142 
-                    move_y /= 1.4142   
-                    
-                move_x *= self.move_speed()
-                move_y *= self.move_speed()
-                    
-                player_entity.move(move_x, move_y, world=world, and_search=True)
-                if move_x != 0:
-                    self.facing_right = move_x > 0
+                self.attack_tick = 0
+                self.cur_attack_dur = 1
+                self.delay_tick = 12
+        
+        # you can keep moving during the attack windup    
+        move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
+        move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
+        
+        self.is_moving = move_x != 0 or move_y != 0
+        
+        if move_x != 0 and move_y != 0:
+            move_x /= 1.4142 
+            move_y /= 1.4142   
+        
+        if self.delay_tick > 0:
+            # half speed after attacking
+            move_x /= 2
+            move_y /= 2
+            
+        move_x *= self.move_speed()
+        move_y *= self.move_speed()
+            
+        player_entity.move(move_x, move_y, world=world, and_search=True)
+        if move_x != 0:
+            self.facing_right = move_x > 0
          
         player_entity.update_images(self.get_sprite(gs), self.facing_right)
+        player_entity.set_shadow_sprite(self.get_shadow_sprite())
         
     def attack_progress(self):
         if self.attack_tick <= 0:
@@ -246,6 +258,13 @@ class PlayerState(ActorState):
             return spriteref.player_move_all[gs.anim_tick % len(spriteref.player_move_all)]
         else:
             return spriteref.player_idle_all[(gs.anim_tick // 2) % len(spriteref.player_idle_all)] 
+            
+    def get_shadow_sprite(self):
+        if self.attack_tick > 0:
+            progress = self.attack_progress()
+            if progress > 0.25 and progress < 0.75:
+                return spriteref.small_shadow
+        return spriteref.medium_shadow
         
         
         

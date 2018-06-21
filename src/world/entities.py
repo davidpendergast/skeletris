@@ -103,11 +103,16 @@ class Entity:
                 scale=2, depth=-1)
         
         if self._shadow is not None:    
-            sh_model = self._shadow.model()    
+            sh_model = self.get_shadow_sprite()
+            if sh_model is None:
+                # TODO no way to del shadows
+                return
+            
             sh_scale = self._shadow.scale()    
             sh_x = self.x() - (sh_model.width() * sh_scale - self.w()) // 2
             sh_y = self.y() + self.h() - (sh_model.height() * sh_scale // 2)
-            self._shadow = self._shadow.update(new_x=sh_x, new_y=sh_y)
+            self._shadow = self._shadow.update(new_model=sh_model, 
+                    new_x=sh_x, new_y=sh_y)
     
     def get_shadow_sprite(self):
         return None
@@ -129,23 +134,50 @@ class Entity:
 
 
 class AttackCircleArt(Entity):
-    def __init__(self, cx, cy, sprites, duration):
+    def __init__(self, cx, cy, duration):
         Entity.__init__(self, cx - 4, cy - 4, 8, 8)
+        self.initial_duration = duration
         self.duration = duration
-        self.sprites = sprites
+        self._img = None
+        
+    def cleanup(self, gs, render_engine):
+        if self._img is not None:
+            render_engine.remove(self._img, layer_id=gs.SHADOW_LAYER)
+    
+    def update_images(self): 
+        progress = min(1, max(0, 1 - self.duration / self.initial_duration))
+        idx = int(progress * len(spriteref.att_circles))
+        print("idx = " + str(idx))
+        sprite = spriteref.att_circles[idx]
+        x = self.x() - (sprite.width() * 2 - self.w()) // 2
+        y = self.y() - (sprite.height() * 2 - self.h()) // 2
+        
+        if self._img is None:
+            self._img = img.ImageBundle(sprite, x, y, scale=2, depth=0)
+        else:
+            self._img = self._img.update(new_model=sprite, new_x=x, new_y=y)
     
     def update(self, world, gs, input_state, render_engine):
-        pass
-            
+        if self.duration <= 0:
+            world.remove(self)
+        else:
+            self.update_images()
+            render_engine.update(self._img, layer_id=gs.SHADOW_LAYER) 
+            self.duration -= 1
+                 
 
 class Player(Entity):
 
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 12)
         self._img = None
+        self._shadow_sprite = spriteref.medium_shadow 
+    
+    def set_shadow_sprite(self, sprite):
+        self._shadow_sprite = sprite
         
     def get_shadow_sprite(self):
-        return spriteref.medium_shadow    
+        return self._shadow_sprite   
     
     def raw_center(self):
         """returns: unrounded center coordinates"""
