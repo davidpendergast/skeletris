@@ -22,6 +22,11 @@ player_move_2 = make(64, 0, 16, 32)
 player_move_3 = make(80, 0, 16, 32)
 player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
+player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
+player_squat = make(80, 240, 16, 32)
+
+att_circles = [make(112 + 48*i, 240, 48, 32) for i in range(0, 9)]
+
 chest_closed = make(0, 32, 16, 16)
 chest_open_0 = make(16, 32, 16, 16)
 chest_open_1 = make(32, 32, 16, 16)

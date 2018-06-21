@@ -1,6 +1,8 @@
 from enum import Enum
 
 from src.items.item import StatType
+import src.game.spriteref as spriteref
+import src.game.inputs as inputs
 
 
 class ItemGrid:
@@ -90,18 +92,13 @@ class PlayerStatType(Enum):
     DPS = "DPS",
     MOVESPEED = "MOVE_SPEED",
     TICKS_PER_ATTACK = "TICKS_PER_ATTACK"
-
-class PlayerState:
-    def __init__(self, name, inventory):
+    
+class ActorState:
+    def __init__(self, name, level, base_values):
         self._name = name
-        self._inventory = inventory
-        self._level = 0
-        self._base_values = {
-            StatType.ATT: 10,
-            StatType.DEF: 10,
-            StatType.VIT: 10,
-            PlayerStatType.TICKS_PER_ATTACK: 50
-        }
+        self._level = level
+        self._base_values = base_values
+        self.current_hp = self.stat_value(PlayerStatType.HP)
     
     def name(self):
         return self._name
@@ -109,8 +106,14 @@ class PlayerState:
     def level(self):
         return self._level
         
-    def inventory(self):
-        return self._inventory
+    def hp(self):
+        return self.current_hp
+        
+    def set_hp(self, value):
+        self.current_hp = value 
+        
+    def move_speed(self):
+        return self.stat_value(PlayerStatType.MOVESPEED)
         
     def _compute_derived_stat(self, stat_type):
         """
@@ -135,6 +138,38 @@ class PlayerState:
             speed = speed * (1 + att_speed_inc / 100)
             return round(1 / speed)
         
+        elif stat_type is PlayerStatType.MOVESPEED:
+            base = self._base_values[stat_type]
+            return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED))
+        
+    def stat_value(self, stat_type):
+        return 0
+
+
+class PlayerState(ActorState):
+    def __init__(self, name, inventory):
+        self._inventory = inventory
+        
+        ActorState.__init__(self, name, 0, {
+            StatType.ATT: 10,
+            StatType.DEF: 10,
+            StatType.VIT: 10,
+            PlayerStatType.TICKS_PER_ATTACK: 30,
+            PlayerStatType.MOVESPEED: 2
+        })
+        
+        self.current_sprite = spriteref.player_idle_0
+
+        self.attack_tick = 0
+        self.cur_attack_dur = 1
+        
+        self.delay_tick = 0
+        self.is_moving = False
+        self.facing_right = True
+        
+    def inventory(self):
+        return self._inventory
+        
     def stat_value(self, stat_type):
         """
             stat_type: StatType or PlayerStatType
@@ -154,8 +189,64 @@ class PlayerState:
                     
         return value
         
-     
-     
-     
-     
-     
+    def update(self, world, gs, input_state):
+        player_entity = world.get_player()
+        if player_entity is None:
+            return
+            
+        if self.delay_tick > 0:
+            self.delay_tick -= 1
+        else:  
+            if self.attack_tick <= 0 and input_state.is_held(inputs.ATTACK):
+                self.cur_attack_dur = self.stat_value(PlayerStatType.TICKS_PER_ATTACK)
+                self.attack_tick = self.cur_attack_dur
+            
+            elif self.attack_tick > 0:
+                self.attack_tick -= 1
+                if self.attack_tick <= 0:
+                    # TODO deliver attack
+                    self.attack_tick = 0
+                    self.cur_attack_dur = 1
+                    self.delay_tick = 10
+            
+            # you can keep moving during the attack windup    
+            if self.delay_tick <= 0:
+                move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
+                move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
+                
+                self.is_moving = move_x != 0 or move_y != 0
+                
+                if move_x != 0 and move_y != 0:
+                    move_x /= 1.4142 
+                    move_y /= 1.4142   
+                    
+                move_x *= self.move_speed()
+                move_y *= self.move_speed()
+                    
+                player_entity.move(move_x, move_y, world=world, and_search=True)
+                if move_x != 0:
+                    self.facing_right = move_x > 0
+         
+        player_entity.update_images(self.get_sprite(gs), self.facing_right)
+        
+    def attack_progress(self):
+        if self.attack_tick <= 0:
+            return -1
+        else:
+            return min(1, max(0, 1 - self.attack_tick / self.cur_attack_dur))
+    
+    def get_sprite(self, gs):
+        if self.attack_tick > 0:
+            progress = self.attack_progress()
+            idx = int(progress * len(spriteref.player_attacks))
+            return spriteref.player_attacks[idx]
+        elif self.delay_tick > 0:
+            return spriteref.player_squat   
+        elif self.is_moving:
+            return spriteref.player_move_all[gs.anim_tick % len(spriteref.player_move_all)]
+        else:
+            return spriteref.player_idle_all[(gs.anim_tick // 2) % len(spriteref.player_idle_all)] 
+        
+        
+        
+

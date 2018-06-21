@@ -126,17 +126,23 @@ class Entity:
         
     def is_chest(self):
         return False
-        
+
+
+class AttackCircleArt(Entity):
+    def __init__(self, cx, cy, sprites, duration):
+        Entity.__init__(self, cx - 4, cy - 4, 8, 8)
+        self.duration = duration
+        self.sprites = sprites
+    
+    def update(self, world, gs, input_state, render_engine):
+        pass
+            
 
 class Player(Entity):
 
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 12)
-        self._img = img.ImageBundle(spriteref.player_idle_0, x, y, 
-                scale=2, depth=self.get_depth())
-        self.is_moving = False
-        self.facing_right = True
-        self.move_speed = 2
+        self._img = None
         
     def get_shadow_sprite(self):
         return spriteref.medium_shadow    
@@ -145,54 +151,32 @@ class Player(Entity):
         """returns: unrounded center coordinates"""
         return (self._x + self.w(), self._y + self.h())
                
-    def update_images(self, anim_tick):
-        if self.is_moving:
-            model = spriteref.player_move_all[anim_tick % len(spriteref.player_move_all)]
-        else:
-            model = spriteref.player_idle_all[(anim_tick // 2) % len(spriteref.player_idle_all)]
+    def update_images(self, sprite, facing_right):        
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, scale=2, depth=self.get_depth())
+
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())        
         
-        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        xflip = not self.facing_right
-        self._img = self._img.update(new_model=model, new_x=x, new_y=y, 
+        xflip = not facing_right
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, 
                 new_depth=depth, new_xflip=xflip)
         
-        super().update_images(anim_tick) # get the shadow
-  
+        super().update_images(0) # get the shadow
             
     def update(self, world, gs, input_state, render_engine):
-        move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
-        move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
-        
-        self.is_moving = move_x != 0 or move_y != 0
-        
-        if move_x != 0 and move_y != 0:
-            move_x /= 1.4142 
-            move_y /= 1.4142   
-        
-        move_x *= self.move_speed
-        move_y *= self.move_speed
-        
-        self.move(move_x, move_y, world=world, and_search=True)
-        
-        if move_x != 0:
-            self.facing_right = move_x > 0
-        
-        self.update_images(gs.anim_tick)
         render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
         render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER) 
         
-        if input_state.was_pressed(inputs.INTERACT):
-            print("player_pos={}, ({}, {})".format(self.rect, self._x, self._y))
-        
     def is_player(self):
         return True
-        
-
+ 
+ 
 class Enemy(Entity):
-    def __init__(self, x, y, sprites):
+    def __init__(self, x, y, state, sprites):
         Entity.__init__(self, x, y, 32, 32)
+        self.state = state
         self._img = img.ImageBundle(sprites[0], x, y, scale=2, depth=self.get_depth())
         self.facing_left = True
         self.sprites = sprites

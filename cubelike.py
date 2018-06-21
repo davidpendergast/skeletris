@@ -5,6 +5,7 @@ from src.game.globalstate import GlobalState
 from src.game.inputs import InputState
 from src.game.ui import UiState
 from src.game.inventory import PlayerState, InventoryState
+from src.game.enemies import EnemyFactory
 
 from src.world.worldstate import World
 from src.world.entities import Player, Enemy, ChestEntity
@@ -35,9 +36,8 @@ def build_me_a_world(width, height, render_eng, gs):
                 else:
                     w.set_geo(x, y, World.FLOOR)
                     if random.random() < 0.05:
-                        i = int(random.random() * len(spriteref.enemies_all))
-                        e = Enemy(0, 0, spriteref.enemies_all[i])
-                        w.add(e, gridcell=(x, y))
+                        enemy = EnemyFactory.gen_enemy(5)
+                        w.add(enemy, gridcell=(x, y))
                     elif random.random() < 0.05:
                         w.add(ChestEntity(0, 0), gridcell=(x, y))
     
@@ -136,6 +136,8 @@ def run():
                 
         if input_state.was_pressed(pygame.K_RETURN):
             world = build_me_a_world(7, 7, render_eng, gs)
+        
+        gs.player_state().update(world, gs, input_state)
         
         world.update_all(gs, input_state, render_eng)
         
