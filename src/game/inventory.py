@@ -146,11 +146,11 @@ class ActorState:
         
         elif stat_type is PlayerStatType.MOVESPEED:
             base = self._base_values[stat_type]
-            return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED))
+            return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
             
         elif stat_type is PlayerStatType.ATTACK_RADIUS:
             base = self._base_values[stat_type]
-            return round(base * (1 + self.stat_value(StatType.ATTACK_RADIUS)))
+            return round(base * (1 + self.stat_value(StatType.ATTACK_RADIUS) / 100))
         
     def stat_value(self, stat_type):
         return 0

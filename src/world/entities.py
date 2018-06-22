@@ -137,36 +137,55 @@ class Entity:
         return False
 
 
-class AttackCircleArt(Entity):
+class AnimationEntity(Entity):
+
+        def __init__(self, x, y, sprites, duration, layer_id, scale=2):
+            Entity.__init__(self, x, y, 8, 8)
+            self.initial_duration = duration
+            self.duration = duration
+            self.sprites = sprites
+            self._layer_id = layer_id
+            self.scale = scale
+            self._img = None
+
+        def get_layer_id(self, gs):
+            return self._layer_id
+
+        def cleanup(self, gs, render_engine):
+            if self._img is not None:
+                render_engine.remove(self._img, layer_id=self.get_layer_id(gs))
+
+        def update_images(self):
+            progress = min(1, max(0, 1 - self.duration / self.initial_duration))
+            idx = int(progress * len(self.sprites))
+            sprite = self.sprites[idx]
+            x = self.x() - (sprite.width() * 2 - self.w()) // 2
+            y = self.y() - (sprite.height() * 2 - self.h()) // 2
+
+            if self._img is None:
+                self._img = img.ImageBundle(sprite, x, y, scale=self.scale, depth=0)
+            else:
+                self._img = self._img.update(new_model=sprite, new_x=x, new_y=y)
+
+        def update(self, world, gs, input_state, render_engine):
+            if self.duration <= 0:
+                world.remove(self)
+            else:
+                self.update_images()
+                render_engine.update(self._img, layer_id=self.get_layer_id(gs))
+                self.duration -= 1
+
+
+class AttackCircleArt(AnimationEntity):
+
     def __init__(self, cx, cy, duration):
-        Entity.__init__(self, cx - 4, cy - 4, 8, 8)
+        AnimationEntity.__init__(self, cx - 4, cy - 4, spriteref.att_circles, duration, None)
         self.initial_duration = duration
         self.duration = duration
         self._img = None
-        
-    def cleanup(self, gs, render_engine):
-        if self._img is not None:
-            render_engine.remove(self._img, layer_id=gs.SHADOW_LAYER)
-    
-    def update_images(self): 
-        progress = min(1, max(0, 1 - self.duration / self.initial_duration))
-        idx = int(progress * len(spriteref.att_circles))
-        sprite = spriteref.att_circles[idx]
-        x = self.x() - (sprite.width() * 2 - self.w()) // 2
-        y = self.y() - (sprite.height() * 2 - self.h()) // 2
-        
-        if self._img is None:
-            self._img = img.ImageBundle(sprite, x, y, scale=2, depth=0)
-        else:
-            self._img = self._img.update(new_model=sprite, new_x=x, new_y=y)
-    
-    def update(self, world, gs, input_state, render_engine):
-        if self.duration <= 0:
-            world.remove(self)
-        else:
-            self.update_images()
-            render_engine.update(self._img, layer_id=gs.SHADOW_LAYER) 
-            self.duration -= 1
+
+    def get_layer_id(self, gs):
+        return gs.SHADOW_LAYER
                  
 
 class Player(Entity):
@@ -180,11 +199,7 @@ class Player(Entity):
         self._shadow_sprite = sprite
         
     def get_shadow_sprite(self):
-        return self._shadow_sprite   
-    
-    def raw_center(self):
-        """returns: unrounded center coordinates"""
-        return (self._x + self.w(), self._y + self.h())
+        return self._shadow_sprite
                
     def update_images(self, sprite, facing_right):        
         if self._img is None:
@@ -198,7 +213,7 @@ class Player(Entity):
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, 
                 new_depth=depth, new_xflip=xflip)
         
-        super().update_images(0) # get the shadow
+        super().update_images(0)  # get the shadow
             
     def update(self, world, gs, input_state, render_engine):
         render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 

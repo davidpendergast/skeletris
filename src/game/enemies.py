@@ -1,7 +1,7 @@
 import random
 import src.game.spriteref as spriteref
 from src.items.item import StatType, ItemFactory
-from src.world.entities import Enemy, ItemEntity, PotionEntity
+from src.world.entities import Enemy, ItemEntity, PotionEntity, AnimationEntity
 from src.game.inventory import ActorState
 from src.utils.util import Utils
 
@@ -50,6 +50,8 @@ class EnemyState(ActorState):
             for l in loot:
                 world.add(l)
             world.remove(entity)
+            splosion = AnimationEntity(entity.x(), entity.y() - 24, spriteref.explosions, 40, gs.ENTITY_LAYER, scale=4)
+            world.add(splosion)
         else:
             if self.took_damage_x_ticks_ago < 15:
                 self.took_damage_x_ticks_ago += 1
