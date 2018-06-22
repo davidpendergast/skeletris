@@ -10,8 +10,7 @@ from src.items.item import StatType
 from src.utils.util import Utils
 from src.game.inventory import InventoryState, PlayerStatType
 
-        
-        
+
 class ItemGridImage:
     def __init__(self, x, y, scale, grid):
         self.x = x
@@ -166,10 +165,10 @@ class UiState:
     def _update_item_panel(self, world, gs, input_state, render_eng):
         should_destroy = True
         item_to_display = None
-           
-        if input_state.mouse_in_window() and self.item_on_cursor is None: 
-            screen_pos = input_state.mouse_pos()
-            
+        screen_pos = input_state.mouse_pos()
+
+        if input_state.mouse_in_window() and self.item_on_cursor is None:
+
             if self.in_inventory_panel(screen_pos):
                 grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
                 if grid_n_cell is not None:
@@ -189,8 +188,8 @@ class UiState:
             if self.item_panel is None:
                 self.item_panel = ItemInfoPane(item_to_display)
                 for bun in self.item_panel.all_bundles():
-                    render_eng.update(bun, layer_id = gs.UI_TOOLTIP_LAYER)
-            
+                    render_eng.update(bun, layer_id=gs.UI_TOOLTIP_LAYER)
+
             offs = (-screen_pos[0], -screen_pos[1])
             render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, *offs)
             should_destroy = False            
@@ -280,7 +279,7 @@ class UiState:
                             create_image = True
                             rebuild_inventory = True
                     
-            else: # we clicked in world
+            else:  # we clicked in world
                 world_pos = gs.screen_to_world_coords(screen_pos)
                 if self.item_on_cursor is None:
                     clicked_item = self._get_item_entity_at_world_coords(world, world_pos)
@@ -291,7 +290,7 @@ class UiState:
                 else:
                     p = world.get_player()
                     if p is not None:
-                        p_center = p.center() # drop position
+                        p_center = p.center()  # drop position
                         drop_dir = Utils.sub(world_pos, p_center)
                         vel = ItemEntity.rand_vel(direction=drop_dir)
                         item_entity = ItemEntity(self.item_on_cursor, *p_center, vel=vel)
@@ -333,10 +332,9 @@ class UiState:
         self.inventory_panel = InventoryPanel(gs.player_state())
         for bun in self.inventory_panel.all_bundles():
             render_eng.update(bun, layer_id=gs.UI_0_LAYER)      
-        
-    
+
     def update(self, world, gs, input_state, render_eng):
-        ## TODO - need to better organize this mess
+        # TODO - need to better organize this mess
         self._update_item_on_cursor(world, gs, input_state, render_eng)
         self._update_item_panel(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)

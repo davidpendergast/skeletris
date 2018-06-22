@@ -9,6 +9,7 @@ from src.world.worldstate import World
 from src.items.item import ItemFactory
 from src.utils.util import Utils
 
+
 class Entity:
 
     def __init__(self, x, y, w, h):
@@ -334,7 +335,8 @@ class ItemEntity(Entity):
         self.push_radius = 20
         self.situated = False
         self.unsituated_time = 0
-        
+
+    @staticmethod
     def rand_vel(speed=None, direction=None):
         speed = speed if speed is not None else 2 + random.random() * 3
         if direction is None:
@@ -429,9 +431,7 @@ class ItemEntity(Entity):
             render_eng.remove(c_img, layer_id=gs.ENTITY_LAYER) 
         render_eng.remove(self._shadow, layer_id=gs.SHADOW_LAYER)
         
-            
-    
-    
+
 class PotionEntity(Entity):
     def __init__(self, cx, cy, vel=None):
         x = cx - 8
@@ -466,6 +466,5 @@ class PotionEntity(Entity):
         self.move(*self.vel, world=world, and_search=True)
             
         self.update_images()
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
-        
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER)
     

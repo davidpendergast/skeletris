@@ -5,8 +5,8 @@ from src.utils.util import Utils
 
 CELLSIZE = 64
 
-class World:
 
+class World:
     EMPTY = 0
     WALL = 1
     DOOR = 2
@@ -92,7 +92,7 @@ class World:
     def size(self):
         return self._size
         
-    NEIGHBORS = [(-1,-1), (0, -1), (1, -1), (1, 0), 
+    NEIGHBORS = [(-1, -1), (0, -1), (1, -1), (1, 0),
                  (1, 1), (0, 1), (-1, 1), (-1, 0)]
     
     def get_neighbor_info(self, grid_x, grid_y, mapping=lambda x: x):
@@ -124,8 +124,7 @@ class World:
                         scale=int(CELLSIZE/model.w), depth=10)
             else:
                 return None
-                
-    
+
     def get_all_bundles(self, geo_id):
         res = []
         for x in range(0, self.size()[0]):
@@ -136,8 +135,7 @@ class World:
                         res.append(bun)
                     
         return res
-      
-              
+
     def update_all(self, gs, input_state, render_engine):
         for e in self._ents_to_remove:
             self.entities.remove(e) # n^2 but whatever

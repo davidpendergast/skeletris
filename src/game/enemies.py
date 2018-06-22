@@ -7,6 +7,8 @@ from src.utils.util import Utils
 
 
 class LootFactory:
+
+    @staticmethod
     def gen_loot(pos, player_lvl, dungeon_level):
         loot = []
         for _ in range(0, 3):
@@ -84,13 +86,12 @@ class EnemyState(ActorState):
             if move_x != 0:
                 self.facing_left = move_x < 0 
                 
-            color_scale = min(1, self.took_damage_x_ticks_ago / 15)
+            color_scale = min(1.0, self.took_damage_x_ticks_ago / 15)
             img_color = (1, color_scale, color_scale)
             
             sprite = self.sprites[(gs.anim_tick // 2) % len(self.sprites)]
             entity.update_images(sprite, self.facing_left, color=img_color)
-            
-            
+
     def deal_damage(self, damage):
         print("enemy took {} damage".format(damage))
         self.took_damage_x_ticks_ago = 0
@@ -99,6 +100,7 @@ class EnemyState(ActorState):
      
 class EnemyFactory:
 
+    @staticmethod
     def gen_enemy(level):
         i = int(random.random() * len(spriteref.enemies_all))
         stats = {

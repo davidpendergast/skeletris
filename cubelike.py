@@ -8,18 +8,16 @@ from src.game.inventory import PlayerState, InventoryState
 from src.game.enemies import EnemyFactory
 
 from src.world.worldstate import World
-from src.world.entities import Player, Enemy, ChestEntity
-import src.renderengine.img as img
+from src.world.entities import Player, ChestEntity
 from src.renderengine.engine import RenderEngine
 
-from src.items.item import ItemFactory
-from src.items.itemrendering import TextImage, ItemImage, ItemInfoPane
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
 
 
 SCREEN_SIZE = (800, 600)
+
 
 def build_me_a_world(width, height, render_eng, gs):
     import random
@@ -51,11 +49,6 @@ def build_me_a_world(width, height, render_eng, gs):
         
     player = Player(80, 80)
     w.add(player)
-    
-    #item = ItemFactory.gen_item()
-    #item_panel = ItemInfoPane(item)
-    #for b in item_panel.all_bundles():
-    #    render_eng.update(b, layer_id=gs.UI_0_LAYER)
     
     return w
    

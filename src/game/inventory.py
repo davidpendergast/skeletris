@@ -48,8 +48,7 @@ class ItemGrid:
             return hit_item
         else:
             return None
-                
-            
+
     def remove(self, item):
         for pos in self.items:
             if self.items[pos] is item:
@@ -88,13 +87,15 @@ class InventoryState:
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
+
 class PlayerStatType(Enum):
     HP = "HP",
     DPS = "DPS",
     MOVESPEED = "MOVE_SPEED",
     TICKS_PER_ATTACK = "TICKS_PER_ATTACK",
     ATTACK_RADIUS = "ATTACK_RADIUS",
-    
+
+
 class ActorState:
     def __init__(self, name, level, base_values):
         self._name = name
@@ -262,7 +263,7 @@ class PlayerState(ActorState):
         if self.attack_tick <= 0:
             return -1
         else:
-            return min(1, max(0, 1 - self.attack_tick / self.cur_attack_dur))
+            return min(1.0, max(0.0, 1 - self.attack_tick / self.cur_attack_dur))
     
     def get_sprite(self, gs):
         if self.attack_tick > 0:

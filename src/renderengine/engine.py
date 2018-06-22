@@ -157,6 +157,7 @@ class Shader:
 
 
 class RenderEngine:
+
     def __init__(self):
         self.bundles = {} # (int) id -> bundle
         self.camera_pos = [0, 0]
@@ -198,7 +199,6 @@ class RenderEngine:
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         self.size = (width, height)
-
 
     def init(self, w, h):
         self.resize(w, h)
@@ -307,19 +307,6 @@ class RenderEngine:
                 glTranslatef(-offs[0], -offs[1], 0.0)
             
             layer.render()
-    
-    
+
     def cleanup(self):
         self.shader.end()
-            
-         
-        
-        
-        
-        
-        
-        
-        
-        
-            
-    

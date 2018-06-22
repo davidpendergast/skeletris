@@ -21,7 +21,8 @@ class StatType(Enum):
     POTION_COOLDOWN = "POTION_COOLDOWN",
 
     HOLE_BONUS = "HOLE_BONUS"
-    
+
+
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]  
 SPECIAL_STATS = [StatType.HOLE_BONUS]
 NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
@@ -43,18 +44,18 @@ ITEM_CORE_NAME = {
 }
      
 ITEM_NAME_END = {
-    StatType.ATTACK_RADIUS:"{} of Envy",
-    StatType.ATTACK_SPEED:"Haste {}",
-    StatType.ATTACK_DAMAGE:"{} of Fury",
-    StatType.MOVEMENT_SPEED:"Pride {}",
-    StatType.DODGE:"Hiding {}",
-    StatType.ACCURACY:"Truth {}",
-    StatType.LIFE_REGEN:"Growth {}",
-    StatType.LIFE_ON_HIT:"{} of Feed",
-    StatType.LIFE_LEECH:"{} of Lust",
-    StatType.MAX_HEALTH:"Gluttony {}",
-    StatType.POTION_HEALING:"Renewal {}",
-    StatType.POTION_COOLDOWN:"Wetness {}"
+    StatType.ATTACK_RADIUS: "{} of Envy",
+    StatType.ATTACK_SPEED: "Haste {}",
+    StatType.ATTACK_DAMAGE: "{} of Fury",
+    StatType.MOVEMENT_SPEED: "Pride {}",
+    StatType.DODGE: "Hiding {}",
+    StatType.ACCURACY: "Truth {}",
+    StatType.LIFE_REGEN: "Growth {}",
+    StatType.LIFE_ON_HIT: "{} of Feed",
+    StatType.LIFE_LEECH: "{} of Lust",
+    StatType.MAX_HEALTH: "Gluttony {}",
+    StatType.POTION_HEALING: "Renewal {}",
+    StatType.POTION_COOLDOWN: "Wetness {}"
 }
 
 ITEM_NAME_SPECIAL_MODIFIER = {
@@ -62,21 +63,21 @@ ITEM_NAME_SPECIAL_MODIFIER = {
 }
  
 STAT_DESCRIPTIONS = {
-    StatType.ATT:"+{} ATT",
-    StatType.DEF:"+{} DEF",
-    StatType.VIT:"+{} VIT",
-    StatType.ATTACK_RADIUS:"+{}% ATT Range",
-    StatType.ATTACK_SPEED:"+{}% Attack SPD",
-    StatType.ATTACK_DAMAGE:"+{} Attack DMG",
-    StatType.MOVEMENT_SPEED:"+{}% Movespeed",
-    StatType.DODGE:"+{}% Dodge",
-    StatType.ACCURACY:"+{} Accuracy",
-    StatType.LIFE_REGEN:"+{} Life Regen",
-    StatType.LIFE_ON_HIT:"+{} Life on Hit",
-    StatType.LIFE_LEECH:"+{}% Life Leech",
-    StatType.MAX_HEALTH:"+{}% Max HP",
-    StatType.POTION_HEALING:"+{} Pot Heal",
-    StatType.POTION_COOLDOWN:"-{}% Pot Delay"
+    StatType.ATT: "+{} ATT",
+    StatType.DEF: "+{} DEF",
+    StatType.VIT: "+{} VIT",
+    StatType.ATTACK_RADIUS: "+{}% ATT Range",
+    StatType.ATTACK_SPEED: "+{}% Attack SPD",
+    StatType.ATTACK_DAMAGE: "+{} Attack DMG",
+    StatType.MOVEMENT_SPEED: "+{}% Movespeed",
+    StatType.DODGE: "+{}% Dodge",
+    StatType.ACCURACY: "+{} Accuracy",
+    StatType.LIFE_REGEN: "+{} Life Regen",
+    StatType.LIFE_ON_HIT: "+{} Life on Hit",
+    StatType.LIFE_LEECH: "+{}% Life Leech",
+    StatType.MAX_HEALTH: "+{}% Max HP",
+    StatType.POTION_HEALING: "+{} Pot Heal",
+    StatType.POTION_COOLDOWN: "-{}% Pot Delay"
 }    
 
 STAT_COLORS = collections.defaultdict(lambda: (0.85, 0.85, 0.85))
@@ -155,8 +156,9 @@ class Item:
         return res
         
         
-class ItemFactory:   
-    
+class ItemFactory:
+
+    @staticmethod
     def rotate_item(item):
         new_cubes = []
         for cube in item.cubes:
@@ -165,11 +167,13 @@ class ItemFactory:
         
         return Item(item.name, item.level, item.stats, 
                 new_cubes, item.color, cube_art=item.cube_art)
-    
+
+    @staticmethod
     def do_seed(seed):
         if seed is not None:
             random.seed(seed)
-            
+
+    @staticmethod
     def gen_cubes(n, size=(5, 5), seed=None):
         ItemFactory.do_seed(seed)
         if n > size[0] * size[1]:
@@ -205,7 +209,8 @@ class ItemFactory:
         res = ItemFactory._push_to_origin(res)
                 
         return tuple(res)
-    
+
+    @staticmethod
     def _push_to_origin(cubes):
         min_x = min([c[0] for c in cubes])
         min_y = min([c[1] for c in cubes])
@@ -213,14 +218,16 @@ class ItemFactory:
             return [(c[0] - min_x, c[1] - min_y) for c in cubes]
         else:
             return cubes
-    
+
+    @staticmethod
     def gen_core_stats():
         res = []
         for stat in CORE_STATS:
             if random.random() < 0.333:
                 res.append(ItemStat(stat, int(random.random()*30)))
         return res
-        
+
+    @staticmethod
     def gen_non_core_stats(n):
         choices = list(NON_CORE_STATS)
         res = []
@@ -230,10 +237,12 @@ class ItemFactory:
             res.append(ItemStat(choice, value))
             
         return res
-        
+
+    @staticmethod
     def get_special_stats(cubes):
         return []
-        
+
+    @staticmethod
     def get_name(core_types, non_core_types, special_types):
         if len(core_types) > 2:
             core_types = core_types[:2]
@@ -247,6 +256,7 @@ class ItemFactory:
             
         return name
 
+    @staticmethod
     def gen_item():
         core_stats = ItemFactory.gen_core_stats() 
         non_core_stats = ItemFactory.gen_non_core_stats(int(4*random.random()))
@@ -271,7 +281,6 @@ class ItemFactory:
         return Item(name, level, stats, cubes, color, cube_art)
         
 
-     
 if __name__ == "__main__":
      print(ItemFactory.gen_item())
 

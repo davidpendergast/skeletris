@@ -4,6 +4,8 @@ from OpenGL.GLU import *
 import random
 
 UNIQUE_ID_CTR = 0
+
+
 def gen_unique_id():
     """Note: this ain't threadsafe"""
     global UNIQUE_ID_CTR
@@ -186,13 +188,13 @@ class ImageModel:
                     
         indices = [0, 1, 2, 0, 2, 3]
         
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         glVertexPointer(2, GL_FLOAT, 0, vertices)
         glTexCoordPointer(2, GL_FLOAT, 0, text_crd)
         glDrawElements(GL_TRIANGLES, len(indices), GL_UNSIGNED_INT, indices)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_VERTEX_ARRAY)
         
         
 

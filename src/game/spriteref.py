@@ -7,11 +7,13 @@ from src.renderengine.img import ImageModel
 
 all_imgs = []
 
+
 def make(x, y, w, h):
     img = ImageModel(x, y, w, h)
     all_imgs.append(img)
     return img
-    
+
+
 player_idle_0 = make(0, 0, 16, 32)
 player_idle_1 = make(16, 0, 16, 32)
 player_idle_all = [player_idle_0, player_idle_1]
@@ -72,7 +74,6 @@ for i in range(0, 10):
     alphabet[c] = make(5*i, 120, 5, 5)
     
 
-
 """Lookup table for wall sprites:   
        0    1    2
     * -- * -- * -- *
@@ -94,6 +95,7 @@ walls = [None] * 256
     * -- * -- * 
 """
 floors = [make(i*16, 48, 16, 16) for i in range(0, 8)]
+
 
 def _get_wall_corner_loc(spot, bools):
     orig_walls = [0, 64, 64, 32] # x, y, w, h
@@ -158,7 +160,8 @@ def build_spritesheet(raw_image):
     # pygame.image.save(sheet, "src/spritesheet.png")
     
     return sheet
-    
+
+
 if __name__ == "__main__":
     raw = pygame.image.load("src/image.png")
     output = build_spritesheet(raw)
