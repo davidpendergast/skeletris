@@ -31,16 +31,22 @@ def build_me_a_world(width, height, render_eng, gs):
             else:
                 if random.random() < 0.33:
                     w.set_geo(x, y, World.WALL)
-                elif random.random() < 0.05:
-                    w.set_geo(x, y, World.DOOR)
-                    w.add(DoorEntity(x, y))
                 else:
                     w.set_geo(x, y, World.FLOOR)
-                    if random.random() < 0.05:
-                        enemy = EnemyFactory.gen_enemy(5)
-                        w.add(enemy, gridcell=(x, y))
-                    elif random.random() < 0.05:
-                        w.add(ChestEntity(0, 0), gridcell=(x, y))
+    for x in range(0, width):
+        for y in range(0, height):
+            if w.get_geo(x, y) == World.FLOOR:
+                if w.is_perfect_door_location(x, y):
+                    if random.random() < 0.5:
+                        w.set_geo(x, y, World.DOOR)
+                        w.add(DoorEntity(x, y))
+
+                elif random.random() < 0.05:
+                    enemy = EnemyFactory.gen_enemy(5)
+                    w.add(enemy, gridcell=(x, y))
+
+                elif random.random() < 0.05:
+                    w.add(ChestEntity(0, 0), gridcell=(x, y))
     
     render_eng.clear_all_sprites()
                         

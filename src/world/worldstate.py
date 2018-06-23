@@ -93,7 +93,18 @@ class World:
             
     def is_valid(self, grid_x, grid_y):
         return 0 <= grid_x < self.size()[0] and 0 <= grid_y < self.size()[1]
-        
+
+    def is_perfect_door_location(self, grid_x, grid_y):
+        left_geo = self.get_geo(grid_x - 1, grid_y)
+        right_geo = self.get_geo(grid_x + 1, grid_y)
+        up_geo = self.get_geo(grid_x, grid_y - 1)
+        down_geo = self.get_geo(grid_x, grid_y + 1)
+
+        config = (left_geo, right_geo, up_geo, down_geo)
+        v_door = (World.WALL, World.WALL, World.FLOOR, World.FLOOR)
+        h_door = (World.FLOOR, World.FLOOR, World.WALL, World.WALL)
+        return config == v_door or config == h_door
+
     def size(self):
         return self._size
         

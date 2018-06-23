@@ -285,8 +285,7 @@ class ChestEntity(Entity):
         sh_y = self._shadow.y()
         sh_s = self._shadow.scale()
         self._shadow = self._shadow.update(new_x=(sh_x + 7*sh_s), new_y=(sh_y - 2*sh_s))
-        
-          
+
     def is_open(self):
         return self.current_cooldown <= 0
     
@@ -504,6 +503,7 @@ class DoorEntity(Entity):
         if self.delay_count > 0:
             sprite = self.sprites[1]
         elif self.opening_count > 0:
+
             n = len(self.sprites) - 2
             idx = 2 + int(n * min(0.99, self.opening_count / self.opening_duration))
             sprite = self.sprites[idx]
@@ -511,7 +511,7 @@ class DoorEntity(Entity):
             sprite = self.sprites[0]
 
         x = self.x()
-        y = self.y()
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = 100
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
@@ -522,9 +522,9 @@ class DoorEntity(Entity):
             return True
 
         solid_left = world.is_solid_at(*Utils.sub(self.center(), (self.w(), 0)))
-        solid_right = world.is_solid_at(*Utils.add(self.center(), (self.h(), 0)))
+        solid_right = world.is_solid_at(*Utils.add(self.center(), (self.w(), 0)))
         if solid_left and solid_right:
-            return True
+            return False
 
         # invalid door, hopefully shouldn't happen
         return random.random() < 0.5
