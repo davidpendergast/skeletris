@@ -8,7 +8,7 @@ from src.game.inventory import PlayerState, InventoryState
 from src.game.enemies import EnemyFactory
 
 from src.world.worldstate import World
-from src.world.entities import Player, ChestEntity
+from src.world.entities import Player, ChestEntity, DoorEntity
 from src.renderengine.engine import RenderEngine
 
 
@@ -24,13 +24,16 @@ def build_me_a_world(width, height, render_eng, gs):
     w = World(width, height)
     for x in range(0, width):
         for y in range(0, height):
-            if x == 0 or y == 0 or x == width-1 or y == height-1:
+            if x == 0 or y == 0 or x == width - 1 or y == height - 1:
                 w.set_geo(x, y, World.WALL)    
             elif x < 3 and y < 3:
                 w.set_geo(x, y, World.FLOOR)
             else:
                 if random.random() < 0.33:
                     w.set_geo(x, y, World.WALL)
+                elif random.random() < 0.05:
+                    w.set_geo(x, y, World.DOOR)
+                    w.add(DoorEntity(x, y, random.random() < 0.5))
                 else:
                     w.set_geo(x, y, World.FLOOR)
                     if random.random() < 0.05:
@@ -43,7 +46,10 @@ def build_me_a_world(width, height, render_eng, gs):
                         
     for bun in w.get_all_bundles(World.WALL):
         render_eng.update(bun, layer_id=gs.WALL_LAYER)
-        
+
+    for bun in w.get_all_bundles(World.DOOR):
+        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
+
     for bun in w.get_all_bundles(World.FLOOR):
         render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
         
@@ -159,5 +165,3 @@ def run():
                 
 if __name__ == "__main__":
     run()
-        
-    

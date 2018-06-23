@@ -34,6 +34,9 @@ chest_open_0 = make(16, 32, 16, 16)
 chest_open_1 = make(32, 32, 16, 16)
 chest_open_all = [chest_open_0, chest_open_1]
 
+door_v = [make(112 + i*16, 64, 16, 16) for i in range(0, 6)]
+door_h = [make(112 + i*16, 80, 16, 16) for i in range(0, 6)]
+
 enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
 enemy_dicel_all = [make(64, 144, 32, 32), make(64, 176, 32, 32)]

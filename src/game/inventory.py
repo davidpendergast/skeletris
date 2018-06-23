@@ -165,7 +165,7 @@ class PlayerState(ActorState):
             StatType.DEF: 10,
             StatType.VIT: 10,
             PlayerStatType.TICKS_PER_ATTACK: 30,
-            PlayerStatType.MOVESPEED: 2,
+            PlayerStatType.MOVESPEED: 2.5,
             PlayerStatType.ATTACK_RADIUS: 64
         })
         

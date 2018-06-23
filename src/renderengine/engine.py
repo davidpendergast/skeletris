@@ -159,10 +159,10 @@ class Shader:
 class RenderEngine:
 
     def __init__(self):
-        self.bundles = {} # (int) id -> bundle
+        self.bundles = {}  # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
-        self.layers = {} # layer_id -> layer
+        self.layers = {}  # layer_id -> layer
         self.ordered_layers = []
         self.shader = None
         

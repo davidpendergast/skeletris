@@ -15,6 +15,10 @@ def gen_unique_id():
 
 class ImageBundle:
 
+    @staticmethod
+    def new_bundle():
+        return ImageBundle(None, 0, 0)
+
     def __init__(self, model, x, y, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
@@ -59,10 +63,10 @@ class ImageBundle:
         return self._y
         
     def width(self):
-        return self.model().width() * self.scale()
+        return self.model().width() * self.scale() if self.model() is not None else 0
         
     def height(self):
-        return self.model().height() * self.scale()
+        return self.model().height() * self.scale() if self.model() is not None else 0
         
     def scale(self):
         return self._scale

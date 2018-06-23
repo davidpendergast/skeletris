@@ -482,4 +482,67 @@ class PotionEntity(Entity):
             
         self.update_images()
         render_engine.update(self._img, layer_id=gs.ENTITY_LAYER)
+
+
+class DoorEntity(Entity):
+
+    def __init__(self, grid_x, grid_y, horz):
+        Entity.__init__(self, grid_x*64, grid_y*64, 64, 64)
+        self.sprites = spriteref.door_h if horz else spriteref.door_v
+        self.delay_duration = 45
+        self.delay_count = 0
+        self.opening_duration = 20
+        self.opening_count = 0
+
+        self.open_radius = 75
+
+    def update_images(self):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, scale=4)
+
+        if self.delay_count > 0:
+            sprite = self.sprites[1]
+        elif self.opening_count > 0:
+            n = len(self.sprites) - 2
+            idx = 2 + int(n * min(0.99, self.opening_count / self.opening_duration))
+            sprite = self.sprites[idx]
+        else:
+            sprite = self.sprites[0]
+
+        x = self.x()
+        y = self.y()
+        depth = 100
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+
+    def cleanup(self, gs, render_engine):
+        if self._img is not None:
+            render_engine.remove(self._img, layer_id=gs.ENTITY_LAYER)
+
+    def update(self, world, gs, input_state, render_engine):
+        if self.opening_count >= self.opening_duration:
+            world.remove(self)
+        elif self.opening_count > 0:
+            self.opening_count += 1
+        else:
+            p = world.get_player()
+            if p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius:
+                self.delay_count += 1
+                if self.delay_count >= self.delay_duration:
+                    # door will open now
+                    self.delay_count = 0
+                    self.opening_count = 1
+                    grid_xy = world.to_grid_coords(*self.center())
+                    world.set_geo(*grid_xy, World.FLOOR)
+                    world.update_geo_bundle(*grid_xy, and_neighbors=True)
+                    # TODO - world_controller.door_opened(self) probably
+
+            else:
+                self.delay_count = 0
+
+
+
+
+
+        self.update_images()
+        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER)
     

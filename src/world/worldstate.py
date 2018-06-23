@@ -1,4 +1,6 @@
-import src.renderengine.img as img   
+import random
+
+import src.renderengine.img as img
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 
@@ -19,7 +21,8 @@ class World:
         self._level_geo = []
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
-        self._geo_bundle_lookup = {} # x,y -> bundle id
+        self._geo_bundle_lookup = {}  # x,y -> bundle id
+        self._dirty_bundles = []
             
         self.entities = []
         self._ents_to_remove = []
@@ -65,13 +68,16 @@ class World:
         
         return res       
         
-    def set_geo(self, grid_x, grid_y, geo_id, quietly=False):
+    def set_geo(self, grid_x, grid_y, geo_id):
         if self.is_valid(grid_x, grid_y):
             self._level_geo[grid_x][grid_y] = geo_id
         elif geo_id != World.EMPTY:
             raise ValueError("Cannot set out of bounds grid cell to " + 
                     "non-empty: ({}, {}) <- {}".format(grid_x, grid_y, geo_id))
-        
+
+    def to_grid_coords(self, pixel_x, pixel_y):
+        return (pixel_x // CELLSIZE, pixel_y // CELLSIZE)
+
     def get_geo(self, grid_x, grid_y):
         if self.is_valid(grid_x, grid_y):
             return self._level_geo[grid_x][grid_y]
@@ -86,8 +92,7 @@ class World:
         return geo in World.SOLIDS
             
     def is_valid(self, grid_x, grid_y):
-        return (grid_x >= 0 and grid_x < self.size()[0] 
-                and grid_y >= 0 and grid_y < self.size()[1])
+        return 0 <= grid_x < self.size()[0] and 0 <= grid_y < self.size()[1]
         
     def size(self):
         return self._size
@@ -97,31 +102,51 @@ class World:
     
     def get_neighbor_info(self, grid_x, grid_y, mapping=lambda x: x):
         return [mapping(self.get_geo(grid_x + offs[0], grid_y + offs[1])) for offs in World.NEIGHBORS]
-    
+
+    def update_geo_bundle(self, grid_x, grid_y, and_neighbors=False):
+        if not self.is_valid(grid_x, grid_y):
+            return
+
+        bundle = self.get_geo_bundle(grid_x, grid_y)
+        sprite = self.calc_sprite_for_geo(grid_x, grid_y)
+        if bundle is not None:
+            if sprite is not None:
+                new_bun = bundle.update(new_model=sprite)
+                if new_bun is not bundle:
+                    self._dirty_bundles.append(new_bun)
+
+        if and_neighbors:
+            for n in World.NEIGHBORS:
+                self.update_geo_bundle(grid_x + n[0], grid_y + n[1], and_neighbors=False)
+
+    def calc_sprite_for_geo(self, grid_x, grid_y):
+        geo = self.get_geo(grid_x, grid_y)
+
+        if geo == World.WALL:
+            n_info = self.get_neighbor_info(grid_x, grid_y,
+                                            mapping=lambda x: 1 if x == World.WALL or x == World.DOOR else 0)
+            mults = [1, 2, 4, 8, 16, 32, 64, 128]
+            wall_img_id = sum(n_info[i] * mults[i] for i in range(0, 8))
+            return spriteref.walls[wall_img_id]
+
+        elif geo == World.FLOOR or geo == World.DOOR:
+            n_info = self.get_neighbor_info(grid_x, grid_y,
+                                            mapping=lambda x: 1 if x == World.WALL or x == World.EMPTY else 0)
+            floor_img_id = 2 * n_info[0] + 4 * n_info[1] + 1 * n_info[7]
+            return spriteref.floors[floor_img_id]
+
+        return None
+
     def get_geo_bundle(self, grid_x, grid_y):
         key = (grid_x, grid_y)
         if key in self._geo_bundle_lookup:
             return self._geo_bundle_lookup[key] 
         else:
-            geo = self.get_geo(grid_x, grid_y)
-            model = None
-            
-            if geo == World.WALL:
-                n_info = self.get_neighbor_info(grid_x, grid_y, 
-                        mapping=lambda x: 1 if x == World.WALL or x == World.DOOR else 0)
-                mults = [1, 2, 4, 8, 16, 32, 64, 128]
-                wall_img_id = sum(n_info[i] * mults[i] for i in range(0, 8))
-                model = spriteref.walls[wall_img_id]
-                
-            elif geo == World.FLOOR:
-                n_info = self.get_neighbor_info(grid_x, grid_y, 
-                        mapping=lambda x: 1 if x == World.WALL or x == World.EMPTY else 0)
-                floor_img_id = 2*n_info[0] + 4*n_info[1] + 1*n_info[7]
-                model = spriteref.floors[floor_img_id]
-            
-            if model is not None:
-                return img.ImageBundle(model, grid_x*CELLSIZE, grid_y*CELLSIZE, 
-                        scale=int(CELLSIZE/model.w), depth=10)
+            sprite = self.calc_sprite_for_geo(grid_x, grid_y)
+
+            if sprite is not None:
+                return img.ImageBundle(sprite, grid_x*CELLSIZE, grid_y*CELLSIZE,
+                        scale=int(CELLSIZE/sprite.w), depth=10)
             else:
                 return None
 
@@ -144,6 +169,9 @@ class World:
             
         for e in self.entities:
             e.update(self, gs, input_state, render_engine)
+
+        for bun in self._dirty_bundles:
+            render_engine.update(bun, layer_id=gs.WALL_LAYER)
         
         p = self.get_player()
         if p is not None:
