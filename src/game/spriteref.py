@@ -111,6 +111,7 @@ walls = [None] * 256
     * -- * -- * 
 """
 floors = [make(i*16, 48, 16, 16) for i in range(0, 8)]
+floor_totally_dark = make(128, 48, 16, 16)
 
 
 def _get_wall_corner_loc(spot, bools):

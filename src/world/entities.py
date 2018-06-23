@@ -487,7 +487,7 @@ class DoorEntity(Entity):
         self.sprites = None
         self.delay_duration = 45
         self.delay_count = 0
-        self.opening_duration = 20
+        self.opening_duration = 15
         self.opening_count = 0
 
         self.open_radius = 75

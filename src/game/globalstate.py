@@ -1,5 +1,6 @@
 import src.game.spriteref as spriteref
 
+
 class GlobalState:
 
     def __init__(self):
@@ -33,6 +34,4 @@ class GlobalState:
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
             self.anim_tick += 1
-            
-            
-        
+

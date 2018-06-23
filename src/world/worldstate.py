@@ -135,15 +135,19 @@ class World:
         geo = self.get_geo(grid_x, grid_y)
 
         if geo == World.WALL:
-            n_info = self.get_neighbor_info(grid_x, grid_y,
-                                            mapping=lambda x: 1 if x == World.WALL or x == World.DOOR else 0)
+            def mapping(x): return 1 if x == World.WALL or x == World.DOOR else 0
+            n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
             mults = [1, 2, 4, 8, 16, 32, 64, 128]
             wall_img_id = sum(n_info[i] * mults[i] for i in range(0, 8))
             return spriteref.walls[wall_img_id]
 
-        elif geo == World.FLOOR or geo == World.DOOR:
-            n_info = self.get_neighbor_info(grid_x, grid_y,
-                                            mapping=lambda x: 1 if x == World.WALL or x == World.EMPTY else 0)
+        elif geo == World.DOOR:
+            return spriteref.floor_totally_dark
+
+        elif geo == World.FLOOR:
+            def mapping(x): return 1 if x in (World.WALL, World.EMPTY, World.DOOR) else 0
+            n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
+
             floor_img_id = 2 * n_info[0] + 4 * n_info[1] + 1 * n_info[7]
             return spriteref.floors[floor_img_id]
 
