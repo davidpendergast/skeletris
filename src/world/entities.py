@@ -100,7 +100,7 @@ class Entity:
 
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
-            self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0,
+            self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0, layer=spriteref.SHADOW_LAYER,
                 scale=2, depth=-1)
         
         if self._shadow is not None:    
@@ -144,18 +144,15 @@ class AnimationEntity(Entity):
             self.initial_duration = duration
             self.duration = duration
             self.sprites = sprites
-            self._layer_id = layer_id
+            self.layer_id = layer_id
             self.scale = scale
             self._img = None
 
-        def get_layer_id(self, gs):
-            return self._layer_id
-
         def cleanup(self, gs, render_engine):
             if self._img is not None:
-                render_engine.remove(self._img, layer_id=self.get_layer_id(gs))
+                render_engine.remove(self._img)
 
-        def update_images(self):
+        def update_images(self, gs):
             progress = min(1, max(0, 1 - self.duration / self.initial_duration))
             idx = int(progress * len(self.sprites))
             sprite = self.sprites[idx]
@@ -163,7 +160,7 @@ class AnimationEntity(Entity):
             y = self.y() - (sprite.height() * 2 - self.h()) // 2
 
             if self._img is None:
-                self._img = img.ImageBundle(sprite, x, y, scale=self.scale, depth=0)
+                self._img = img.ImageBundle(sprite, x, y, layer=self.layer_id, scale=self.scale, depth=0)
             else:
                 self._img = self._img.update(new_model=sprite, new_x=x, new_y=y)
 
@@ -171,21 +168,18 @@ class AnimationEntity(Entity):
             if self.duration <= 0:
                 world.remove(self)
             else:
-                self.update_images()
-                render_engine.update(self._img, layer_id=self.get_layer_id(gs))
+                self.update_images(gs)
+                render_engine.update(self._img)
                 self.duration -= 1
 
 
 class AttackCircleArt(AnimationEntity):
 
     def __init__(self, cx, cy, duration):
-        AnimationEntity.__init__(self, cx - 4, cy - 4, spriteref.att_circles, duration, None)
+        AnimationEntity.__init__(self, cx - 4, cy - 4, spriteref.att_circles, duration, spriteref.SHADOW_LAYER)
         self.initial_duration = duration
         self.duration = duration
         self._img = None
-
-    def get_layer_id(self, gs):
-        return gs.SHADOW_LAYER
                  
 
 class Player(Entity):
@@ -203,7 +197,7 @@ class Player(Entity):
                
     def update_images(self, sprite, facing_right):        
         if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, scale=2, depth=self.get_depth())
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
 
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (sprite.height() * self._img.scale() - self.h())        
@@ -216,8 +210,8 @@ class Player(Entity):
         super().update_images(0)  # get the shadow
             
     def update(self, world, gs, input_state, render_engine):
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
-        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER) 
+        render_engine.update(self._img)
+        render_engine.update(self._shadow)
         
     def is_player(self):
         return True
@@ -235,7 +229,7 @@ class Enemy(Entity):
     
     def update_images(self, sprite, facing_left, color=(1, 1, 1)):
         if self._img is None:
-            self._img = img.ImageBundle(sprite, 0, 0, scale=2)
+            self._img = img.ImageBundle(sprite, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = self.get_depth()
@@ -244,15 +238,15 @@ class Enemy(Entity):
                 new_depth=depth, new_xflip=xflip, new_color=color)
         
     def cleanup(self, gs, render_engine):
-        render_engine.remove(self._img, layer_id=gs.ENTITY_LAYER)
-        render_engine.remove(self._shadow, layer_id=gs.SHADOW_LAYER)
+        render_engine.remove(self._img)
+        render_engine.remove(self._shadow)
         
     def update(self, world, gs, input_state, render_engine):
         self.state.update(self, world, gs, input_state)
         super().update_images(gs.anim_tick) # TODO - shadows are dumb
         
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
-        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+        render_engine.update(self._img)
+        render_engine.update(self._shadow)
         
     def is_enemy(self):
         return True
@@ -263,7 +257,6 @@ class ChestEntity(Entity):
         Entity.__init__(self, x, y, 24, 24)
         self.ticks_to_open = 60
         self.current_cooldown = self.ticks_to_open
-        self._img = img.ImageBundle(spriteref.chest_closed, x, y, scale=2, depth=self.get_depth())
         
     def is_chest(self):
         return True
@@ -278,11 +271,14 @@ class ChestEntity(Entity):
             model = spriteref.chest_open_0
         else:
             model = spriteref.chest_closed
-            
+
+        if self._img is None:
+            self._img = img.ImageBundle(spriteref.chest_closed, 0, 0, layer=spriteref.ENTITY_LAYER)
+
         x = self.x() - (model.width() * self._img.scale() - self.w())
         y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        self._img = self._img.update(new_model=model, new_x=x, new_y=y, new_depth=depth)
+        self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
         
         super().update_images(anim_tick)
         sh_x = self._shadow.x()
@@ -330,8 +326,8 @@ class ChestEntity(Entity):
                 self._do_open(world)           
              
         self.update_images(gs.anim_tick)
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER) 
-        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+        render_engine.update(self._img)
+        render_engine.update(self._shadow)
         
         
 class ItemEntity(Entity):
@@ -371,7 +367,7 @@ class ItemEntity(Entity):
     def update_images(self, anim_tick):
         if len(self._cube_imgs) == 0:
             for c in self.item.cubes:
-                c_img = img.ImageBundle(spriteref.item_piece_small, 0, 0, 
+                c_img = img.ImageBundle(spriteref.item_piece_small, 0, 0, layer=spriteref.ENTITY_LAYER,
                         scale=2, color=self.item.color)
                 self._cube_imgs.append(c_img)
         
@@ -397,7 +393,7 @@ class ItemEntity(Entity):
         super().update_images(anim_tick)
                     
     def _handle_pushes(self, world):
-          if not self.situated:
+        if not self.situated:
             nearby_ents = world.entities_in_circle(self.center(), self.push_radius)
             other_items = [i for i in nearby_ents if (i.is_item() or i.is_chest()) and i is not self]
             if len(other_items) > 0 and Utils.mag(self.vel) < 2:
@@ -438,13 +434,13 @@ class ItemEntity(Entity):
             
         self.update_images(gs.anim_tick)
         for c_img in self._cube_imgs:
-            render_engine.update(c_img, layer_id=gs.ENTITY_LAYER) 
-        render_engine.update(self._shadow, layer_id=gs.SHADOW_LAYER)
+            render_engine.update(c_img)
+        render_engine.update(self._shadow)
         
     def cleanup(self, gs, render_eng):
         for c_img in self._cube_imgs:
-            render_eng.remove(c_img, layer_id=gs.ENTITY_LAYER) 
-        render_eng.remove(self._shadow, layer_id=gs.SHADOW_LAYER)
+            render_eng.remove(c_img)
+        render_eng.remove(self._shadow)
         
 
 class PotionEntity(Entity):
@@ -452,7 +448,7 @@ class PotionEntity(Entity):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
-        self._img = img.ImageBundle(spriteref.potion_small, x, y, 
+        self._img = img.ImageBundle(spriteref.potion_small, x, y, layer=spriteref.ENTITY_LAYER,
                scale=2, depth=5)
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
@@ -481,14 +477,15 @@ class PotionEntity(Entity):
         self.move(*self.vel, world=world, and_search=True)
             
         self.update_images()
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER)
+        render_engine.update(self._img)
 
 
 class DoorEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, horz):
+    def __init__(self, grid_x, grid_y):
         Entity.__init__(self, grid_x*64, grid_y*64, 64, 64)
-        self.sprites = spriteref.door_h if horz else spriteref.door_v
+        self._is_horz = None
+        self.sprites = None
         self.delay_duration = 45
         self.delay_count = 0
         self.opening_duration = 20
@@ -497,8 +494,12 @@ class DoorEntity(Entity):
         self.open_radius = 75
 
     def update_images(self):
+        if self._is_horz is None:
+            print("tried to update door image before _is_horz was calculated...")
+            return
+
         if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, scale=4)
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
         if self.delay_count > 0:
             sprite = self.sprites[1]
@@ -514,12 +515,38 @@ class DoorEntity(Entity):
         depth = 100
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
+    def _calc_is_horz(self, world):
+        solid_up = world.is_solid_at(*Utils.sub(self.center(), (0, self.h())))
+        solid_down = world.is_solid_at(*Utils.add(self.center(), (0, self.h())))
+        if solid_up and solid_down:
+            return True
+
+        solid_left = world.is_solid_at(*Utils.sub(self.center(), (self.w(), 0)))
+        solid_right = world.is_solid_at(*Utils.add(self.center(), (self.h(), 0)))
+        if solid_left and solid_right:
+            return True
+
+        # invalid door, hopefully shouldn't happen
+        return random.random() < 0.5
+
     def cleanup(self, gs, render_engine):
         if self._img is not None:
-            render_engine.remove(self._img, layer_id=gs.ENTITY_LAYER)
+            render_engine.remove(self._img)
 
     def update(self, world, gs, input_state, render_engine):
+        if self._is_horz is None:
+            self._is_horz = self._calc_is_horz(world)
+            self.sprites = spriteref.door_h if self._is_horz else spriteref.door_v
+
         if self.opening_count >= self.opening_duration:
+            # XXX kinda jank, we set the geo value to FLOOR when the door is set to open
+            # but we don't update the surrounding tile sprites until the opening animation
+            # is finished. This allows the player to pass through while the door is partially
+            # open, while also keeping the wall sprites correct.
+            #
+            # TODO this <will> cause bugs in the future
+            grid_xy = world.to_grid_coords(*self.center())
+            world.update_geo_bundle(*grid_xy, and_neighbors=True)
             world.remove(self)
         elif self.opening_count > 0:
             self.opening_count += 1
@@ -533,16 +560,9 @@ class DoorEntity(Entity):
                     self.opening_count = 1
                     grid_xy = world.to_grid_coords(*self.center())
                     world.set_geo(*grid_xy, World.FLOOR)
-                    world.update_geo_bundle(*grid_xy, and_neighbors=True)
-                    # TODO - world_controller.door_opened(self) probably
-
             else:
                 self.delay_count = 0
 
-
-
-
-
         self.update_images()
-        render_engine.update(self._img, layer_id=gs.ENTITY_LAYER)
+        render_engine.update(self._img)
     

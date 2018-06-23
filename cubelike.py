@@ -33,7 +33,7 @@ def build_me_a_world(width, height, render_eng, gs):
                     w.set_geo(x, y, World.WALL)
                 elif random.random() < 0.05:
                     w.set_geo(x, y, World.DOOR)
-                    w.add(DoorEntity(x, y, random.random() < 0.5))
+                    w.add(DoorEntity(x, y))
                 else:
                     w.set_geo(x, y, World.FLOOR)
                     if random.random() < 0.05:
@@ -45,13 +45,13 @@ def build_me_a_world(width, height, render_eng, gs):
     render_eng.clear_all_sprites()
                         
     for bun in w.get_all_bundles(World.WALL):
-        render_eng.update(bun, layer_id=gs.WALL_LAYER)
+        render_eng.update(bun)
 
     for bun in w.get_all_bundles(World.DOOR):
-        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
+        render_eng.update(bun)
 
     for bun in w.get_all_bundles(World.FLOOR):
-        render_eng.update(bun, layer_id=gs.FLOOR_LAYER)
+        render_eng.update(bun)
         
     player = Player(80, 80)
     w.add(player)
@@ -78,28 +78,28 @@ def run():
     COLOR = True
     SORTS = True
     render_eng.add_layer(
-            gs.FLOOR_LAYER, 
+            spriteref.FLOOR_LAYER,
             "floors", 0, 
             False, False)
     render_eng.add_layer(
-            gs.SHADOW_LAYER, 
+            spriteref.SHADOW_LAYER,
             "shadow_layer", 5, 
             False, False)
     render_eng.add_layer(
-            gs.WALL_LAYER, 
+            spriteref.WALL_LAYER,
             "walls", 10, 
             False, False)
     render_eng.add_layer(
-            gs.ENTITY_LAYER, 
+            spriteref.ENTITY_LAYER,
             "entities", 15, 
             SORTS, COLOR)
     render_eng.add_layer(
-            gs.UI_0_LAYER, 
+            spriteref.UI_0_LAYER,
             "ui_0", 20, 
             False, COLOR)
     render_eng.add_layer(
-            gs.UI_TOOLTIP_LAYER, 
-            "ui_tooltips", 25, 
+            spriteref.UI_TOOLTIP_LAYER,
+            "ui_tooltips", 25,
             False, COLOR)
     
     raw_sheet = pygame.image.load("assets/image.png")
@@ -152,7 +152,7 @@ def run():
         ui_state.update(world, gs, input_state, render_eng)
         
         camera = gs.get_world_camera()
-        for layer_id in gs.world_layers:
+        for layer_id in spriteref.WORLD_LAYERS:
             render_eng.set_layer_offset(layer_id, *camera)
         
         render_eng.render_layers()

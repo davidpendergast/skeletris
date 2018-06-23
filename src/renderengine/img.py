@@ -19,11 +19,12 @@ class ImageBundle:
     def new_bundle():
         return ImageBundle(None, 0, 0)
 
-    def __init__(self, model, x, y, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
+    def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
         self._y = y
+        self._layer = layer  # Note: can't be changed once set
         self._scale = scale
         self._depth = depth
         self._xflip = xflip
@@ -51,7 +52,7 @@ class ImageBundle:
             return self
         else:
             return ImageBundle(model, x, y, scale=scale, 
-                    depth=depth, xflip=xflip, color=color, uid=self.uid())
+                    depth=depth, xflip=xflip, layer=self.layer(), color=color, uid=self.uid())
         
     def model(self):
         return self._model
@@ -73,6 +74,9 @@ class ImageBundle:
         
     def depth(self):
         return self._depth
+
+    def layer(self):
+        return self._layer
         
     def xflip(self):
         return self._xflip

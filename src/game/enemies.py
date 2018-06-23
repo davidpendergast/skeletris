@@ -50,7 +50,7 @@ class EnemyState(ActorState):
             for l in loot:
                 world.add(l)
             world.remove(entity)
-            splosion = AnimationEntity(entity.x(), entity.y() - 24, spriteref.explosions, 40, gs.ENTITY_LAYER, scale=4)
+            splosion = AnimationEntity(entity.x(), entity.y() - 24, spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
             world.add(splosion)
         else:
             if self.took_damage_x_ticks_ago < 15:

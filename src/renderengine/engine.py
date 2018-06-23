@@ -188,16 +188,16 @@ class RenderEngine:
                 l.remove(uid)
         self.bundles.clear()
         
-    def clear_bundles(self, bundles, layer_id):
+    def clear_bundles(self, bundles):
         for bun in bundles:
-            self.remove(bun, layer_id=layer_id)
+            self.remove(bun)
 
     def resize(self, width, height):
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        glOrtho(0, width, height, 0, 1, -1);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+        glOrtho(0, width, height, 0, 1, -1)
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
         self.size = (width, height)
 
     def init(self, w, h):
@@ -264,27 +264,25 @@ class RenderEngine:
         self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
         self.camera_pos[1] = y - (self.size[1] // 2) if center else 0
         
-    def remove(self, img_bundle, layer_id=None):
+    def remove(self, img_bundle):
         if img_bundle is None:
             return
             
         uid = img_bundle.uid()
         if uid in self.bundles:
             del self.bundles[img_bundle.uid()]
-            
-        if layer_id is not None:
-            self.layers[layer_id].remove(uid)
+
+        self.layers[img_bundle.layer()].remove(uid)
         
-    def update(self, img_bundle, layer_id=None):
+    def update(self, img_bundle):
         if img_bundle is None:
             return
             
         uid = img_bundle.uid()
         self.bundles[uid] = img_bundle
-        
-        if layer_id is not None:
-            layer = self.layers[layer_id]
-            layer.update(uid)
+
+        layer = self.layers[img_bundle.layer()]
+        layer.update(uid)
         
     def __contains__(self, key):
         try:

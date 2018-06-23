@@ -12,10 +12,11 @@ from src.game.inventory import InventoryState, PlayerStatType
 
 
 class ItemGridImage:
-    def __init__(self, x, y, scale, grid):
+    def __init__(self, x, y, grid, layer, scale):
         self.x = x
         self.y = y
         self.grid = grid
+        self.layer = layer
         self.scale = scale
         
         self.item_images = []
@@ -28,7 +29,7 @@ class ItemGridImage:
             pos = self.grid.get_pos(item)
             x_pos = self.x + pos[0] * cellsize[0] * self.scale
             y_pos = self.y + pos[1] * cellsize[1] * self.scale
-            self.item_images.append(ItemImage(x_pos, y_pos, item, self.scale))
+            self.item_images.append(ItemImage(x_pos, y_pos, item, self.layer, self.scale))
         
     def all_bundles(self):
         for item_img in self.item_images:
@@ -40,10 +41,13 @@ class InventoryPanel:
     def __init__(self, player_state):
         self.player_state = player_state
         self.state = self.player_state.inventory()
+        self.layer = spriteref.UI_0_LAYER
+
         self.top_img = None
         self.mid_imgs = []
         self.bot_img = None
         self.title_text = None
+
         
         sc = 2
         
@@ -67,51 +71,51 @@ class InventoryPanel:
         self._build_images(sc)
         
     def _build_images(self, sc):
-        self.top_img = ImageBundle(spriteref.inv_panel_top, 0, 0, scale=sc)
+        self.top_img = ImageBundle(spriteref.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
-            self.mid_imgs.append(ImageBundle(spriteref.inv_panel_mid, 0, y, scale=sc))
+            self.mid_imgs.append(ImageBundle(spriteref.inv_panel_mid, 0, y, layer=self.layer, scale=sc))
         y = (128 + self.state.rows*16 - 16)*sc
-        self.bot_img = ImageBundle(spriteref.inv_panel_bot, 0, y, scale=sc) 
+        self.bot_img = ImageBundle(spriteref.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
         
-        self.title_text = TextImage(8*sc, 8*sc, "Inventory", scale=int(sc*3/2))
+        self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(sc*3/2))
         
         name_str = self.player_state.name()
         lvl_str = self.player_state.level()
         info_txt = "{}\n\nLVL: {}\nROOM:8\nKILL:405".format(name_str, lvl_str)
         i_xy = [self.info_rect[0], self.info_rect[1]]
-        self.info_text = TextImage(*i_xy, info_txt, scale=sc)
+        self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=sc)
         
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
         att_str = "ATT:{}".format(self.player_state.stat_value(StatType.ATT))
-        self.att_text = TextImage(*s_xy, att_str, scale=sc, 
+        self.att_text = TextImage(*s_xy, att_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[item_module.StatType.ATT])
         s_xy[1] += self.att_text.line_height()
         
         def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
-        self.def_text = TextImage(*s_xy, def_str, scale=sc, 
+        self.def_text = TextImage(*s_xy, def_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[item_module.StatType.DEF])
         s_xy[1] += self.def_text.line_height()
         
         vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
-        self.vit_text = TextImage(*s_xy, vit_str, scale=sc, 
+        self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[item_module.StatType.VIT])
         s_xy[1] += 2 * self.def_text.line_height()
         
         hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))
-        self.hp_text = TextImage(*s_xy, hp_str, scale=sc, 
+        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
         dps_str = "DPS:{}".format(self.player_state.stat_value(PlayerStatType.DPS))
-        self.dps_text = TextImage(*s_xy, dps_str, scale=sc, 
+        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[None])
         
         e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
-        self.equip_img = ItemGridImage(*e_xy, sc, self.state.equip_grid)
+        self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
         
         inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
-        self.inv_img = ItemGridImage(*inv_xy, sc, self.state.inv_grid)
+        self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
         
     def all_bundles(self):
         yield self.top_img
@@ -148,10 +152,10 @@ class UiState:
         self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
         
-    def _destroy_panel(self, panel, layer_id, render_eng):
+    def _destroy_panel(self, panel, render_eng):
         if panel is not None:
             bundles = panel.all_bundles()
-            render_eng.clear_bundles(bundles, layer_id)
+            render_eng.clear_bundles(bundles)
             
     def _get_item_entity_at_world_coords(self, world, world_pos):
         hover_rad = 24
@@ -182,20 +186,20 @@ class UiState:
                     
         if item_to_display is not None:
             if self.item_panel is not None and self.item_panel.item is not item_to_display:
-                self._destroy_panel(self.item_panel, gs.UI_TOOLTIP_LAYER, render_eng)
+                self._destroy_panel(self.item_panel, render_eng)
                 self.item_panel = None
                 
             if self.item_panel is None:
                 self.item_panel = ItemInfoPane(item_to_display)
                 for bun in self.item_panel.all_bundles():
-                    render_eng.update(bun, layer_id=gs.UI_TOOLTIP_LAYER)
+                    render_eng.update(bun)
 
             offs = (-screen_pos[0], -screen_pos[1])
-            render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, *offs)
+            render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
             should_destroy = False            
         
         if should_destroy and self.item_panel is not None:
-            self._destroy_panel(self.item_panel, gs.UI_TOOLTIP_LAYER, render_eng)
+            self._destroy_panel(self.item_panel, render_eng)
             self.item_panel = None
             
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
@@ -203,7 +207,7 @@ class UiState:
             if self.inventory_panel is None: 
                 self.rebuild_inventory(gs, render_eng)
             else:
-                self._destroy_panel(self.inventory_panel, gs.UI_0_LAYER, render_eng)
+                self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
     
     def in_inventory_panel(self, screen_pos):
@@ -304,15 +308,15 @@ class UiState:
             destroy_image = True
                                      
         if destroy_image:
-            self._destroy_panel(self.item_on_cursor_image, gs.UI_TOOLTIP_LAYER, render_eng)
+            self._destroy_panel(self.item_on_cursor_image, render_eng)
             self.item_on_cursor_image = None
         
         if create_image:
             size = ItemImage.calc_size(self.item_on_cursor, 2)
-            self.item_on_cursor_image = ItemImage(0, 0, self.item_on_cursor, 2)
+            self.item_on_cursor_image = ItemImage(0, 0, self.item_on_cursor, spriteref.UI_TOOLTIP_LAYER, 2)
             self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
             for bun in self.item_on_cursor_image.all_bundles():
-                render_eng.update(bun, gs.UI_TOOLTIP_LAYER)
+                render_eng.update(bun)
                 
         if rebuild_inventory:
             self.rebuild_inventory(gs, render_eng)
@@ -322,16 +326,16 @@ class UiState:
             if screen_pos is not None:
                 x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
                 y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
-                render_eng.set_layer_offset(gs.UI_TOOLTIP_LAYER, x_offs, y_offs)
+                render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
      
     def rebuild_inventory(self, gs, render_eng):                
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
-                render_eng.remove(bun, layer_id=gs.UI_0_LAYER)
+                render_eng.remove(bun)
                 
         self.inventory_panel = InventoryPanel(gs.player_state())
         for bun in self.inventory_panel.all_bundles():
-            render_eng.update(bun, layer_id=gs.UI_0_LAYER)      
+            render_eng.update(bun)
 
     def update(self, world, gs, input_state, render_eng):
         # TODO - need to better organize this mess

@@ -3,13 +3,13 @@ import src.items.item as items
 import src.game.spriteref as spriteref
 
 
-
 class TextImage:
-    def __init__(self, x, y, text, color=(1, 1, 1), scale=2, center_w=None):
+    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=2, center_w=None):
         self.x = x
         self.center_w = center_w
         self.y = y
         self.text = text.lower()
+        self.layer = layer
         self.color = color
         self.scale = scale
         self._letter_images = []
@@ -55,7 +55,7 @@ class TextImage:
                 ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
                 sprite = spriteref.alphabet[c]
-                img = ImageBundle(sprite, self.x + xpos, self.y + ypos, 
+                img = ImageBundle(sprite, self.x + xpos, self.y + ypos, layer=self.layer,
                         scale=self.scale, color=self.color)
                 self._letter_images.append(img)  
                 xpos += (self.x_kerning + a_sprite.width()) * self.scale
@@ -68,12 +68,13 @@ class TextImage:
 
 class ItemImage:
     
-    def __init__(self, x, y, item, scale):
+    def __init__(self, x, y, item, layer, scale):
         self.x = x
         self.y = y
         self.item = item
         self.scale = scale
         self._cube_images = []
+        self.layer = layer
         
         self._build_images()
         
@@ -83,13 +84,14 @@ class ItemImage:
             sprite = spriteref.item_piece_bigs[art]
             xpos = self.x + sprite.width()*self.scale*cube[0]
             ypos = self.y + sprite.height()*self.scale*cube[1]
-            img = ImageBundle(sprite, xpos, ypos, scale=self.scale, color=self.item.color)
+            img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color)
             self._cube_images.append(img)
             
     def all_bundles(self):
         for b in self._cube_images:
             yield b
-            
+
+    @staticmethod
     def calc_size(item, scale):
         sprite = spriteref.item_piece_bigs[0]
         return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
@@ -99,7 +101,8 @@ class ItemInfoPane:
     
     def __init__(self, item):
         self.item = item        
-        
+        self.layer = spriteref.UI_TOOLTIP_LAYER
+
         self.top_panel = None
         self.mid_panels = []
         self.bot_panel = None
@@ -114,10 +117,10 @@ class ItemInfoPane:
         
     def _build_images(self):
         sc = 1
-        self.top_panel = ImageBundle(spriteref.item_panel_top, 0, 0, scale=sc)
+        self.top_panel = ImageBundle(spriteref.item_panel_top, 0, 0, layer=self.layer, scale=sc)
         h = self.top_panel.height()
         for i in range(0, len(self.item.non_core_stats())):
-            img = ImageBundle(spriteref.item_panel_middle, 0, h, scale=sc)
+            img = ImageBundle(spriteref.item_panel_middle, 0, h, layer=self.layer, scale=sc)
             h += img.height()
             self.mid_panels.append(img)
         
@@ -126,27 +129,27 @@ class ItemInfoPane:
         else:
             bot_sprite = spriteref.item_panel_bottom_1
             h -= bot_sprite.height() * sc  # covers up part of the top 
-        self.bot_panel = ImageBundle(bot_sprite, 0, h, scale=sc)
+        self.bot_panel = ImageBundle(bot_sprite, 0, h, layer=self.layer, scale=sc)
         
-        self.title_text = TextImage(16*sc, 12*sc, self.item.name, scale=2*sc)
+        self.title_text = TextImage(16*sc, 12*sc, self.item.name, self.layer, scale=2*sc)
         
         line_spacing = 3*sc
         
         h = 32*sc + line_spacing
-        lvl_txt = TextImage((1 + 112)*sc, h, self.item.level_string(), scale=2*sc)
+        lvl_txt = TextImage((1 + 112)*sc, h, self.item.level_string(), self.layer, scale=2*sc)
         self.core_texts.append(lvl_txt)
         h += lvl_txt.line_height()
 
         for stat in self.item.core_stats():
             h += line_spacing
-            stat_txt = TextImage(112*sc, h, str(stat), color=stat.color(), scale=2*sc)
+            stat_txt = TextImage(112*sc, h, str(stat), self.layer, color=stat.color(), scale=2*sc)
             self.core_texts.append(stat_txt)
             h += stat_txt.line_height()   
          
         h = 128*sc    
         for stat in self.item.non_core_stats():
             h += line_spacing
-            stat_txt = TextImage(16*sc, h, str(stat), color=stat.color(), scale=2*sc)
+            stat_txt = TextImage(16*sc, h, str(stat), self.layer, color=stat.color(), scale=2*sc)
             self.non_core_texts.append(stat_txt)
             h += stat_txt.line_height()   
         
@@ -154,7 +157,7 @@ class ItemInfoPane:
         item_img_size = ItemImage.calc_size(self.item, item_img_sc)
         item_img_x = 16*sc + 80*sc // 2 - item_img_size[0] // 2
         item_img_y = 32*sc + 80*sc // 2 - item_img_size[1] // 2
-        self.item_image = ItemImage(item_img_x, item_img_y, self.item, item_img_sc)
+        self.item_image = ItemImage(item_img_x, item_img_y, self.item, self.layer, item_img_sc)
                     
     def all_bundles(self):
         yield self.top_panel

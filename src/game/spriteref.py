@@ -5,6 +5,17 @@ import collections
 
 from src.renderengine.img import ImageModel 
 
+FLOOR_LAYER = 0
+SHADOW_LAYER = 5
+WALL_LAYER = 10
+ENTITY_LAYER = 15
+UI_0_LAYER = 20
+UI_TOOLTIP_LAYER = 25
+
+"""Layers that follow the player"""
+WORLD_LAYERS = (FLOOR_LAYER, SHADOW_LAYER,
+                WALL_LAYER, ENTITY_LAYER)
+
 all_imgs = []
 
 

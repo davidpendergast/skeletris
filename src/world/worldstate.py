@@ -111,9 +111,10 @@ class World:
         sprite = self.calc_sprite_for_geo(grid_x, grid_y)
         if bundle is not None:
             if sprite is not None:
-                new_bun = bundle.update(new_model=sprite)
-                if new_bun is not bundle:
-                    self._dirty_bundles.append(new_bun)
+                new_bun = bundle.update(new_model=sprite, new_x=grid_x*CELLSIZE, new_y=grid_y*CELLSIZE,
+                                        new_scale=4, new_depth=10)
+                self._geo_bundle_lookup[(grid_x, grid_y)] = new_bun
+                self._dirty_bundles.append((grid_x, grid_y))
 
         if and_neighbors:
             for n in World.NEIGHBORS:
@@ -142,13 +143,15 @@ class World:
         if key in self._geo_bundle_lookup:
             return self._geo_bundle_lookup[key] 
         else:
-            sprite = self.calc_sprite_for_geo(grid_x, grid_y)
-
-            if sprite is not None:
-                return img.ImageBundle(sprite, grid_x*CELLSIZE, grid_y*CELLSIZE,
-                        scale=int(CELLSIZE/sprite.w), depth=10)
+            geo = self.get_geo(grid_x, grid_y)
+            if geo is World.WALL:
+                layer = spriteref.WALL_LAYER
             else:
-                return None
+                layer = spriteref.FLOOR_LAYER
+
+            self._geo_bundle_lookup[key] = img.ImageBundle(None, 0, 0, layer=layer)
+            self.update_geo_bundle(grid_x, grid_y)
+            return self._geo_bundle_lookup[key]
 
     def get_all_bundles(self, geo_id):
         res = []
@@ -170,9 +173,10 @@ class World:
         for e in self.entities:
             e.update(self, gs, input_state, render_engine)
 
-        for bun in self._dirty_bundles:
-            render_engine.update(bun, layer_id=gs.WALL_LAYER)
-        
+        for bun_key in self._dirty_bundles:
+            render_engine.update(self._geo_bundle_lookup[bun_key])
+        self._dirty_bundles.clear()
+
         p = self.get_player()
         if p is not None:
             # raw center for scrolling smoothness
