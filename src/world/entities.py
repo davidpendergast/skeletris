@@ -565,4 +565,10 @@ class DoorEntity(Entity):
 
         self.update_images()
         render_engine.update(self._img)
+
+
+class ExitEntity(Entity):
+
+    def __init__(self, x, y):
+        pass
     

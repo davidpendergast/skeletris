@@ -33,6 +33,9 @@ class EnemyState(ActorState):
         ActorState.__init__(self, name, 0, stats)
         
         self.took_damage_x_ticks_ago = 15
+
+    def duplicate(self):
+        return EnemyState(self.name, self.sprites, self.level, dict(self.stats))
         
     def stat_value(self, stat_type):
         derived = self._compute_derived_stat(stat_type)
@@ -113,4 +116,16 @@ class EnemyFactory:
         state = EnemyState("enem1", spriteref.enemies_all[i], level, stats)
         
         return Enemy(0, 0, state)
+
+    @staticmethod
+    def gen_enemies(level, n=None):
+        if n is None:
+            n = int(1 + random.random()*4)
+
+        first = EnemyFactory.gen_enemy(level)
+        res = [first]
+        for _ in range(1, n):
+            res.append(Enemy(0, 0, first.state.duplicate()))
+
+        return res
 

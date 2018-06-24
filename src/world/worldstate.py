@@ -94,17 +94,6 @@ class World:
     def is_valid(self, grid_x, grid_y):
         return 0 <= grid_x < self.size()[0] and 0 <= grid_y < self.size()[1]
 
-    def is_perfect_door_location(self, grid_x, grid_y):
-        left_geo = self.get_geo(grid_x - 1, grid_y)
-        right_geo = self.get_geo(grid_x + 1, grid_y)
-        up_geo = self.get_geo(grid_x, grid_y - 1)
-        down_geo = self.get_geo(grid_x, grid_y + 1)
-
-        config = (left_geo, right_geo, up_geo, down_geo)
-        v_door = (World.WALL, World.WALL, World.FLOOR, World.FLOOR)
-        h_door = (World.FLOOR, World.FLOOR, World.WALL, World.WALL)
-        return config == v_door or config == h_door
-
     def size(self):
         return self._size
         
@@ -168,11 +157,11 @@ class World:
             self.update_geo_bundle(grid_x, grid_y)
             return self._geo_bundle_lookup[key]
 
-    def get_all_bundles(self, geo_id):
+    def get_all_bundles(self, geo_id=None):
         res = []
         for x in range(0, self.size()[0]):
             for y in range(0, self.size()[1]):
-                if self.get_geo(x, y) == geo_id:
+                if geo_id is None or self.get_geo(x, y) == geo_id:
                     bun = self.get_geo_bundle(x, y)
                     if bun is not None:
                         res.append(bun)

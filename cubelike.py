@@ -11,6 +11,8 @@ from src.world.worldstate import World
 from src.world.entities import Player, ChestEntity, DoorEntity
 from src.renderengine.engine import RenderEngine
 
+from src.worldgen.worldgen import WorldFactory
+
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
@@ -20,47 +22,12 @@ SCREEN_SIZE = (800, 600)
 
 
 def build_me_a_world(width, height, render_eng, gs):
-    import random
-    w = World(width, height)
-    for x in range(0, width):
-        for y in range(0, height):
-            if x == 0 or y == 0 or x == width - 1 or y == height - 1:
-                w.set_geo(x, y, World.WALL)    
-            elif x < 3 and y < 3:
-                w.set_geo(x, y, World.FLOOR)
-            else:
-                if random.random() < 0.33:
-                    w.set_geo(x, y, World.WALL)
-                else:
-                    w.set_geo(x, y, World.FLOOR)
-    for x in range(0, width):
-        for y in range(0, height):
-            if w.get_geo(x, y) == World.FLOOR:
-                if w.is_perfect_door_location(x, y):
-                    if random.random() < 0.5:
-                        w.set_geo(x, y, World.DOOR)
-                        w.add(DoorEntity(x, y))
-
-                elif random.random() < 0.05:
-                    enemy = EnemyFactory.gen_enemy(5)
-                    w.add(enemy, gridcell=(x, y))
-
-                elif random.random() < 0.05:
-                    w.add(ChestEntity(0, 0), gridcell=(x, y))
-    
     render_eng.clear_all_sprites()
+
+    w = WorldFactory.gen_world(5).build_world()
                         
-    for bun in w.get_all_bundles(World.WALL):
+    for bun in w.get_all_bundles():
         render_eng.update(bun)
-
-    for bun in w.get_all_bundles(World.DOOR):
-        render_eng.update(bun)
-
-    for bun in w.get_all_bundles(World.FLOOR):
-        render_eng.update(bun)
-        
-    player = Player(80, 80)
-    w.add(player)
     
     return w
    
