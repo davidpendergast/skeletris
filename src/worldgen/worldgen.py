@@ -17,7 +17,7 @@ class WorldBlueprint:
         self.player_spawn = [1, 1]
         self.enemy_spawns = []
         self.chest_spawns = []
-        self.exit_spawn = [2, 2]
+        self.exit_spawn = [2, 1]
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -49,7 +49,7 @@ class WorldBlueprint:
             w.add(ChestEntity(0, 0), gridcell=chest_pos)
 
         w.add(Player(0, 0), gridcell=self.player_spawn)
-        # w.add(ExitEntity(0, 0), gridcell=self.exit_spawn)
+        w.add(ExitEntity(*self.exit_spawn))
 
         return w
 

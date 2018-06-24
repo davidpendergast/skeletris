@@ -77,6 +77,8 @@ inv_panel_top = make(480, 0, 160, 128)
 inv_panel_mid = make(480, 128, 160, 16)
 inv_panel_bot = make(480, 144, 160, 16)
 
+end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
+
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
 
 _chars = [letter for letter in string.ascii_lowercase]

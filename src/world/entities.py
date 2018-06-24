@@ -569,6 +569,57 @@ class DoorEntity(Entity):
 
 class ExitEntity(Entity):
 
-    def __init__(self, x, y):
-        pass
+    def __init__(self, grid_x, grid_y):
+        Entity.__init__(self, grid_x*64, grid_y*64, 64, 2)
+        self.delay_count = 0
+        self.delay_duration = 90
+        self.ending_animation_count = 0
+        self.ending_animation_duration = 60
+        self.radius = 32
+
+    def update_images(self, anim_tick):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
+
+        n = len(spriteref.end_level_consoles)
+        if self.delay_count > 0:
+            if self.delay_count <= self.delay_duration / 3:
+                # slow blinking for first third
+                sprite = spriteref.end_level_consoles[(anim_tick // 2) % 2]
+            else:
+                progress = min(0.99, (self.delay_count - self.delay_duration / 3) / (2/3*self.delay_duration))
+                sprite = spriteref.end_level_consoles[2 + int(progress*(n - 2))]
+        elif self.ending_animation_count > 0:
+            sprite = spriteref.end_level_consoles[n - 2 + (anim_tick % 2)]
+        else:
+            sprite = spriteref.end_level_consoles[0]
+
+        x = self.x() + 13 * 2
+        y = self.y() - 16 * 2
+        depth = self.get_depth()
+
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+
+    def update(self, world, gs, input_state, render_engine):
+        if self.ending_animation_count >= self.ending_animation_duration:
+            # TODO - go to next level
+            pass
+        elif self.delay_count >= self.delay_duration:
+            self.delay_count = 0
+            self.ending_animation_count = 1
+        elif self.ending_animation_count > 0:
+            self.ending_animation_count += 1
+        else:
+            p = world.get_player()
+            in_range = p is not None and Utils.dist(p.center(), self.center()) <= self.radius
+
+            if in_range:
+                self.delay_count += 1
+            elif self.delay_count > 0:
+                self.delay_count -= 1
+
+        self.update_images(gs.anim_tick)
+        render_engine.update(self._img)
+
+
     
