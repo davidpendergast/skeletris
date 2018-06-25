@@ -11,6 +11,9 @@ class GlobalState:
         
         self._world_camera_center = [0, 0]
         self._player_state = None
+
+        self._needs_next_level = False
+        self._needs_next_level_countdown = 0
         
     def set_player_state(self, state):
         self._player_state = state
@@ -34,4 +37,14 @@ class GlobalState:
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
             self.anim_tick += 1
+
+        if self._needs_next_level_countdown > 0:
+            self._needs_next_level_countdown -= 1
+            if self._needs_next_level_countdown <= 0:
+                self._needs_next_level = True
+
+    def trigger_next_level_seq(self):
+        if self._needs_next_level_countdown <= 0:
+            print("triggered next level")
+            self._needs_next_level_countdown = 60
 

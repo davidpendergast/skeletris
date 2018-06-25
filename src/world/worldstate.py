@@ -26,6 +26,7 @@ class World:
             
         self.entities = []
         self._ents_to_remove = []
+        self._ents_to_add = []
         
     def cellsize(self):
         return CELLSIZE
@@ -40,7 +41,7 @@ class World:
             entity.set_x(x)
             entity.set_y(y)
             
-        self.entities.append(entity)
+        self._ents_to_add.append(entity)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)
@@ -169,6 +170,10 @@ class World:
         return res
 
     def update_all(self, gs, input_state, render_engine):
+        for e in self._ents_to_add:
+            self.entities.append(e)
+        self._ents_to_add.clear()
+
         for e in self._ents_to_remove:
             self.entities.remove(e) # n^2 but whatever
             e.cleanup(gs, render_engine)

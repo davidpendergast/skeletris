@@ -114,8 +114,9 @@ def run():
                 input_state.set_mouse_pos(None)
         input_state.update(gs)
                 
-        if input_state.was_pressed(pygame.K_RETURN):
+        if gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN):
             world = build_me_a_world(10, 10, render_eng, gs)
+            gs._needs_next_level = False
         
         player = world.get_player()
         gs.player_state().update(player, world, gs, input_state)

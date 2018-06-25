@@ -220,6 +220,8 @@ class PlayerState(ActorState):
             
         if self.delay_tick > 0:
             self.delay_tick -= 1
+
+        blocked = player_entity.inputs_blocked()
              
         if input_state.is_held(inputs.ATTACK) and self._can_begin_attack():
             self.cur_attack_dur = self.stat_value(PlayerStatType.TICKS_PER_ATTACK)
@@ -235,8 +237,8 @@ class PlayerState(ActorState):
                 self.delay_tick = 12
         
         # you can keep moving during the attack windup    
-        move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT)) 
-        move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP)) 
+        move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT))
+        move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP))
         
         self.is_moving = move_x != 0 or move_y != 0
         

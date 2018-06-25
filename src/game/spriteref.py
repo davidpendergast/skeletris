@@ -37,6 +37,7 @@ player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
 player_squat = make(80, 240, 16, 32)
+player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
 
 att_circles = [make(112 + 48*i, 240, 48, 32) for i in range(0, 9)]
 

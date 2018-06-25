@@ -66,6 +66,15 @@ def is_perfect_door_location(bp, x, y):
     return config == v_door or config == h_door
 
 
+def rand_iterate_through_points(x, y, w, h):
+    all_points = []
+    for x_i in range(x, x + w):
+        for y_i in range(y, y + h):
+            all_points.append((x_i, y_i))
+    random.shuffle(all_points)
+    return all_points
+
+
 class WorldFactory:
     MAX_SIZE = (15, 10)
     ROOM_NUM_BOUNDS = [10, 30]
@@ -99,5 +108,10 @@ class WorldFactory:
 
                     elif random.random() < 0.05:
                         bp.chest_spawns.append((x, y))
+
+        for pt in rand_iterate_through_points(0, 0, width, height):
+            if bp.get(*pt) == World.FLOOR and bp.get(pt[0], pt[1] - 1) == World.WALL:
+                bp.exit_spawn = pt
+                break
 
         return bp
