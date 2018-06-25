@@ -31,7 +31,8 @@ class EnemyState(ActorState):
         self.dir = [0, 0]
         self.facing_left = True
         ActorState.__init__(self, name, 0, stats)
-        
+        self._anim_offset = int(20 * random.random())
+
         self.took_damage_x_ticks_ago = 15
 
     def duplicate(self):
@@ -95,7 +96,7 @@ class EnemyState(ActorState):
             color_scale = min(1.0, self.took_damage_x_ticks_ago / 15)
             img_color = (1, color_scale, color_scale)
             
-            sprite = self.sprites[(gs.anim_tick // 2) % len(self.sprites)]
+            sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
 
             health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
 
