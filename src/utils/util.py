@@ -4,6 +4,15 @@ import random
 class Utils:
 
     @staticmethod
+    def bound(val, lower, upper):
+        if upper is not None and val > upper:
+            return upper
+        elif lower is not None and val < lower:
+            return lower
+        else:
+            return val
+
+    @staticmethod
     def add(v1, v2):
         return (v1[0] + v2[0], v1[1] + v2[1])
 

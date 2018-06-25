@@ -2,7 +2,7 @@ import random
 import src.game.spriteref as spriteref
 from src.items.item import StatType, ItemFactory
 from src.world.entities import Enemy, ItemEntity, PotionEntity, AnimationEntity
-from src.game.inventory import ActorState
+from src.game.inventory import ActorState, PlayerStatType
 from src.utils.util import Utils
 
 
@@ -53,7 +53,8 @@ class EnemyState(ActorState):
             for l in loot:
                 world.add(l)
             world.remove(entity)
-            splosion = AnimationEntity(entity.x(), entity.y() - 24, spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
+            splosion = AnimationEntity(entity.x(), entity.y() - 24,
+                                       spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
             world.add(splosion)
         else:
             if self.took_damage_x_ticks_ago < 15:
@@ -95,7 +96,10 @@ class EnemyState(ActorState):
             img_color = (1, color_scale, color_scale)
             
             sprite = self.sprites[(gs.anim_tick // 2) % len(self.sprites)]
-            entity.update_images(sprite, self.facing_left, color=img_color)
+
+            health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
+
+            entity.update_images(sprite, self.facing_left, health_ratio, color=img_color)
 
     def deal_damage(self, damage):
         print("enemy took {} damage".format(damage))

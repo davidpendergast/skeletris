@@ -82,6 +82,8 @@ end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
 
+progress_bars = [make((i // 4)*16, (i % 4)*4 + 336, 16, 4) for i in range(0, 16)]
+
 _chars = [letter for letter in string.ascii_lowercase]
 _chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":"])
 _qmark = make(160, 115, 5, 5)

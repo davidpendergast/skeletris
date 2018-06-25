@@ -175,12 +175,15 @@ class World:
         self._ents_to_add.clear()
 
         for e in self._ents_to_remove:
-            self.entities.remove(e) # n^2 but whatever
+            self.entities.remove(e)  # n^2 but whatever
             e.cleanup(gs, render_engine)
         self._ents_to_remove.clear()
             
         for e in self.entities:
             e.update(self, gs, input_state, render_engine)
+
+            for bun in e.all_bundles():
+                render_engine.update(bun)
 
         for bun_key in self._dirty_bundles:
             render_engine.update(self._geo_bundle_lookup[bun_key])

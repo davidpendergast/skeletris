@@ -96,7 +96,8 @@ class Entity:
         pass 
         
     def cleanup(self, gs, render_engine):
-        pass
+        for bundle in self.all_bundles():
+            render_engine.remove(bundle)
 
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
@@ -135,6 +136,16 @@ class Entity:
         
     def is_enemy(self):
         return False
+
+    def all_bundles(self, extras=[]):
+        if self._shadow is not None:
+            yield self._shadow
+        if self._img is not None:
+            yield self._img
+
+        for bun in extras:
+            if bun is not None:
+                yield bun
 
 
 class AnimationEntity(Entity):
@@ -194,7 +205,6 @@ class AnimationEntity(Entity):
                 world.remove(self)
             else:
                 self.update_images(gs)
-                render_engine.update(self._img)
                 self.duration -= 1
 
 
@@ -246,9 +256,6 @@ class Player(Entity):
         if self.inputs_blocked_for_x_ticks > 0:
             self.inputs_blocked_for_x_ticks -= 1
 
-        render_engine.update(self._img)
-        render_engine.update(self._shadow)
-
     def block_inputs(self, duration):
         self.inputs_blocked_for_x_ticks = duration
         
@@ -262,30 +269,44 @@ class Enemy(Entity):
         Entity.__init__(self, x, y, 32, 32)
         self.state = state
         self._img = None
+        self._healthbar_img = None
         
     def get_shadow_sprite(self):
         return spriteref.large_shadow 
     
-    def update_images(self, sprite, facing_left, color=(1, 1, 1)):
+    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1)):
         if self._img is None:
-            self._img = img.ImageBundle(sprite, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         xflip = not facing_left
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, 
-                new_depth=depth, new_xflip=xflip, new_color=color)
-        
-    def cleanup(self, gs, render_engine):
-        render_engine.remove(self._img)
-        render_engine.remove(self._shadow)
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_xflip=xflip, new_color=color)
+
+        if health_ratio < 1.0 and self._healthbar_img is None:
+            self._healthbar_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
+        if self._healthbar_img is not None:
+            n = len(spriteref.progress_bars)
+            hp_sprite = spriteref.progress_bars[int(min(0.99, health_ratio) * n)]
+            hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
+            hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
+            color = (1.0, 0, 0)
+            self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
+                                                             new_depth=depth, new_color=color)
+
+    def all_bundles(self, extras=[]):
+        for bun in Entity.all_bundles(self, extras=extras):
+            yield bun
+
+        if self._healthbar_img is not None:
+            yield self._healthbar_img
         
     def update(self, world, gs, input_state, render_engine):
         self.state.update(self, world, gs, input_state)
         super().update_images(gs.anim_tick) # TODO - shadows are dumb
-        
-        render_engine.update(self._img)
-        render_engine.update(self._shadow)
         
     def is_enemy(self):
         return True
@@ -364,8 +385,6 @@ class ChestEntity(Entity):
                 self._do_open(world)           
              
         self.update_images(gs.anim_tick)
-        render_engine.update(self._img)
-        render_engine.update(self._shadow)
         
         
 class ItemEntity(Entity):
@@ -471,15 +490,10 @@ class ItemEntity(Entity):
         self.move(*self.vel, world=world, and_search=True)
             
         self.update_images(gs.anim_tick)
-        for c_img in self._cube_imgs:
-            render_engine.update(c_img)
-        render_engine.update(self._shadow)
-        
-    def cleanup(self, gs, render_eng):
-        for c_img in self._cube_imgs:
-            render_eng.remove(c_img)
-        render_eng.remove(self._shadow)
-        
+
+    def all_bundles(self, extras=[]):
+        return Entity.all_bundles(self, extras=extras + self._cube_imgs)
+
 
 class PotionEntity(Entity):
     def __init__(self, cx, cy, vel=None):
@@ -515,7 +529,6 @@ class PotionEntity(Entity):
         self.move(*self.vel, world=world, and_search=True)
             
         self.update_images()
-        render_engine.update(self._img)
 
 
 class DoorEntity(Entity):
@@ -568,10 +581,6 @@ class DoorEntity(Entity):
         # invalid door, hopefully shouldn't happen
         return random.random() < 0.5
 
-    def cleanup(self, gs, render_engine):
-        if self._img is not None:
-            render_engine.remove(self._img)
-
     def update(self, world, gs, input_state, render_engine):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
@@ -603,7 +612,6 @@ class DoorEntity(Entity):
                 self.delay_count = 0
 
         self.update_images()
-        render_engine.update(self._img)
 
 
 class ExitEntity(Entity):
@@ -674,9 +682,6 @@ class ExitEntity(Entity):
 
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
-    def cleanup(self, gs, render_engine):
-        render_engine.remove(self._img)
-
     def update(self, world, gs, input_state, render_engine):
         if self.count >= self.delay_duration + self.final_cinematic_duration:
             gs.trigger_next_level_seq()
@@ -696,7 +701,6 @@ class ExitEntity(Entity):
         self._update_player_if_needed(world, p)
 
         self.update_images(gs.anim_tick)
-        render_engine.update(self._img)
 
 
     
