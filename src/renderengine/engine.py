@@ -11,7 +11,7 @@ class _Layer:
             use_color: bool -- true if layer respects sprites' color value
         """
         self.name = name
-        self.images = [] # ordered list of image ids
+        self.images = []  # ordered list of image ids
         self._image_set = set()
         self._offset = (0, 0)
         self._z_order = z_order

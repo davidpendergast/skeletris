@@ -69,10 +69,10 @@ medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 chest_shadow = make(96, 40, 32, 8)
 
-item_panel_top = make(256, 0, 224, 128)
-item_panel_middle = make(256, 128, 224, 16)
-item_panel_bottom_0 = make(256, 144, 224, 16)
-item_panel_bottom_1 = make(256, 160, 224, 16) # if no bonus attributes
+item_panel_top = make(640, 0, 112, 64)
+item_panel_middle = make(640, 64, 112, 8)
+item_panel_bottom_0 = make(640, 72, 112, 8)
+item_panel_bottom_1 = make(640, 80, 112, 8)  # if no bonus attributes
 
 inv_panel_top = make(480, 0, 160, 128)
 inv_panel_mid = make(480, 128, 160, 16)
