@@ -393,11 +393,17 @@ class ItemEntity(Entity):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
-        self._cube_imgs = []
         self.pickup_delay = 45
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.90
         self.bounce_offset = int(random.random() * 100)
+
+        try:
+            self.sprite = spriteref.item_entities[self.item.cubes]
+        except:
+            # this could break in so many ways, better to fail somewhat gracefully
+            print("ERROR: Failed to get entity sprite for item: {}".format(self.item))
+            self.sprite = spriteref.player_idle_0
         
         # for moving away from other stuff
         self.push_radius = 20
@@ -422,31 +428,17 @@ class ItemEntity(Entity):
         return True
             
     def update_images(self, anim_tick):
-        if len(self._cube_imgs) == 0:
-            for c in self.item.cubes:
-                c_img = img.ImageBundle(spriteref.item_piece_small, 0, 0, layer=spriteref.ENTITY_LAYER,
-                        scale=2, color=self.item.color)
-                self._cube_imgs.append(c_img)
-        
-        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
-        
-        item_w = self.item.w()
-        item_h = self.item.h()
-        
-        for i in range(0, len(self._cube_imgs)):
-            cube = self.item.cubes[i]
-            c_img = self._cube_imgs[i]
-            
-            model = c_img.model()
-            c_w = model.width() * c_img.scale()
-            c_h = model.height() * c_img.scale()
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+            self._img = self._img.update(new_color=self.item.color, new_model=self.sprite)
 
-            x = (self.x() + self.w() // 2) - (c_w * item_w // 2) + cube[0] * c_w
-            y = (self.y() + self.h()) - c_h * item_h + cube[1] * c_h - (2 - bounce)
-            depth = self.get_depth()
-            self._cube_imgs[i] = c_img.update(new_model=model, 
-                    new_x=x, new_y=y, new_depth=depth)   
-                    
+        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
+
+        x = self.x() - (self.sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (self.sprite.height() * self._img.scale() - self.h()) + (2 - bounce)
+        depth = self.get_depth()
+        self._img = self._img.update(new_x=x, new_y=y, new_depth=depth)
+
         super().update_images(anim_tick)
                     
     def _handle_pushes(self, world):
@@ -490,9 +482,6 @@ class ItemEntity(Entity):
         self.move(*self.vel, world=world, and_search=True)
             
         self.update_images(gs.anim_tick)
-
-    def all_bundles(self, extras=[]):
-        return Entity.all_bundles(self, extras=extras + self._cube_imgs)
 
 
 class PotionEntity(Entity):
