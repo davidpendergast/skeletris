@@ -24,7 +24,8 @@ SCREEN_SIZE = (800, 600)
 def build_me_a_world(width, height, render_eng, gs):
     render_eng.clear_all_sprites()
 
-    w = WorldFactory.gen_world(5).build_world()
+    w = WorldFactory.gen_world_from_rooms().build_world()
+    # w = WorldFactory.gen_test_world(5).build_world()
                         
     for bun in w.get_all_bundles():
         render_eng.update(bun)

@@ -91,6 +91,10 @@ class ImageBundle:
         x = self.x()
         y = self.y()
         model = self.model()
+
+        if model is None:
+            return
+
         w = model.w * self.scale()
         h = model.h * self.scale()
         color = self.color()
