@@ -4,7 +4,6 @@ import math
 
 import src.renderengine.img as img
 import src.game.spriteref as spriteref
-import src.game.inputs as inputs
 from src.world.worldstate import World
 from src.items.item import ItemFactory
 from src.utils.util import Utils

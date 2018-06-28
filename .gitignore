@@ -1,5 +1,6 @@
 *__pycache__*
-*xcf
+*.xcf
+planning/ui_planning.xcf
 videos/
 gl_examples/
 .idea

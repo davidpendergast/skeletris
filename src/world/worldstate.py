@@ -193,6 +193,4 @@ class World:
         if p is not None:
             # raw center for scrolling smoothness
             gs.set_world_camera_center(*p.center())
-                
-                
-                
+

@@ -13,6 +13,8 @@ from src.renderengine.engine import RenderEngine
 
 from src.worldgen.worldgen import WorldFactory
 
+import src.utils.profiling as profiling
+
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
@@ -24,7 +26,7 @@ SCREEN_SIZE = (800, 600)
 def build_me_a_world(width, height, render_eng, gs):
     render_eng.clear_all_sprites()
 
-    w = WorldFactory.gen_world_from_rooms().build_world()
+    w = WorldFactory.gen_world_from_rooms(num_rooms=8).build_world()
     # w = WorldFactory.gen_test_world(5).build_world()
                         
     for bun in w.get_all_bundles():
@@ -113,11 +115,16 @@ def run():
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
+
         input_state.update(gs)
                 
         if gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN):
             world = build_me_a_world(10, 10, render_eng, gs)
             gs._needs_next_level = False
+
+        if input_state.was_pressed(pygame.K_F1):
+            # used to help find performance bottlenecks
+            profiling.get_instance().toggle()
         
         player = world.get_player()
         gs.player_state().update(player, world, gs, input_state)
