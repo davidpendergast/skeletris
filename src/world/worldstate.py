@@ -30,7 +30,8 @@ class World:
         self.entities = []
         self._ents_to_remove = []
         self._ents_to_add = []
-        
+        self._onscreen_entities = set()
+
     def cellsize(self):
         return CELLSIZE
         
@@ -203,12 +204,19 @@ class World:
             self.entities.remove(e)  # n^2 but whatever
             e.cleanup(gs, render_engine)
         self._ents_to_remove.clear()
-            
-        for e in self.entities:
-            e.update(self, gs, input_state, render_engine)
 
-            for bun in e.all_bundles():
-                render_engine.update(bun)
+        cam_center = gs.get_world_camera(center=True)
+
+        for e in self.entities:
+            if Utils.dist(e.center(), cam_center) <= 800:
+                self._onscreen_entities.add(e)
+                e.update(self, gs, input_state, render_engine)
+                for bun in e.all_bundles():
+                    render_engine.update(bun)
+
+            elif e in self._onscreen_entities:
+                e.cleanup(gs, render_engine)
+                self._onscreen_entities.remove(e)
 
         p = self.get_player()
         if p is not None:

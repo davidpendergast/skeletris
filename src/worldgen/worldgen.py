@@ -122,8 +122,6 @@ class BuilderUtils:
         to_place.set_offset(0, 0)
         doors1 = to_place.get_adorable_walls()
         doors2 = to_attach_to.get_adorable_walls()
-        print(doors1)
-        print(doors2)
 
         if len(doors1) == 0 or len(doors2) == 0:
             return False
@@ -132,7 +130,7 @@ class BuilderUtils:
                 d1 = doors1[int(len(doors1) * random.random())]
                 d2 = doors2[int(len(doors2) * random.random())]
                 offs = (d2[0] - d1[0], d2[1] - d1[1])
-                print("trying position {}".format(offs))
+                # print("trying position {}".format(offs))
                 to_place.set_offset(*offs)
                 if BuilderUtils.can_place_room(to_place, all_rooms):
                     print("placing room at {}".format(to_place.offset()))
@@ -199,7 +197,7 @@ class WorldBlueprint:
                     w.add(DoorEntity(x, y))
 
         for spawn_pos in self.enemy_spawns:
-            enemies = EnemyFactory.gen_enemies(self.level, n=2)
+            enemies = EnemyFactory.gen_enemies(self.level)
             for e in enemies:
                 w.add(e, gridcell=spawn_pos)
 
@@ -266,7 +264,7 @@ class WorldFactory:
         random.shuffle(flrs)
         bp.player_spawn = flrs[0]
 
-        bp.enemy_spawns = WorldFactory._get_random_floors(bp, num_rooms // 2)
+        bp.enemy_spawns = WorldFactory._get_random_floors(bp, num_rooms * 3)
         bp.chest_spawns = WorldFactory._get_random_floors(bp, num_rooms // 3)
 
         bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)

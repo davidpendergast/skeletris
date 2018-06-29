@@ -24,10 +24,13 @@ class GlobalState:
     def set_world_camera_center(self, x, y):
         self._world_camera_center = (x, y)
     
-    def get_world_camera(self):
-        offs_x = self._world_camera_center[0] - self.screen_size[0] // 2 
-        offs_y = self._world_camera_center[1] - self.screen_size[1] // 2 
-        return (offs_x, offs_y)
+    def get_world_camera(self, center=False):
+        if center:
+            return tuple(self._world_camera_center)
+        else:
+            offs_x = self._world_camera_center[0] - self.screen_size[0] // 2
+            offs_y = self._world_camera_center[1] - self.screen_size[1] // 2
+            return (offs_x, offs_y)
 
     def get_world_camera_size(self):
         return self.screen_size

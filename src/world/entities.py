@@ -8,10 +8,19 @@ from src.world.worldstate import World
 from src.items.item import ItemFactory
 from src.utils.util import Utils
 
+ENTITY_UID_COUNTER = 0
+
 
 class Entity:
 
+    @staticmethod
+    def gen_uid():
+        global ENTITY_UID_COUNTER
+        ENTITY_UID_COUNTER += 1
+        return ENTITY_UID_COUNTER - 1
+
     def __init__(self, x, y, w, h):
+        self._uid = Entity.gen_uid()
         self._x = x
         self._y = y
         self.rect = pygame.Rect(int(x), int(y), w, h)
@@ -135,6 +144,12 @@ class Entity:
         
     def is_enemy(self):
         return False
+
+    def __eq__(self, other):
+        return other is not None and self._uid == other._uid
+
+    def __hash__(self):
+        return self._uid
 
     def all_bundles(self, extras=[]):
         if self._shadow is not None:

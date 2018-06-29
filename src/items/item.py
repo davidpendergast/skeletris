@@ -341,9 +341,3 @@ class ItemFactory:
         except TypeError:
             return ItemFactory._get_all_possible_cube_configs_helper(n-1, size, [(0, 0)], set())
 
-
-if __name__ == "__main__":
-     all_cubes = ItemFactory.get_all_possible_cube_configs(n=(5, 6, 7))
-     print(len(all_cubes))
-     print(all_cubes)
-

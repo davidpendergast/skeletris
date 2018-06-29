@@ -65,7 +65,7 @@ class _Layer:
         
         if len(self._to_add) > 0:
             self.images.extend(self._to_add)
-            print("layer {} size increased to: {}".format(self.name, len(self.images)))
+            # print("layer {} size increased to: {}".format(self.name, len(self.images)))
             self._to_add = []
             
         # todo: smarter update
@@ -320,6 +320,6 @@ class RenderEngine:
     def count_sprites(self):
         res = 0
         for layer in self.layers.values():
-            print("layer {} has {} sprites".format(layer.name, layer.num_sprites()))
+            # print("layer {} has {} sprites".format(layer.name, layer.num_sprites()))
             res += layer.num_sprites()
         return res
