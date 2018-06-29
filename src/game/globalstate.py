@@ -28,6 +28,9 @@ class GlobalState:
         offs_x = self._world_camera_center[0] - self.screen_size[0] // 2 
         offs_y = self._world_camera_center[1] - self.screen_size[1] // 2 
         return (offs_x, offs_y)
+
+    def get_world_camera_size(self):
+        return self.screen_size
         
     def screen_to_world_coords(self, point):
         cam = self.get_world_camera()

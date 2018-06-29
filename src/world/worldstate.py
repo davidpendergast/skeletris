@@ -21,7 +21,10 @@ class World:
         self._level_geo = []
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
-        self._geo_bundle_lookup = {}  # x,y -> bundle id
+        self._geo_bundle_lookup = {}    # x,y -> bundle id
+
+        self._onscreen_bundles = set()
+
         self._dirty_bundles = []
             
         self.entities = []
@@ -169,6 +172,28 @@ class World:
                     
         return res
 
+    def _update_onscreen_geo_bundles(self, gs, render_engine):
+        px, py = gs.get_world_camera()
+        pw, ph = gs.get_world_camera_size()
+        grid_rect = [px // CELLSIZE, py // CELLSIZE,
+                     pw // CELLSIZE + 3, ph // CELLSIZE + 3]
+
+        new_onscreen = set()
+        for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):
+            for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
+                bun_key = (x, y)
+                bun = self.get_geo_bundle(*bun_key)
+                if bun is not None:
+                    new_onscreen.add(bun_key)
+                    if bun_key not in self._onscreen_bundles or bun_key in self._dirty_bundles:
+                        render_engine.update(bun)
+
+        for bun_key in self._onscreen_bundles:
+            if bun_key not in new_onscreen:
+                render_engine.remove(self.get_geo_bundle(*bun_key))
+
+        self._onscreen_bundles = new_onscreen
+
     def update_all(self, gs, input_state, render_engine):
         for e in self._ents_to_add:
             self.entities.append(e)
@@ -185,12 +210,12 @@ class World:
             for bun in e.all_bundles():
                 render_engine.update(bun)
 
-        for bun_key in self._dirty_bundles:
-            render_engine.update(self._geo_bundle_lookup[bun_key])
-        self._dirty_bundles.clear()
-
         p = self.get_player()
         if p is not None:
-            # raw center for scrolling smoothness
             gs.set_world_camera_center(*p.center())
+
+        self._update_onscreen_geo_bundles(gs, render_engine)
+
+
+
 

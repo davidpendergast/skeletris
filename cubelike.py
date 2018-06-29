@@ -26,11 +26,8 @@ SCREEN_SIZE = (800, 600)
 def build_me_a_world(width, height, render_eng, gs):
     render_eng.clear_all_sprites()
 
-    w = WorldFactory.gen_world_from_rooms(num_rooms=8).build_world()
+    w = WorldFactory.gen_world_from_rooms(num_rooms=20).build_world()
     # w = WorldFactory.gen_test_world(5).build_world()
-                        
-    for bun in w.get_all_bundles():
-        render_eng.update(bun)
     
     return w
    
@@ -142,7 +139,7 @@ def run():
         clock.tick(60)
         if gs.tick_counter % 60 == 0:
             if clock.get_fps() < 59:
-                print("fps: {}".format(clock.get_fps()))
+                print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
 
                 
 if __name__ == "__main__":

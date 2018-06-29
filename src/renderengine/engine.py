@@ -1,7 +1,12 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
- 
- 
+
+
+def assert_int(val):
+    if not isinstance(val, int):
+        raise ValueError("value is not an int: {}".format(val))
+
+
 class _Layer:
     def __init__(self, name, z_order, sort_sprites, use_color):
         """
@@ -33,6 +38,7 @@ class _Layer:
         return self._offset
     
     def update(self, bundle_id):
+        assert_int(bundle_id)
         if bundle_id in self._image_set:
             self._dirty_sprites.append(bundle_id)
         else:
@@ -40,6 +46,7 @@ class _Layer:
             self._to_add.append(bundle_id)
         
     def remove(self, bundle_id):
+        assert_int(bundle_id)
         if bundle_id in self._image_set:
             self._image_set.remove(bundle_id)
             self._to_remove.append(bundle_id)
@@ -108,6 +115,9 @@ class _Layer:
     def z_order(self):
         return self._z_order
 
+    def num_sprites(self):
+        return len(self.images)
+
 
 def printOpenGLError():
     err = glGetError()
@@ -117,7 +127,7 @@ def printOpenGLError():
 
 class Shader:
 
-    def initShader(self, vertex_shader_source, fragment_shader_source):
+    def __init__(self, vertex_shader_source, fragment_shader_source):
         # create program
         self.program=glCreateProgram()
         print('create program')
@@ -165,6 +175,7 @@ class RenderEngine:
         self.layers = {}  # layer_id -> layer
         self.ordered_layers = []
         self.shader = None
+        self.tex_id = None
         
     def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color):
         l = _Layer(layer_name, z_order, sort_sprites, use_color)
@@ -208,12 +219,9 @@ class RenderEngine:
         
         vstring = glGetString(GL_VERSION)
         vstring = vstring.decode() if vstring is not None else None
-        print ("running OpenGL version: {}".format(vstring))
+        print("running OpenGL version: {}".format(vstring))
         
-        self.tex_id = None
-        
-        self.shader=Shader()
-        self.shader.initShader(
+        self.shader = Shader(
             '''
             varying vec2 vTexCoord;
 
@@ -308,3 +316,10 @@ class RenderEngine:
 
     def cleanup(self):
         self.shader.end()
+
+    def count_sprites(self):
+        res = 0
+        for layer in self.layers.values():
+            print("layer {} has {} sprites".format(layer.name, layer.num_sprites()))
+            res += layer.num_sprites()
+        return res
