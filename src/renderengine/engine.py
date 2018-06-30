@@ -320,6 +320,5 @@ class RenderEngine:
     def count_sprites(self):
         res = 0
         for layer in self.layers.values():
-            # print("layer {} has {} sprites".format(layer.name, layer.num_sprites()))
             res += layer.num_sprites()
         return res

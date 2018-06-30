@@ -1,4 +1,5 @@
 import random
+from collections import deque
 
 import src.renderengine.img as img
 import src.game.spriteref as spriteref
@@ -19,8 +20,14 @@ class World:
     def __init__(self, width, height):
         self._size = (width, height)
         self._level_geo = []
+        self._hidden = []
+        self._active_light_events = []
+        self._light_update_freq = 1  # ticks per update
+
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
+            self._hidden.append([False] * height)
+
         self._geo_bundle_lookup = {}    # x,y -> bundle id
 
         self._onscreen_bundles = set()
@@ -35,7 +42,7 @@ class World:
     def cellsize(self):
         return CELLSIZE
         
-    def add(self, entity, gridcell=None):
+    def add(self, entity, gridcell=None, next_update=True):
         """
             gridcell: (grid_x, grid_y) or None
         """
@@ -44,8 +51,11 @@ class World:
             y = gridcell[1] * self.cellsize() + (self.cellsize() - entity.h()) // 2
             entity.set_x(x)
             entity.set_y(y)
-            
-        self._ents_to_add.append(entity)
+
+        if next_update:
+            self._ents_to_add.append(entity)
+        else:
+            self.entities.append(entity)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)
@@ -88,10 +98,36 @@ class World:
             return self._level_geo[grid_x][grid_y]
         else:
             return World.EMPTY
-            
+
     def get_geo_at(self, pixel_x, pixel_y):
         return self.get_geo(pixel_x // self.cellsize(), pixel_y // self.cellsize())
-        
+
+    def door_opened(self, grid_x, grid_y):
+        print("door opened at {}".format((grid_x, grid_y)))
+        for n in World.NEIGHBORS:
+            self.set_hidden(grid_x + n[0], grid_y + n[1], False, and_fill_adj_floors=True)
+
+    def get_hidden(self, grid_x, grid_y):
+        if self.is_valid(grid_x, grid_y):
+            return self._hidden[grid_x][grid_y]
+        else:
+            return False
+
+    def set_hidden(self, grid_x, grid_y, val, and_fill_adj_floors=True):
+        if self.get_geo(grid_x, grid_y) == World.FLOOR and self._hidden[grid_x][grid_y] != val:
+            self._hidden[grid_x][grid_y] = val
+            self.update_geo_bundle(grid_x, grid_y, and_neighbors=False)
+
+            if and_fill_adj_floors:
+                for n in World.NEIGHBORS:
+                    self.set_hidden(grid_x + n[0], grid_y + n[1], val, and_fill_adj_floors=True)
+
+    def hide_all_floors(self):
+        for x in range(0, self.size()[0]):
+            for y in range(0, self.size()[1]):
+                if self.get_geo(x, y) == World.FLOOR:
+                    self.set_hidden(x, y, True, and_fill_adj_floors=False)
+
     def is_solid_at(self, pixel_x, pixel_y):
         geo = self.get_geo_at(pixel_x, pixel_y)
         return geo in World.SOLIDS
@@ -101,12 +137,12 @@ class World:
 
     def size(self):
         return self._size
-        
-    NEIGHBORS = [(-1, -1), (0, -1), (1, -1), (1, 0),
-                 (1, 1), (0, 1), (-1, 1), (-1, 0)]
+
+    NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
+    ALL_NEIGHBORS = [(-1, -1), (0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0)]
     
     def get_neighbor_info(self, grid_x, grid_y, mapping=lambda x: x):
-        return [mapping(self.get_geo(grid_x + offs[0], grid_y + offs[1])) for offs in World.NEIGHBORS]
+        return [mapping(self.get_geo(grid_x + offs[0], grid_y + offs[1])) for offs in World.ALL_NEIGHBORS]
 
     def update_geo_bundle(self, grid_x, grid_y, and_neighbors=False):
         if not self.is_valid(grid_x, grid_y):
@@ -122,7 +158,7 @@ class World:
                 self._dirty_bundles.append((grid_x, grid_y))
 
         if and_neighbors:
-            for n in World.NEIGHBORS:
+            for n in World.ALL_NEIGHBORS:
                 self.update_geo_bundle(grid_x + n[0], grid_y + n[1], and_neighbors=False)
 
     def calc_sprite_for_geo(self, grid_x, grid_y):
@@ -139,11 +175,14 @@ class World:
             return spriteref.floor_totally_dark
 
         elif geo == World.FLOOR:
-            def mapping(x): return 1 if x in (World.WALL, World.EMPTY, World.DOOR) else 0
-            n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
+            if self.get_hidden(grid_x, grid_y):
+                return spriteref.floor_hidden
+            else:
+                def mapping(x): return 1 if x in (World.WALL, World.EMPTY, World.DOOR) else 0
+                n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
 
-            floor_img_id = 2 * n_info[0] + 4 * n_info[1] + 1 * n_info[7]
-            return spriteref.floors[floor_img_id]
+                floor_img_id = 2 * n_info[0] + 4 * n_info[1] + 1 * n_info[7]
+                return spriteref.floors[floor_img_id]
 
         return None
 
@@ -208,9 +247,16 @@ class World:
         cam_center = gs.get_world_camera(center=True)
 
         for e in self.entities:
-            if Utils.dist(e.center(), cam_center) <= 800:
-                self._onscreen_entities.add(e)
+            e_center = e.center()
+            on_camera = Utils.dist(e.center(), cam_center) <= 800
+            is_hidden = self.get_hidden(*self.to_grid_coords(*e_center))
+
+            if on_camera:
+                # still want them to wander around if they're hidden
                 e.update(self, gs, input_state, render_engine)
+
+            if on_camera and not is_hidden:
+                self._onscreen_entities.add(e)
                 for bun in e.all_bundles():
                     render_engine.update(bun)
 
@@ -223,6 +269,7 @@ class World:
             gs.set_world_camera_center(*p.center())
 
         self._update_onscreen_geo_bundles(gs, render_engine)
+
 
 
 

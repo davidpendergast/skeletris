@@ -194,18 +194,18 @@ class WorldBlueprint:
             for y in range(0, self.size[1]):
                 w.set_geo(x, y, self.geo[x][y])
                 if self.geo[x][y] == World.DOOR:
-                    w.add(DoorEntity(x, y))
+                    w.add(DoorEntity(x, y), next_update=False)
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)
             for e in enemies:
-                w.add(e, gridcell=spawn_pos)
+                w.add(e, gridcell=spawn_pos, next_update=False)
 
         for chest_pos in self.chest_spawns:
-            w.add(ChestEntity(0, 0), gridcell=chest_pos)
+            w.add(ChestEntity(0, 0), gridcell=chest_pos, next_update=False)
 
-        w.add(Player(0, 0), gridcell=self.player_spawn)
-        w.add(ExitEntity(*self.exit_spawn))
+        w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
+        w.add(ExitEntity(*self.exit_spawn), next_update=False)
 
         return w
 
@@ -264,7 +264,7 @@ class WorldFactory:
         random.shuffle(flrs)
         bp.player_spawn = flrs[0]
 
-        bp.enemy_spawns = WorldFactory._get_random_floors(bp, num_rooms * 3)
+        bp.enemy_spawns = WorldFactory._get_random_floors(bp, num_rooms)
         bp.chest_spawns = WorldFactory._get_random_floors(bp, num_rooms // 3)
 
         bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)

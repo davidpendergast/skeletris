@@ -23,12 +23,19 @@ print("running pygame version: " + pygame.version.ver)
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(width, height, render_eng, gs):
-    render_eng.clear_all_sprites()
-
-    w = WorldFactory.gen_world_from_rooms(num_rooms=50).build_world()
+def build_me_a_world():
+    w = WorldFactory.gen_world_from_rooms(num_rooms=25).build_world()
     # w = WorldFactory.gen_test_world(5).build_world()
-    
+
+    w.hide_all_floors()
+
+    p = w.get_player()
+    print("p = ", p)
+    if p is not None:
+        grid_xy = w.to_grid_coords(*p.center())
+        print("setting hidden to false at {}".format(grid_xy))
+        w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
+
     return w
    
     
@@ -87,7 +94,7 @@ def run():
     height = img_surface.get_height()
     render_eng.set_texture(texture_data, width, height)
         
-    world = build_me_a_world(1, 1, render_eng, gs)
+    world = None
         
     clock = pygame.time.Clock()    
     
@@ -115,8 +122,9 @@ def run():
 
         input_state.update(gs)
                 
-        if gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN):
-            world = build_me_a_world(10, 10, render_eng, gs)
+        if world is None or gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN):
+            render_eng.clear_all_sprites()
+            world = build_me_a_world()
             gs._needs_next_level = False
 
         if input_state.was_pressed(pygame.K_F1):

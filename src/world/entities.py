@@ -598,6 +598,7 @@ class DoorEntity(Entity):
             # TODO this <will> cause bugs in the future
             grid_xy = world.to_grid_coords(*self.center())
             world.update_geo_bundle(*grid_xy, and_neighbors=True)
+            world.door_opened(*grid_xy)
             world.remove(self)
         elif self.opening_count > 0:
             self.opening_count += 1
