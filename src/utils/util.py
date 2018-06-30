@@ -25,6 +25,20 @@ class Utils:
         return (a*v[0], a*v[1])
 
     @staticmethod
+    def rotate(v, rad):
+        cos = math.cos(rad)
+        sin = math.sin(rad)
+        return (v[0]*cos - v[1]*sin, v[0]*sin + v[1]*cos)
+
+    @staticmethod
+    def to_degrees(rads):
+        return rads * 180 / 3.141529
+
+    @staticmethod
+    def to_rads(degrees):
+        return degrees * 3.141529 / 180
+
+    @staticmethod
     def set_length(v, length):
         mag = math.sqrt(v[0]*v[0] + v[1]*v[1])
         if mag == 0:

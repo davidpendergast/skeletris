@@ -107,6 +107,9 @@ class World:
         for n in World.NEIGHBORS:
             self.set_hidden(grid_x + n[0], grid_y + n[1], False, and_fill_adj_floors=True)
 
+    def get_hidden_at(self, pixel_x, pixel_y):
+        return self.get_hidden(*self.to_grid_coords(pixel_x, pixel_y))
+
     def get_hidden(self, grid_x, grid_y):
         if self.is_valid(grid_x, grid_y):
             return self._hidden[grid_x][grid_y]

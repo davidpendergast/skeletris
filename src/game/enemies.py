@@ -20,6 +20,79 @@ class LootFactory:
         return loot
 
 
+class MovementAI():
+
+    @staticmethod
+    def get_move_dir(entity, ai_state, world):
+        return (0, 0)
+
+
+class BasicChaseAI(MovementAI):
+
+    @staticmethod
+    def get_move_dir(entity, ai_state, world):
+        p = world.get_player()
+        if p is None:
+            return (0, 0)
+        else:
+            e_pos = entity.center()
+            p_pos = p.center()
+
+            if "basic_angle_offset_degrees" not in ai_state:
+                ai_state["basic_angle_offset_degrees"] = 0
+
+            if random.random() < 0.03:
+                dist = Utils.dist(e_pos, p_pos)
+                max_angle_range = 80  # plus or minus
+                angle = random.random() * max_angle_range * Utils.bound((400 - dist) / 400, 0.25, 1.0)
+                angle *= 1.0 if random.random() < 0.5 else -1.0
+
+                ai_state["basic_angle_offset_degrees"] = angle
+
+            rotate_rads = Utils.to_rads(ai_state["basic_angle_offset_degrees"])
+
+            towards_player = Utils.set_length(Utils.sub(p_pos, e_pos), 1.0)
+            return Utils.rotate(towards_player, rotate_rads)
+
+
+class IdleAI(MovementAI):
+
+    @staticmethod
+    def get_move_dir(entity, ai_state, world):
+        if "idle_dir" not in ai_state:
+            ai_state["idle_dir"] = [0, 0]
+
+        res = ai_state["idle_dir"]
+
+        if random.random() < 0.01:
+            i = int(8 * random.random())
+            if i >= 4:
+                res = [0, 0]
+            else:
+                res = [[-1, 0], [1, 0], [0, 1], [0, -1]][i]
+
+        x1 = entity.x()
+        x2 = entity.x() + entity.w()
+        y1 = entity.y()
+        y2 = entity.y() + entity.h()
+
+        if res[0] < 0:
+            if world.is_solid_at(x1 - 1, y1) or world.is_solid_at(x1 - 1, y2):
+                res[0] = 1
+        elif res[0] > 0:
+            if world.is_solid_at(x2 + 1, y1) or world.is_solid_at(x2 + 1, y2):
+                res[0] = -1
+        elif res[1] > 0:
+            if world.is_solid_at(x1, y2 + 1) or world.is_solid_at(x2, y2 + 1):
+                res[1] = -1
+        elif res[1] < 0:
+            if world.is_solid_at(x1, y1 - 1) or world.is_solid_at(x2, y1 - 1):
+                res[1] = 1
+
+        ai_state["idle_dir"] = res
+        return ai_state["idle_dir"]
+
+
 class EnemyState(ActorState):
 
     def __init__(self, name, sprites, level, stats):
@@ -28,8 +101,11 @@ class EnemyState(ActorState):
         """
         self.sprites = sprites
         self.stats = stats
-        self.dir = [0, 0]
+
         self.facing_left = True
+        self.facing_left_last_frame = None # used to detect and prevent left-right flickering
+
+        self.movement_ai_state = {}
         ActorState.__init__(self, name, 0, stats)
         self._anim_offset = int(20 * random.random())
 
@@ -60,38 +136,25 @@ class EnemyState(ActorState):
         else:
             if self.took_damage_x_ticks_ago < 15:
                 self.took_damage_x_ticks_ago += 1
-            
-            if random.random() < 0.01:
-                i = int(10 * random.random())
-                if i >= 4:
-                    self.dir = [0, 0]
-                else:
-                    self.dir = [[-1, 0], [1, 0], [0, 1], [0, -1]][i]
-        
-            x1 = entity.x()
-            x2 = entity.x() + entity.w()
-            y1 = entity.y()
-            y2 = entity.y() + entity.h()
-            
-            if self.dir[0] < 0:
-                if world.is_solid_at(x1 - 1, y1) or world.is_solid_at(x1 - 1, y2):
-                    self.dir[0] = 1
-            elif self.dir[0] > 0:
-                if world.is_solid_at(x2 + 1, y1) or world.is_solid_at(x2 + 1, y2):
-                    self.dir[0] = -1
-            elif self.dir[1] > 0:
-                if world.is_solid_at(x1, y2 + 1) or world.is_solid_at(x2, y2 + 1):
-                    self.dir[1] = -1
-            elif self.dir[1] < 0:
-                if world.is_solid_at(x1, y1 - 1) or world.is_solid_at(x2, y1 - 1):
-                    self.dir[1] = 1
-            
-            move_x = self.dir[0] * 0.65
-            move_y = self.dir[1] * 0.65
+
+            if world.get_hidden_at(*entity.center()):
+                move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
+            else:
+                move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
+
+            move_x, move_y = move_dir
+            move_x *= 0.65
+            move_y *= 0.65
             entity.move(move_x, move_y, world=world, and_search=True)
             
             if move_x != 0:
-                self.facing_left = move_x < 0 
+                # don't actually turn until we've been moving that direction for two frames
+                if self.facing_left_last_frame == (move_x < 0):
+                    self.facing_left = move_x < 0
+
+                self.facing_left_last_frame = move_x < 0
+            else:
+                self.facing_left_last_frame = None
                 
             color_scale = min(1.0, self.took_damage_x_ticks_ago / 15)
             img_color = (1, color_scale, color_scale)
