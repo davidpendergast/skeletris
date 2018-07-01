@@ -145,6 +145,10 @@ class Entity:
     def is_enemy(self):
         return False
 
+    def can_damage(self, other):
+        return ((self.is_player() and other.is_enemy()) or
+                (self.is_enemy() and other.is_player()))
+
     def __eq__(self, other):
         return other is not None and self._uid == other._uid
 

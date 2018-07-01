@@ -1,3 +1,4 @@
+import src.game.stats
 from src.items.itemrendering import ItemInfoPane
 from src.items.itemrendering import ItemImage
 from src.renderengine.img import ImageBundle
@@ -6,9 +7,9 @@ import src.game.inputs as inputs
 from src.world.entities import ItemEntity
 from src.items.itemrendering import TextImage
 import src.items.item as item_module
-from src.items.item import StatType
 from src.utils.util import Utils
-from src.game.inventory import InventoryState, PlayerStatType
+from src.game.inventory import InventoryState
+from src.game.stats import PlayerStatType, StatType
 
 
 class ItemGridImage:
@@ -89,17 +90,17 @@ class InventoryPanel:
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
         att_str = "ATT:{}".format(self.player_state.stat_value(StatType.ATT))
         self.att_text = TextImage(*s_xy, att_str, self.layer, scale=sc,
-                color=item_module.STAT_COLORS[item_module.StatType.ATT])
+                                  color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
         s_xy[1] += self.att_text.line_height()
         
         def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
         self.def_text = TextImage(*s_xy, def_str, self.layer, scale=sc,
-                color=item_module.STAT_COLORS[item_module.StatType.DEF])
+                                  color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
         s_xy[1] += self.def_text.line_height()
         
         vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
         self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=sc,
-                color=item_module.STAT_COLORS[item_module.StatType.VIT])
+                                  color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
         s_xy[1] += 2 * self.def_text.line_height()
         
         hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))

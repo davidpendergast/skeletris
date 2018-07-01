@@ -4,7 +4,8 @@ import src.game.spriteref as spriteref
 from src.game.globalstate import GlobalState
 from src.game.inputs import InputState
 from src.game.ui import UiState
-from src.game.inventory import PlayerState, InventoryState
+from src.game.inventory import InventoryState
+from src.game.actorstate import PlayerState
 from src.game.enemies import EnemyFactory
 
 from src.world.worldstate import World

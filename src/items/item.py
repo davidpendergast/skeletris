@@ -1,29 +1,9 @@
-from enum import Enum
 import random
 import collections
 
+from src.game.stats import StatType
 
-class StatType(Enum):
-    ATT = "ATT",
-    DEF = "DEF",
-    VIT = "VIT",
-    ATTACK_RADIUS = "ATTACK_RADIUS",
-    ATTACK_SPEED = "ATTACK_SPEED",
-    ATTACK_DAMAGE= "ATTACK_DAMAGE",
-    MOVEMENT_SPEED = "MOVEMENT_SPEED",
-    DODGE = "DODGE",
-    ACCURACY = "ACCURACY",
-    LIFE_REGEN = "LIFE_REGEN",
-    LIFE_ON_HIT = "LIFE_ON_HIT",
-    LIFE_LEECH = "LIFE_LEECH",
-    MAX_HEALTH = "MAX_HEALTH",
-    POTION_HEALING = "POTION_HEALING",
-    POTION_COOLDOWN = "POTION_COOLDOWN",
-
-    HOLE_BONUS = "HOLE_BONUS"
-
-
-CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]  
+CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 SPECIAL_STATS = [StatType.HOLE_BONUS]
 NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
 
