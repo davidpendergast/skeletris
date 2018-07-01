@@ -12,11 +12,11 @@ class LootFactory:
     def gen_loot(pos, player_lvl, dungeon_level):
         loot = []
         for _ in range(0, 3):
-            if random.random() < 0.50:  
+            if random.random() < 0.05:
                 loot.append(ItemEntity(ItemFactory.gen_item(), *pos))
-        for _ in range(0, 3):
-            if random.random() < 0.75:
-                loot.append(PotionEntity(*pos))
+        #for _ in range(0, 3):
+        #    if random.random() < 0.75:
+        #        loot.append(PotionEntity(*pos))
         return loot
 
 

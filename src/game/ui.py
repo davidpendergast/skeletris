@@ -108,7 +108,7 @@ class InventoryPanel:
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
-        dps_str = "DPS:{}".format(self.player_state.stat_value(PlayerStatType.DPS))
+        dps_str = "DPS:{}".format(round(self.player_state.stat_value(PlayerStatType.DPS)))
         self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=sc,
                 color=item_module.STAT_COLORS[None])
         

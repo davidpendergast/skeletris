@@ -15,6 +15,12 @@ class AttackState:
         self.current_attack = None
         self._next_att = None
 
+    def set_attack(self, attack):
+        if self.is_attacking():
+            self._next_att = attack
+        else:
+            self.current_attack = attack
+
     def can_attack(self):
         return not self.is_active() and self.current_attack is not None
 
@@ -25,13 +31,19 @@ class AttackState:
             print("starting attack: " + str(self.current_attack.name))
             self.attack_tick = 1
 
-            att_speed = 1.0 / self.current_attack.base_duration
-            att_speed *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_SPEED))
-            self.attack_dur = max(1, round(1.0 / att_speed))
+            self.attack_dur = self.get_attack_dur(stat_lookup)
 
-            del_speed = 1.0 / self.current_attack.base_delay
-            del_speed *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_SPEED))
-            self.delay_dur = max(1, round(1.0 / del_speed))
+            self.delay_dur = self.get_delay_dur(stat_lookup)
+
+    def get_attack_dur(self, stat_lookup):
+        att_speed = 1.0 / self.current_attack.base_duration
+        att_speed *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_SPEED))
+        return max(1, round(1.0 / att_speed))
+
+    def get_delay_dur(self, stat_lookup):
+        del_speed = 1.0 / self.current_attack.base_delay
+        del_speed *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_SPEED))
+        return max(1, round(1.0 / del_speed))
 
     def update(self, entity, world, gs):
         if self.is_active():
@@ -45,10 +57,8 @@ class AttackState:
 
                 for target in targets:
                     t_ent, t_state = target
-                    dmg = stat_lookup.stat_value(StatType.ATT)
-                    dmg *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_DAMAGE))
-                    dmg *= self.current_attack.base_damage
 
+                    dmg = self.get_dmg(stat_lookup)
                     sub = Utils.sub(t_ent.center(), entity.center())
                     kb = Utils.set_length(sub, self.current_attack.knockback)
                     t_state.deal_damage(dmg, knockback=kb)
@@ -58,6 +68,20 @@ class AttackState:
 
             if self.is_active():
                 self.attack_tick += 1
+
+    def get_dps(self, stat_lookup):
+        if self.current_attack is None:
+            return 0.0
+
+        total_dur = self.get_delay_dur(stat_lookup) + self.get_attack_dur(stat_lookup)
+        total_dmg = self.get_dmg(stat_lookup)
+
+        return total_dmg / (total_dur / 60.0)
+
+    def get_dmg(self, stat_lookup):
+        dmg = stat_lookup.stat_value(StatType.ATT)
+        dmg *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_DAMAGE))
+        return dmg * self.current_attack.base_damage
 
     def is_active(self):
         return self.attack_tick > 0
@@ -83,11 +107,6 @@ class AttackState:
             self.current_attack = self._next_att
             self._next_att = None
 
-    def set_attack(self, attack):
-        if self.is_attacking():
-            self._next_att = attack
-        else:
-            self.current_attack = attack
 
 
 class Attack:

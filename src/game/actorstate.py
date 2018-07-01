@@ -14,6 +14,8 @@ class ActorState:
         self._base_values = base_values
         self.current_hp = self.stat_value(PlayerStatType.HP)
 
+        self.attack_state = attacks.AttackState()
+
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
         self.current_knockback = (0, 0)
@@ -62,6 +64,9 @@ class ActorState:
             base = self._base_values[stat_type]
             return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
 
+        elif stat_type is PlayerStatType.DPS:
+            return self.attack_state.get_dps(self)
+
     def stat_value(self, stat_type):
         return 0
 
@@ -79,7 +84,6 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        self.attack_state = attacks.AttackState()
         self.attack_state.set_attack(attacks.GROUND_POUND)
 
         self.is_moving = False
@@ -182,6 +186,7 @@ class EnemyState(ActorState):
         """
         self.sprites = sprites
         self.stats = stats
+        ActorState.__init__(self, name, 0, stats)
 
         self.facing_left = True
         self.facing_left_last_frame = None  # used to detect and prevent left-right flickering
@@ -190,11 +195,8 @@ class EnemyState(ActorState):
         self.aggro_radius = 350
         self.forget_radius = 450
 
-        self.movement_ai_state = {}
-        self.attack_state = attacks.AttackState()
         self.attack_state.set_attack(attacks.TOUCH_ATTACK)
-
-        ActorState.__init__(self, name, 0, stats)
+        self.movement_ai_state = {}
         self._anim_offset = int(20 * random.random())
 
     def duplicate(self):
