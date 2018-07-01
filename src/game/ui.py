@@ -39,6 +39,7 @@ class ItemGridImage:
         
 
 class InventoryPanel:
+
     def __init__(self, player_state):
         self.player_state = player_state
         self.state = self.player_state.inventory()
@@ -49,7 +50,6 @@ class InventoryPanel:
         self.bot_img = None
         self.title_text = None
 
-        
         sc = 2
         
         self.total_rect = [0, 0, spriteref.inv_panel_top.width()*sc, 

@@ -252,7 +252,7 @@ class Player(Entity):
     def get_shadow_sprite(self):
         return self._shadow_sprite
                
-    def update_images(self, sprite, facing_right):        
+    def update_images(self, sprite, facing_right, color=(1.0, 1.0, 1.0)):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
 
@@ -261,7 +261,7 @@ class Player(Entity):
         
         depth = self.get_depth()
         xflip = not facing_right
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, 
+        self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
                 new_depth=depth, new_xflip=xflip)
         
         super().update_images(0)  # get the shadow

@@ -14,6 +14,10 @@ class ActorState:
         self._base_values = base_values
         self.current_hp = self.stat_value(PlayerStatType.HP)
 
+        self.damage_recoil = 15
+        self.took_damage_x_ticks_ago = self.damage_recoil
+        self.current_knockback = (0, 0)
+
     def update(self, entity, world, gs, input_state):
         pass
 
@@ -32,8 +36,18 @@ class ActorState:
     def move_speed(self):
         return self.stat_value(PlayerStatType.MOVESPEED)
 
-    def deal_damage(self, damage):
-        self.set_hp(self.hp() - damage)
+    def recoil_progress(self):
+        return Utils.bound(self.took_damage_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
+
+    def is_invuln(self):
+        return False
+
+    def deal_damage(self, damage, knockback=(0, 0)):
+        if damage > 0 and not self.is_invuln():
+            print("{} received {} damage".format(self, damage))
+            self.set_hp(self.hp() - damage)
+            self.took_damage_x_ticks_ago = 0
+            self.current_knockback = knockback
 
     def _compute_derived_stat(self, stat_type):
         """
@@ -44,27 +58,9 @@ class ActorState:
             plus_hp = self.stat_value(StatType.MAX_HEALTH)
             return round(vit * 4 * (1 + plus_hp / 100))
 
-        elif stat_type is PlayerStatType.DPS:
-            att = self.stat_value(StatType.ATT)
-            att_dmg_inc = self.stat_value(StatType.ATTACK_DAMAGE)
-            ticks_per_att = self._compute_derived_stat(PlayerStatType.TICKS_PER_ATTACK)
-            attacks_per_sec = 60 / ticks_per_att
-            return round((att + (1 + att_dmg_inc / 100)) * attacks_per_sec)
-
-        elif stat_type is PlayerStatType.TICKS_PER_ATTACK:
-            base = self._base_values[stat_type]
-            speed = 1 / base
-            att_speed_inc = self.stat_value(StatType.ATTACK_SPEED)
-            speed = speed * (1 + att_speed_inc / 100)
-            return round(1 / speed)
-
         elif stat_type is PlayerStatType.MOVESPEED:
             base = self._base_values[stat_type]
             return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
-
-        elif stat_type is PlayerStatType.ATTACK_RADIUS:
-            base = self._base_values[stat_type]
-            return round(base * (1 + self.stat_value(StatType.ATTACK_RADIUS) / 100))
 
     def stat_value(self, stat_type):
         return 0
@@ -78,9 +74,7 @@ class PlayerState(ActorState):
             StatType.ATT: 10,
             StatType.DEF: 10,
             StatType.VIT: 10,
-            PlayerStatType.TICKS_PER_ATTACK: 30,
             PlayerStatType.MOVESPEED: 2.5,
-            PlayerStatType.ATTACK_RADIUS: 64
         })
 
         self.current_sprite = spriteref.player_idle_0
@@ -93,6 +87,10 @@ class PlayerState(ActorState):
 
     def inventory(self):
         return self._inventory
+
+    def is_invuln(self):
+        # can't be hit while attacking
+        return self.attack_state.is_attacking()
 
     def stat_value(self, stat_type):
         """
@@ -117,6 +115,9 @@ class PlayerState(ActorState):
         if player_entity is None:
             return
 
+        if self.took_damage_x_ticks_ago < self.damage_recoil:
+            self.took_damage_x_ticks_ago += 1
+
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
             self.attack_state.start_attack(self)
 
@@ -132,10 +133,14 @@ class PlayerState(ActorState):
             move_x /= 1.4142
             move_y /= 1.4142
 
-        if self.attack_state.is_delaying():
-            # half speed after attacking
+        if self.attack_state.is_delaying() or self.recoil_progress() < 1:
+            # half speed after attacking or being attacked
             move_x /= 2
             move_y /= 2
+
+        if self.recoil_progress() < 1:
+            move_x += self.current_knockback[0] * (1 - self.recoil_progress())
+            move_y += self.current_knockback[1] * (1 - self.recoil_progress())
 
         move_x *= self.move_speed()
         move_y *= self.move_speed()
@@ -144,7 +149,9 @@ class PlayerState(ActorState):
         if move_x != 0:
             self.facing_right = move_x > 0
 
-        player_entity.update_images(self.get_sprite(gs), self.facing_right)
+        color = (1.0, self.recoil_progress(), self.recoil_progress())
+
+        player_entity.update_images(self.get_sprite(gs), self.facing_right, color=color)
         player_entity.set_shadow_sprite(self.get_shadow_sprite())
 
     def get_sprite(self, gs):
@@ -179,11 +186,16 @@ class EnemyState(ActorState):
         self.facing_left = True
         self.facing_left_last_frame = None  # used to detect and prevent left-right flickering
 
+        self.is_aggro = False
+        self.aggro_radius = 350
+        self.forget_radius = 450
+
         self.movement_ai_state = {}
+        self.attack_state = attacks.AttackState()
+        self.attack_state.set_attack(attacks.TOUCH_ATTACK)
+
         ActorState.__init__(self, name, 0, stats)
         self._anim_offset = int(20 * random.random())
-
-        self.took_damage_x_ticks_ago = 15
 
     def duplicate(self):
         return EnemyState(self.name, self.sprites, self.level, dict(self.stats))
@@ -198,23 +210,43 @@ class EnemyState(ActorState):
         else:
             return 0
 
+    def _handle_death(self, entity, world):
+        import src.game.enemies as enemies
+        loot = enemies.LootFactory.gen_loot(entity.center(), 0, self.level())
+
+        for l in loot:
+            world.add(l)
+
+        world.remove(entity)
+        splosion = AnimationEntity(entity.x(), entity.y() - 24,
+                                   spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
+        world.add(splosion)
+
     def update(self, entity, world, gs, input_state):
         if self.hp() <= 0:
-            import src.game.enemies as enemies
-            loot = enemies.LootFactory.gen_loot(entity.center(), 0, self.level())
-
-            for l in loot:
-                world.add(l)
-
-            world.remove(entity)
-            splosion = AnimationEntity(entity.x(), entity.y() - 24,
-                                       spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
-            world.add(splosion)
+            self._handle_death(entity, world)
         else:
-            if self.took_damage_x_ticks_ago < 15:
+            if self.took_damage_x_ticks_ago < self.damage_recoil:
                 self.took_damage_x_ticks_ago += 1
 
-            if world.get_hidden_at(*entity.center()):
+            # updating aggro
+            if random.random() < 0.05:
+                p = world.get_player()
+                if p is not None:
+                    dist = Utils.dist(p.center(), entity.center())
+                    if self.is_aggro:
+                        self.is_aggro = dist <= self.forget_radius
+                    else:
+                        self.is_aggro = dist <= self.aggro_radius
+
+            # doing attacks
+            if random.random() < 0.05:
+                if self.is_aggro and self._should_attack(entity, world):
+                    self.attack_state.start_attack(self)
+
+            self.attack_state.update(entity, world, gs)
+
+            if world.get_hidden_at(*entity.center()) or not self.is_aggro:
                 move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
             else:
                 move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
@@ -222,6 +254,15 @@ class EnemyState(ActorState):
             move_x, move_y = move_dir
             move_x *= 0.65
             move_y *= 0.65
+
+            if self.recoil_progress() < 1.0:
+                move_x /= 2
+                move_y /= 2
+
+            if self.recoil_progress() < 1:
+                move_x += self.current_knockback[0] * (1 - self.recoil_progress())
+                move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+
             entity.move(move_x, move_y, world=world, and_search=True)
 
             if move_x != 0:
@@ -233,7 +274,7 @@ class EnemyState(ActorState):
             else:
                 self.facing_left_last_frame = None
 
-            color_scale = min(1.0, self.took_damage_x_ticks_ago / 15)
+            color_scale = self.recoil_progress()
             img_color = (1, color_scale, color_scale)
 
             sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
@@ -242,11 +283,13 @@ class EnemyState(ActorState):
 
             entity.update_images(sprite, self.facing_left, health_ratio, color=img_color)
 
-    def deal_damage(self, damage):
-        print("enemy took {} damage".format(damage))
-        ActorState.deal_damage(self, damage)
-        if damage > 0:
-            self.took_damage_x_ticks_ago = 0
+    def _should_attack(self, entity, world):
+        p = world.get_player()
+        return (self.attack_state.can_attack() and
+                self.is_aggro and
+                p is not None and
+                self.took_damage_x_ticks_ago >= self.damage_recoil and
+                not world.get_hidden_at(*entity.center()))
 
 
 class MovementAI():
