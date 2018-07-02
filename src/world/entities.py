@@ -3,6 +3,7 @@ import random
 import math
 
 import src.renderengine.img as img
+from src.items.itemrendering import TextImage
 import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.items.item import ItemFactory
@@ -197,10 +198,6 @@ class AnimationEntity(Entity):
             idx = int(progress * len(self.sprites))
             return self.sprites[idx]
 
-        def cleanup(self, gs, render_engine):
-            if self._img is not None:
-                render_engine.remove(self._img)
-
         def update_images(self, gs):
             sprite = self.get_current_sprite()
 
@@ -233,7 +230,58 @@ class AttackCircleArt(AnimationEntity):
         self.initial_duration = duration
         self.duration = duration
         self._img = None
-                 
+
+
+class FloatingTextEntity(Entity):
+    def __init__(self, text, duration, color, anchor=None, scale=2, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
+        self.text = text
+        self.color = color
+        self.scale = scale
+        self.anchor = anchor
+        self.start_offs = start_offs
+        self.end_offs = end_offs
+        self.fadeout = fadeout
+
+        self.duration = duration
+        self.tick_count = 0
+
+        self.text_img = self._build_text_img()
+        Entity.__init__(self, 0, 0, *self.text_img.size())
+
+    def get_progress(self):
+        return Utils.bound(self.tick_count / self.duration, 0.0, 1.0)
+
+    def _build_text_img(self):
+        return TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, color=self.color, scale=self.scale)
+
+    def update_images(self):
+        prog = self.get_progress()
+        offs_x = self.start_offs[0] * (1 - prog) + self.end_offs[0] * prog
+        offs_y = self.start_offs[1] * (1 - prog) + self.end_offs[1] * prog
+
+        x = self.x() + offs_x
+        y = self.y() + offs_y
+
+        self.text_img.update(new_x=x, new_y=y)
+
+    def update(self, world, gs, input_state, render_engine):
+        if self.tick_count >= self.duration:
+            world.remove(self)
+        else:
+            if self.anchor is not None:
+                size = self.text_img.size()
+                self.set_x(self.anchor.center()[0] - size[0] // 2)
+                self.set_y(self.anchor.center()[1] - size[1] // 2)
+
+            self.update_images()
+            self.tick_count += 1
+
+    def all_bundles(self, extras=[]):
+        for i in self.text_img.all_bundles():
+            yield i
+        for e in extras:
+            yield e
+
 
 class Player(Entity):
 

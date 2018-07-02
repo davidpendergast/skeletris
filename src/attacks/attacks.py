@@ -28,7 +28,6 @@ class AttackState:
         if not self.can_attack():
             return False
         else:
-            print("starting attack: " + str(self.current_attack.name))
             self.attack_tick = 1
 
             self.attack_dur = self.get_attack_dur(stat_lookup)

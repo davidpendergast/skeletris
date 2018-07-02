@@ -15,9 +15,21 @@ class TextImage:
         self._letter_images = []
         self.x_kerning = 1
         self.y_kerning = 1
-        
+
         self._build_images()
-        
+
+        self.actual_size = self._recalc_size()
+
+    def _recalc_size(self):
+        x_range = [None, None]
+        y_range = [None, None]
+        for img in self.all_bundles():
+            x_range[0] = img.x() if x_range[0] is None else min(x_range[0], img.x())
+            x_range[1] = img.x() + img.width() if x_range[1] is None else max(x_range[0], img.x() + img.width())
+            y_range[0] = img.y() if y_range[0] is None else min(y_range[0], img.y())
+            y_range[1] = img.y() + img.height() if y_range[1] is None else max(y_range[1], img.y() + img.height())
+        return (x_range[1] - x_range[0], y_range[1] - y_range[0])
+
     def _calc_width(self):
         max_line_w = 0
         cur_line_w = 0
@@ -29,14 +41,16 @@ class TextImage:
                 cur_line_w += char_w
                 max_line_w = max(max_line_w, cur_line_w)
         return max_line_w
+
+    def size(self):
+        return self.actual_size
         
     def line_height(self):
         return (spriteref.alphabet["a"].height() + self.y_kerning) * self.scale
         
     def _build_images(self):
         ypos = self.y_kerning
-        
-        x_shift = 0
+
         if self.center_w is not None:
             true_width = self._calc_width()
             x_shift = self.x + self.center_w // 2 - true_width // 2     
@@ -59,7 +73,23 @@ class TextImage:
                         scale=self.scale, color=self.color)
                 self._letter_images.append(img)  
                 xpos += (self.x_kerning + a_sprite.width()) * self.scale
-                    
+
+    def update(self, new_x=None, new_y=None, new_depth=None, new_color=None):
+        dx = 0 if new_x is None else new_x - self.x
+        dy = 0 if new_y is None else new_y - self.y
+        new_imgs = []
+        for letter in self._letter_images:
+            letter_new_x = letter.x() + dx
+            letter_new_y = letter.y() + dy
+            new_imgs.append(letter.update(new_x=letter_new_x, new_y=letter_new_y,
+                                          new_depth=new_depth, new_color=new_color))
+
+        self._letter_images = new_imgs
+        self.x = new_x if new_x is not None else self.x
+        self.y = new_y if new_y is not None else self.y
+        self.color = new_color if new_color is not None else self.color
+        self.actual_size = self._recalc_size()
+
     def all_bundles(self):
         for b in self._letter_images:
             if b is not None:

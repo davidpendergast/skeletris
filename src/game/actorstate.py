@@ -4,7 +4,7 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity
 
 
 class ActorState:
@@ -19,6 +19,7 @@ class ActorState:
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
         self.current_knockback = (0, 0)
+        self.damage_amounts = []
 
     def update(self, entity, world, gs, input_state):
         pass
@@ -44,12 +45,19 @@ class ActorState:
     def is_invuln(self):
         return False
 
+    def show_dmg_text(self, entity, world):
+        for dmg in self.damage_amounts:
+            text = "-" + str(round(dmg))
+            color = (0.65, 0.0, 0.0)
+            show_floating_text(text, color, entity, world)
+        self.damage_amounts.clear()
+
     def deal_damage(self, damage, knockback=(0, 0)):
         if damage > 0 and not self.is_invuln():
-            print("{} received {} damage".format(self, damage))
             self.set_hp(self.hp() - damage)
             self.took_damage_x_ticks_ago = 0
             self.current_knockback = knockback
+            self.damage_amounts.append(damage)
 
     def _compute_derived_stat(self, stat_type):
         """
@@ -69,6 +77,15 @@ class ActorState:
 
     def stat_value(self, stat_type):
         return 0
+
+
+def show_floating_text(text, color, entity, world):
+    x_offs = int(15 * (0.5 - random.random()))
+    text = FloatingTextEntity(text, 25, color, anchor=entity,
+                              start_offs=(x_offs, -64), end_offs=(x_offs, -96))
+    text.set_x(entity.center()[0])  # XXX needs to be onscreen to receive first update...
+    text.set_y(entity.center()[1])
+    world.add(text)
 
 
 class PlayerState(ActorState):
@@ -118,6 +135,9 @@ class PlayerState(ActorState):
     def update(self, player_entity, world, gs, input_state):
         if player_entity is None:
             return
+
+        if self.took_damage_x_ticks_ago == 0:
+            self.show_dmg_text(player_entity, world)
 
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
@@ -225,6 +245,9 @@ class EnemyState(ActorState):
         world.add(splosion)
 
     def update(self, entity, world, gs, input_state):
+        if self.took_damage_x_ticks_ago == 0:
+            self.show_dmg_text(entity, world)
+
         if self.hp() <= 0:
             self._handle_death(entity, world)
         else:
