@@ -7,7 +7,21 @@ from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity
 
 
+def show_floating_text(text, color, scale, entity, world):
+    x_offs = int(15 * (0.5 - random.random()))
+    text = FloatingTextEntity(text, 25, color, anchor=None, scale=scale,
+                              start_offs=(x_offs, -64), end_offs=(x_offs, -96))
+    text.set_x(entity.center()[0] - text.w() // 2)
+    text.set_y(entity.center()[1] - text.h() // 2)
+    world.add(text)
+
+
 class ActorState:
+
+    R_TEXT_COLOR = (0.75, 0.0, 0.0)
+    G_TEXT_COLOR = (0.2, 0.85, 0.2)
+    B_TEXT_COLOR = (0.2, 0.2, 0.85)
+
     def __init__(self, name, level, base_values):
         self._name = name
         self._level = level
@@ -19,7 +33,10 @@ class ActorState:
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
         self.current_knockback = (0, 0)
+
         self.damage_amounts = []
+        self.heal_amounts = []
+        self.avoided_attack = False
 
     def update(self, entity, world, gs, input_state):
         pass
@@ -30,11 +47,14 @@ class ActorState:
     def level(self):
         return self._level
 
+    def max_hp(self):
+        return self.stat_value(PlayerStatType.HP)
+
     def hp(self):
-        return self.current_hp
+        return Utils.bound(self.current_hp, 0, self.max_hp())
 
     def set_hp(self, value):
-        self.current_hp = value
+        self.current_hp = Utils.bound(value, 0, self.max_hp())
 
     def move_speed(self):
         return self.stat_value(PlayerStatType.MOVESPEED)
@@ -45,12 +65,21 @@ class ActorState:
     def is_invuln(self):
         return False
 
-    def show_dmg_text(self, entity, world):
+    def handle_floating_text(self, entity, world, scale=2):
         for dmg in self.damage_amounts:
-            text = "-" + str(round(dmg))
-            color = (0.65, 0.0, 0.0)
-            show_floating_text(text, color, entity, world)
+            show_floating_text("-{}".format(round(dmg)), ActorState.R_TEXT_COLOR, scale, entity, world)
         self.damage_amounts.clear()
+
+        for heal in self.heal_amounts:
+            if heal >= 1:
+                show_floating_text("+{}".format(round(heal), ActorState.G_TEXT_COLOR, scale, entity, world))
+            elif heal >= 0.05:
+                show_floating_text("+{}".format(round(heal*10)/10, ActorState.G_TEXT_COLOR, scale, entity, world))
+        self.heal_amounts.clear()
+
+        if self.avoided_attack:
+            show_floating_text("miss", ActorState.B_TEXT_COLOR, scale, entity, world)
+            self.avoided_attack = False
 
     def deal_damage(self, damage, knockback=(0, 0)):
         if damage > 0 and not self.is_invuln():
@@ -58,6 +87,16 @@ class ActorState:
             self.took_damage_x_ticks_ago = 0
             self.current_knockback = knockback
             self.damage_amounts.append(damage)
+
+    def do_heal(self, amount):
+        if amount > 0:
+            prev_hp = self.hp()
+            self.set_hp(prev_hp + amount)
+            diff = self.hp() - prev_hp
+            self.heal_amounts.append(diff)
+
+    def was_missed(self):
+        self.avoided_attack = True
 
     def _compute_derived_stat(self, stat_type):
         """
@@ -77,15 +116,6 @@ class ActorState:
 
     def stat_value(self, stat_type):
         return 0
-
-
-def show_floating_text(text, color, entity, world):
-    x_offs = int(15 * (0.5 - random.random()))
-    text = FloatingTextEntity(text, 25, color, anchor=entity,
-                              start_offs=(x_offs, -64), end_offs=(x_offs, -96))
-    text.set_x(entity.center()[0])  # XXX needs to be onscreen to receive first update...
-    text.set_y(entity.center()[1])
-    world.add(text)
 
 
 class PlayerState(ActorState):
@@ -136,11 +166,14 @@ class PlayerState(ActorState):
         if player_entity is None:
             return
 
-        if self.took_damage_x_ticks_ago == 0:
-            self.show_dmg_text(player_entity, world)
+        if gs.tick_counter % 60 == 0:
+            regen = self.stat_value(StatType.LIFE_REGEN)
+            self.do_heal(regen)
 
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
+
+        # self.handle_floating_text(player_entity, world, scale=3)
 
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
             self.attack_state.start_attack(self)
@@ -217,7 +250,7 @@ class EnemyState(ActorState):
 
         self.attack_state.set_attack(attacks.TOUCH_ATTACK)
         self.movement_ai_state = {}
-        self._anim_offset = int(20 * random.random())
+        self._anim_offset = int(60 * random.random())
 
     def duplicate(self):
         return EnemyState(self.name, self.sprites, self.level, dict(self.stats))
@@ -245,12 +278,16 @@ class EnemyState(ActorState):
         world.add(splosion)
 
     def update(self, entity, world, gs, input_state):
-        if self.took_damage_x_ticks_ago == 0:
-            self.show_dmg_text(entity, world)
+        self.handle_floating_text(entity, world)
 
         if self.hp() <= 0:
             self._handle_death(entity, world)
         else:
+
+            if (gs.tick_counter + self._anim_offset) % 60 == 0:
+                regen = self.stat_value(StatType.LIFE_REGEN)
+                self.do_heal(regen)
+
             if self.took_damage_x_ticks_ago < self.damage_recoil:
                 self.took_damage_x_ticks_ago += 1
 

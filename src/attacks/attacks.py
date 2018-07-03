@@ -54,13 +54,32 @@ class AttackState:
 
                 targets = self.current_attack.activate(gs, entity, world, stat_lookup)
 
+                dmg_dealt = 0
+                num_hit = 0
+
                 for target in targets:
                     t_ent, t_state = target
 
-                    dmg = self.get_dmg(stat_lookup)
-                    sub = Utils.sub(t_ent.center(), entity.center())
-                    kb = Utils.set_length(sub, self.current_attack.knockback)
-                    t_state.deal_damage(dmg, knockback=kb)
+                    att_defense = stat_lookup.stat_value(StatType.DEF) + stat_lookup.stat_value(StatType.ACCURACY)
+                    defend_defense = t_state.stat_value(StatType.DEF) + t_state.stat_value(StatType.DODGE)
+
+                    chance_to_hit = Utils.bound(2 * att_defense / (att_defense + defend_defense), 0.10, 1.0)
+
+                    if random.random() <= chance_to_hit:
+                        dmg = self.get_dmg(stat_lookup)
+                        sub = Utils.sub(t_ent.center(), entity.center())
+                        kb = Utils.set_length(sub, self.current_attack.knockback)
+                        t_state.deal_damage(dmg, knockback=kb)
+
+                        num_hit += 1
+                        dmg_dealt += dmg
+                    else:
+                        t_state.was_missed()
+
+                if num_hit > 0:
+                    healing = stat_lookup.stat_value(StatType.LIFE_ON_HIT) * num_hit
+                    healing += stat_lookup.stat_value(StatType.LIFE_LEECH) * 0.01 * dmg_dealt
+                    stat_lookup.do_heal(healing)
 
             elif self.attack_tick >= self.attack_dur + self.delay_dur:
                 self._finish_attack()
@@ -105,7 +124,6 @@ class AttackState:
         if self._next_att is not None:
             self.current_attack = self._next_att
             self._next_att = None
-
 
 
 class Attack:
