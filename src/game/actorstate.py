@@ -65,21 +65,36 @@ class ActorState:
     def is_invuln(self):
         return False
 
-    def handle_floating_text(self, entity, world, scale=2):
-        for dmg in self.damage_amounts:
-            show_floating_text("-{}".format(round(dmg)), ActorState.R_TEXT_COLOR, scale, entity, world)
+    def get_dodge_text_info(self):
+        return ("miss", 2, ActorState.B_TEXT_COLOR)
+
+    def get_dmg_text_info(self):
+        return ("-{}", 2, ActorState.R_TEXT_COLOR)
+
+    def get_heal_text_info(self):
+        return ("+{}", 2, ActorState.G_TEXT_COLOR)
+
+    def handle_floating_text(self, entity, world):
+        dmg_info = self.get_dmg_text_info()
+        if dmg_info is not None:
+            for dmg in self.damage_amounts:
+                show_floating_text(dmg_info[0].format(round(dmg)), dmg_info[2], dmg_info[1], entity, world)
         self.damage_amounts.clear()
 
-        for heal in self.heal_amounts:
-            if heal >= 1:
-                show_floating_text("+{}".format(round(heal), ActorState.G_TEXT_COLOR, scale, entity, world))
-            elif heal >= 0.05:
-                show_floating_text("+{}".format(round(heal*10)/10, ActorState.G_TEXT_COLOR, scale, entity, world))
+        heal_info = self.get_heal_text_info()
+        if heal_info is not None:
+            for heal in self.heal_amounts:
+                if heal < 0.05:
+                    continue
+                heal_amt = round(heal) if heal >= 1 else round(heal*10)/10
+                show_floating_text(heal_info[0].format(heal_amt), heal_info[2], heal_info[1], entity, world)
         self.heal_amounts.clear()
 
-        if self.avoided_attack:
-            show_floating_text("miss", ActorState.B_TEXT_COLOR, scale, entity, world)
-            self.avoided_attack = False
+        avoid_info = self.get_dodge_text_info()
+        if avoid_info is not None:
+            if self.avoided_attack:
+                show_floating_text(avoid_info[0], avoid_info[2], avoid_info[1], entity, world)
+        self.avoided_attack = False
 
     def deal_damage(self, damage, knockback=(0, 0)):
         if damage > 0 and not self.is_invuln():
@@ -162,6 +177,15 @@ class PlayerState(ActorState):
 
         return value
 
+    def get_dodge_text_info(self):
+        return ("dodge", 3, ActorState.B_TEXT_COLOR)
+
+    def get_dmg_text_info(self):
+        return ("-{}", 5, ActorState.R_TEXT_COLOR)
+
+    def get_heal_text_info(self):
+        return ("+{}", 3, ActorState.G_TEXT_COLOR)
+
     def update(self, player_entity, world, gs, input_state):
         if player_entity is None:
             return
@@ -173,7 +197,7 @@ class PlayerState(ActorState):
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
 
-        # self.handle_floating_text(player_entity, world, scale=3)
+        self.handle_floating_text(player_entity, world)
 
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
             self.attack_state.start_attack(self)

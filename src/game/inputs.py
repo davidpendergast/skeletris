@@ -15,6 +15,7 @@ EXIT = [pygame.K_ESCAPE]
 class InputState:
     def __init__(self):
         self._held_keys = {}  # keycode -> time pressed
+        self._mouse_pos_last_update = (0, 0)
         self._mouse_pos = (0, 0)
         self._mouse_down_time = None
         self._current_time = 0
@@ -62,6 +63,9 @@ class InputState:
         
     def mouse_pos(self):
         return self._mouse_pos
+
+    def mouse_moved(self):
+        return self._mouse_pos != self._mouse_pos_last_update
         
     def mouse_in_window(self):
         return self._mouse_pos is not None    
@@ -74,4 +78,5 @@ class InputState:
         return self._held_keys.keys()
         
     def update(self, global_state):
+        self._mouse_pos_last_update = self.mouse_pos
         self._current_time = global_state.tick_counter

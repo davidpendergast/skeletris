@@ -152,7 +152,7 @@ class MenuManager:
 
     def __init__(self, menu_id):
         self._active_menu = self._get_menu(menu_id)
-        self._next_active_menu_id = None
+        self._next_active_menu_id = menu_id
 
     def update(self, world, gs, input_state, render_eng):
         if self._next_active_menu_id is not None:
@@ -510,6 +510,19 @@ class DeathMenu(Menu):
             self._selection = (self._selection + 1) % self._num_options
         if input_state.was_pressed(inputs.ENTER):
             self._handle_enter_press(gs)
+
+        if input_state.mouse_in_window():
+            pos = input_state.mouse_pos()
+            if input_state.mouse_moved():
+                for i in range(0, self._num_options):
+                    if Utils.rect_contains(self._option_rects[i], pos):
+                        self._selection = i
+
+            if input_state.mouse_was_pressed():
+                for i in range(0, self._num_options):
+                    if Utils.rect_contains(self._option_rects[i], pos):
+                        self._handle_enter_press(gs)
+                        break
 
         screensize = gs.screen_size
         flv_size = self._flavor_img.size()
