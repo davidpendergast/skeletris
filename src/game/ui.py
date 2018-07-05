@@ -1,3 +1,5 @@
+import random
+
 import src.game.stats
 from src.items.itemrendering import ItemInfoPane
 from src.items.itemrendering import ItemImage
@@ -141,17 +143,88 @@ class InventoryPanel:
             yield bun 
         for bun in self.inv_img.all_bundles():
             yield bun
+
+
+class MenuManager:
+    DEATH_MENU = 0
+    IN_GAME_MENU = 1
+    START_MENU = 2
+
+    def __init__(self, menu_id):
+        self._active_menu = self._get_menu(menu_id)
+        self._next_active_menu_id = None
+
+    def update(self, world, gs, input_state, render_eng):
+        if self._next_active_menu_id is not None:
+            for bun in self._active_menu.all_bundles():
+                render_eng.remove(bun)
+
+            self._active_menu.cleanup()
+
+            self._active_menu = self._get_menu(self._next_active_menu_id)
+            self._next_active_menu_id = None
+            render_eng.set_clear_color(*self._active_menu.get_clear_color())
+
+        menu = self.get_active_menu()
+        menu.update(world, gs, input_state, render_eng)
+
+    def _get_menu(self, menu_id):
+        if menu_id == MenuManager.DEATH_MENU:
+            return DeathMenu()
+        elif menu_id == MenuManager.IN_GAME_MENU:
+            return InGameUiState()
+        raise ValueError("Unknown menu id: " + str(menu_id))
+
+    def should_draw_world(self):
+        return self._active_menu.keep_drawing_world_underneath()
+
+    def get_active_menu(self):
+        return self._active_menu
+
+    def set_active_menu(self, menu_id):
+        if menu_id is None:
+            raise ValueError("Can't set null menu")
+        self._next_active_menu_id = menu_id
+
+
+class Menu:
+
+    def __init__(self, menu_type):
+        self._menu_type = menu_type
+
+    def get_clear_color(self):
+        return (0.5, 0.5, 0.5)
+
+    def get_type(self):
+        return self._menu_type
+
+    def update(self, world, gs, input_state, render_eng):
+        state = gs.get_in_game_ui_state()
+        state.update(world, gs, input_state, render_eng)
+
+    def all_bundles(self):
+        return []
+
+    def cleanup(self):
+        pass
+
+    def keep_drawing_world_underneath(self):
+        return False
+
             
-            
-class UiState:
+class InGameUiState(Menu):
 
     def __init__(self):
+        Menu.__init__(self, MenuManager.IN_GAME_MENU)
         self.item_panel = None
         self.inventory_panel = None
         
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
+
+    def keep_drawing_world_underneath(self):
+        return True
         
     def _destroy_panel(self, panel, render_eng):
         if panel is not None:
@@ -343,9 +416,160 @@ class UiState:
         self._update_item_on_cursor(world, gs, input_state, render_eng)
         self._update_item_panel(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
-        
-        
-        
-        
-        
-        
+
+        p_state = gs.player_state()
+        if p_state.hp() <= 0:
+            gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+
+    def cleanup(self):
+        self.item_on_cursor = None
+        self.inventory_panel = None
+        self.item_on_cursor_image = None
+        self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
+
+    def all_bundles(self):
+        if self.item_panel is not None:
+            for bun in self.item_panel.all_bundles():
+                yield bun
+        if self.inventory_panel is not None:
+            for bun in self.inventory_panel.all_bundles():
+                yield bun
+        if self.item_on_cursor_image is not None:
+            for bun in self.item_on_cursor_image.all_bundles():
+                yield bun
+
+
+class DeathMenu(Menu):
+    RETRY_OPT = 0
+    EXIT_OPT = 1
+
+    def __init__(self):
+        Menu.__init__(self, MenuManager.DEATH_MENU)
+        self._you_died_img = None
+        self._flavor_img = None
+
+        self._num_options = 2
+        self._option_imgs = [None] * self._num_options
+        self._selection = 0
+
+        self._title_pos = (0, 0)
+        self._flavor_pos = (0, 0)
+        self._option_rects = [(0, 0, 0, 0)] * self._num_options
+
+        self._showing_flavor = True
+        self._flavor_duration = 100
+        self._flavor_tick = 0
+        self._flavor_text = self._get_flavor_text()
+
+        self._build_imgs()
+
+    def get_flavor_progress(self):
+        return Utils.bound(self._flavor_tick / self._flavor_duration, 0.0, 1.0)
+
+    def get_clear_color(self):
+        return (0.0, 0.0, 0.0)
+
+    ALL_FLAVOR = [
+        "from death... comes life?",
+        "you'll do better next time!"
+    ]
+
+    def _get_flavor_text(self):
+        idx = int(random.random() * len(DeathMenu.ALL_FLAVOR))
+        return DeathMenu.ALL_FLAVOR[idx]
+
+    def _build_imgs(self):
+        if self._you_died_img is None:
+            self._you_died_img = TextImage(0, 0, "game over", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=6)
+        if self._flavor_img is None:
+            self._flavor_img = TextImage(0, 0, self._flavor_text, layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=2)
+        if self._option_imgs[0] is None:
+            self._option_imgs[0] = TextImage(0, 0, "retry", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+        if self._option_imgs[1] is None:
+            self._option_imgs[1] = TextImage(0, 0, "quit", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+
+    def _update_imgs(self):
+        if self.get_flavor_progress() < 0.15:
+            c = self.get_flavor_progress() / 0.15
+            color = (c, c, c)  # fade in
+        else:
+            color = (1, 1, 1)
+        self._flavor_img.update(new_x=self._flavor_pos[0], new_y=self._flavor_pos[1], new_color=color)
+
+        self._you_died_img.update(new_x=self._title_pos[0], new_y=self._title_pos[1])
+        for i in range(0, self._num_options):
+            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
+            x = self._option_rects[i][0]
+            y = self._option_rects[i][1]
+            self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+
+    def update(self, world, gs, input_state, render_eng):
+        if input_state.was_pressed(inputs.UP):
+            self._selection = (self._selection - 1) % self._num_options
+        if input_state.was_pressed(inputs.DOWN):
+            self._selection = (self._selection + 1) % self._num_options
+        if input_state.was_pressed(inputs.ENTER):
+            self._handle_enter_press(gs)
+
+        screensize = gs.screen_size
+        flv_size = self._flavor_img.size()
+        self._flavor_pos = (screensize[0] // 2 - flv_size[0] // 2,
+                            screensize[1] // 2 - flv_size[1] // 2)
+
+        gap = 32
+        total_height = self._you_died_img.size()[1]
+        for img in self._option_imgs:
+            total_height += img.size()[1] + gap
+
+        total_width = self._you_died_img.size()[0]
+
+        x_pos = screensize[0] // 2 - total_width // 2
+        y_pos = screensize[1] // 2 - total_height // 2
+
+        self._title_pos = (x_pos, y_pos)
+        y_pos += self._you_died_img.size()[1] + gap
+
+        for i in range(0, self._num_options):
+            opt_size = self._option_imgs[i].size()
+            x_pos = screensize[0] // 2 - opt_size[0] // 2
+            self._option_rects[i] = (x_pos, y_pos, opt_size[0], opt_size[1])
+
+            y_pos += opt_size[1] + gap
+
+        self._update_imgs()
+
+        if self._showing_flavor and self.get_flavor_progress() == 1.0:
+            self._showing_flavor = False
+            for bun in self._flavor_img.all_bundles():
+                render_eng.remove(bun)
+        elif self._showing_flavor:
+            self._flavor_tick += 1
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def all_bundles(self):
+        if self._showing_flavor:
+            if self._flavor_img is not None:
+                for bun in self._flavor_img.all_bundles():
+                    yield bun
+        else:
+            if self._you_died_img is not None:
+                for bun in self._you_died_img.all_bundles():
+                    yield bun
+            for opt_img in self._option_imgs:
+                if opt_img is not None:
+                    for bun in opt_img.all_bundles():
+                        yield bun
+
+    def _handle_enter_press(self, gs):
+        if self.get_flavor_progress() < 1:
+            self._flavor_tick = self._flavor_duration
+        else:
+            sel = self._selection
+            print("sel = {}".format(sel))
+            if sel == DeathMenu.RETRY_OPT:
+                gs.new_game()
+            elif sel == DeathMenu.EXIT_OPT:
+                gs.new_game()
+

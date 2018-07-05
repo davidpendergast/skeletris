@@ -273,6 +273,18 @@ class World:
 
         self._update_onscreen_geo_bundles(gs, render_engine)
 
+    def cleanup_active_bundles(self, render_eng):
+        for e in self._onscreen_entities:
+            for bun in e.all_bundles():
+                render_eng.remove(bun)
+        self._onscreen_entities.clear()
+
+        for bun_key in self._onscreen_bundles:
+            render_eng.remove(self._geo_bundle_lookup[bun_key])
+        self._onscreen_bundles.clear()
+
+
+
 
 
 

@@ -211,11 +211,13 @@ class RenderEngine:
         glLoadIdentity()
         self.size = (width, height)
 
+    def set_clear_color(self, r, g, b):
+        glClearColor(r, g, b, 0.0)
+
     def init(self, w, h):
         self.resize(w, h)
-        # glEnable(GL_DEPTH_TEST)
         glShadeModel(GL_FLAT)
-        glClearColor(0.5, 0.5, 0.5, 0.0);
+        glClearColor(0.5, 0.5, 0.5, 0.0)
         
         vstring = glGetString(GL_VERSION)
         vstring = vstring.decode() if vstring is not None else None

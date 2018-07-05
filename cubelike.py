@@ -2,8 +2,8 @@ import pygame
 
 import src.game.spriteref as spriteref
 from src.game.globalstate import GlobalState
-from src.game.inputs import InputState
-from src.game.ui import UiState
+import src.game.inputs as inputs
+from src.game.ui import MenuManager
 from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.game.enemies import EnemyFactory
@@ -38,20 +38,24 @@ def build_me_a_world():
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
 
     return w
-   
-    
+
+
+def new_gs():
+    gs = GlobalState()
+    gs.set_player_state(PlayerState("ghast", InventoryState()))
+    return gs
+
+
 def run():
     pygame.init()
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
     
     pygame.display.set_caption("Cubelike")
     
-    screen = pygame.display.set_mode(SCREEN_SIZE, mods)
+    pygame.display.set_mode(SCREEN_SIZE, mods)
     
-    input_state = InputState()
-    gs = GlobalState()
-    gs.set_player_state(PlayerState("ghast", InventoryState()))
-    ui_state = UiState()
+    input_state = inputs.InputState()
+    gs = None
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
@@ -102,7 +106,14 @@ def run():
     running = True
     
     while running:
+
+        if gs is None or gs._needs_new_game:
+            print("Starting new game")
+            gs = new_gs()
+            world = None
+
         gs.update()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -122,8 +133,10 @@ def run():
                 input_state.set_mouse_pos(None)
 
         input_state.update(gs)
-                
-        if world is None or gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN):
+
+        world_active = gs.get_menu_manager().should_draw_world()
+
+        if world_active and (world is None or gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN)):
             render_eng.clear_all_sprites()
             world = build_me_a_world()
             gs._needs_next_level = False
@@ -131,19 +144,29 @@ def run():
         if input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
             profiling.get_instance().toggle()
-        
-        player = world.get_player()
-        gs.player_state().update(player, world, gs, input_state)
-        
-        world.update_all(gs, input_state, render_eng)
-        
-        ui_state.update(world, gs, input_state, render_eng)
-        
-        camera = gs.get_world_camera()
-        for layer_id in spriteref.WORLD_LAYERS:
-            render_eng.set_layer_offset(layer_id, *camera)
-        
+
+        if input_state.was_pressed(inputs.KILL):
+            manager = gs.get_menu_manager()
+            if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
+                gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+
+        if world_active:
+            player = world.get_player()
+            gs.player_state().update(player, world, gs, input_state)
+
+            world.update_all(gs, input_state, render_eng)
+
+            camera = gs.get_world_camera()
+            for layer_id in spriteref.WORLD_LAYERS:
+                render_eng.set_layer_offset(layer_id, *camera)
+
+        elif world is not None:
+            world.cleanup_active_bundles(render_eng)
+
+        gs.get_menu_manager().update(world, gs, input_state, render_eng)
+
         render_eng.render_layers()
+
         pygame.display.flip()
         clock.tick(60)
         if gs.tick_counter % 60 == 0:

@@ -1,4 +1,4 @@
-import src.game.spriteref as spriteref
+from src.game.ui import MenuManager
 
 
 class GlobalState:
@@ -12,8 +12,15 @@ class GlobalState:
         self._world_camera_center = [0, 0]
         self._player_state = None
 
+        self._needs_new_game = False
+
         self._needs_next_level = False
         self._needs_next_level_countdown = 0
+
+        self._menu_manager = MenuManager(MenuManager.IN_GAME_MENU)
+
+    def get_menu_manager(self):
+        return self._menu_manager
         
     def set_player_state(self, state):
         self._player_state = state
@@ -49,8 +56,11 @@ class GlobalState:
             if self._needs_next_level_countdown <= 0:
                 self._needs_next_level = True
 
-    def trigger_next_level_seq(self):
+    def new_game(self):
+        self._needs_new_game = True
+
+    def trigger_next_level_seq(self, pause_for=60):
         if self._needs_next_level_countdown <= 0:
             print("triggered next level")
-            self._needs_next_level_countdown = 60
+            self._needs_next_level_countdown = pause_for
 

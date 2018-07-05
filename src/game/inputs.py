@@ -1,14 +1,14 @@
 import pygame
 
 UP = [pygame.K_w, pygame.K_UP]
-JUMP = UP + [pygame.K_SPACE]
 LEFT = [pygame.K_a, pygame.K_LEFT]
 RIGHT = [pygame.K_d, pygame.K_RIGHT]
 DOWN = [pygame.K_s, pygame.K_DOWN]
-CROUCH = DOWN + [pygame.K_LSHIFT, pygame.K_RSHIFT]
-ATTACK = [pygame.K_j, pygame.K_x]
+ATTACK = [pygame.K_j, pygame.K_x, pygame.K_SPACE]
 INVENTORY = [pygame.K_r]
-INTERACT = [pygame.K_k, pygame.K_e]
+INTERACT = [pygame.K_e]
+KILL = [pygame.K_k]
+ENTER = [pygame.K_RETURN]
 EXIT = [pygame.K_ESCAPE]
 
 
