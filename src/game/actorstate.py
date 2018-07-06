@@ -148,11 +148,17 @@ class PlayerState(ActorState):
 
         self.attack_state.set_attack(attacks.GROUND_POUND)
 
+        self._damage_last_tick = 0
+        self._healing_last_tick = 0
+
         self.is_moving = False
         self.facing_right = True
 
     def inventory(self):
         return self._inventory
+
+    def damage_and_healing_last_tick(self):
+        return self._damage_last_tick, self._healing_last_tick
 
     def is_invuln(self):
         # can't be hit while attacking
@@ -197,6 +203,8 @@ class PlayerState(ActorState):
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
 
+        self._damage_last_tick = sum(self.damage_amounts)
+        self._healing_last_tick = sum(self.damage_amounts)
         self.handle_floating_text(player_entity, world)
 
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():

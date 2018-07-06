@@ -10,7 +10,6 @@ from src.world.entities import ItemEntity
 from src.items.itemrendering import TextImage
 import src.items.item as item_module
 from src.utils.util import Utils
-from src.game.inventory import InventoryState
 from src.game.stats import PlayerStatType, StatType
 
 
@@ -145,7 +144,79 @@ class InventoryPanel:
             yield bun
 
 
+class HealthBarPanel:
+
+    def __init__(self):
+        self._top_img = None
+        self._bar_img = None
+        self._floating_bars = []  # list of [img, duration]
+        self._float_dur = 30
+        self._float_height = 30
+        self._bar_color = (1.0, 0.5, 0.5)
+
+    def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing):
+        if self._top_img is None:
+            self._top_img = ImageBundle(spriteref.health_bar_top, 0, 0,
+                                        layer=spriteref.UI_0_LAYER, scale=2)
+        if self._bar_img is None:
+            self._bar_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+            self._bar_img = self._bar_img.update(new_color=self._bar_color)
+
+        hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
+        x = gs.screen_size[0] // 2 - self._top_img.width() // 2
+        w = self._top_img.width()
+        y = gs.screen_size[1] - self._top_img.height()
+
+        if new_damage > 0:
+            pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
+            dmg_x = int(x + hp_pcnt_full * w)
+            dmg_sprite = spriteref.get_health_bar(pcnt_full)
+            dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
+            self._floating_bars.append([dmg_img, 0])
+
+        for i in range(0, len(self._floating_bars)):
+            img, cur_dur = self._floating_bars[i]
+            prog = Utils.bound(cur_dur / self._float_dur, 0.0, 1.0)
+            h_offs = int(self._float_height * prog)
+            g = self._bar_color[1] * (1 - prog)
+            b = self._bar_color[2] * (1 - prog)
+
+            self._floating_bars[i][0] = img.update(new_y=(y - h_offs), new_color=(1.0, g, b))
+
+        self._top_img = self._top_img.update(new_x=x, new_y=y)
+        bar_sprite = spriteref.get_health_bar(hp_pcnt_full)
+
+        self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=x, new_y=y)
+
+    def update(self, world, gs, input_state, render_eng):
+        p_state = gs.player_state()
+        new_dmg, new_healing = p_state.damage_and_healing_last_tick()
+
+        if len(self._floating_bars) > 0:
+            new_bars = []
+            for fb in self._floating_bars:
+                if fb[1] >= self._float_dur:
+                    render_eng.remove(fb[0])
+                else:
+                    new_bars.append([fb[0], fb[1] + 1])
+            self._floating_bars = new_bars
+
+        self.update_images(gs, p_state.hp(), p_state.max_hp(), new_dmg, new_healing)
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def all_bundles(self):
+        if self._bar_img is not None:
+            yield self._bar_img
+        if self._top_img is not None:
+            yield self._top_img
+        for floating_bar in self._floating_bars:
+            yield floating_bar[0]
+
+
 class MenuManager:
+
     DEATH_MENU = 0
     IN_GAME_MENU = 1
     START_MENU = 2
@@ -218,6 +289,7 @@ class InGameUiState(Menu):
         Menu.__init__(self, MenuManager.IN_GAME_MENU)
         self.item_panel = None
         self.inventory_panel = None
+        self.health_bar_panel = None
         
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
@@ -283,6 +355,11 @@ class InGameUiState(Menu):
             else:
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
+
+    def _update_health_bar_panel(self, world, gs, input_state, render_eng):
+        if self.health_bar_panel is None:
+            self.health_bar_panel = HealthBarPanel()
+        self.health_bar_panel.update(world, gs, input_state, render_eng)
     
     def in_inventory_panel(self, screen_pos):
         if self.inventory_panel is None:
@@ -416,6 +493,7 @@ class InGameUiState(Menu):
         self._update_item_on_cursor(world, gs, input_state, render_eng)
         self._update_item_panel(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
+        self._update_health_bar_panel(world, gs, input_state, render_eng)
 
         p_state = gs.player_state()
         if p_state.hp() <= 0:
@@ -428,6 +506,9 @@ class InGameUiState(Menu):
         self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
 
     def all_bundles(self):
+        if self.health_bar_panel is not None:
+            for bun in self.health_bar_panel.all_bundles():
+                yield bun
         if self.item_panel is not None:
             for bun in self.item_panel.all_bundles():
                 yield bun

@@ -87,6 +87,18 @@ explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
 
 progress_bars = [make((i // 4)*16, (i % 4)*4 + 336, 16, 4) for i in range(0, 16)]
 
+health_bar_top = make(544, 160, 256, 16)
+health_bar_full = make(544, 176, 256, 16)
+health_bars_with_length = []
+for i in range(0, 256):
+    health_bars_with_length.append(make(544, 176, i, 16))
+health_bars_with_length.append(health_bar_full)
+
+
+def get_health_bar(pcnt_full):
+    return health_bars_with_length[round(pcnt_full * 256)]
+
+
 _chars = [letter for letter in string.ascii_lowercase]
 _chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":", "'"])
 _qmark = make(160, 115, 5, 5)
