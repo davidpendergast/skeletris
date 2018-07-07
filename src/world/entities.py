@@ -466,7 +466,7 @@ class ChestEntity(Entity):
             angle = random.random() * 6.28  # 2pi-ish
             speed = 2 + random.random() * 3
             vel = (speed*math.cos(angle), speed*math.sin(angle))
-            item = ItemFactory.gen_item()
+            item = ItemFactory.gen_item(random.randint(0, 64))
             world.add(ItemEntity(item, c[0], c[1], vel=vel))
             
     def update(self, world, gs, input_state, render_engine):

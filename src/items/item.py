@@ -1,7 +1,7 @@
 import random
 import collections
 
-from src.game.stats import StatType
+from src.game.stats import StatType, ItemStatRanges
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 SPECIAL_STATS = [StatType.HOLE_BONUS]
@@ -48,9 +48,9 @@ STAT_DESCRIPTIONS = {
     StatType.VIT: "+{} VIT",
     StatType.ATTACK_RADIUS: "+{}% ATT Range",
     StatType.ATTACK_SPEED: "+{}% Attack SPD",
-    StatType.ATTACK_DAMAGE: "+{} Attack DMG",
+    StatType.ATTACK_DAMAGE: "+{}% Attack DMG",
     StatType.MOVEMENT_SPEED: "+{}% Movespeed",
-    StatType.DODGE: "+{}% Dodge",
+    StatType.DODGE: "+{} Dodge",
     StatType.ACCURACY: "+{} Accuracy",
     StatType.LIFE_REGEN: "+{} Life Regen",
     StatType.LIFE_ON_HIT: "+{} Life on Hit",
@@ -219,22 +219,23 @@ class ItemFactory:
             return cubes
 
     @staticmethod
-    def gen_core_stats():
+    def gen_core_stat(lvl):
         res = []
-        for stat in CORE_STATS:
-            if random.random() < 0.333:
-                res.append(ItemStat(stat, int(random.random()*30)))
-        return res
+        stat = CORE_STATS[int(random.random() * len(CORE_STATS))]
+        low, high = ItemStatRanges.get_range(stat, lvl)
+
+        return ItemStat(stat, random.randint(low, high))
 
     @staticmethod
-    def gen_non_core_stats(n):
-        choices = list(NON_CORE_STATS)
+    def gen_non_core_stats(lvl, n, exclude=()):
         res = []
+        choices = [x for x in NON_CORE_STATS + CORE_STATS if x not in exclude]
         while len(res) < n and len(choices) > 0:
             choice = choices[int(len(choices)*random.random())]
-            value = 1 + int(random.random() * 16)
-            res.append(ItemStat(choice, value))
-            
+            low, high = ItemStatRanges.get_range(choice, lvl)
+            res.append(ItemStat(choice, random.randint(low, high)))
+            choices.remove(choice)
+
         return res
 
     @staticmethod
@@ -256,9 +257,13 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item():
-        core_stats = ItemFactory.gen_core_stats() 
-        non_core_stats = ItemFactory.gen_non_core_stats(int(4*random.random()))
+    def gen_item(lvl):
+        primary_stat = ItemFactory.gen_core_stat(lvl)
+        secondary_stats = ItemFactory.gen_non_core_stats(lvl, int(4*random.random()), exclude=[primary_stat.stat_type])
+
+        core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
+        non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
+
         cubes = ItemFactory.gen_cubes(5 + int(2 * random.random()))
         special_stats = ItemFactory.get_special_stats(cubes)
         

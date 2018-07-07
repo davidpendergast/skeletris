@@ -13,10 +13,7 @@ class LootFactory:
         loot = []
         for _ in range(0, 3):
             if random.random() < 0.05:
-                loot.append(ItemEntity(ItemFactory.gen_item(), *pos))
-        #for _ in range(0, 3):
-        #    if random.random() < 0.75:
-        #        loot.append(PotionEntity(*pos))
+                loot.append(ItemEntity(ItemFactory.gen_item(random.randint(0, 64)), *pos))
         return loot
 
 
