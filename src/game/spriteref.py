@@ -37,6 +37,8 @@ player_move_2 = make(64, 0, 16, 32)
 player_move_3 = make(80, 0, 16, 32)
 player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
+player_death_seq = [make(112 + 32*i, 208, 32, 32) for i in range(0, 5)]
+
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
 player_squat = make(80, 240, 16, 32)
 player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
@@ -59,7 +61,7 @@ enemy_muncher_all = [make(128, 144, 32, 32), make(128, 176, 32, 32)]
 enemy_muncher_alt_all = [make(160, 144, 32, 32), make(160, 176, 32, 32)]
 enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
         enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all]
-        
+
 potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 

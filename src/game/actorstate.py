@@ -154,6 +154,10 @@ class PlayerState(ActorState):
         self.is_moving = False
         self.facing_right = True
 
+        self._is_dead = False
+        self.death_seq_duration = 120
+        self.death_seq_tick = 0
+
     def inventory(self):
         return self._inventory
 
@@ -163,6 +167,22 @@ class PlayerState(ActorState):
     def is_invuln(self):
         # can't be hit while attacking
         return self.attack_state.is_attacking()
+
+    def is_dead(self):
+        return self._is_dead
+
+    def _handle_death(self, player_entity, world):
+        world.remove(player_entity)
+        death_anim = AnimationEntity(player_entity.x(), player_entity.y(),
+                                     spriteref.player_death_seq, 20, spriteref.ENTITY_LAYER,
+                                     scale=2, w=player_entity.w(), h=player_entity.h())
+
+        death_anim.set_sprite_offset((0, -24))
+        death_anim.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
+        death_anim.set_xflipped(not self.facing_right)
+        death_anim.set_vel(Utils.mult(self.current_knockback, 2), fric=0.90, collides=True)
+
+        world.add(death_anim)
 
     def stat_value(self, stat_type):
         """
@@ -193,7 +213,23 @@ class PlayerState(ActorState):
         return ("+{}", 3, ActorState.G_TEXT_COLOR)
 
     def update(self, player_entity, world, gs, input_state):
+        if self._is_dead:
+            if self.death_seq_tick >= self.death_seq_duration:
+                gs.player_died()
+            else:
+                self.death_seq_tick += 1
+
         if player_entity is None:
+            return
+
+        self._damage_last_tick = sum(self.damage_amounts)
+        self._healing_last_tick = sum(self.damage_amounts)
+        self.handle_floating_text(player_entity, world)
+
+        if self.hp() <= 0:
+            self._is_dead = True
+            self._handle_death(player_entity, world)
+            self._damage_last_tick = 0
             return
 
         if gs.tick_counter % 60 == 0:
@@ -202,10 +238,6 @@ class PlayerState(ActorState):
 
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
-
-        self._damage_last_tick = sum(self.damage_amounts)
-        self._healing_last_tick = sum(self.damage_amounts)
-        self.handle_floating_text(player_entity, world)
 
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
             self.attack_state.start_attack(self)
@@ -334,7 +366,7 @@ class EnemyState(ActorState):
                         self.is_aggro = dist <= self.aggro_radius
 
             # doing attacks
-            if random.random() < 0.05:
+            if random.random() < 0.1:
                 if self.is_aggro and self._should_attack(entity, world):
                     self.attack_state.start_attack(self)
 

@@ -169,10 +169,14 @@ class Entity:
 
 class AnimationEntity(Entity):
 
+        LOOP_ON_FINISH = 1
+        FREEZE_ON_FINISH = 2
+        DELETE_ON_FINISH = 3
+
         def __init__(self, x, y, sprites, duration, layer_id, w=8, h=8, scale=2):
             Entity.__init__(self, x, y, w, h)
-            self.initial_duration = duration
             self.duration = duration
+            self.tick_count = 0
             self.sprites = sprites
             self.layer_id = layer_id
             self.scale = scale
@@ -180,6 +184,19 @@ class AnimationEntity(Entity):
             self.xflipped = False
             self.sprite_offset = (0, 0)
             self.centered = [True, True]
+            self.on_finish_mode = AnimationEntity.DELETE_ON_FINISH
+
+            self.vel = (0, 0)
+            self.fric = 0.90
+            self.collides = False
+
+        def set_vel(self, vel, fric=None, collides=None):
+            self.vel = vel
+            self.fric = self.fric if fric is None else fric
+            self.collides = self.collides if collides is None else collides
+
+        def set_finish_behavior(self, mode):
+            self.on_finish_mode = mode
 
         def set_xflipped(self, val):
             self.xflipped = val
@@ -194,7 +211,7 @@ class AnimationEntity(Entity):
             self.centered[1] = val
 
         def get_current_sprite(self):
-            progress = min(1, max(0, 1 - self.duration / self.initial_duration))
+            progress = Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
             idx = int(progress * len(self.sprites))
             return self.sprites[idx]
 
@@ -216,11 +233,31 @@ class AnimationEntity(Entity):
                                          new_xflip=self.xflipped, new_depth=self.get_depth())
 
         def update(self, world, gs, input_state, render_engine):
-            if self.duration <= 0:
+            if self.tick_count >= self.duration and self.on_finish_mode == AnimationEntity.DELETE_ON_FINISH:
                 world.remove(self)
-            else:
-                self.update_images(gs)
-                self.duration -= 1
+                return
+
+            if self.tick_count >= self.duration:
+                if self.on_finish_mode == AnimationEntity.LOOP_ON_FINISH:
+                    self.tick_count = 0
+                elif self.on_finish_mode == AnimationEntity.FREEZE_ON_FINISH:
+                    self.tick_count = self.duration
+                else:
+                    raise ValueError("invalid on_finish_mode: {}".format(self.on_finish_mode))
+
+            if self.vel != (0, 0):
+                if self.collides:
+                    self.move(self.vel[0], self.vel[1], world=world, and_search=True)
+                else:
+                    self.move(self.vel[0], self.vel[1])
+
+                if self.fric < 1:
+                    self.vel = Utils.mult(self.vel, self.fric)
+                    if Utils.mag(self.vel) < 0.01:
+                        self.vel = (0, 0)
+
+            self.update_images(gs)
+            self.tick_count += 1
 
 
 class AttackCircleArt(AnimationEntity):
@@ -372,7 +409,7 @@ class Enemy(Entity):
         
     def update(self, world, gs, input_state, render_engine):
         self.state.update(self, world, gs, input_state)
-        super().update_images(gs.anim_tick) # TODO - shadows are dumb
+        super().update_images(gs.anim_tick)  # TODO - shadows are dumb
         
     def is_enemy(self):
         return True
@@ -419,14 +456,14 @@ class ChestEntity(Entity):
         num_potions = 1 + int(random.random()*3)
         for _ in range(0, num_potions):
             c = self.center()
-            angle = random.random() * 6.28 # 2pi-ish
+            angle = random.random() * 6.28  # 2pi-ish
             speed = 2 + random.random() * 3
             vel = (speed*math.cos(angle), speed*math.sin(angle))
             world.add(PotionEntity(c[0], c[1], vel=vel))
             
         for _ in range(0, 3):
             c = self.center()
-            angle = random.random() * 6.28 # 2pi-ish
+            angle = random.random() * 6.28  # 2pi-ish
             speed = 2 + random.random() * 3
             vel = (speed*math.cos(angle), speed*math.sin(angle))
             item = ItemFactory.gen_item()

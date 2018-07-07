@@ -56,6 +56,9 @@ class GlobalState:
             if self._needs_next_level_countdown <= 0:
                 self._needs_next_level = True
 
+    def player_died(self):
+        self.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+
     def new_game(self):
         self._needs_new_game = True
 

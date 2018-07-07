@@ -342,14 +342,21 @@ class InGameUiState(Menu):
 
             offs = (-screen_pos[0], -screen_pos[1])
             render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
-            should_destroy = False            
+            should_destroy = False
+
+        if gs.player_state().is_dead():
+            should_destroy = True
         
         if should_destroy and self.item_panel is not None:
             self._destroy_panel(self.item_panel, render_eng)
             self.item_panel = None
             
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(inputs.INVENTORY):
+        if gs.player_state().is_dead():
+            if self.inventory_panel is not None:
+                self._destroy_panel(self.inventory_panel, render_eng)
+
+        elif input_state.was_pressed(inputs.INVENTORY):
             if self.inventory_panel is None: 
                 self.rebuild_inventory(gs, render_eng)
             else:
@@ -391,9 +398,17 @@ class InGameUiState(Menu):
         destroy_image = False
         create_image = False
         rebuild_inventory = False
-        
-        if not input_state.mouse_in_window():
+
+        if gs.player_state().is_dead():
             destroy_image = True
+            if self.item_on_cursor is not None:
+                center = gs.screen_size[0] // 2, gs.screen_size[1] // 2
+                world_coords = gs.screen_to_world_coords(center)
+                self._drop_item_on_cursor(world_coords, Utils.rand_vec(1), world)
+
+        elif not input_state.mouse_in_window():
+            destroy_image = True
+
         elif self.item_on_cursor is not None and self.item_on_cursor_image is None:
             # mouse left window and came back
             create_image = True
@@ -405,7 +420,7 @@ class InGameUiState(Menu):
                 if self.item_on_cursor is not None:
                     # when holding an item, gotta offset the click to the top left corner
                     grid_click_pos = Utils.add(screen_pos, self.item_on_cursor_offs)
-                    grid_click_pos = Utils.add(grid_click_pos, (16, 16)) # plus some fudge XXX
+                    grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
                 else:
                     grid_click_pos = screen_pos    
                     
@@ -447,11 +462,8 @@ class InGameUiState(Menu):
                     if p is not None:
                         p_center = p.center()  # drop position
                         drop_dir = Utils.sub(world_pos, p_center)
-                        vel = ItemEntity.rand_vel(direction=drop_dir)
-                        item_entity = ItemEntity(self.item_on_cursor, *p_center, vel=vel)
-                        world.add(item_entity)
+                        self._drop_item_on_cursor(p_center, drop_dir, world)
                         destroy_image = True
-                        self.item_on_cursor = None
         
         if input_state.was_pressed(inputs.INTERACT) and self.item_on_cursor is not None:
             self.item_on_cursor = item_module.ItemFactory.rotate_item(self.item_on_cursor) 
@@ -478,7 +490,15 @@ class InGameUiState(Menu):
                 x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
                 y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
                 render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
-     
+
+    def _drop_item_on_cursor(self, pos, drop_dir, world):
+        if self.item_on_cursor is None:
+            return
+        vel = ItemEntity.rand_vel(direction=drop_dir)
+        item_entity = ItemEntity(self.item_on_cursor, *pos, vel=vel)
+        world.add(item_entity)
+        self.item_on_cursor = None
+
     def rebuild_inventory(self, gs, render_eng):                
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
@@ -494,10 +514,6 @@ class InGameUiState(Menu):
         self._update_item_panel(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
-
-        p_state = gs.player_state()
-        if p_state.hp() <= 0:
-            gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
 
     def cleanup(self):
         self.item_on_cursor = None
@@ -551,8 +567,9 @@ class DeathMenu(Menu):
         return (0.0, 0.0, 0.0)
 
     ALL_FLAVOR = [
-        "from death... comes life?",
-        "you'll do better next time!"
+        "you'll do better next time!",
+        "epic run!",
+        "ouch!"
     ]
 
     def _get_flavor_text(self):
