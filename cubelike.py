@@ -141,9 +141,21 @@ def run():
             world = build_me_a_world()
             gs._needs_next_level = False
 
+        if input_state.was_pressed(pygame.K_ESCAPE):
+            running = False
+            continue
+
         if input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
             profiling.get_instance().toggle()
+
+        if input_state.was_pressed(pygame.K_F4):
+            size = gs.screen_size
+            if gs.is_fullscreen:
+                pygame.display.set_mode(size, pygame.OPENGL)
+            else:
+                pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
+            gs.is_fullscreen = not gs.is_fullscreen
 
         if input_state.was_pressed(inputs.KILL):
             manager = gs.get_menu_manager()

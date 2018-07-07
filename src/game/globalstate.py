@@ -5,6 +5,7 @@ class GlobalState:
 
     def __init__(self):
         self.screen_size = [800, 600]
+        self.is_fullscreen = False
     
         self.tick_counter = 0
         self.anim_tick = 0
