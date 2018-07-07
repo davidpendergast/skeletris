@@ -6,10 +6,6 @@ import src.game.inputs as inputs
 from src.game.ui import MenuManager
 from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
-from src.game.enemies import EnemyFactory
-
-from src.world.worldstate import World
-from src.world.entities import Player, ChestEntity, DoorEntity
 from src.renderengine.engine import RenderEngine
 
 from src.worldgen.worldgen import WorldFactory
@@ -34,7 +30,6 @@ def build_me_a_world():
     print("p = ", p)
     if p is not None:
         grid_xy = w.to_grid_coords(*p.center())
-        print("setting hidden to false at {}".format(grid_xy))
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
 
     return w

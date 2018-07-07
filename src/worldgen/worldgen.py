@@ -112,9 +112,12 @@ class BuilderUtils:
     @staticmethod
     def can_place_room(room, room_list):
         for floor_pos in room.all_floors():
+            blocked_positions = [(floor_pos[0] + n[0], floor_pos[1] + n[1]) for n in NEIGHBORS]
+            blocked_positions.append(floor_pos)
             for existing_room in room_list:
-                if existing_room.has_floor_at(floor_pos):
-                    return False
+                for b in blocked_positions:
+                    if existing_room.has_floor_at(b):
+                        return False
         return True
 
     @staticmethod
