@@ -185,6 +185,7 @@ class AnimationEntity(Entity):
             self.sprite_offset = (0, 0)
             self.centered = [True, True]
             self.on_finish_mode = AnimationEntity.DELETE_ON_FINISH
+            self._color = (1, 1, 1)
 
             self.vel = (0, 0)
             self.fric = 0.90
@@ -210,12 +211,17 @@ class AnimationEntity(Entity):
         def set_y_centered(self, val):
             self.centered[1] = val
 
+        def set_color(self, color):
+            self._color = color
+
         def get_current_sprite(self):
-            progress = Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
-            idx = int(progress * len(self.sprites))
+            idx = int(self.get_progress() * len(self.sprites))
             return self.sprites[idx]
 
-        def update_images(self, gs):
+        def update_attributes(self, gs):
+            pass
+
+        def _update_images(self, gs):
             sprite = self.get_current_sprite()
 
             x = self.x() + self.sprite_offset[0]
@@ -230,7 +236,11 @@ class AnimationEntity(Entity):
                 self._img = img.ImageBundle(sprite, x, y, layer=self.layer_id, scale=self.scale, depth=0)
 
             self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
-                                         new_xflip=self.xflipped, new_depth=self.get_depth())
+                                         new_xflip=self.xflipped, new_depth=self.get_depth(),
+                                         new_color=self._color)
+
+        def get_progress(self):
+            return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
 
         def update(self, world, gs, input_state, render_engine):
             if self.tick_count >= self.duration and self.on_finish_mode == AnimationEntity.DELETE_ON_FINISH:
@@ -256,20 +266,30 @@ class AnimationEntity(Entity):
                     if Utils.mag(self.vel) < 0.01:
                         self.vel = (0, 0)
 
-            self.update_images(gs)
+            self.update_attributes(gs)
+
+            self._update_images(gs)
             self.tick_count += 1
 
 
 class AttackCircleArt(AnimationEntity):
 
-    def __init__(self, cx, cy, duration):
+    def __init__(self, cx, cy, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
         AnimationEntity.__init__(self, cx - 4, cy - 4, spriteref.att_circles, duration, spriteref.SHADOW_LAYER)
-        self.initial_duration = duration
-        self.duration = duration
-        self._img = None
+        self._start_color = color
+        self._end_color = color_end
+
+    def update_attributes(self, gs):
+        prog = self.get_progress()
+        if self._end_color is not None:
+            color = Utils.linear_interp(self._start_color, self._end_color, prog)
+        else:
+            color = self._start_color
+        self.set_color(color)
 
 
 class FloatingTextEntity(Entity):
+
     def __init__(self, text, duration, color, anchor=None, scale=2, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
         self.text = text
         self.color = color

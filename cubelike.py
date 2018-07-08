@@ -64,7 +64,7 @@ def run():
     render_eng.add_layer(
             spriteref.SHADOW_LAYER,
             "shadow_layer", 5, 
-            False, False)
+            False, COLOR)
     render_eng.add_layer(
             spriteref.WALL_LAYER,
             "walls", 10, 

@@ -61,6 +61,8 @@ class Utils:
 
     @staticmethod
     def rect_contains(rect, v):
-        return (v[0] >= rect[0] and v[0] < rect[0] + rect[2]
-                and v[1] >= rect[1] and v[1] < rect[1] + rect[3])
-        
+        return rect[0] <= v[0] < rect[0] + rect[2] and rect[1] <= v[1] < rect[1] + rect[3]
+
+    @staticmethod
+    def linear_interp(v1, v2, a):
+        return tuple([v1[i] * (1 - a) + v2[i] * a for i in range(0, len(v1))])
