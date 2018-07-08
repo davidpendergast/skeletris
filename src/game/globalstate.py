@@ -9,6 +9,9 @@ class GlobalState:
     
         self.tick_counter = 0
         self.anim_tick = 0
+
+        self.dungeon_level = 0
+        self.kill_count = 0
         
         self._world_camera_center = [0, 0]
         self._player_state = None
@@ -55,7 +58,7 @@ class GlobalState:
         if self._needs_next_level_countdown > 0:
             self._needs_next_level_countdown -= 1
             if self._needs_next_level_countdown <= 0:
-                self._needs_next_level = True
+                self.next_level()
 
     def player_died(self):
         self.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
@@ -67,4 +70,9 @@ class GlobalState:
         if self._needs_next_level_countdown <= 0:
             print("triggered next level")
             self._needs_next_level_countdown = pause_for
+
+    def next_level(self):
+        self.dungeon_level += 1
+        self._needs_next_level_countdown = 0
+        self._needs_next_level = True
 

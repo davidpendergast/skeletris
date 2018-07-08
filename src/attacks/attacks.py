@@ -67,9 +67,11 @@ class AttackState:
 
                     if random.random() <= chance_to_hit:
                         dmg = self.get_dmg(stat_lookup)
+                        spread = 0.25
+                        dmg_actual = dmg * (1 + spread * 2 * (0.5 - random.random()))
                         sub = Utils.sub(t_ent.center(), entity.center())
                         kb = Utils.set_length(sub, self.current_attack.knockback)
-                        t_state.deal_damage(dmg, knockback=kb)
+                        t_state.deal_damage(dmg_actual, knockback=kb)
 
                         num_hit += 1
                         dmg_dealt += dmg

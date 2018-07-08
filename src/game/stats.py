@@ -30,13 +30,16 @@ class StatType(Enum):
     HOLE_BONUS = "HOLE_BONUS"
 
 
-def _exp_map(x1, y0, y1, intensity=0):
+def _exp_map(x1, y0, y1, intensity=0, integral=True):
     """
         intensity: float in [0.0, 1.0). bigger = harsher slope near max
     """
     b = intensity
     a = (1 / x1) * math.log((y1 - y0*b) / (y0 * (1 - b)))
-    return [round((y0 * b) + y0 * (1 - b) * math.exp(a * x)) for x in range(0, x1+1)]
+    if integral:
+        return [round((y0 * b) + y0 * (1 - b) * math.exp(a * x)) for x in range(0, x1+1)]
+    else:
+        return [(y0 * b) + y0 * (1 - b) * math.exp(a * x) for x in range(0, x1 + 1)]
 
 
 def _linear_map(x1, y0, y1):
@@ -56,9 +59,10 @@ PCNT_RANGES = (_exp_map(64, MIN_LVL_PCNT_RANGE[0], MAX_LVL_PCNT_RANGE[0]),
                 _exp_map(64, MIN_LVL_PCNT_RANGE[1], MAX_LVL_PCNT_RANGE[1]))
 
 MOVE_SPEED_RANGE = (_exp_map(64, 5, 15), _exp_map(64, 12, 18))
-SECONDARY_RANGES = (_exp_map(64, 6, 14), _exp_map(64, 44, 64))
+SECONDARY_RANGES = (_exp_map(64, 6, 44), _exp_map(64, 14, 64))
 
-LIFE_REGEN_RANGE = (_exp_map(64, 1, 5), _exp_map(64, 3, 22))
+LIFE_ON_HIT_RANGE = (_exp_map(64, 1, 6), _exp_map(64, 3, 16))
+LIFE_REGEN_RANGE = (_exp_map(64, 1, 5), _exp_map(64, 7, 35))
 LIFE_LEECH_RANGE = (_exp_map(64, 1, 2), _exp_map(64, 2, 4))
 
 
@@ -75,7 +79,7 @@ class ItemStatRanges:
         StatType.DODGE: SECONDARY_RANGES,
         StatType.ACCURACY: SECONDARY_RANGES,
         StatType.LIFE_REGEN: LIFE_REGEN_RANGE,
-        StatType.LIFE_ON_HIT: SECONDARY_RANGES,
+        StatType.LIFE_ON_HIT: LIFE_ON_HIT_RANGE,
         StatType.LIFE_LEECH: LIFE_LEECH_RANGE,
         StatType.MAX_HEALTH: PCNT_RANGES,
         StatType.POTION_HEALING: PCNT_RANGES,
@@ -86,17 +90,3 @@ class ItemStatRanges:
     def get_range(stat_type, lvl):
         return (ItemStatRanges.RANGES[stat_type][0][lvl],
                 ItemStatRanges.RANGES[stat_type][1][lvl])
-
-
-if __name__ == "__main__":
-    x1 = 64
-    y0 = 7
-    y1 = 64
-    intensity = 0.0
-    print("_exp_map({}, {}, {}) = {}".format(x1, y0, y1, _exp_map(x1, y0, y1, intensity=intensity)))
-    intensity = 0.5
-    print("_exp_map({}, {}, {}) = {}".format(x1, y0, y1, _exp_map(x1, y0, y1, intensity=intensity)))
-    intensity = 0.99
-    print("_exp_map({}, {}, {}) = {}".format(x1, y0, y1, _exp_map(x1, y0, y1, intensity=intensity)))
-
-    print("_linear_map({}, {}, {}) = {}".format(x1, y0, y1, _linear_map(x1, y0, y1)))

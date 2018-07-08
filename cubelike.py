@@ -20,8 +20,8 @@ print("running pygame version: " + pygame.version.ver)
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world():
-    w = WorldFactory.gen_world_from_rooms(num_rooms=25).build_world()
+def build_me_a_world(level):
+    w = WorldFactory.gen_world_from_rooms(level, num_rooms=25).build_world()
     # w = WorldFactory.gen_test_world(5).build_world()
 
     w.hide_all_floors()
@@ -131,10 +131,13 @@ def run():
 
         world_active = gs.get_menu_manager().should_draw_world()
 
-        if world_active and (world is None or gs._needs_next_level or input_state.was_pressed(pygame.K_RETURN)):
+        if world_active and (world is None or gs._needs_next_level):
             render_eng.clear_all_sprites()
-            world = build_me_a_world()
+            world = build_me_a_world(gs.dungeon_level)
             gs._needs_next_level = False
+
+        if input_state.was_pressed(pygame.K_RETURN):
+            gs.next_level()
 
         if input_state.was_pressed(pygame.K_ESCAPE):
             running = False

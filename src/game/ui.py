@@ -41,10 +41,12 @@ class ItemGridImage:
 
 class InventoryPanel:
 
-    def __init__(self, player_state):
-        self.player_state = player_state
+    def __init__(self, gs):
+        self.player_state = gs.player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
+        self.kill_count = gs.kill_count
+        self.dungeon_level = gs.dungeon_level
 
         self.top_img = None
         self.mid_imgs = []
@@ -70,9 +72,13 @@ class InventoryPanel:
         self.equip_img = None
         self.inv_img = None
         
-        self._build_images(sc)
+        self._build_images(sc, gs)
+
+    def gs_info_is_outdated(self, gs):
+        return (self.kill_count != gs.kill_count or
+                self.dungeon_level != gs.dungeon_level)
         
-    def _build_images(self, sc):
+    def _build_images(self, sc, gs):
         self.top_img = ImageBundle(spriteref.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
@@ -84,7 +90,7 @@ class InventoryPanel:
         
         name_str = self.player_state.name()
         lvl_str = self.player_state.level()
-        info_txt = "{}\n\nLVL: {}\nROOM:8\nKILL:405".format(name_str, lvl_str)
+        info_txt = "{}\n\nLVL: {}\nROOM:{}\nKILL:{}".format(name_str, lvl_str, self.dungeon_level, self.kill_count)
         i_xy = [self.info_rect[0], self.info_rect[1]]
         self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=sc)
         
@@ -363,6 +369,9 @@ class InGameUiState(Menu):
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
 
+        elif self.inventory_panel is not None and self.inventory_panel.gs_info_is_outdated(gs):
+            self.rebuild_inventory(gs, render_eng)
+
     def _update_health_bar_panel(self, world, gs, input_state, render_eng):
         if self.health_bar_panel is None:
             self.health_bar_panel = HealthBarPanel()
@@ -504,7 +513,7 @@ class InGameUiState(Menu):
             for bun in self.inventory_panel.all_bundles():
                 render_eng.remove(bun)
                 
-        self.inventory_panel = InventoryPanel(gs.player_state())
+        self.inventory_panel = InventoryPanel(gs)
         for bun in self.inventory_panel.all_bundles():
             render_eng.update(bun)
 

@@ -6,8 +6,8 @@ import src.renderengine.img as img
 from src.items.itemrendering import TextImage
 import src.game.spriteref as spriteref
 from src.world.worldstate import World
-from src.items.item import ItemFactory
 from src.utils.util import Utils
+from src.game.loot import LootFactory
 
 ENTITY_UID_COUNTER = 0
 
@@ -452,22 +452,11 @@ class ChestEntity(Entity):
     def is_open(self):
         return self.current_cooldown <= 0
     
-    def _do_open(self, world):
-        num_potions = 1 + int(random.random()*3)
-        for _ in range(0, num_potions):
-            c = self.center()
-            angle = random.random() * 6.28  # 2pi-ish
-            speed = 2 + random.random() * 3
-            vel = (speed*math.cos(angle), speed*math.sin(angle))
-            world.add(PotionEntity(c[0], c[1], vel=vel))
-            
-        for _ in range(0, 3):
-            c = self.center()
-            angle = random.random() * 6.28  # 2pi-ish
-            speed = 2 + random.random() * 3
-            vel = (speed*math.cos(angle), speed*math.sin(angle))
-            item = ItemFactory.gen_item(random.randint(0, 64))
-            world.add(ItemEntity(item, c[0], c[1], vel=vel))
+    def _do_open(self, world, level):
+        loot = LootFactory.gen_chest_loot(level)
+
+        for item in loot:
+            world.add(ItemEntity(item, *self.center()))
             
     def update(self, world, gs, input_state, render_engine):
         
@@ -485,7 +474,7 @@ class ChestEntity(Entity):
                 self.current_cooldown = self.ticks_to_open
                 
             if self.is_open():
-                self._do_open(world)           
+                self._do_open(world, gs.dungeon_level)
              
         self.update_images(gs.anim_tick)
         

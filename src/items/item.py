@@ -220,7 +220,6 @@ class ItemFactory:
 
     @staticmethod
     def gen_core_stat(lvl):
-        res = []
         stat = CORE_STATS[int(random.random() * len(CORE_STATS))]
         low, high = ItemStatRanges.get_range(stat, lvl)
 
@@ -257,9 +256,9 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item(lvl):
-        primary_stat = ItemFactory.gen_core_stat(lvl)
-        secondary_stats = ItemFactory.gen_non_core_stats(lvl, int(4*random.random()), exclude=[primary_stat.stat_type])
+    def gen_item(level):
+        primary_stat = ItemFactory.gen_core_stat(level)
+        secondary_stats = ItemFactory.gen_non_core_stats(level, int(4 * random.random()), exclude=[primary_stat.stat_type])
 
         core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
@@ -280,7 +279,6 @@ class ItemFactory:
         for c in cubes:
             if random.random() < 0.15:
                 cube_art[c] = int(6*random.random())
-        level = 1 + int(63 * random.random())   
         
         return Item(name, level, stats, cubes, color, cube_art)
 

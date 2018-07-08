@@ -239,7 +239,7 @@ class WorldFactory:
     ROOM_NUM_BOUNDS = [10, 30]
 
     @staticmethod
-    def gen_world_from_rooms(num_rooms=8):
+    def gen_world_from_rooms(level, num_rooms=8):
         size_range = (3, 8)
         rooms = []
         idx = 0
@@ -257,7 +257,7 @@ class WorldFactory:
 
         size = BuilderUtils.shift_to_origin_and_get_size(rooms)
 
-        bp = WorldBlueprint(size, 5)
+        bp = WorldBlueprint(size, level)
         for room in rooms:
             room.add_to_blueprint(bp)
 

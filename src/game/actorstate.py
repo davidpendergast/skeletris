@@ -4,7 +4,8 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity
+from src.game.loot import LootFactory
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -303,7 +304,7 @@ class EnemyState(ActorState):
         """
         self.sprites = sprites
         self.stats = stats
-        ActorState.__init__(self, name, 0, stats)
+        ActorState.__init__(self, name, level, stats)
 
         self.facing_left = True
         self.facing_left_last_frame = None  # used to detect and prevent left-right flickering
@@ -317,7 +318,7 @@ class EnemyState(ActorState):
         self._anim_offset = int(60 * random.random())
 
     def duplicate(self):
-        return EnemyState(self.name, self.sprites, self.level, dict(self.stats))
+        return EnemyState(self.name(), self.sprites, self.level(), dict(self.stats))
 
     def stat_value(self, stat_type):
         derived = self._compute_derived_stat(stat_type)
@@ -329,23 +330,25 @@ class EnemyState(ActorState):
         else:
             return 0
 
-    def _handle_death(self, entity, world):
-        import src.game.enemies as enemies
-        loot = enemies.LootFactory.gen_loot(entity.center(), 0, self.level())
+    def _handle_death(self, entity, world, gs):
+        loot = LootFactory.gen_loot(self.level())
 
-        for l in loot:
-            world.add(l)
+        for item in loot:
+            item_ent = ItemEntity(item, *entity.center())
+            world.add(item_ent)
 
         world.remove(entity)
         splosion = AnimationEntity(entity.x(), entity.y() - 24,
                                    spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
         world.add(splosion)
+        gs.kill_count += 1
+        print("gs.kill_count={}".format(gs.kill_count))
 
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
 
         if self.hp() <= 0:
-            self._handle_death(entity, world)
+            self._handle_death(entity, world, gs)
         else:
 
             if (gs.tick_counter + self._anim_offset) % 60 == 0:
