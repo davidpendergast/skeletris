@@ -113,6 +113,32 @@ for i in range(0, 10):
     c = "0123456789"[i]
     alphabet[c] = make(5*i, 120, 5, 5)
 
+_cached_text = ["att:", "def:", "vit:", "miss", "dodge", "inventory", "lvl:", "room:",
+               "kill:", "hp:", "dps:"]
+_cached_lengths = set([len(t) for t in _cached_text])
+cached_text_imgs = {}
+
+
+def split_text(text, add_to=None):
+    if add_to is None:
+        add_to = []
+
+    if len(text) == 0:
+        return add_to
+    elif len(text) == 1:
+        add_to.append(text)
+        return add_to
+    else:
+        for length in _cached_lengths:
+            if len(text) >= length:
+                if text[:length] in cached_text_imgs:
+                    add_to.append(text[:length])
+                    split_text(text[length:], add_to)
+                    return add_to
+        add_to.append(text[0])
+        split_text(text[1:], add_to)
+        return add_to
+
 
 """Lookup table for wall sprites:   
        0    1    2
@@ -198,7 +224,24 @@ def build_spritesheet(raw_image):
                 draw_x = 0
                 draw_y += 16
 
+    draw_x = 0
     draw_y += 16
+
+    for text in _cached_text:
+        width = len(text) * (5 + 1) - 1
+        if draw_x + width >= sheet_size[0]:
+            draw_y += 6
+            draw_x = 0
+
+        cached_text_imgs[text] = make(draw_x, draw_y, width, 5)
+
+        for letter in text:
+            if letter != " ":
+                letter_img = alphabet[letter]
+                sheet.blit(raw_image, (draw_x, draw_y), letter_img.rect())
+                draw_x += 6
+
+    draw_y += 6
 
     all_cube_configs = ItemFactory.get_all_possible_cube_configs(n=(5, 6, 7))
     print("building {} item sprites...".format(len(all_cube_configs)))

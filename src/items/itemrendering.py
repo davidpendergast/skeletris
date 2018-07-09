@@ -4,7 +4,11 @@ import src.game.spriteref as spriteref
 
 
 class TextImage:
-    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=2, center_w=None):
+
+    X_KERNING = 1
+    Y_KERNING = 1
+
+    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None):
         self.x = x
         self.center_w = center_w
         self.y = y
@@ -13,8 +17,11 @@ class TextImage:
         self.color = color
         self.scale = scale
         self._letter_images = []
-        self.x_kerning = 1
-        self.y_kerning = 1
+
+        self._text_chunks = spriteref.split_text(self.text) if try_split else list(self.text)
+
+        #if try_split and max(map(lambda _x: len(_x), self._text_chunks)) == 1:
+        #    print("couldn't split: {}".format(self.text))
 
         self._build_images()
 
@@ -33,7 +40,7 @@ class TextImage:
     def _calc_width(self):
         max_line_w = 0
         cur_line_w = 0
-        char_w = (spriteref.alphabet["a"].width() + self.x_kerning) * self.scale
+        char_w = (spriteref.alphabet["a"].width() + TextImage.X_KERNING) * self.scale
         for c in self.text:
             if c == "\n":
                 cur_line_w = 0
@@ -46,33 +53,36 @@ class TextImage:
         return self.actual_size
         
     def line_height(self):
-        return (spriteref.alphabet["a"].height() + self.y_kerning) * self.scale
+        return (spriteref.alphabet["a"].height() + TextImage.Y_KERNING) * self.scale
         
     def _build_images(self):
-        ypos = self.y_kerning
+        ypos = TextImage.Y_KERNING
 
         if self.center_w is not None:
             true_width = self._calc_width()
             x_shift = self.x + self.center_w // 2 - true_width // 2     
         else:
-            x_shift = self.x_kerning
+            x_shift = TextImage.X_KERNING
             
         xpos = x_shift
             
         a_sprite = spriteref.alphabet["a"]
-        for i in range(0, len(self.text)):
-            c = self.text[i]
-            if c == " ":
-                xpos += (self.x_kerning + a_sprite.width()) * self.scale
-            elif c == "\n":
+        for chunk in self._text_chunks:
+            if chunk == " ":
+                xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
+            elif chunk == "\n":
                 xpos = x_shift
-                ypos += (self.y_kerning + a_sprite.height()) * self.scale
+                ypos += (TextImage.Y_KERNING + a_sprite.height()) * self.scale
             else:
-                sprite = spriteref.alphabet[c]
+                if len(chunk) == 1:
+                    sprite = spriteref.alphabet[chunk]
+                else:
+                    sprite = spriteref.cached_text_imgs[chunk]
+
                 img = ImageBundle(sprite, self.x + xpos, self.y + ypos, layer=self.layer,
                         scale=self.scale, color=self.color)
                 self._letter_images.append(img)  
-                xpos += (self.x_kerning + a_sprite.width()) * self.scale
+                xpos += (TextImage.X_KERNING + sprite.width()) * self.scale
 
     def update(self, new_x=None, new_y=None, new_depth=None, new_color=None):
         dx = 0 if new_x is None else new_x - self.x
