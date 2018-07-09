@@ -150,6 +150,9 @@ class Entity:
         return ((self.is_player() and other.is_enemy()) or
                 (self.is_enemy() and other.is_player()))
 
+    def get_actorstate(self, gs):
+        return None
+
     def __eq__(self, other):
         return other is not None and self._uid == other._uid
 
@@ -165,6 +168,153 @@ class Entity:
         for bun in extras:
             if bun is not None:
                 yield bun
+
+
+class ProjectileEntity(Entity):
+    def __init__(self, cx, cy, radius, source, duration, source_state, attack):
+        Entity.__init__(self, cx-radius, cy-radius, radius*2, radius*2)
+        self._sprite_offset = (0, 0)
+        self._radius = radius
+        self._source = source
+        self._tick_count = 0
+        self._duration = duration
+        self._attack = attack
+        self._source_state = source_state
+        self._poll_rate = 0.1
+
+    def _update_images(self, sprite, color, gs):
+        Entity.update_images(self, gs.anim_tick)
+
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+        self._img = self._img.update(new_model=sprite)
+
+        x = self.center()[0] - self._img.width() // 2 + self._sprite_offset[0]
+        y = self.center()[1] - self._img.height() // 2 + self._sprite_offset[1]
+
+        self._img = self._img.update(new_color=color, new_x=x, new_y=y)
+
+    def update(self, world, gs, input_state, render_engine):
+        if 0 < self._duration <= self._tick_count:
+            world.remove(self)
+        else:
+            vel = self.get_vel(world, gs)
+
+            self.move(vel[0], vel[1])
+
+            # check every five-ish ticks, lol
+            if random.random() < self._poll_rate:
+                potential_hits = self.get_potential_hits(world)
+                for e in potential_hits:
+                    self_destroyed = self.touched_entity(e, world, gs)
+                    if self_destroyed:
+                        break
+
+            spr = self.get_sprite(world, gs)
+            color = self.get_color(world, gs)
+
+            self._update_images(spr, color, gs)
+            self._tick_count += 1
+
+    def get_potential_hits(self, world):
+        res = []
+        in_range = world.entities_in_circle(self.center(), self._radius)
+        for e in in_range:
+            if self.get_source().can_damage(e):
+                res.append(e)
+        random.shuffle(res)
+        return res
+
+    def get_progress(self):
+        if self._duration > 0:
+            return Utils.bound(self._tick_count / self._duration, 0, 0.999)
+        else:
+            return 0.0
+
+    def get_vel(self, world, gs):
+        return (0, 0)
+
+    def get_sprite(self, world, gs):
+        return spriteref.explosions
+
+    def get_color(self, world, gs):
+        return (1, 1, 1)
+
+    def get_radius(self):
+        return self._radius
+
+    def set_sprite_offset(self, offset):
+        self._sprite_offset = offset
+
+    def touched_entity(self, entity, world, gs):
+        return False
+
+    def get_shadow_sprite(self):
+        return spriteref.small_shadow
+
+    def get_attack(self):
+        return self._attack
+
+    def get_source(self):
+        return self._source
+
+    def get_source_state(self):
+        return self._source_state
+
+
+class MinionProjectile(ProjectileEntity):
+
+    def __init__(self, cx, cy, source, target, duration, color, source_state, attack):
+        ProjectileEntity.__init__(self, cx, cy, 24, source, duration, source_state, attack)
+        self._target = target
+        self._color = color
+        self._min_speed = 1.25
+        self._max_speed = 2.5
+        self._vel = Utils.rand_vec(self._min_speed)
+
+    def get_sprite(self, world, gs):
+        return spriteref.floaty_guys[gs.anim_tick % 2]
+
+    def get_color(self, world, gs):
+        return self._color
+
+    def get_vel(self, world, gs):
+        prog = self.get_progress()
+        if prog < 0.15:
+            pass
+        elif prog < 0.35:
+            a = Utils.bound((prog - 0.15) / 0.15, 0, 1)
+            speed = self._min_speed * (1 - a) + self._max_speed * a
+            vel = Utils.set_length(Utils.sub(self._target.center(), self.center()), speed)
+            self._vel = vel
+
+        return self._vel
+
+    def touched_entity(self, entity, world, gs):
+        if entity is self._target:
+            t_state = entity.get_actorstate(gs)
+            if t_state is None:
+                return True  # uhh weird
+
+            if t_state.is_invuln():
+                return False
+
+            att_state = self.get_source_state().get_attack_state()
+            att_state.delayed_attack_landed(self.center(), entity, self.get_attack())
+            world.remove(self)
+
+            explosion = AnimationEntity(*self.center(), spriteref.explosions, 45,
+                                        spriteref.ENTITY_LAYER, scale=2)
+            explosion.set_color(self.get_color(world, gs))
+            world.add(explosion)
+
+            return True
+
+    def get_potential_hits(self, world):
+        if Utils.dist(self._target.center(), self.center()) <= self.get_radius():
+            return [self._target]
+        else:
+            return []
 
 
 class AnimationEntity(Entity):
@@ -384,6 +534,9 @@ class Player(Entity):
         
     def is_player(self):
         return True
+
+    def get_actorstate(self, gs):
+        return gs.player_state()
  
  
 class Enemy(Entity):
@@ -433,6 +586,9 @@ class Enemy(Entity):
         
     def is_enemy(self):
         return True
+
+    def get_actorstate(self, gs):
+        return self.state
         
 
 class ChestEntity(Entity):
@@ -526,7 +682,7 @@ class ItemEntity(Entity):
     def rand_vel(speed=None, direction=None):
         speed = speed if speed is not None else 2 + random.random() * 3
         if direction is None:
-            direction = (0, 0) # becomes random
+            direction = (0, 0)  # becomes random
         direction = Utils.set_length(direction, 1.0)
         return [speed*direction[0], speed*direction[1]]
         

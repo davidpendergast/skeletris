@@ -34,6 +34,7 @@ class ActorState:
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
         self.current_knockback = (0, 0)
+        self.dmg_color = (1, 0, 0)
 
         self.damage_amounts = []
         self.heal_amounts = []
@@ -62,6 +63,9 @@ class ActorState:
 
     def recoil_progress(self):
         return Utils.bound(self.took_damage_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
+
+    def recoil_color(self):
+        return Utils.linear_interp(self.dmg_color, (1, 1, 1), self.recoil_progress())
 
     def is_invuln(self):
         return False
@@ -97,10 +101,11 @@ class ActorState:
                 show_floating_text(avoid_info[0], avoid_info[2], avoid_info[1], entity, world)
         self.avoided_attack = False
 
-    def deal_damage(self, damage, knockback=(0, 0)):
+    def deal_damage(self, damage, knockback=(0, 0), color=(1, 0, 0)):
         if damage > 0 and not self.is_invuln():
             self.set_hp(self.hp() - damage)
             self.took_damage_x_ticks_ago = 0
+            self.dmg_color = color
             self.current_knockback = knockback
             self.damage_amounts.append(damage)
 
@@ -147,7 +152,8 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        self.attack_state.set_attack(attacks.GROUND_POUND)
+        # self.attack_state.set_attack(attacks.GROUND_POUND)
+        self.attack_state.set_attack(attacks.MINION_LAUNCH_ATTACK)
 
         self._damage_last_tick = 0
         self._healing_last_tick = 0
@@ -271,7 +277,7 @@ class PlayerState(ActorState):
         if move_x != 0:
             self.facing_right = move_x > 0
 
-        color = (1.0, self.recoil_progress(), self.recoil_progress())
+        color = self.recoil_color()
 
         player_entity.update_images(self.get_sprite(gs), self.facing_right, color=color)
         player_entity.set_shadow_sprite(self.get_shadow_sprite())
@@ -294,6 +300,9 @@ class PlayerState(ActorState):
             if 0.25 < progress < 0.75:
                 return spriteref.small_shadow
         return spriteref.medium_shadow
+
+    def get_attack_state(self):
+        return self.attack_state
 
 
 class EnemyState(ActorState):
@@ -340,9 +349,9 @@ class EnemyState(ActorState):
         world.remove(entity)
         splosion = AnimationEntity(entity.x(), entity.y() - 24,
                                    spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
+        splosion.set_color((0, 0, 0))
         world.add(splosion)
         gs.kill_count += 1
-        print("gs.kill_count={}".format(gs.kill_count))
 
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
@@ -403,14 +412,13 @@ class EnemyState(ActorState):
             else:
                 self.facing_left_last_frame = None
 
-            color_scale = self.recoil_progress()
-            img_color = (1, color_scale, color_scale)
+            color = self.recoil_color()
 
             sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
 
             health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
 
-            entity.update_images(sprite, self.facing_left, health_ratio, color=img_color)
+            entity.update_images(sprite, self.facing_left, health_ratio, color=color)
 
     def _should_attack(self, entity, world):
         p = world.get_player()

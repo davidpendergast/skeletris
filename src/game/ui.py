@@ -687,7 +687,6 @@ class DeathMenu(Menu):
             self._flavor_tick = self._flavor_duration
         else:
             sel = self._selection
-            print("sel = {}".format(sel))
             if sel == DeathMenu.RETRY_OPT:
                 gs.new_game()
             elif sel == DeathMenu.EXIT_OPT:

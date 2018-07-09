@@ -62,6 +62,8 @@ enemy_muncher_alt_all = [make(160, 144, 32, 32), make(160, 176, 32, 32)]
 enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
         enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all]
 
+floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
+
 potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 
@@ -110,7 +112,7 @@ for i in range(0, len(_chars)):
 for i in range(0, 10):
     c = "0123456789"[i]
     alphabet[c] = make(5*i, 120, 5, 5)
-    
+
 
 """Lookup table for wall sprites:   
        0    1    2

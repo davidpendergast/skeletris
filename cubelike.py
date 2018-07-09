@@ -27,7 +27,6 @@ def build_me_a_world(level):
     w.hide_all_floors()
 
     p = w.get_player()
-    print("p = ", p)
     if p is not None:
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)

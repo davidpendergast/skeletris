@@ -66,13 +66,14 @@ class World:
                 return e
         return None
     
-    def entities_in_circle(self, center, radius):
+    def entities_in_circle(self, center, radius, onscreen=True):
         """
             returns: list of entities in circle, sorted by distance from center 
         """
         r2 = radius*radius
         res = []
-        for e in self.entities:
+        search_space = self._onscreen_entities if onscreen else self.entities
+        for e in search_space:
             e_c = e.center()
             dx = e_c[0] - center[0]
             dy = e_c[1] - center[1]
@@ -244,6 +245,8 @@ class World:
 
         for e in self._ents_to_remove:
             self.entities.remove(e)  # n^2 but whatever
+            if e in self._onscreen_entities:
+                self._onscreen_entities.remove(e)
             e.cleanup(gs, render_engine)
         self._ents_to_remove.clear()
 
