@@ -59,8 +59,10 @@ enemy_dicel_all = [make(64, 144, 32, 32), make(64, 176, 32, 32)]
 enemy_flappum_all = [make(96, 144, 32, 32), make(96, 176, 32, 32)]
 enemy_muncher_all = [make(128, 144, 32, 32), make(128, 176, 32, 32)]
 enemy_muncher_alt_all = [make(160, 144, 32, 32), make(160, 176, 32, 32)]
+enemy_small_trilla_all = [make(192, 176 + i * 16, 16, 16) for i in range(0, 2)]
 enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
-        enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all]
+               enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all,
+               enemy_small_trilla_all]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 

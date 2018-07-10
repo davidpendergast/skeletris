@@ -546,13 +546,17 @@ class Enemy(Entity):
         self.state = state
         self._img = None
         self._healthbar_img = None
+        self._shadow_sprite = spriteref.large_shadow
         
     def get_shadow_sprite(self):
-        return spriteref.large_shadow 
+        return self._shadow_sprite
     
-    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1)):
+    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), shadow_sprite=None):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
+        if shadow_sprite is not None:
+            self._shadow_sprite = shadow_sprite
 
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (sprite.height() * self._img.scale() - self.h())

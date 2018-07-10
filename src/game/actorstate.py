@@ -1,11 +1,12 @@
 import random
 
+from enum import Enum
+
 from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity
-from src.game.loot import LootFactory
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -48,6 +49,9 @@ class ActorState:
 
     def level(self):
         return self._level
+
+    def get_base_stats(self):
+        return dict(self._base_values)
 
     def max_hp(self):
         return self.stat_value(PlayerStatType.HP)
@@ -152,8 +156,8 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        # self.attack_state.set_attack(attacks.GROUND_POUND)
-        self.attack_state.set_attack(attacks.MINION_LAUNCH_ATTACK)
+        self.attack_state.set_attack(attacks.GROUND_POUND)
+        # self.attack_state.set_attack(attacks.MINION_LAUNCH_ATTACK)
 
         self._damage_last_tick = 0
         self._healing_last_tick = 0
@@ -307,13 +311,14 @@ class PlayerState(ActorState):
 
 class EnemyState(ActorState):
 
-    def __init__(self, name, sprites, level, stats):
+    def __init__(self, template, level, stats):
         """
             stats: map StatType -> value
         """
-        self.sprites = sprites
+        self.template = template
+        self.sprites = template.get_sprites()
         self.stats = stats
-        ActorState.__init__(self, name, level, stats)
+        ActorState.__init__(self, template.get_name(), level, stats)
 
         self.facing_left = True
         self.facing_left_last_frame = None  # used to detect and prevent left-right flickering
@@ -322,12 +327,12 @@ class EnemyState(ActorState):
         self.aggro_radius = 350
         self.forget_radius = 450
 
-        self.attack_state.set_attack(attacks.TOUCH_ATTACK)
+        self.attack_state.set_attack(template.get_attack())
         self.movement_ai_state = {}
         self._anim_offset = int(60 * random.random())
 
     def duplicate(self):
-        return EnemyState(self.name(), self.sprites, self.level(), dict(self.stats))
+        return EnemyState(self.template, self.level(), dict(self.stats))
 
     def stat_value(self, stat_type):
         derived = self._compute_derived_stat(stat_type)
@@ -340,11 +345,13 @@ class EnemyState(ActorState):
             return 0
 
     def _handle_death(self, entity, world, gs):
-        loot = LootFactory.gen_loot(self.level())
+        loot = self.template.get_loot(self.level())
 
         for item in loot:
             item_ent = ItemEntity(item, *entity.center())
             world.add(item_ent)
+
+        self.template.special_death_action(self.level(), entity, world)
 
         world.remove(entity)
         splosion = AnimationEntity(entity.x(), entity.y() - 24,
@@ -390,8 +397,8 @@ class EnemyState(ActorState):
                 move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
 
             move_x, move_y = move_dir
-            move_x *= 0.65
-            move_y *= 0.65
+            move_x *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
+            move_y *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
 
             if self.recoil_progress() < 1.0:
                 move_x /= 2
@@ -418,7 +425,8 @@ class EnemyState(ActorState):
 
             health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
 
-            entity.update_images(sprite, self.facing_left, health_ratio, color=color)
+            entity.update_images(sprite, self.facing_left, health_ratio, color=color,
+                                 shadow_sprite=self.template.get_shadow_sprite())
 
     def _should_attack(self, entity, world):
         p = world.get_player()
@@ -427,6 +435,12 @@ class EnemyState(ActorState):
                 p is not None and
                 self.took_damage_x_ticks_ago >= self.damage_recoil and
                 not world.get_hidden_at(*entity.center()))
+
+
+class PathfindingType(Enum):
+    PASSIVE = 0,
+    BASIC_CHASE = 1,
+    SMART_CHASE = 2
 
 
 class MovementAI():
