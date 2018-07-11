@@ -5,3 +5,5 @@ videos/
 gl_examples/
 .idea
 *.mp4
+dist/
+build/

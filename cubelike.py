@@ -1,6 +1,7 @@
 import pygame
 
 import src.game.spriteref as spriteref
+from src.utils.util import Utils
 from src.game.globalstate import GlobalState
 import src.game.inputs as inputs
 from src.game.ui import MenuManager
@@ -80,8 +81,9 @@ def run():
             spriteref.UI_TOOLTIP_LAYER,
             "ui_tooltips", 25,
             False, COLOR)
-    
-    raw_sheet = pygame.image.load("assets/image.png")
+
+    img_path = Utils.resource_path("assets/image.png")
+    raw_sheet = pygame.image.load(img_path)
     img_surface = spriteref.build_spritesheet(raw_sheet)
     
     window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)

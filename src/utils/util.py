@@ -1,5 +1,8 @@
 import math
 import random
+import os
+import sys
+
 
 class Utils:
 
@@ -66,3 +69,14 @@ class Utils:
     @staticmethod
     def linear_interp(v1, v2, a):
         return tuple([v1[i] * (1 - a) + v2[i] * a for i in range(0, len(v1))])
+
+    @staticmethod
+    def resource_path(relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
