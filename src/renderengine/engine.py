@@ -59,10 +59,14 @@ class _Layer:
         
     def rebuild(self, bundle_lookup): 
         if len(self._to_remove) > 0:
+            for bun_id in self._to_remove:
+                if bun_id in self._image_set:
+                    self._image_set.remove(bun_id)
             rem_set = set(self._to_remove)
             self.images = [img for img in self.images if img not in rem_set]
             self._to_remove = []
-        
+            self._to_add = [x for x in self._to_add if x not in rem_set]
+
         if len(self._to_add) > 0:
             self.images.extend(self._to_add)
             # print("layer {} size increased to: {}".format(self.name, len(self.images)))

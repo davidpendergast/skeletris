@@ -1,5 +1,4 @@
 import src.game.stats
-from src.game import spriteref as spriteref
 from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.items.item as item_module

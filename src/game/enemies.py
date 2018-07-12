@@ -30,6 +30,16 @@ ENEMY_STATS = [StatType.ATT,
                StatType.MAX_HEALTH
 ]
 
+TRUE_BASE_STATS = {
+    StatType.ATT: 10,
+    StatType.DEF: 10,
+    StatType.VIT: 10,
+    StatType.MOVEMENT_SPEED: -35
+}
+for stat in ENEMY_STATS:
+    if stat not in TRUE_BASE_STATS:
+        TRUE_BASE_STATS[stat] = 0
+
 
 class EnemyTemplate:
 
@@ -60,16 +70,7 @@ class EnemyTemplate:
         return LootFactory.gen_loot(level)
 
     def get_base_stats(self):
-        res = {
-            StatType.ATT: 10,
-            StatType.DEF: 10,
-            StatType.VIT: 10,
-            StatType.MOVEMENT_SPEED: -35
-        }
-        for stat in ENEMY_STATS:
-            if stat not in res:
-                res[stat] = 0
-        return res
+        return dict(TRUE_BASE_STATS)
 
     def special_death_action(self, level, entity, world):
         pass

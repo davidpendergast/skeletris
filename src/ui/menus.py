@@ -2,7 +2,7 @@ import random
 
 from src.game import spriteref as spriteref, inputs as inputs
 from src.items import item as item_module
-from src.ui.tooltips import ItemInfoPane
+from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, TextImage, ItemImage
 from src.utils.util import Utils
 from src.world.entities import ItemEntity
@@ -55,6 +55,7 @@ class Menu:
 
     def __init__(self, menu_type):
         self._menu_type = menu_type
+        self._active_tooltip = None
 
     def get_clear_color(self):
         return (0.5, 0.5, 0.5)
@@ -67,13 +68,31 @@ class Menu:
         state.update(world, gs, input_state, render_eng)
 
     def all_bundles(self):
-        return []
+        tooltip = self.get_active_tooltip()
+        if tooltip is not None:
+            for bun in tooltip.all_bundles():
+                yield bun
+        else:
+            return []
 
     def cleanup(self):
         pass
 
     def keep_drawing_world_underneath(self):
         return False
+
+    def get_active_tooltip(self):
+        return self._active_tooltip
+
+    def set_active_tooltip(self, tooltip, render_eng):
+        if self._active_tooltip is not None:
+            self._destroy_panel(self._active_tooltip, render_eng)
+        self._active_tooltip = tooltip
+
+    def _destroy_panel(self, panel, render_eng):
+        if panel is not None:
+            bundles = panel.all_bundles()
+            render_eng.clear_bundles(bundles)
 
 
 class DeathMenu(Menu):
@@ -200,6 +219,8 @@ class DeathMenu(Menu):
             render_eng.update(bun)
 
     def all_bundles(self):
+        for bun in Menu.all_bundles(self):
+            yield bun
         if self._showing_flavor:
             if self._flavor_img is not None:
                 for bun in self._flavor_img.all_bundles():
@@ -228,7 +249,6 @@ class InGameUiState(Menu):
 
     def __init__(self):
         Menu.__init__(self, MenuManager.IN_GAME_MENU)
-        self.item_panel = None
         self.inventory_panel = None
         self.health_bar_panel = None
 
@@ -239,58 +259,55 @@ class InGameUiState(Menu):
     def keep_drawing_world_underneath(self):
         return True
 
-    def _destroy_panel(self, panel, render_eng):
-        if panel is not None:
-            bundles = panel.all_bundles()
-            render_eng.clear_bundles(bundles)
-
-    def _get_item_entity_at_world_coords(self, world, world_pos):
-        hover_rad = 24
+    def _get_entity_at_world_coords(self, world, world_pos, cond=None):
+        hover_rad = 32
         hover_over = world.entities_in_circle(world_pos, hover_rad)
-        hover_items = list(filter(lambda x: x.is_item(), hover_over))
-        if len(hover_items) > 0:
-            return hover_items[0]
+        if cond is not None:
+            hover_over = list(filter(cond, hover_over))
+        if len(hover_over) > 0:
+            return hover_over[0]
         else:
             return None
 
-    def _update_item_panel(self, world, gs, input_state, render_eng):
-        should_destroy = True
-        item_to_display = None
+    def _update_tooltip(self, world, gs, input_state, render_eng):
+        needs_update = False
+        obj_to_display = None
         screen_pos = input_state.mouse_pos()
 
         if input_state.mouse_in_window() and self.item_on_cursor is None:
-
             if self.in_inventory_panel(screen_pos):
                 grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
                 if grid_n_cell is not None:
                     grid, cell = grid_n_cell
-                    item_to_display = grid.item_at_position(cell)
+                    obj_to_display = grid.item_at_position(cell)
             else:
                 world_pos = gs.screen_to_world_coords(screen_pos)
-                item_entity = self._get_item_entity_at_world_coords(world, world_pos)
+                item_entity = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_item())
                 if item_entity is not None:
-                    item_to_display = item_entity.get_item()
+                    obj_to_display = item_entity.get_item()
+                else:
+                    enemy_entity = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_enemy())
+                    if enemy_entity is not None:
+                        obj_to_display = enemy_entity.state
 
-        if item_to_display is not None:
-            if self.item_panel is not None and self.item_panel.item is not item_to_display:
-                self._destroy_panel(self.item_panel, render_eng)
-                self.item_panel = None
-
-            if self.item_panel is None:
-                self.item_panel = ItemInfoPane(item_to_display)
-                for bun in self.item_panel.all_bundles():
-                    render_eng.update(bun)
+        if obj_to_display is not None:
+            current_tooltip = self.get_active_tooltip()
+            if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
+                new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
+                self.set_active_tooltip(new_tooltip, render_eng)
+                needs_update = True
 
             offs = (-screen_pos[0], -screen_pos[1])
             render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
-            should_destroy = False
 
-        if gs.player_state().is_dead():
-            should_destroy = True
+        current_tooltip = self.get_active_tooltip()
 
-        if should_destroy and self.item_panel is not None:
-            self._destroy_panel(self.item_panel, render_eng)
-            self.item_panel = None
+        if needs_update and current_tooltip is not None:
+            for bun in current_tooltip.all_bundles():
+                render_eng.update(bun)
+
+        if gs.player_state().is_dead() or obj_to_display is None:
+            self.set_active_tooltip(None, render_eng)
 
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
         if gs.player_state().is_dead():
@@ -396,7 +413,7 @@ class InGameUiState(Menu):
             else:  # we clicked in world
                 world_pos = gs.screen_to_world_coords(screen_pos)
                 if self.item_on_cursor is None:
-                    clicked_item = self._get_item_entity_at_world_coords(world, world_pos)
+                    clicked_item = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_item())
                     if clicked_item is not None:
                         world.remove(clicked_item)
                         self.item_on_cursor = clicked_item.get_item()
@@ -455,22 +472,21 @@ class InGameUiState(Menu):
     def update(self, world, gs, input_state, render_eng):
         # TODO - need to better organize this mess
         self._update_item_on_cursor(world, gs, input_state, render_eng)
-        self._update_item_panel(world, gs, input_state, render_eng)
+        self._update_tooltip(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
 
     def cleanup(self):
-        self.item_on_cursor = None
+        Menu.cleanup(self)
         self.inventory_panel = None
         self.item_on_cursor_image = None
         self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
 
     def all_bundles(self):
+        for bun in Menu.all_bundles(self):
+            yield bun
         if self.health_bar_panel is not None:
             for bun in self.health_bar_panel.all_bundles():
-                yield bun
-        if self.item_panel is not None:
-            for bun in self.item_panel.all_bundles():
                 yield bun
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
