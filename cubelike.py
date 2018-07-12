@@ -4,7 +4,7 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 from src.game.globalstate import GlobalState
 import src.game.inputs as inputs
-from src.game.ui import MenuManager
+from src.ui.menus import MenuManager
 from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine

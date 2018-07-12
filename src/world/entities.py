@@ -3,7 +3,7 @@ import random
 import math
 
 import src.renderengine.img as img
-from src.items.itemrendering import TextImage
+from src.ui.ui import TextImage
 import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.utils.util import Utils

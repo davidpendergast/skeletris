@@ -1,4 +1,4 @@
-from src.game.ui import MenuManager
+from src.ui.menus import MenuManager
 
 
 class GlobalState:
