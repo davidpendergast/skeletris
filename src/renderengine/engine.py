@@ -69,7 +69,6 @@ class _Layer:
 
         if len(self._to_add) > 0:
             self.images.extend(self._to_add)
-            # print("layer {} size increased to: {}".format(self.name, len(self.images)))
             self._to_add = []
             
         # todo: smarter update

@@ -195,9 +195,9 @@ class GroundPoundAttack(Attack):
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
-
+        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
         pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, 60, color=(1, 0, 0), color_end=(0, 0, 0))
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=(1, 0, 0), color_end=(0, 0, 0))
         world.add(circle)
 
         return res
@@ -228,7 +228,8 @@ class SpawnMinionAttack(Attack):
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
         pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, 60, color=(1, 0, 1), color_end=(0.25, 0, 0.25))
+        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=(1, 0, 1), color_end=(0.25, 0, 0.25))
         world.add(circle)
 
         if len(res) > 0:

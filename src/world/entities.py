@@ -424,8 +424,9 @@ class AnimationEntity(Entity):
 
 class AttackCircleArt(AnimationEntity):
 
-    def __init__(self, cx, cy, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
-        AnimationEntity.__init__(self, cx - 4, cy - 4, spriteref.att_circles, duration, spriteref.SHADOW_LAYER)
+    def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
+        sprites = spriteref.get_attack_circles(radius * 2 // 2)
+        AnimationEntity.__init__(self, cx - 4, cy - 4, sprites, duration, spriteref.SHADOW_LAYER)
         self._start_color = color
         self._end_color = color_end
 

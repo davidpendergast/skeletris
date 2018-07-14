@@ -1,9 +1,11 @@
 import pygame
+import math
 
 import string
 import collections
 
 from src.items.item import ItemFactory
+from src.utils.util import Utils
 
 from src.renderengine.img import ImageModel 
 
@@ -44,6 +46,17 @@ player_squat = make(80, 240, 16, 32)
 player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
 
 att_circles = [make(112 + 48*i, 240, 48, 32) for i in range(0, 9)]
+
+att_circle_min_size = 48
+att_circle_max_size = 48 * 3
+att_circles_real = []  # list of lists of frames, sorted by size, frame idx
+
+
+def get_attack_circles(size):
+    size_prog = (size - att_circle_min_size) / (att_circle_max_size - att_circle_min_size)
+    size_idx = int(Utils.bound(size_prog, 0, 0.999) * len(att_circles_real))
+    return att_circles_real[size_idx]
+
 
 chest_closed = make(0, 32, 16, 16)
 chest_open_0 = make(16, 32, 16, 16)
@@ -168,7 +181,7 @@ floor_hidden = make(144, 48, 16, 16)
 
 
 def _get_wall_corner_loc(spot, bools):
-    orig_walls = [0, 64, 64, 32] # x, y, w, h
+    orig_walls = [0, 64, 64, 32]  # x, y, w, h
     if spot == "TL":
         y = 0
         x = 1*bools[7] + 2*bools[0] + 4*bools[1]
@@ -183,14 +196,28 @@ def _get_wall_corner_loc(spot, bools):
         x = 1*bools[3] + 2*bools[4] + 4*bools[5]
         
     return (orig_walls[0] + x*8, orig_walls[1] + y*8, 8, 8)
-        
-    
+
+
+def _draw_ellipse(sheet, center, width, height, opacity):
+    color = (255, 255, 255)
+    rect = [center[0] - width, center[1] - height, width * 2, height * 2]
+    pygame.draw.ellipse(sheet, color, rect, 1)
+
+    for x in range(rect[0], rect[0] + rect[2]):
+        for y in range(rect[1], rect[1] + rect[3]):
+            # it's good enoughTM don't @ me
+            if x < 0 or x >= sheet.get_width() or y < 0 or y >= sheet.get_height():
+                continue
+            if sheet.get_at((x, y)) == color:
+                sheet.set_at((x, y), (color[0], color[1], color[2], int(opacity*255)))
+
+
 def build_spritesheet(raw_image):
     """
         returns: Surface
     """
     global walls
-    sheet_size = (raw_image.get_width(), raw_image.get_height() + 1000)
+    sheet_size = (raw_image.get_width(), raw_image.get_height() + 2000)
     sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
     sheet.fill((255, 255, 255, 0))
     sheet.blit(raw_image, (0, 0))
@@ -264,6 +291,42 @@ def build_spritesheet(raw_image):
         if draw_x > sheet_size[0] - 20:
             draw_x = 0
             draw_y += 20
+
+    draw_y += 20
+    draw_x = 0
+
+    step = 8
+    circle_art_heights = [y for y in range(32, 32 * 3 + 1, step)]
+    circle_art_widths = [int(1.5 * y) for y in circle_art_heights]
+    num_frames = 8
+    anim_frames = 4
+
+    print("drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
+
+    for i in range(0, len(circle_art_widths)):
+        w = circle_art_widths[i]
+        h = circle_art_heights[i]
+        att_circles_real.append([])
+        for frame in range(0, num_frames):
+            if draw_x + w > sheet_size[0]:
+                draw_x = 0
+                draw_y += h
+            rect = [draw_x, draw_y, w, h]
+            att_circles_real[-1].append(make(rect[0], rect[1], rect[2], rect[3]))
+            center = rect[0] + w // 2, rect[1] + h // 2
+            opacity = 1 - frame / (num_frames - 1)
+            _draw_ellipse(sheet, center, rect[2] // 2, rect[3] // 2, opacity)
+
+            small_circle_size = (rect[2] // 2, rect[3] // 2)
+            for j in range(0, 4):
+                angle = (j + (frame % anim_frames) / anim_frames) * 3.1415 / 2
+                cx = int(small_circle_size[0] // 2 * math.cos(angle))
+                cy = int(small_circle_size[1] // 2 * math.sin(angle))
+                _draw_ellipse(sheet, (rect[0] + rect[2] // 2 + cx, rect[1] + rect[3] // 2 + cy),
+                              small_circle_size[0] // 2, small_circle_size[1] // 2, opacity)
+            draw_x += w
+
+    draw_y += circle_art_heights[-1]
 
     for img in all_imgs:
         img.set_sheet_size(sheet_size)
