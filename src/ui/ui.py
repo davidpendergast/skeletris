@@ -1,3 +1,5 @@
+import math
+
 import src.game.stats
 from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
@@ -155,20 +157,21 @@ class HealthBarPanel:
 
     def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing):
         if self._top_img is None:
-            self._top_img = ImageBundle(spriteref.health_bar_top, 0, 0,
+            self._top_img = ImageBundle(spriteref.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2)
         if self._bar_img is None:
             self._bar_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
-            self._bar_img = self._bar_img.update(new_color=self._bar_color)
+
+        x = gs.screen_size[0] // 2 - self._top_img.width() // 2
+        y = gs.screen_size[1] - self._top_img.height()
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
-        x = gs.screen_size[0] // 2 - self._top_img.width() // 2
-        w = self._top_img.width()
-        y = gs.screen_size[1] - self._top_img.height()
+        bar_w = spriteref.health_bar_full.width() * 2
+        bar_x = gs.screen_size[0] // 2 - bar_w // 2
 
         if new_damage > 0:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
-            dmg_x = int(x + hp_pcnt_full * w)
+            dmg_x = int(bar_x + hp_pcnt_full * bar_w)
             dmg_sprite = spriteref.get_health_bar(pcnt_full)
             dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
             self._floating_bars.append([dmg_img, 0])
@@ -185,7 +188,10 @@ class HealthBarPanel:
         self._top_img = self._top_img.update(new_x=x, new_y=y)
         bar_sprite = spriteref.get_health_bar(hp_pcnt_full)
 
-        self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=x, new_y=y)
+        glow_factor = (1 - hp_pcnt_full) * 0.2 * math.cos(((gs.anim_tick % 6) / 6) * 2 * (3.1415))
+        color = (self._bar_color[0], self._bar_color[1] + glow_factor, self._bar_color[2] + glow_factor)
+
+        self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
     def update(self, world, gs, input_state, render_eng):
         p_state = gs.player_state()
