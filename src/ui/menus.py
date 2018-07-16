@@ -5,7 +5,7 @@ from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, TextImage, ItemImage
 from src.utils.util import Utils
-from src.world.entities import ItemEntity
+from src.world.entities import ItemEntity, PickupEntity
 
 
 class MenuManager:
@@ -37,6 +37,8 @@ class MenuManager:
             return DeathMenu()
         elif menu_id == MenuManager.IN_GAME_MENU:
             return InGameUiState()
+        elif menu_id == MenuManager.START_MENU:
+            return StartMenu()
         raise ValueError("Unknown menu id: " + str(menu_id))
 
     def should_draw_world(self):
@@ -93,6 +95,103 @@ class Menu:
         if panel is not None:
             bundles = panel.all_bundles()
             render_eng.clear_bundles(bundles)
+
+
+class StartMenu(Menu):
+    START_OPT = 0
+    OPTIONS_OPT = 1
+    EXIT_OPT = 2
+
+    def __init__(self):
+        Menu.__init__(self, MenuManager.START_MENU)
+        self._title_img = None
+        self._num_options = 3
+        self._option_imgs = [None] * self._num_options
+        self._selection = 0
+
+        self._title_pos = (0, 0)
+        self._option_rects = [(0, 0, 0, 0)] * self._num_options
+
+        self._build_imgs()
+
+    def get_clear_color(self):
+        return (0, 0, 0)
+
+    def _build_imgs(self):
+        if self._title_img is None:
+            self._title_img = TextImage(0, 0, "cubelike", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=10)
+        if self._option_imgs[0] is None:
+            self._option_imgs[0] = TextImage(0, 0, "start", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+        if self._option_imgs[1] is None:
+            self._option_imgs[1] = TextImage(0, 0, "options", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+        if self._option_imgs[2] is None:
+            self._option_imgs[2] = TextImage(0, 0, "exit", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+
+    def _handle_enter_press(self, gs):
+        if self._selection == StartMenu.START_OPT:
+            gs.new_game()
+        elif self._selection == StartMenu.EXIT_OPT:
+            gs.needs_exit = True
+        elif self._selection == StartMenu.OPTIONS_OPT:
+            pass  # TODO
+
+    def _update_imgs(self):
+        self._title_img.update(new_x=self._title_pos[0], new_y=self._title_pos[1])
+
+        for i in range(0, self._num_options):
+            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
+            x = self._option_rects[i][0]
+            y = self._option_rects[i][1]
+            self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+
+    def update(self, world, gs, input_state, render_eng):
+        if input_state.was_pressed(inputs.UP):
+            self._selection = (self._selection - 1) % self._num_options
+        if input_state.was_pressed(inputs.DOWN):
+            self._selection = (self._selection + 1) % self._num_options
+        if input_state.was_pressed(inputs.ENTER):
+            self._handle_enter_press(gs)
+
+        if input_state.mouse_in_window():
+            pos = input_state.mouse_pos()
+            if input_state.mouse_moved():
+                for i in range(0, self._num_options):
+                    if Utils.rect_contains(self._option_rects[i], pos):
+                        self._selection = i
+
+            if input_state.mouse_was_pressed():
+                for i in range(0, self._num_options):
+                    if Utils.rect_contains(self._option_rects[i], pos):
+                        self._handle_enter_press(gs)
+                        break
+
+        screensize = gs.screen_size
+        self._title_pos = (screensize[0] // 2 - self._title_img.size()[0] // 2,
+                           screensize[1] // 3 - self._title_img.size()[1] // 2)
+        gap = 16
+        opt_y = screensize[1] // 2
+        for i in range(0, self._num_options):
+            self._option_rects[i] = (screensize[0] // 2 - self._option_imgs[i].size()[0] // 2,
+                                     opt_y,
+                                     self._option_imgs[i].size()[0],
+                                     self._option_imgs[i].size()[1])
+            opt_y += self._option_imgs[i].size()[1] + gap
+
+        self._update_imgs()
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def all_bundles(self):
+        for bun in Menu.all_bundles(self):
+            yield bun
+
+        if self._title_img is not None:
+            for bun in self._title_img.all_bundles():
+                yield bun
+        for opt_img in self._option_imgs:
+            if opt_img is not None:
+                for bun in opt_img.all_bundles():
+                    yield bun
 
 
 class DeathMenu(Menu):
@@ -242,7 +341,7 @@ class DeathMenu(Menu):
             if sel == DeathMenu.RETRY_OPT:
                 gs.new_game()
             elif sel == DeathMenu.EXIT_OPT:
-                gs.new_game()
+                gs.get_menu_manager().set_active_menu(MenuManager.START_MENU)
 
 
 class InGameUiState(Menu):
@@ -455,7 +554,7 @@ class InGameUiState(Menu):
     def _drop_item_on_cursor(self, pos, drop_dir, world):
         if self.item_on_cursor is None:
             return
-        vel = ItemEntity.rand_vel(direction=drop_dir)
+        vel = PickupEntity.rand_vel(direction=drop_dir)
         item_entity = ItemEntity(self.item_on_cursor, *pos, vel=vel)
         world.add(item_entity)
         self.item_on_cursor = None

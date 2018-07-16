@@ -6,7 +6,7 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -350,6 +350,9 @@ class EnemyState(ActorState):
         for item in loot:
             item_ent = ItemEntity(item, *entity.center())
             world.add(item_ent)
+
+        if random.random() < 0.25:
+            world.add(PotionEntity(*entity.center()))
 
         self.template.special_death_action(self.level(), entity, world)
 

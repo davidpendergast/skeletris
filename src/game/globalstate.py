@@ -3,7 +3,7 @@ from src.ui.menus import MenuManager
 
 class GlobalState:
 
-    def __init__(self):
+    def __init__(self, menu_id=MenuManager.START_MENU):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
@@ -21,7 +21,9 @@ class GlobalState:
         self._needs_next_level = False
         self._needs_next_level_countdown = 0
 
-        self._menu_manager = MenuManager(MenuManager.IN_GAME_MENU)
+        self._menu_manager = MenuManager(menu_id)
+
+        self.needs_exit = False
 
     def get_menu_manager(self):
         return self._menu_manager

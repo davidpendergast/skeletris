@@ -317,6 +317,8 @@ class TextImage:
         self.color = new_color if new_color is not None else self.color
         self.actual_size = self._recalc_size()
 
+        return self
+
     def all_bundles(self):
         for b in self._letter_images:
             if b is not None:

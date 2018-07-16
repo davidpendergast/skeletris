@@ -35,8 +35,8 @@ def build_me_a_world(level):
     return w
 
 
-def new_gs():
-    gs = GlobalState()
+def new_gs(menu_id):
+    gs = GlobalState(menu_id=menu_id)
     gs.set_player_state(PlayerState("ghast", InventoryState()))
     return gs
 
@@ -105,15 +105,16 @@ def run():
 
         if gs is None or gs._needs_new_game:
             print("Starting new game")
-            gs = new_gs()
+            menu_id = MenuManager.START_MENU if gs is None else MenuManager.IN_GAME_MENU
+            gs = new_gs(menu_id)
             world = None
 
         gs.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
                 running = False
+                continue
             elif event.type == pygame.KEYDOWN:
                 input_state.set_key(event.key, True)
             elif event.type == pygame.KEYUP:
@@ -140,7 +141,7 @@ def run():
         if input_state.was_pressed(pygame.K_RETURN):
             gs.next_level()
 
-        if input_state.was_pressed(pygame.K_ESCAPE):
+        if input_state.was_pressed(pygame.K_ESCAPE) or gs.needs_exit:
             running = False
             continue
 
@@ -183,6 +184,8 @@ def run():
         if gs.tick_counter % 60 == 0:
             if clock.get_fps() < 59:
                 print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
+
+    pygame.quit()
 
                 
 if __name__ == "__main__":

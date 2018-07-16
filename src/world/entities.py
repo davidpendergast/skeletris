@@ -146,6 +146,9 @@ class Entity:
     def is_enemy(self):
         return False
 
+    def is_pickup(self):
+        return False
+
     def can_damage(self, other):
         return ((self.is_player() and other.is_enemy()) or
                 (self.is_enemy() and other.is_player()))
@@ -658,30 +661,9 @@ class ChestEntity(Entity):
                 self._do_open(world, gs.dungeon_level)
              
         self.update_images(gs.anim_tick)
-        
-        
-class ItemEntity(Entity):
-    def __init__(self, item, cx, cy, vel=None):
-        self.item = item
-        x = cx - 8
-        y = cy - 8
-        Entity.__init__(self, x, y, 16, 16)
-        self.pickup_delay = 45
-        self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
-        self.fric = 0.90
-        self.bounce_offset = int(random.random() * 100)
 
-        try:
-            self.sprite = spriteref.item_entities[self.item.cubes]
-        except:
-            # this could break in so many ways, better to fail somewhat gracefully
-            print("ERROR: Failed to get entity sprite for item: {}".format(self.item))
-            self.sprite = spriteref.player_idle_0
-        
-        # for moving away from other stuff
-        self.push_radius = 20
-        self.situated = False
-        self.unsituated_time = 0
+
+class PickupEntity(Entity):
 
     @staticmethod
     def rand_vel(speed=None, direction=None):
@@ -689,108 +671,116 @@ class ItemEntity(Entity):
         if direction is None:
             direction = (0, 0)  # becomes random
         direction = Utils.set_length(direction, 1.0)
-        return [speed*direction[0], speed*direction[1]]
-        
+        return [speed * direction[0], speed * direction[1]]
+
+    def __init__(self, cx, cy, sprites, vel=None):
+        x = cx - 8
+        y = cy - 8
+        Entity.__init__(self, x, y, 16, 16)
+        self.sprites = sprites
+        self.pickup_delay = 45
+        self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
+        self.fric = 0.95
+        self.bounce_offset = int(random.random() * 100)
+
+        # for moving away from other stuff
+        self.push_radius = 20
+
     def get_shadow_sprite(self):
         return spriteref.small_shadow
-    
+
+    def get_color(self):
+        return (1, 1, 1)
+
+    def get_sprite_offset(self):
+        return (0, 0)
+
+    def update_images(self, anim_tick):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
+        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
+
+        cur_sprite = self.sprites[anim_tick % len(self.sprites)]
+
+        offs = self.get_sprite_offset()
+        x = self.x() - (cur_sprite.width() * self._img.scale() - self.w()) // 2 + offs[0]
+        y = self.y() - (cur_sprite.height() * self._img.scale() - self.h()) + (2 - bounce) + offs[1]
+        depth = self.get_depth()
+        self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),
+                                     new_model=cur_sprite, new_depth=depth)
+
+        super().update_images(anim_tick)
+
+    def _get_pushes(self, world):
+        if not self.vel == (0, 0):
+            nearby_ents = world.entities_in_circle(self.center(), self.push_radius)
+            other_pickups = [i for i in nearby_ents if (i.is_pickup() or i.is_chest()) and i is not self]
+            if len(other_pickups) > 0:
+                i = other_pickups[int(random.random()*len(other_pickups))]
+                direction = Utils.sub(self.center(), i.center())
+                return Utils.set_length(direction, 0.75)
+            else:
+                return (0, 0)
+
+    def update(self, world, gs, input_state, render_engine):
+        if self.pickup_delay > 0:
+            self.pickup_delay -= 1
+
+        vel_before = Utils.mag(self.vel)
+
+        if vel_before > 0:
+            pushes = self._get_pushes(world)
+            self.vel = Utils.add(self.vel, pushes)
+            self.vel = Utils.set_length(self.vel, vel_before)
+
+            if Utils.mag(self.vel) < 0.05:
+                self.vel = (0, 0)
+            else:
+                self.vel = Utils.mult(self.vel, self.fric)
+
+            self.move(*self.vel, world=world, and_search=True)
+
+        self.update_images(gs.anim_tick)
+
+    def is_pickup(self):
+        return True
+
+    def can_pickup(self):
+        return self.pickup_delay <= 0
+
+
+class ItemEntity(PickupEntity):
+    def __init__(self, item, cx, cy, vel=None):
+        self.item = item
+        try:
+            sprite = spriteref.item_entities[self.item.cubes]
+        except:
+            # this could break in so many ways, better to fail somewhat gracefully
+            print("ERROR: Failed to get entity sprite for item: {}".format(self.item))
+            sprite = spriteref.player_idle_0
+        PickupEntity.__init__(self, cx, cy, [sprite], vel=vel)
+
+    def get_color(self):
+        return self.get_item().color
+
     def get_item(self):
         return self.item
         
     def is_item(self):
         return True
-            
-    def update_images(self, anim_tick):
-        if self._img is None:
-            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
-            self._img = self._img.update(new_color=self.item.color, new_model=self.sprite)
-
-        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
-
-        x = self.x() - (self.sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (self.sprite.height() * self._img.scale() - self.h()) + (2 - bounce)
-        depth = self.get_depth()
-        self._img = self._img.update(new_x=x, new_y=y, new_depth=depth)
-
-        super().update_images(anim_tick)
-                    
-    def _handle_pushes(self, world):
-        if not self.situated:
-            nearby_ents = world.entities_in_circle(self.center(), self.push_radius)
-            other_items = [i for i in nearby_ents if (i.is_item() or i.is_chest()) and i is not self]
-            if len(other_items) > 0 and Utils.mag(self.vel) < 2:
-                for i in other_items:
-                    if i.is_item() and i.can_unsituate():
-                        i.situated = False # 'wake up' the other items too
-                i = other_items[int(random.random()*len(other_items))] 
-                direction = Utils.sub(self.center(), i.center())
-                push = Utils.set_length(direction, 0.25)
-                self.vel[0] += push[0]
-                self.vel[1] += push[1]
-            
-            if len(other_items) == 0:
-                self.situated = True
-                self.unsituated_time = 0
-            elif not self.can_unsituate():
-                self.situated = True 
-                # means it's probably crammed in a corner,
-                # don't reset unsituated_time so other items
-                # will stop waking it up 
-                   
-    def can_unsituate(self):
-        return self.unsituated_time < 500      
-          
-    def update(self, world, gs, input_state, render_engine):
-        if self.pickup_delay > 0:
-            self.pickup_delay -= 1
-        
-        self._handle_pushes(world)
-               
-        if self.vel[0] != 0:
-            self.vel[0] = 0 if abs(self.vel[0]) < 0.05 else self.vel[0] * self.fric 
-           
-        if self.vel[1] != 0:
-            self.vel[1] = 0 if abs(self.vel[1]) < 0.05 else self.vel[1] * self.fric
-            
-        self.move(*self.vel, world=world, and_search=True)
-            
-        self.update_images(gs.anim_tick)
 
 
-class PotionEntity(Entity):
+class PotionEntity(PickupEntity):
     def __init__(self, cx, cy, vel=None):
-        x = cx - 8
-        y = cy - 8
-        Entity.__init__(self, x, y, 16, 16)
-        self._img = img.ImageBundle(spriteref.potion_small, x, y, layer=spriteref.ENTITY_LAYER,
-               scale=2, depth=5)
-        self.pickup_delay = 45
-        self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
-        self.fric = 0.90
-    
-    def update_images(self):
-        model = self._img.model()
-        x = self.x() - (model.width() * self._img.scale() - self.w())
-        y = self.y() - (model.height() * self._img.scale() - self.h())
-        depth = self.get_depth()
-        self._img = self._img.update(new_model=model, new_x=x, new_y=y, new_depth=depth)   
-        
-    def can_pickup(self):
-        return self.pickup_delay <= 0
-        
-    def update(self, world, gs, input_state, render_engine):
-        if self.pickup_delay > 0:
-            self.pickup_delay -= 1
-              
-        if self.vel[0] != 0:
-            self.vel[0] = 0 if abs(self.vel[0]) < 0.05 else self.vel[0] * self.fric 
-           
-        if self.vel[1] != 0:
-            self.vel[1] = 0 if abs(self.vel[1]) < 0.05 else self.vel[1] * self.fric
-            
-        self.move(*self.vel, world=world, and_search=True)
-            
-        self.update_images()
+        PickupEntity.__init__(self, cx, cy, [spriteref.potion_small], vel=vel)
+
+    def get_sprite_offset(self):
+        return (0, -2)
+
+
+class AttackPickupEntity(PickupEntity):
+    pass
 
 
 class DoorEntity(Entity):

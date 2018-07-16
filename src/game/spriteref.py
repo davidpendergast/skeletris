@@ -79,6 +79,8 @@ enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
+spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 4)]
+
 potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 
