@@ -149,6 +149,12 @@ class Entity:
     def is_pickup(self):
         return False
 
+    def is_attack_pickup(self):
+        return False
+
+    def is_potion(self):
+        return False
+
     def can_damage(self, other):
         return ((self.is_player() and other.is_enemy()) or
                 (self.is_enemy() and other.is_player()))
@@ -778,9 +784,23 @@ class PotionEntity(PickupEntity):
     def get_sprite_offset(self):
         return (0, -2)
 
+    def is_potion(self):
+        return True
+
 
 class AttackPickupEntity(PickupEntity):
-    pass
+    def __init__(self, attack, cx, cy, vel=None):
+        self.attack = attack
+        PickupEntity.__init__(self, cx, cy, spriteref.spinny_cubes, vel=vel)
+
+    def get_attack(self):
+        return self.attack
+
+    def get_color(self):
+        return self.attack.dmg_color
+
+    def is_attack_pickup(self):
+        return True
 
 
 class DoorEntity(Entity):

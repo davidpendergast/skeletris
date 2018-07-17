@@ -46,6 +46,9 @@ class AttackState:
         del_speed *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_SPEED))
         return max(1, round(1.0 / del_speed))
 
+    def get_attack_range(self, stat_lookup):
+        return self.current_attack.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+
     def update(self, entity, world, gs):
         stat_lookup = entity.get_actorstate(gs)
 
@@ -165,6 +168,7 @@ class Attack:
         self.base_damage = 1.0
         self.knockback = 1
         self.dmg_color = (1, 0, 0)
+        self.is_droppable = False
 
     def activate(self, gs, entity, world, stat_lookup):
         """
@@ -192,6 +196,7 @@ class GroundPoundAttack(Attack):
         self.base_radius = 64
         self.base_damage = 0.65
         self.knockback = 0.25
+        self.is_droppable = True
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
@@ -224,6 +229,7 @@ class SpawnMinionAttack(Attack):
         self.projectile_range = 300
         self.num_shots = 2
         self.dmg_color = (1, 0, 1)
+        self.is_droppable = True
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
@@ -241,7 +247,10 @@ class SpawnMinionAttack(Attack):
             for e in entities_in_range:
                 if n >= self.num_shots:
                     break
-                if entity.can_damage(e) and (e not in res) and (not world.get_hidden_at(*e.center())):
+                if world.get_hidden_at(*e.center()) or not entity.can_damage(e):
+                    continue
+                    
+                if e.is_player() or e not in res:
                     proj = entities.MinionProjectile(pos[0], pos[1], entity, e, 150, (1, 0, 1), src_state, self)
                     world.add(proj)
                     n += 1

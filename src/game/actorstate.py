@@ -6,7 +6,8 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, AttackPickupEntity
+from src.game.loot import LootFactory
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -69,10 +70,13 @@ class ActorState:
         return Utils.bound(self.took_damage_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
 
     def recoil_color(self):
-        return Utils.linear_interp(self.dmg_color, (1, 1, 1), self.recoil_progress())
+        return Utils.linear_interp(self.dmg_color, self.base_color(), self.recoil_progress())
 
     def is_invuln(self):
         return False
+
+    def base_color(self):
+        return (1, 1, 1)
 
     def get_dodge_text_info(self):
         return ("miss", 2, ActorState.B_TEXT_COLOR)
@@ -328,11 +332,25 @@ class EnemyState(ActorState):
         self.forget_radius = 450
 
         self.attack_state.set_attack(template.get_attack())
+        self.special_attack = None
+
         self.movement_ai_state = {}
         self._anim_offset = int(60 * random.random())
 
     def duplicate(self):
-        return EnemyState(self.template, self.level(), dict(self.stats))
+        res = EnemyState(self.template, self.level(), dict(self.stats))
+        res.set_special_attack(self.special_attack)
+        return res
+
+    def base_color(self):
+        if self.special_attack is not None:
+            sp_color = self.special_attack.dmg_color
+            res = (1 - (1 - sp_color[0]) * 0.25,
+                   1 - (1 - sp_color[1]) * 0.25,
+                   1 - (1 - sp_color[2]) * 0.25)
+            return res
+        else:
+            return ActorState.base_color(self)
 
     def stat_value(self, stat_type):
         derived = self._compute_derived_stat(stat_type)
@@ -351,8 +369,11 @@ class EnemyState(ActorState):
             item_ent = ItemEntity(item, *entity.center())
             world.add(item_ent)
 
-        if random.random() < 0.25:
+        for _ in range(0, LootFactory.gen_num_potions_to_drop(self.level())):
             world.add(PotionEntity(*entity.center()))
+
+        if self.can_drop_attack() and LootFactory.should_drop_attack(self.level()):
+            world.add(AttackPickupEntity(self.special_attack, *entity.center()))
 
         self.template.special_death_action(self.level(), entity, world)
 
@@ -433,11 +454,26 @@ class EnemyState(ActorState):
 
     def _should_attack(self, entity, world):
         p = world.get_player()
-        return (self.attack_state.can_attack() and
+        if (self.attack_state.can_attack() and
                 self.is_aggro and
                 p is not None and
                 self.took_damage_x_ticks_ago >= self.damage_recoil and
-                not world.get_hidden_at(*entity.center()))
+                not world.get_hidden_at(*entity.center())):
+            radius = self.attack_state.get_attack_range(entity.state)
+
+            return Utils.dist(p.center(), entity.center()) < radius * 1.5
+
+    def set_special_attack(self, attack):
+        self.special_attack = attack
+        if attack is None:
+            self.attack_state.set_attack(self.template.get_attack())
+        else:
+            self.attack_state.set_attack(attack)
+
+    def can_drop_attack(self):
+        return (self.special_attack is not None
+                and self.special_attack.is_droppable
+                and self.template.can_drop_special_attack())
 
 
 class PathfindingType(Enum):

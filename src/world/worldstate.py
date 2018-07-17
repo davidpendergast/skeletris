@@ -46,6 +46,9 @@ class World:
         """
             gridcell: (grid_x, grid_y) or None
         """
+        if entity is None:
+            raise ValueError("tried to add None to world.")
+
         if gridcell is not None:
             x = gridcell[0] * self.cellsize() + (self.cellsize() - entity.w()) // 2
             y = gridcell[1] * self.cellsize() + (self.cellsize() - entity.h()) // 2

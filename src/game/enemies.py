@@ -34,7 +34,8 @@ TRUE_BASE_STATS = {
     StatType.ATT: 10,
     StatType.DEF: 10,
     StatType.VIT: 10,
-    StatType.MOVEMENT_SPEED: -35
+    StatType.MOVEMENT_SPEED: -35,
+    StatType.ATTACK_RADIUS: -25
 }
 for stat in ENEMY_STATS:
     if stat not in TRUE_BASE_STATS:
@@ -75,6 +76,12 @@ class EnemyTemplate:
     def special_death_action(self, level, entity, world):
         pass
 
+    def get_possible_special_attacks(self):
+        return [attacks.GROUND_POUND, attacks.MINION_LAUNCH_ATTACK]
+
+    def can_drop_special_attack(self):
+        return True
+
 
 class TrillaTemplate(EnemyTemplate):
 
@@ -103,7 +110,11 @@ class TrillaTemplate(EnemyTemplate):
             e_state.dmg_color = (1, 1, 1)
             e_state.took_damage_x_ticks_ago = 0
             e_state.current_knockback = Utils.rand_vec(3)
+            e_state.set_special_attack(entity.state.special_attack)
             world.add(Enemy(pos[0], pos[1], e_state), next_update=True)
+
+    def can_drop_special_attack(self):
+        return False
 
     def get_loot(self, level):
         return []
@@ -153,6 +164,12 @@ class EnemyFactory:
                 enemy_stats[stat_type] = stat_value
 
         state = EnemyState(template, level, enemy_stats)
+
+        if random.random() < 0.15:
+            sp_atts = template.get_possible_special_attacks()
+            if len(sp_atts) > 0:
+                idx = int(random.random() * len(sp_atts))
+                state.set_special_attack(sp_atts[idx])
 
         return Enemy(0, 0, state)
 

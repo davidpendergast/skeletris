@@ -26,3 +26,20 @@ class LootFactory:
             if random.random() < 0.05:
                 loot.append(ItemFactory.gen_item(level))
         return loot
+
+    @staticmethod
+    def gen_num_potions_to_drop(level):
+        rng = random.random()
+        if rng < 0.125:
+            return 2
+        elif random.random() < 0.25:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def should_drop_attack(level):
+        if random.random() < 0.25:
+            return True
+        else:
+            return False
