@@ -54,6 +54,9 @@ class ActorState:
     def get_base_stats(self):
         return dict(self._base_values)
 
+    def get_attack_state(self):
+        return self.attack_state
+
     def max_hp(self):
         return self.stat_value(PlayerStatType.HP)
 
@@ -175,6 +178,17 @@ class PlayerState(ActorState):
 
     def inventory(self):
         return self._inventory
+
+    def picked_up(self, pickup_entity):
+        print("picked up {}".format(pickup_entity))
+
+        if pickup_entity.is_attack_pickup():
+            att = pickup_entity.get_attack()
+            self.get_attack_state().set_attack(att)
+
+        elif pickup_entity.is_potion():
+            # TODO - actual potions
+            self.do_heal(20)
 
     def damage_and_healing_last_tick(self):
         return self._damage_last_tick, self._healing_last_tick
@@ -308,9 +322,6 @@ class PlayerState(ActorState):
             if 0.25 < progress < 0.75:
                 return spriteref.small_shadow
         return spriteref.medium_shadow
-
-    def get_attack_state(self):
-        return self.attack_state
 
 
 class EnemyState(ActorState):

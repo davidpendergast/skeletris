@@ -249,7 +249,7 @@ class SpawnMinionAttack(Attack):
                     break
                 if world.get_hidden_at(*e.center()) or not entity.can_damage(e):
                     continue
-                    
+
                 if e.is_player() or e not in res:
                     proj = entities.MinionProjectile(pos[0], pos[1], entity, e, 150, (1, 0, 1), src_state, self)
                     world.add(proj)

@@ -684,10 +684,13 @@ class PickupEntity(Entity):
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
         self.sprites = sprites
-        self.pickup_delay = 45
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.95
         self.bounce_offset = int(random.random() * 100)
+
+        self.pickup_radius = 32
+        self.pickup_delay = 45
+        self.time_touched = 0
 
         # for moving away from other stuff
         self.push_radius = 20
@@ -698,6 +701,9 @@ class PickupEntity(Entity):
     def get_color(self):
         return (1, 1, 1)
 
+    def get_sprite(self, anim_tick):
+        return self.sprites[anim_tick % len(self.sprites)]
+
     def get_sprite_offset(self):
         return (0, 0)
 
@@ -707,7 +713,7 @@ class PickupEntity(Entity):
 
         bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
 
-        cur_sprite = self.sprites[anim_tick % len(self.sprites)]
+        cur_sprite = self.get_sprite(anim_tick)
 
         offs = self.get_sprite_offset()
         x = self.x() - (cur_sprite.width() * self._img.scale() - self.w()) // 2 + offs[0]
@@ -730,9 +736,6 @@ class PickupEntity(Entity):
                 return (0, 0)
 
     def update(self, world, gs, input_state, render_engine):
-        if self.pickup_delay > 0:
-            self.pickup_delay -= 1
-
         vel_before = Utils.mag(self.vel)
 
         if vel_before > 0:
@@ -747,13 +750,26 @@ class PickupEntity(Entity):
 
             self.move(*self.vel, world=world, and_search=True)
 
+        # lol, this is weird but w/evs
+        pickup_polling = 5
+        if random.random() < 1 / pickup_polling:
+            p = world.get_player()
+            if p is not None and Utils.dist(p.center(), self.center()) <= self.pickup_radius:
+                self.time_touched += pickup_polling
+            else:
+                self.time_touched = 0
+
         self.update_images(gs.anim_tick)
+
+        if self.can_pickup():
+            gs.player_state().picked_up(self)
+            world.remove(self)
 
     def is_pickup(self):
         return True
 
     def can_pickup(self):
-        return self.pickup_delay <= 0
+        return self.time_touched >= self.pickup_delay
 
 
 class ItemEntity(PickupEntity):
@@ -776,10 +792,14 @@ class ItemEntity(PickupEntity):
     def is_item(self):
         return True
 
+    def can_pickup(self):
+        return False
+
 
 class PotionEntity(PickupEntity):
     def __init__(self, cx, cy, vel=None):
         PickupEntity.__init__(self, cx, cy, [spriteref.potion_small], vel=vel)
+        self.pickup_delay = 10
 
     def get_sprite_offset(self):
         return (0, -2)
@@ -797,10 +817,20 @@ class AttackPickupEntity(PickupEntity):
         return self.attack
 
     def get_color(self):
-        return self.attack.dmg_color
+        color = self.attack.dmg_color
+        return (1 - (1 - color[0]) * 0.25,
+                1 - (1 - color[1]) * 0.25,
+                1 - (1 - color[2]) * 0.25)
 
     def is_attack_pickup(self):
         return True
+
+    def get_sprite(self, anim_tick):
+        if self.time_touched <= 0:
+            return PickupEntity.get_sprite(self, anim_tick)
+        else:
+            idx = anim_tick % len(spriteref.spinny_cubes_fat)
+            return spriteref.spinny_cubes_fat[idx]
 
 
 class DoorEntity(Entity):
