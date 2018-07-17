@@ -165,7 +165,7 @@ class EnemyFactory:
 
         state = EnemyState(template, level, enemy_stats)
 
-        if random.random() < 0.15:
+        if random.random() < 0.35:
             sp_atts = template.get_possible_special_attacks()
             if len(sp_atts) > 0:
                 idx = int(random.random() * len(sp_atts))

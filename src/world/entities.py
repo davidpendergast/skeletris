@@ -695,6 +695,9 @@ class PickupEntity(Entity):
         # for moving away from other stuff
         self.push_radius = 20
 
+    def get_pickup_progress(self):
+        return Utils.bound(self.time_touched / self.pickup_delay, 0, 1.0)
+
     def get_shadow_sprite(self):
         return spriteref.small_shadow
 
@@ -762,8 +765,11 @@ class PickupEntity(Entity):
         self.update_images(gs.anim_tick)
 
         if self.can_pickup():
-            gs.player_state().picked_up(self)
+            self.on_pickup(world, gs)
             world.remove(self)
+
+    def on_pickup(self, world, gs):
+        gs.player_state().picked_up(self)
 
     def is_pickup(self):
         return True
@@ -812,15 +818,22 @@ class AttackPickupEntity(PickupEntity):
     def __init__(self, attack, cx, cy, vel=None):
         self.attack = attack
         PickupEntity.__init__(self, cx, cy, spriteref.spinny_cubes, vel=vel)
+        self.pickup_delay = 90
 
     def get_attack(self):
         return self.attack
 
+    def get_sprite_offset(self):
+        prog = self.get_pickup_progress()
+        jiggle = round(6 * prog * (random.random() - 0.5))
+        return (jiggle, -16 * prog)
+
     def get_color(self):
         color = self.attack.dmg_color
-        return (1 - (1 - color[0]) * 0.25,
-                1 - (1 - color[1]) * 0.25,
-                1 - (1 - color[2]) * 0.25)
+        scale = 0.25 + 0.75 * self.get_pickup_progress()
+        return (1 - (1 - color[0]) * scale,
+                1 - (1 - color[1]) * scale,
+                1 - (1 - color[2]) * scale)
 
     def is_attack_pickup(self):
         return True
@@ -831,6 +844,14 @@ class AttackPickupEntity(PickupEntity):
         else:
             idx = anim_tick % len(spriteref.spinny_cubes_fat)
             return spriteref.spinny_cubes_fat[idx]
+
+    def on_pickup(self, world, gs):
+        PickupEntity.on_pickup(self, world, gs)
+        splosion = AnimationEntity(self.x(), self.y() - 24,
+                                   spriteref.explosions, 40, spriteref.ENTITY_LAYER, w=self.w(), scale=3)
+        splosion.set_color(self.get_color())
+        world.add(splosion)
+
 
 
 class DoorEntity(Entity):
