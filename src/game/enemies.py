@@ -78,7 +78,7 @@ class EnemyTemplate:
         pass
 
     def get_possible_special_attacks(self):
-        return [attacks.GROUND_POUND, attacks.MINION_LAUNCH_ATTACK]
+        return attacks.ALL_SPECIAL_ATTACKS
 
     def can_drop_special_attack(self):
         return True

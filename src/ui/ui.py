@@ -153,7 +153,6 @@ class HealthBarPanel:
         self._floating_bars = []  # list of [img, duration]
         self._float_dur = 30
         self._float_height = 30
-        self._bar_color = (1.0, 0.5, 0.5)
 
     def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing):
         if self._top_img is None:
@@ -176,12 +175,14 @@ class HealthBarPanel:
             dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
             self._floating_bars.append([dmg_img, 0])
 
+        bar_color = gs.player_state().get_hp_color()
+
         for i in range(0, len(self._floating_bars)):
             img, cur_dur = self._floating_bars[i]
             prog = Utils.bound(cur_dur / self._float_dur, 0.0, 1.0)
             h_offs = int(self._float_height * prog)
-            g = self._bar_color[1] * (1 - prog)
-            b = self._bar_color[2] * (1 - prog)
+            g = bar_color[1] * (1 - prog)
+            b = bar_color[2] * (1 - prog)
 
             self._floating_bars[i][0] = img.update(new_y=(y - h_offs), new_color=(1.0, g, b))
 
@@ -189,7 +190,7 @@ class HealthBarPanel:
         bar_sprite = spriteref.get_health_bar(hp_pcnt_full)
 
         glow_factor = (1 - hp_pcnt_full) * 0.2 * math.cos(((gs.anim_tick % 6) / 6) * 2 * (3.1415))
-        color = (self._bar_color[0], self._bar_color[1] + glow_factor, self._bar_color[2] + glow_factor)
+        color = (bar_color[0], bar_color[1] + glow_factor, bar_color[2] + glow_factor)
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 

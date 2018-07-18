@@ -65,6 +65,7 @@ class AttackState:
                 if successful:
                     num_hit += 1
                     dmg_dealt += dmg
+                    attack.on_hit(gs, t_entity, dmg_dealt, entity, world)
 
             self._delayed_attacks_this_tick.clear()
 
@@ -82,6 +83,8 @@ class AttackState:
                     if successful:
                         num_hit += 1
                         dmg_dealt += dmg
+
+                        self.current_attack.on_hit(gs, t_ent, dmg_dealt, entity, world)
 
             elif self.attack_tick >= self.attack_dur + self.delay_dur:
                 self._finish_attack()
@@ -187,6 +190,9 @@ class Attack:
 
         return res
 
+    def on_hit(self, gs, t_entity, dmg, s_entity, world):
+        pass
+
 
 class GroundPoundAttack(Attack):
     def __init__(self):
@@ -202,7 +208,7 @@ class GroundPoundAttack(Attack):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
         radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
         pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, radius, 60, color=(1, 0, 0), color_end=(0, 0, 0))
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=self.dmg_color, color_end=(0, 0, 0))
         world.add(circle)
 
         return res
@@ -258,8 +264,95 @@ class SpawnMinionAttack(Attack):
         return res
 
 
+class StatusEffect:
+    POISON = 0
+
+    def __init__(self, name, s_type):
+        self._name = name
+        self._type = s_type
+
+    def get_name(self):
+        return self._name
+
+    def get_type(self):
+        return self._type
+
+    def update(self, entity, world, gs):
+        pass
+
+
+class PoisonStatus(StatusEffect):
+
+    def __init__(self, dmg_per_pulse, n_pulses, pulse_delay, color=(0, 1, 0), src_state=None):
+        StatusEffect.__init__(self, "Plague Breath", StatusEffect.POISON)
+        self.dmg_per_pulse = dmg_per_pulse
+        self.n_pulses = n_pulses
+        self.pulse_delay = pulse_delay
+        self.color = color
+
+        self.src_state = src_state
+
+        self.ticks_active = 0
+
+    def update(self, entity, world, gs):
+        self.ticks_active += 1
+
+        if self.ticks_active > (self.n_pulses + 1) * self.pulse_delay - 1:
+            e_state = entity.get_actorstate(gs)
+            e_state.remove_status(self)
+
+        elif gs.tick_counter % self.pulse_delay == 0:
+            e_state = entity.get_actorstate(gs)
+            e_state.deal_damage(self.dmg_per_pulse, color=self.color)
+
+            if self.src_state is not None:
+                leech_pct = self.src_state.stat_value(StatType.LIFE_LEECH) / 100.0
+                self.src_state.do_heal(leech_pct * self.dmg_per_pulse)
+
+
+class PoisonAttack(Attack):
+
+    def __init__(self):
+        Attack.__init__(self, "Plague")
+        self.base_duration = 35
+        self.base_delay = 12
+        self.base_radius = 72
+        self.base_damage = 0.75
+        self.knockback = 0.15
+        self.dmg_color = (0, 1, 0)
+        self.is_droppable = True
+
+        self.num_pulses = 7
+        self.base_pulse_delay = 60
+
+    def activate(self, gs, entity, world, stat_lookup):
+        res = Attack.activate(self, gs, entity, world, stat_lookup)
+        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+        pos = entity.center()
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=self.dmg_color, color_end=(0, 0, 0))
+        world.add(circle)
+
+        return res
+
+    def on_hit(self, gs, t_entity, dmg, s_entity, world):
+        s_state = s_entity.get_actorstate(gs)
+        att_spd = 1 + 0.01 * s_state.stat_value(StatType.ATTACK_SPEED)
+        pulse_delay = max(1, round(self.base_pulse_delay / att_spd))
+        dmg = max(1, dmg)
+        n_pulses = self.num_pulses if dmg >= self.num_pulses else int(dmg)
+        per_pulse = round(dmg / n_pulses)
+
+        poison_effect = PoisonStatus(per_pulse, n_pulses, pulse_delay,
+                                     color=self.dmg_color, src_state=s_entity.get_actorstate(gs))
+
+        t_entity.get_actorstate(gs).add_status(poison_effect)
+
+
 GROUND_POUND = GroundPoundAttack()
 MINION_LAUNCH_ATTACK = SpawnMinionAttack()
 TOUCH_ATTACK = TouchAttack()
+POISON_ATTACK = PoisonAttack()
+
+ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, GROUND_POUND, POISON_ATTACK]
 
 

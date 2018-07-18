@@ -42,6 +42,10 @@ class ActorState:
         self.heal_amounts = []
         self.avoided_attack = False
 
+        self._status_effects = []
+        self._statuses_to_add = []
+        self._statuses_to_remove = set()
+
     def update(self, entity, world, gs, input_state):
         pass
 
@@ -57,6 +61,18 @@ class ActorState:
     def get_attack_state(self):
         return self.attack_state
 
+    def add_status(self, status):
+        self._statuses_to_add.append(status)
+
+    def remove_status(self, status):
+        self._statuses_to_remove.add(status)
+
+    def has_status(self, status_type):
+        for s in self._status_effects:
+            if s.get_type() == status_type:
+                return True
+        return False
+
     def max_hp(self):
         return self.stat_value(PlayerStatType.HP)
 
@@ -65,6 +81,9 @@ class ActorState:
 
     def set_hp(self, value):
         self.current_hp = Utils.bound(value, 0, self.max_hp())
+
+    def get_hp_color(self):
+        return (1, 0, 0) if not self.has_status(attacks.StatusEffect.POISON) else (0.2, 0.7, 0.2)
 
     def move_speed(self):
         return self.stat_value(PlayerStatType.MOVESPEED)
@@ -93,16 +112,16 @@ class ActorState:
     def handle_floating_text(self, entity, world):
         dmg_info = self.get_dmg_text_info()
         if dmg_info is not None:
-            for dmg in self.damage_amounts:
-                show_floating_text(dmg_info[0].format(round(dmg)), dmg_info[2], dmg_info[1], entity, world)
+            total_dmg = sum(self.damage_amounts)
+            if total_dmg > 0:
+                show_floating_text(dmg_info[0].format(round(total_dmg)), dmg_info[2], dmg_info[1], entity, world)
         self.damage_amounts.clear()
 
         heal_info = self.get_heal_text_info()
         if heal_info is not None:
-            for heal in self.heal_amounts:
-                if heal < 0.05:
-                    continue
-                heal_amt = round(heal) if heal >= 1 else round(heal*10)/10
+            total_heal = sum(self.heal_amounts)
+            if total_heal >= 0.05:
+                heal_amt = round(total_heal) if total_heal >= 1 else round(total_heal*10)/10
                 show_floating_text(heal_info[0].format(heal_amt), heal_info[2], heal_info[1], entity, world)
         self.heal_amounts.clear()
 
@@ -126,6 +145,16 @@ class ActorState:
             self.set_hp(prev_hp + amount)
             diff = self.hp() - prev_hp
             self.heal_amounts.append(diff)
+
+    def update_status_effects(self, entity, world, gs):
+        for status in self._statuses_to_add:
+            self._status_effects.append(status)
+        self._status_effects = [x for x in self._status_effects if x not in self._statuses_to_remove]
+        self._statuses_to_add.clear()
+        self._statuses_to_remove.clear()
+
+        for status in self._status_effects:
+            status.update(entity, world, gs)
 
     def was_missed(self):
         self.avoided_attack = True
@@ -163,8 +192,8 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        self.attack_state.set_attack(attacks.GROUND_POUND)
-        # self.attack_state.set_attack(attacks.MINION_LAUNCH_ATTACK)
+        # self.attack_state.set_attack(attacks.GROUND_POUND)
+        self.attack_state.set_attack(attacks.POISON_ATTACK)
 
         self._damage_last_tick = 0
         self._healing_last_tick = 0
@@ -179,12 +208,23 @@ class PlayerState(ActorState):
     def inventory(self):
         return self._inventory
 
+    def get_hp_color(self):
+        if self.has_status(attacks.StatusEffect.POISON):
+            return ActorState.get_hp_color(self)
+        else:
+            return (1.0, 0.5, 0.5)
+
     def picked_up(self, pickup_entity):
         print("picked up {}".format(pickup_entity))
 
         if pickup_entity.is_attack_pickup():
             att = pickup_entity.get_attack()
             self.get_attack_state().set_attack(att)
+
+            # hack to make player flash a color,
+            # also causes slowness and inaction lol
+            self.took_damage_x_ticks_ago = 0
+            self.dmg_color = att.dmg_color
 
         elif pickup_entity.is_potion():
             # TODO - actual potions
@@ -264,6 +304,8 @@ class PlayerState(ActorState):
         if gs.tick_counter % 60 == 0:
             regen = self.stat_value(StatType.LIFE_REGEN)
             self.do_heal(regen)
+
+        self.update_status_effects(player_entity, world, gs)
 
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
@@ -356,9 +398,9 @@ class EnemyState(ActorState):
     def base_color(self):
         if self.special_attack is not None:
             sp_color = self.special_attack.dmg_color
-            res = (1 - (1 - sp_color[0]) * 0.25,
-                   1 - (1 - sp_color[1]) * 0.25,
-                   1 - (1 - sp_color[2]) * 0.25)
+            res = (1 - (1 - sp_color[0]) * 0.15,
+                   1 - (1 - sp_color[1]) * 0.15,
+                   1 - (1 - sp_color[2]) * 0.15)
             return res
         else:
             return ActorState.base_color(self)
@@ -405,6 +447,8 @@ class EnemyState(ActorState):
             if (gs.tick_counter + self._anim_offset) % 60 == 0:
                 regen = self.stat_value(StatType.LIFE_REGEN)
                 self.do_heal(regen)
+
+            self.update_status_effects(entity, world, gs)
 
             if self.took_damage_x_ticks_ago < self.damage_recoil:
                 self.took_damage_x_ticks_ago += 1
@@ -460,7 +504,9 @@ class EnemyState(ActorState):
 
             health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
 
-            entity.update_images(sprite, self.facing_left, health_ratio, color=color,
+            hp_color = self.get_hp_color()
+
+            entity.update_images(sprite, self.facing_left, health_ratio, color=color, hp_color=hp_color,
                                  shadow_sprite=self.template.get_shadow_sprite())
 
     def _should_attack(self, entity, world):

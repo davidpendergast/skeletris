@@ -561,7 +561,7 @@ class Enemy(Entity):
     def get_shadow_sprite(self):
         return self._shadow_sprite
     
-    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), shadow_sprite=None):
+    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), hp_color=(1, 0, 0), shadow_sprite=None):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
@@ -583,9 +583,8 @@ class Enemy(Entity):
             hp_sprite = spriteref.progress_bars[int(min(0.99, health_ratio) * n)]
             hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
             hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
-            color = (1.0, 0, 0)
             self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
-                                                             new_depth=depth, new_color=color)
+                                                             new_depth=depth, new_color=hp_color)
 
     def all_bundles(self, extras=[]):
         for bun in Entity.all_bundles(self, extras=extras):

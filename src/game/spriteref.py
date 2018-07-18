@@ -133,7 +133,13 @@ for i in range(0, 10):
     alphabet[c] = make(5*i, 120, 5, 5)
 
 _cached_text = ["att:", "def:", "vit:", "miss", "dodge", "inventory", "lvl:", "room:",
-               "kill:", "hp:", "dps:"]
+                "kill:", "hp:", "dps:"]
+for i in range(1, 10):
+    _cached_text.append("+0.{}".format(i))
+for i in range(1, 100):
+    _cached_text.append("+{}".format(i))
+    _cached_text.append("-{}".format(i))
+
 _cached_lengths = set([len(t) for t in _cached_text])
 cached_text_imgs = {}
 
