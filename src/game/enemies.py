@@ -21,8 +21,8 @@ ENEMY_STATS = [StatType.ATT,
                StatType.DEF,
                StatType.VIT,
                StatType.ATTACK_DAMAGE,
-               # StatType.ATTACK_RADIUS,
-               # StatType.ATTACK_SPEED,
+               StatType.ATTACK_RADIUS,
+               StatType.ATTACK_SPEED,
                StatType.MOVEMENT_SPEED,
                StatType.DODGE,
                StatType.ACCURACY,
@@ -37,6 +37,7 @@ TRUE_BASE_STATS = {
     StatType.MOVEMENT_SPEED: -35,
     StatType.ATTACK_RADIUS: -25
 }
+
 for stat in ENEMY_STATS:
     if stat not in TRUE_BASE_STATS:
         TRUE_BASE_STATS[stat] = 0

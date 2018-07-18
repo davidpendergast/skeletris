@@ -343,5 +343,6 @@ def build_spritesheet(raw_image):
 if __name__ == "__main__":
     raw = pygame.image.load("assets/image.png")
     output = build_spritesheet(raw)
+    print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     
