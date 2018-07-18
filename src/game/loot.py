@@ -39,7 +39,7 @@ class LootFactory:
 
     @staticmethod
     def should_drop_attack(level):
-        if random.random() < 0.25:
+        if random.random() < 0.05:
             return True
         else:
             return False

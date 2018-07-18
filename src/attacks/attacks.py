@@ -199,16 +199,17 @@ class GroundPoundAttack(Attack):
         Attack.__init__(self, "Satan's Circle")
         self.base_duration = 35
         self.base_delay = 12
-        self.base_radius = 64
+        self.base_radius = 54
         self.base_damage = 0.65
+        self.dmg_color = (1, 0, 0)
         self.knockback = 0.25
-        self.is_droppable = True
+        self.is_droppable = False
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
         radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
         pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, radius, 60, color=self.dmg_color, color_end=(0, 0, 0))
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=(0.25, 0.25, 0.25), color_end=(0, 0, 0))
         world.add(circle)
 
         return res
@@ -222,6 +223,7 @@ class TouchAttack(Attack):
         self.base_radius = 42
         self.base_damage = 1.0
         self.knockback = 2
+        self.is_droppable = False
 
 
 class SpawnMinionAttack(Attack):
@@ -353,6 +355,6 @@ MINION_LAUNCH_ATTACK = SpawnMinionAttack()
 TOUCH_ATTACK = TouchAttack()
 POISON_ATTACK = PoisonAttack()
 
-ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, GROUND_POUND, POISON_ATTACK]
+ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, POISON_ATTACK]
 
 

@@ -74,7 +74,7 @@ class GlobalState:
             self._needs_next_level_countdown = pause_for
 
     def next_level(self):
-        self.dungeon_level = min(self.dungeon_level + 1, 64)
+        self.dungeon_level = min(self.dungeon_level + 10, 64)
         self._needs_next_level_countdown = 0
         self._needs_next_level = True
 

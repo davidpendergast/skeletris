@@ -192,8 +192,8 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        # self.attack_state.set_attack(attacks.GROUND_POUND)
-        self.attack_state.set_attack(attacks.POISON_ATTACK)
+        self.attack_state.set_attack(attacks.GROUND_POUND)
+        # self.attack_state.set_attack(attacks.POISON_ATTACK)
 
         self._damage_last_tick = 0
         self._healing_last_tick = 0
@@ -210,7 +210,7 @@ class PlayerState(ActorState):
 
     def get_hp_color(self):
         if self.has_status(attacks.StatusEffect.POISON):
-            return ActorState.get_hp_color(self)
+            return (0.5, 1.0, 0.5)
         else:
             return (1.0, 0.5, 0.5)
 
