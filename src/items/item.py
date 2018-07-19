@@ -258,7 +258,8 @@ class ItemFactory:
     @staticmethod
     def gen_item(level):
         primary_stat = ItemFactory.gen_core_stat(level)
-        secondary_stats = ItemFactory.gen_non_core_stats(level, int(4 * random.random()), exclude=[primary_stat.stat_type])
+        n_secondary_stats = int(4 * random.random())
+        secondary_stats = ItemFactory.gen_non_core_stats(level, n_secondary_stats, exclude=[primary_stat.stat_type])
 
         core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
@@ -272,13 +273,24 @@ class ItemFactory:
                 list(map(lambda x: x.stat_type, special_stats)))
         
         stats = core_stats + non_core_stats + special_stats
-        color = [1, 0.5 + random.random()/2, 0.5 + random.random()/2]
-        random.shuffle(color)
-        color = tuple(color)
+
+        color = tuple([0.5 + random.random() * 0.25] * 3)
+        if len(core_stats) > 0:
+            max_core = max(core_stats, key=lambda x: x.value)
+            if max_core.stat_type is StatType.ATT:
+                color = (1, 0.5 + random.random() * 0.25, 0.5 + random.random() * 0.25)
+            elif max_core.stat_type is StatType.DEF:
+                color = (0.5 + random.random() * 0.25, 0.5 + random.random() * 0.25, 1)
+            elif max_core.stat_type is StatType.VIT:
+                color = (0.5 + random.random() * 0.25, 1, 0.5 + random.random() * 0.25)
+
         cube_art = {}
-        for c in cubes:
-            if random.random() < 0.15:
-                cube_art[c] = int(6*random.random())
+        cubes_copy = [c for c in cubes]
+        random.shuffle(cubes_copy)
+
+        for i in range(0, n_secondary_stats):
+            if i < len(cubes_copy):
+                cube_art[cubes_copy[i]] = 1 + int(5*random.random())
         
         return Item(name, level, stats, cubes, color, cube_art)
 
