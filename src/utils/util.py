@@ -17,15 +17,15 @@ class Utils:
 
     @staticmethod
     def add(v1, v2):
-        return (v1[0] + v2[0], v1[1] + v2[1])
+        return tuple(i[0] + i[1] for i in zip(v1, v2))
 
     @staticmethod
     def sub(v1, v2):
-        return (v1[0] - v2[0], v1[1] - v2[1])
+        return tuple(i[0] - i[1] for i in zip(v1, v2))
 
     @staticmethod
     def mult(v, a):
-        return (a*v[0], a*v[1])
+        return tuple(a*v_i for v_i in v)
 
     @staticmethod
     def rotate(v, rad):
@@ -51,7 +51,7 @@ class Utils:
 
     @staticmethod
     def mag(v):
-        return math.sqrt(v[0]*v[0] + v[1]*v[1])
+        return math.sqrt(sum(i*i for i in v))
 
     @staticmethod
     def dist(v1, v2):

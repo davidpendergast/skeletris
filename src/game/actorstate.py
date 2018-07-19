@@ -35,6 +35,7 @@ class ActorState:
 
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
+        self.set_color_x_ticks_ago = self.damage_recoil
         self.current_knockback = (0, 0)
         self.dmg_color = (1, 0, 0)
 
@@ -91,8 +92,11 @@ class ActorState:
     def recoil_progress(self):
         return Utils.bound(self.took_damage_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
 
+    def color_fade_progress(self):
+        return Utils.bound(self.set_color_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
+
     def recoil_color(self):
-        return Utils.linear_interp(self.dmg_color, self.base_color(), self.recoil_progress())
+        return Utils.linear_interp(self.dmg_color, self.base_color(), self.color_fade_progress())
 
     def is_invuln(self):
         return False
@@ -135,6 +139,7 @@ class ActorState:
         if damage > 0 and not self.is_invuln():
             self.set_hp(self.hp() - damage)
             self.took_damage_x_ticks_ago = 0
+            self.set_color_x_ticks_ago = 0
             self.dmg_color = color
             self.current_knockback = knockback
             self.damage_amounts.append(damage)
@@ -221,9 +226,7 @@ class PlayerState(ActorState):
             att = pickup_entity.get_attack()
             self.get_attack_state().set_attack(att)
 
-            # hack to make player flash a color,
-            # also causes slowness and inaction lol
-            self.took_damage_x_ticks_ago = 0
+            self.set_color_x_ticks_ago = 0
             self.dmg_color = att.dmg_color
 
         elif pickup_entity.is_potion():
@@ -310,8 +313,18 @@ class PlayerState(ActorState):
         if self.took_damage_x_ticks_ago < self.damage_recoil:
             self.took_damage_x_ticks_ago += 1
 
+        if self.set_color_x_ticks_ago < self.damage_recoil:
+            self.set_color_x_ticks_ago += 1
+
         if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
             self.attack_state.start_attack(self)
+
+        eq_attacks = self.inventory().get_equipped_attacks()
+        inv_attack = attacks.GROUND_POUND if len(eq_attacks) == 0 else eq_attacks[0]
+        if self.attack_state.get_next_or_current_attack() is not inv_attack:
+            self.attack_state.set_attack(inv_attack)
+            self.set_color_x_ticks_ago = 0
+            self.dmg_color = inv_attack.dmg_color
 
         self.attack_state.update(player_entity, world, gs)
 
@@ -416,7 +429,12 @@ class EnemyState(ActorState):
             return 0
 
     def _handle_death(self, entity, world, gs):
-        loot = self.template.get_loot(self.level())
+        if self.can_drop_attack():
+            att = self.special_attack
+        else:
+            att = attacks.POISON_ATTACK
+
+        loot = self.template.get_loot(self.level(), potential_attack=att)
 
         for item in loot:
             item_ent = ItemEntity(item, *entity.center())
@@ -424,9 +442,6 @@ class EnemyState(ActorState):
 
         for _ in range(0, LootFactory.gen_num_potions_to_drop(self.level())):
             world.add(PotionEntity(*entity.center()))
-
-        if self.can_drop_attack() and LootFactory.should_drop_attack(self.level()):
-            world.add(AttackPickupEntity(self.special_attack, *entity.center()))
 
         self.template.special_death_action(self.level(), entity, world)
 
@@ -452,6 +467,9 @@ class EnemyState(ActorState):
 
             if self.took_damage_x_ticks_ago < self.damage_recoil:
                 self.took_damage_x_ticks_ago += 1
+
+            if self.set_color_x_ticks_ago < self.damage_recoil:
+                self.set_color_x_ticks_ago += 1
 
             # updating aggro
             if random.random() < 0.05:

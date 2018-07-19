@@ -23,6 +23,12 @@ class AttackState:
         else:
             self.current_attack = attack
 
+    def get_next_or_current_attack(self):
+        if self._next_att is not None:
+            return self._next_att
+        else:
+            return self.current_attack
+
     def can_attack(self):
         return not self.is_active() and self.current_attack is not None
 

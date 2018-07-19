@@ -86,6 +86,7 @@ potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 
 item_piece_small = make(72, 32, 4, 4)
+item_piece_small_inverted = make(76, 32, 4, 4)
 item_piece_bigs = [make(i*16, 96, 16, 16) for i in range(0, 6)]
 item_entities = {}  # cubes -> sprite
 
@@ -282,21 +283,38 @@ def build_spritesheet(raw_image):
 
     draw_y += 6
 
-    all_cube_configs = ItemFactory.get_all_possible_cube_configs(n=(5, 6, 7))
+    all_cube_configs = ItemFactory.get_all_possible_cube_configs(n=(4, 5, 6, 7))
     print("building {} item sprites...".format(len(all_cube_configs)))
 
     draw_x = 0
-    piece_rect = item_piece_small.rect()
     for item in all_cube_configs:
         w = 1
         h = 1
-        for c in item:
-            dest = (draw_x + c[0]*4, draw_y + c[1]*4)
-            sheet.blit(raw_image, dest, piece_rect)
-            w = max(c[0] + 1, w)
-            h = max(c[1] + 1, h)
+        if len(item) == 4:
+            for c in item:
+                # outline
+                pygame.draw.rect(sheet, (0, 0, 0), [draw_x + c[0]*3, draw_y + c[1]*3, 6, 6], 0)
+            for c in item:
+                dest = (draw_x + c[0] * 3 + 1, draw_y + c[1] * 3 + 1)
+                piece_rect = item_piece_small_inverted.rect()
+                sheet.blit(raw_image, dest, piece_rect)
 
-        item_entities[item] = make(draw_x, draw_y, w*4, h*4)
+                w = max(c[0] + 1, w)
+                h = max(c[1] + 1, h)
+
+            item_entities[item] = make(draw_x, draw_y, w * 3 + 3, h * 3 + 3)
+
+        else:
+            for c in item:
+                dest = (draw_x + c[0]*4, draw_y + c[1]*4)
+                piece_rect = item_piece_small.rect()
+                sheet.blit(raw_image, dest, piece_rect)
+
+                w = max(c[0] + 1, w)
+                h = max(c[1] + 1, h)
+
+            item_entities[item] = make(draw_x, draw_y, w * 4, h * 4)
+
         draw_x += 20
         if draw_x > sheet_size[0] - 20:
             draw_x = 0

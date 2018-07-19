@@ -3,6 +3,7 @@
 class ItemGrid:
     def __init__(self, size):
         self.size = size
+        self.place_order = []
         self.items = {}  # coords -> item
     
     def can_place(self, item, pos):
@@ -19,6 +20,7 @@ class ItemGrid:
     def place(self, item, pos):
         if self.can_place(item, pos):
             self.items[pos] = item
+            self.place_order.append(item)
             
     def try_to_replace(self, item, pos):
         if (item.w() + pos[0] > self.size[0] or 
@@ -47,6 +49,7 @@ class ItemGrid:
         for pos in self.items:
             if self.items[pos] is item:
                 del self.items[pos]
+                self.place_order.remove(item)
                 return True
         return False
         
@@ -62,7 +65,7 @@ class ItemGrid:
             yield (pos[0] + cube[0], pos[1] + cube[1])
         
     def all_items(self):
-        return self.items.values()
+        return list(self.place_order)
         
     def get_pos(self, item):
         for pos in self.items:  # inefficient but whatever
@@ -80,6 +83,14 @@ class InventoryState:
         
     def all_equipped_items(self):
         return self.equip_grid.all_items()
+
+    def get_equipped_attacks(self):
+        res = []
+        for item in self.equip_grid.all_items():
+            if item.is_attack_item():
+                res.append(item.get_attack())
+        return res
+
         
         
         

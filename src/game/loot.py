@@ -17,14 +17,14 @@ class LootFactory:
         return loot
 
     @staticmethod
-    def gen_loot(level):
+    def gen_loot(level, potential_attack=None):
         """
             returns: list of items
         """
         loot = []
         for _ in range(0, 3):
-            if random.random() < 0.05:
-                loot.append(ItemFactory.gen_item(level))
+            if random.random() < 0.5:
+                loot.append(ItemFactory.gen_item(level, potential_attack=potential_attack))
         return loot
 
     @staticmethod
@@ -36,10 +36,3 @@ class LootFactory:
             return 1
         else:
             return 0
-
-    @staticmethod
-    def should_drop_attack(level):
-        if random.random() < 0.05:
-            return True
-        else:
-            return False

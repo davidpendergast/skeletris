@@ -2,6 +2,7 @@ import random
 import collections
 
 from src.game.stats import StatType, ItemStatRanges
+from src.utils.util import Utils
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 SPECIAL_STATS = [StatType.HOLE_BONUS]
@@ -101,6 +102,9 @@ class Item:
         self.cubes = tuple(cubes)
         self.color = color
         self.cube_art = {} if cube_art is None else cube_art
+
+    def is_attack_item(self):
+        return False
     
     def level_string(self):
         return "lvl:{}".format(self.level)
@@ -135,6 +139,19 @@ class Item:
                     res += "- "    
         res += "\n[" + "_"*len(self.name) + "]"
         return res
+
+
+class AttackItem(Item):
+
+    def __init__(self, name, attack, level, stats, cubes, color, cube_art=None):
+        Item.__init__(self, name, level, stats, cubes, color, cube_art=cube_art)
+        self.attack = attack
+
+    def get_attack(self):
+        return self.attack
+
+    def is_attack_item(self):
+        return True
         
         
 class ItemFactory:
@@ -163,9 +180,13 @@ class ItemFactory:
         for cube in item.cubes:
             new_cubes.append((5 - cube[1], cube[0]))
         new_cubes = ItemFactory.clean_cubes(new_cubes)
-        
-        return Item(item.name, item.level, item.stats, 
-                new_cubes, item.color, cube_art=item.cube_art)
+
+        if not item.is_attack_item():
+            return Item(item.name, item.level, item.stats,
+                        new_cubes, item.color, cube_art=item.cube_art)
+        else:
+            return AttackItem(item.name, item.get_attack(), item.level,
+                              item.stats, new_cubes, item.color, cube_art=item.cube_art)
 
     @staticmethod
     def do_seed(seed):
@@ -256,33 +277,49 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item(level):
+    def gen_item(level, potential_attack=None):
+        attack = None
+        if potential_attack is not None and random.random() < 0.75:
+            attack = potential_attack
+
         primary_stat = ItemFactory.gen_core_stat(level)
-        n_secondary_stats = int(4 * random.random())
+        n_secondary_stats = int(4 * random.random()) if attack is None else 0
+        n_cubes = 5 + int(2 * random.random()) if attack is None else 4
+
         secondary_stats = ItemFactory.gen_non_core_stats(level, n_secondary_stats, exclude=[primary_stat.stat_type])
 
         core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
 
-        cubes = ItemFactory.gen_cubes(5 + int(2 * random.random()))
-        special_stats = ItemFactory.get_special_stats(cubes)
-        
-        name = ItemFactory.get_name(
-                list(map(lambda x: x.stat_type, core_stats)),
-                list(map(lambda x: x.stat_type, non_core_stats)),
-                list(map(lambda x: x.stat_type, special_stats)))
+        cubes = ItemFactory.gen_cubes(n_cubes)
+        special_stats = ItemFactory.get_special_stats(cubes) if attack is None else []
+
+        if attack is None:
+            name = ItemFactory.get_name(
+                    list(map(lambda x: x.stat_type, core_stats)),
+                    list(map(lambda x: x.stat_type, non_core_stats)),
+                    list(map(lambda x: x.stat_type, special_stats)))
+        else:
+            name = attack.name
         
         stats = core_stats + non_core_stats + special_stats
 
-        color = tuple([0.5 + random.random() * 0.25] * 3)
-        if len(core_stats) > 0:
-            max_core = max(core_stats, key=lambda x: x.value)
-            if max_core.stat_type is StatType.ATT:
-                color = (1, 0.5 + random.random() * 0.25, 0.5 + random.random() * 0.25)
-            elif max_core.stat_type is StatType.DEF:
-                color = (0.5 + random.random() * 0.25, 0.5 + random.random() * 0.25, 1)
-            elif max_core.stat_type is StatType.VIT:
-                color = (0.5 + random.random() * 0.25, 1, 0.5 + random.random() * 0.25)
+        if attack is not None:
+            diff = Utils.sub((1, 1, 1), attack.dmg_color)
+            diff = Utils.mult(diff, 0.25)
+            color = Utils.sub((1, 1, 1), diff)
+        else:
+            color = tuple([0.5 + random.random() * 0.25] * 3)
+            if len(core_stats) > 0:
+                rand1 = 0.5 + random.random() * 0.5
+                rand2 = 0.5 + random.random() * 0.5
+                max_core = max(core_stats, key=lambda x: x.value)
+                if max_core.stat_type is StatType.ATT:
+                    color = (1, rand1, rand2)
+                elif max_core.stat_type is StatType.VIT:
+                    color = (rand1, 1, rand2)
+                elif max_core.stat_type is StatType.DEF:
+                    color = (rand1, rand2, 1)
 
         cube_art = {}
         cubes_copy = [c for c in cubes]
@@ -291,8 +328,11 @@ class ItemFactory:
         for i in range(0, n_secondary_stats):
             if i < len(cubes_copy):
                 cube_art[cubes_copy[i]] = 1 + int(5*random.random())
-        
-        return Item(name, level, stats, cubes, color, cube_art)
+
+        if attack is None:
+            return Item(name, level, stats, cubes, color, cube_art)
+        else:
+            return AttackItem(name, attack, level, stats, cubes, color, cube_art)
 
     NEIGHBORS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 

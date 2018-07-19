@@ -68,8 +68,8 @@ class EnemyTemplate:
     def get_attack(self):
         return attacks.TOUCH_ATTACK
 
-    def get_loot(self, level):
-        return LootFactory.gen_loot(level)
+    def get_loot(self, level, potential_attack=None):
+        return LootFactory.gen_loot(level, potential_attack=potential_attack)
 
     def get_base_stats(self):
         return dict(TRUE_BASE_STATS)
@@ -110,6 +110,7 @@ class TrillaTemplate(EnemyTemplate):
             # kind of a hack to get them to scoot outwards lol
             e_state.dmg_color = (1, 1, 1)
             e_state.took_damage_x_ticks_ago = 0
+            e_state.set_color_x_ticks_ago = 0
             e_state.current_knockback = Utils.rand_vec(3)
             e_state.set_special_attack(entity.state.special_attack)
             world.add(Enemy(pos[0], pos[1], e_state), next_update=True)
@@ -117,7 +118,7 @@ class TrillaTemplate(EnemyTemplate):
     def can_drop_special_attack(self):
         return False
 
-    def get_loot(self, level):
+    def get_loot(self, level, potential_attack=None):
         return []
 
 
