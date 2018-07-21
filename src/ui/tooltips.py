@@ -36,9 +36,10 @@ class Tooltip:
 
 class TitleImageAndStatsTooltip(Tooltip):
 
-    def __init__(self, title, level, stat_list):
+    def __init__(self, title, level, stat_list, title_color=(1, 1, 1)):
         Tooltip.__init__(self)
         self.title = title
+        self.title_color = title_color
         self.level = level
         self.core_stats = [s for s in stat_list if s.stat_type in item.CORE_STATS]
         self.non_core_stats = [s for s in stat_list if s.stat_type not in item.CORE_STATS]
@@ -69,7 +70,7 @@ class TitleImageAndStatsTooltip(Tooltip):
             h -= bot_sprite.height() * sc  # covers up part of the top
         self.bot_panel = ImageBundle(bot_sprite, 0, h, layer=self.layer, scale=sc)
 
-        self.title_text = TextImage(8 * sc, 6 * sc, self.title, self.layer, scale=sc)
+        self.title_text = TextImage(8 * sc, 6 * sc, self.title, self.layer, scale=sc, color=self.title_color)
 
         line_spacing = int(1.5 * sc)
 
@@ -124,7 +125,8 @@ class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
     def __init__(self, item):
         self.item = item
-        TitleImageAndStatsTooltip.__init__(self, item.name, item.level, item.all_stats())
+        TitleImageAndStatsTooltip.__init__(self, item.name, item.level, item.all_stats(),
+                                           title_color=item.get_title_color())
 
     def get_target(self):
         return self.item

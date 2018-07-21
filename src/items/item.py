@@ -105,6 +105,9 @@ class Item:
 
     def is_attack_item(self):
         return False
+
+    def get_title_color(self):
+        return (1, 1, 1)
     
     def level_string(self):
         return "lvl:{}".format(self.level)
@@ -152,6 +155,10 @@ class AttackItem(Item):
 
     def is_attack_item(self):
         return True
+
+    def get_title_color(self):
+        att_color = self.get_attack().dmg_color
+        return Utils.linear_interp(att_color, (1, 1, 1), 0.75)
         
         
 class ItemFactory:
@@ -277,11 +284,7 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item(level, potential_attack=None):
-        attack = None
-        if potential_attack is not None and random.random() < 0.75:
-            attack = potential_attack
-
+    def gen_item(level, attack=None):
         primary_stat = ItemFactory.gen_core_stat(level)
         n_secondary_stats = int(4 * random.random()) if attack is None else 0
         n_cubes = 5 + int(2 * random.random()) if attack is None else 4

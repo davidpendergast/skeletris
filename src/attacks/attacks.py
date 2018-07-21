@@ -311,7 +311,7 @@ class PoisonStatus(StatusEffect):
 
         elif gs.tick_counter % self.pulse_delay == 0:
             e_state = entity.get_actorstate(gs)
-            e_state.deal_damage(self.dmg_per_pulse, color=self.color)
+            e_state.deal_damage(self.dmg_per_pulse, ignore_invuln=True, color=self.color)
 
             if self.src_state is not None:
                 leech_pct = self.src_state.stat_value(StatType.LIFE_LEECH) / 100.0

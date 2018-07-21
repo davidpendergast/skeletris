@@ -8,6 +8,7 @@ from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, AttackPickupEntity
 from src.game.loot import LootFactory
+from src.world.entities import AttackCircleArt
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -135,8 +136,8 @@ class ActorState:
                 show_floating_text(avoid_info[0], avoid_info[2], avoid_info[1], entity, world)
         self.avoided_attack = False
 
-    def deal_damage(self, damage, knockback=(0, 0), color=(1, 0, 0)):
-        if damage > 0 and not self.is_invuln():
+    def deal_damage(self, damage, ignore_invuln=False, knockback=(0, 0), color=(1, 0, 0)):
+        if damage > 0 and (ignore_invuln or not self.is_invuln()):
             self.set_hp(self.hp() - damage)
             self.took_damage_x_ticks_ago = 0
             self.set_color_x_ticks_ago = 0
@@ -219,17 +220,10 @@ class PlayerState(ActorState):
         else:
             return (1.0, 0.5, 0.5)
 
-    def picked_up(self, pickup_entity):
+    def picked_up(self, pickup_entity, world):
         print("picked up {}".format(pickup_entity))
 
-        if pickup_entity.is_attack_pickup():
-            att = pickup_entity.get_attack()
-            self.get_attack_state().set_attack(att)
-
-            self.set_color_x_ticks_ago = 0
-            self.dmg_color = att.dmg_color
-
-        elif pickup_entity.is_potion():
+        if pickup_entity.is_potion():
             # TODO - actual potions
             self.do_heal(20)
 
@@ -323,8 +317,13 @@ class PlayerState(ActorState):
         inv_attack = attacks.GROUND_POUND if len(eq_attacks) == 0 else eq_attacks[0]
         if self.attack_state.get_next_or_current_attack() is not inv_attack:
             self.attack_state.set_attack(inv_attack)
-            self.set_color_x_ticks_ago = 0
-            self.dmg_color = inv_attack.dmg_color
+            if len(eq_attacks) > 0:
+                self.set_color_x_ticks_ago = 0
+                self.dmg_color = inv_attack.dmg_color
+
+                pos = player_entity.center()
+                circle = AttackCircleArt(pos[0], pos[1], 32, 60, inv_attack.dmg_color, (0, 0, 0))
+                world.add(circle)
 
         self.attack_state.update(player_entity, world, gs)
 
@@ -432,7 +431,7 @@ class EnemyState(ActorState):
         if self.can_drop_attack():
             att = self.special_attack
         else:
-            att = attacks.POISON_ATTACK
+            att = None
 
         loot = self.template.get_loot(self.level(), potential_attack=att)
 

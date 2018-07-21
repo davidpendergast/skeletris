@@ -768,7 +768,7 @@ class PickupEntity(Entity):
             world.remove(self)
 
     def on_pickup(self, world, gs):
-        gs.player_state().picked_up(self)
+        gs.player_state().picked_up(self, world)
 
     def is_pickup(self):
         return True
