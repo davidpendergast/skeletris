@@ -198,8 +198,8 @@ class PlayerState(ActorState):
 
         self.current_sprite = spriteref.player_idle_0
 
-        self.attack_state.set_attack(attacks.GROUND_POUND)
-        # self.attack_state.set_attack(attacks.POISON_ATTACK)
+        self._default_attack = attacks.GROUND_POUND
+        self.attack_state.set_attack(self._default_attack)
 
         self._damage_last_tick = 0
         self._healing_last_tick = 0
@@ -314,7 +314,7 @@ class PlayerState(ActorState):
             self.attack_state.start_attack(self)
 
         eq_attacks = self.inventory().get_equipped_attacks()
-        inv_attack = attacks.GROUND_POUND if len(eq_attacks) == 0 else eq_attacks[0]
+        inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[0]
         if self.attack_state.get_next_or_current_attack() is not inv_attack:
             self.attack_state.set_attack(inv_attack)
             if len(eq_attacks) > 0:

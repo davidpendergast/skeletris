@@ -71,6 +71,10 @@ class Utils:
         return tuple([v1[i] * (1 - a) + v2[i] * a for i in range(0, len(v1))])
 
     @staticmethod
+    def round(v):
+        return tuple([round(i) for i in v])
+
+    @staticmethod
     def resource_path(relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
         try:

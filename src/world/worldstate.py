@@ -1,4 +1,5 @@
 import random
+import math
 from collections import deque
 
 import src.renderengine.img as img
@@ -275,7 +276,17 @@ class World:
 
         p = self.get_player()
         if p is not None:
-            gs.set_world_camera_center(*p.center())
+            cam_center = gs.get_world_camera(center=True)
+            dist = Utils.dist(cam_center, p.center())
+            min_speed = 10
+            max_speed = 20
+            if dist > 200 or dist <= min_speed:
+                gs.set_world_camera_center(*p.center())
+            else:
+                speed = min_speed + (max_speed - min_speed) * math.sqrt(dist / 200)
+                move_xy = Utils.set_length(Utils.sub(p.center(), cam_center), speed)
+                new_pos = Utils.add(cam_center, move_xy)
+                gs.set_world_camera_center(*Utils.round(new_pos))
 
         self._update_onscreen_geo_bundles(gs, render_engine)
 

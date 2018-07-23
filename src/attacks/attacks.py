@@ -179,6 +179,13 @@ class Attack:
         self.dmg_color = (1, 0, 0)
         self.is_droppable = False
 
+    def place_attack_circle(self, pos, stat_lookup, world, color=None):
+        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+        if color is None:
+            color = self.dmg_color
+        circle = entities.AttackCircleArt(*pos, radius, 60, color=color, color_end=(0, 0, 0))
+        world.add(circle)
+
     def activate(self, gs, entity, world, stat_lookup):
         """
             returns: list of Entities hit by attack.
@@ -213,10 +220,7 @@ class GroundPoundAttack(Attack):
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
-        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
-        pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, radius, 60, color=(0.25, 0.25, 0.25), color_end=(0, 0, 0))
-        world.add(circle)
+        self.place_attack_circle(entity.center(), stat_lookup, world, color=(0.25, 0.25, 0.25))
 
         return res
 
@@ -247,12 +251,10 @@ class SpawnMinionAttack(Attack):
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
-        pos = entity.center()
-        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
-        circle = entities.AttackCircleArt(*pos, radius, 60, color=(1, 0, 1), color_end=(0.25, 0, 0.25))
-        world.add(circle)
+        self.place_attack_circle(entity.center(), stat_lookup, world)
 
         if len(res) > 0:
+            pos = entity.center()
             entities_in_range = world.entities_in_circle(pos, self.projectile_range)
             random.shuffle(entities_in_range)
 
@@ -335,10 +337,7 @@ class PoisonAttack(Attack):
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
-        radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
-        pos = entity.center()
-        circle = entities.AttackCircleArt(*pos, radius, 60, color=self.dmg_color, color_end=(0, 0, 0))
-        world.add(circle)
+        self.place_attack_circle(entity.center(), stat_lookup, world)
 
         return res
 
@@ -356,11 +355,43 @@ class PoisonAttack(Attack):
         t_entity.get_actorstate(gs).add_status(poison_effect)
 
 
+class TeleportAttack(Attack):
+
+    def __init__(self):
+        Attack.__init__(self, "Teleport")
+        self.base_duration = 35
+        self.base_delay = 12
+        self.base_radius = 56
+        self.base_damage = 0.7
+        self.knockback = 0.25
+        self.dmg_color = (0.5, 0.5, 1)
+        self.is_droppable = True
+        self.base_teleport_radius = 80
+
+    def activate(self, gs, entity, world, stat_lookup):
+        res = Attack.activate(self, gs, entity, world, stat_lookup)
+
+        if len(res) == 0 and entity.get_vel() != (0, 0):
+            print("vel = " + str(entity.get_vel()))
+            length = self.base_teleport_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+            move_xy = Utils.set_length(entity.get_vel(), length)
+            entity.move(*move_xy, world, and_search=True)
+
+            res = Attack.activate(self, gs, entity, world, stat_lookup)
+
+        self.place_attack_circle(entity.center(), stat_lookup, world)
+        return res
+
+    def on_hit(self, gs, t_entity, dmg, s_entity, world):
+        pass
+
+
 GROUND_POUND = GroundPoundAttack()
 MINION_LAUNCH_ATTACK = SpawnMinionAttack()
 TOUCH_ATTACK = TouchAttack()
 POISON_ATTACK = PoisonAttack()
+TELEPORT_ATTACK = TeleportAttack()
 
-ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, POISON_ATTACK]
+ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, POISON_ATTACK, TELEPORT_ATTACK]
 
 

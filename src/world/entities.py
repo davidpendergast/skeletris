@@ -27,6 +27,7 @@ class Entity:
         self.rect = pygame.Rect(int(x), int(y), w, h)
         self._img = None     # main image: ImageBundle
         self._shadow = None  # shadow image: ImageBundle
+        self._last_vel = (0, 0)
         
     def x(self):
         return self.rect[0]
@@ -39,6 +40,9 @@ class Entity:
         
     def h(self):
         return self.rect[3]
+
+    def get_vel(self):
+        return self._last_vel
         
     def center(self):
         return self.rect.center
@@ -46,31 +50,37 @@ class Entity:
     def set_x(self, x):
         self._x = x
         self.rect[0] = int(x)
+        self._last_vel = (0, 0)
     
     def set_y(self, y):
         self._y = y
         self.rect[1] = int(y)
+        self._last_vel = (0, 0)
+
+    def valid_to_stand_on(self, world, x, y):
+        return not world.is_solid_at(x, y)
         
     def _can_move(self, dx, dy, world):
         x1 = int(self._x + dx)
         x2 = int(self._x + self.w() + dx) 
         y1 = int(self._y + dy)
         y2 = int(self._y + self.h() + dy)
-        return not (world.is_solid_at(x1, y1) or world.is_solid_at(x2-1, y1)
-                or world.is_solid_at(x2-1, y2-1) or world.is_solid_at(x1, y2-1))
+        return (self.valid_to_stand_on(world, x1, y1) and self.valid_to_stand_on(world, x2-1, y1)
+                and self.valid_to_stand_on(world, x2-1, y2-1) and self.valid_to_stand_on(world, x1, y2-1))
     
     def move(self, dx, dy, world=None, and_search=False):
         """
             returns: True if move was successful
         """
         if dx == 0 and dy == 0:
+            self._last_vel = (0, 0)
             return True
         
         if world is not None and not self._can_move(dx, dy, world):
             if not and_search:
                 return False
             else:    
-                self.set_x(self.x()) # elim decimal points
+                self.set_x(self.x())  # elim decimal points
                 self.set_y(self.y())             
                 
                 x_can_move = True
@@ -99,6 +109,7 @@ class Entity:
                     
         self.set_x(self._x + dx)
         self.set_y(self._y + dy)
+        self._last_vel = (dx, dy)
         return True
         
     def update(self, world, gs, input_state, render_engine):
@@ -547,6 +558,10 @@ class Player(Entity):
 
     def get_actorstate(self, gs):
         return gs.player_state()
+
+    def valid_to_stand_on(self, world, x, y):
+        return (Entity.valid_to_stand_on(self, world, x, y) and
+                not world.get_hidden_at(x, y))
  
  
 class Enemy(Entity):
