@@ -2,6 +2,7 @@ import random
 import src.game.spriteref as spriteref
 from src.world.entities import Enemy
 from src.game.actorstate import EnemyState, PathfindingType
+from src.game.droprates import EnemyRates
 from src.game.stats import StatType
 import src.game.stats as stats
 import src.attacks.attacks as attacks
@@ -167,7 +168,7 @@ class EnemyFactory:
 
         state = EnemyState(template, level, enemy_stats)
 
-        if random.random() < 0.35:
+        if random.random() < EnemyRates.CHANCE_TO_HAVE_ATTACK:
             sp_atts = template.get_possible_special_attacks()
             if len(sp_atts) > 0:
                 idx = int(random.random() * len(sp_atts))

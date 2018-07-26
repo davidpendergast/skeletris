@@ -53,7 +53,7 @@ class AttackState:
         return max(1, round(1.0 / del_speed))
 
     def get_attack_range(self, stat_lookup):
-        return self.current_attack.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+        return self.current_attack.get_base_range() * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
 
     def update(self, entity, world, gs):
         stat_lookup = entity.get_actorstate(gs)
@@ -185,6 +185,9 @@ class Attack:
             color = self.dmg_color
         circle = entities.AttackCircleArt(*pos, radius, 60, color=color, color_end=(0, 0, 0))
         world.add(circle)
+
+    def get_base_range(self):
+        return self.base_radius
 
     def activate(self, gs, entity, world, stat_lookup):
         """
@@ -327,6 +330,7 @@ class PoisonAttack(Attack):
         self.base_duration = 35
         self.base_delay = 12
         self.base_radius = 72
+        self.base_range = 72
         self.base_damage = 0.75
         self.knockback = 0.15
         self.dmg_color = (0, 1, 0)
@@ -366,14 +370,15 @@ class TeleportAttack(Attack):
         self.knockback = 0.25
         self.dmg_color = (0.5, 0.5, 1)
         self.is_droppable = True
-        self.base_teleport_radius = 80
+
+    def get_base_range(self):
+        return self.base_radius * 3
 
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
 
         if len(res) == 0 and entity.get_vel() != (0, 0):
-            print("vel = " + str(entity.get_vel()))
-            length = self.base_teleport_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
+            length = self.get_base_range() * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
             move_xy = Utils.set_length(entity.get_vel(), length)
             entity.move(*move_xy, world, and_search=True)
 

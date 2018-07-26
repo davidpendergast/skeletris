@@ -1,6 +1,9 @@
 from src.ui.menus import MenuManager
 
 
+DEBUG_MODE = True
+
+
 class GlobalState:
 
     def __init__(self, menu_id=MenuManager.START_MENU):

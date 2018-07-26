@@ -9,6 +9,7 @@ from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, AttackPickupEntity
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
+import src.game.debug as debug
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -211,6 +212,13 @@ class PlayerState(ActorState):
         self.death_seq_duration = 120
         self.death_seq_tick = 0
 
+    def hp(self):
+        if debug.DEBUG:
+            # no dying in debug mode
+            return max(1, ActorState.hp(self))
+        else:
+            return ActorState.hp(self)
+
     def inventory(self):
         return self._inventory
 
@@ -314,7 +322,7 @@ class PlayerState(ActorState):
             self.attack_state.start_attack(self)
 
         eq_attacks = self.inventory().get_equipped_attacks()
-        inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[0]
+        inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[-1]
         if self.attack_state.get_next_or_current_attack() is not inv_attack:
             self.attack_state.set_attack(inv_attack)
             if len(eq_attacks) > 0:

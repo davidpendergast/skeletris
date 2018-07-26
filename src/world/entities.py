@@ -58,7 +58,7 @@ class Entity:
         self._last_vel = (0, 0)
 
     def valid_to_stand_on(self, world, x, y):
-        return not world.is_solid_at(x, y)
+        return not world.is_solid_at(x, y) and world.get_geo_at(x, y) != World.EMPTY
         
     def _can_move(self, dx, dy, world):
         x1 = int(self._x + dx)
@@ -865,7 +865,6 @@ class AttackPickupEntity(PickupEntity):
                                    spriteref.explosions, 40, spriteref.ENTITY_LAYER, w=self.w(), scale=3)
         splosion.set_color(self.get_color())
         world.add(splosion)
-
 
 
 class DoorEntity(Entity):
