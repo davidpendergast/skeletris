@@ -39,6 +39,7 @@ TRUE_BASE_STATS = {
     StatType.ATTACK_RADIUS: -25
 }
 
+
 for stat in ENEMY_STATS:
     if stat not in TRUE_BASE_STATS:
         TRUE_BASE_STATS[stat] = 0
@@ -69,6 +70,9 @@ class EnemyTemplate:
     def get_attack(self):
         return attacks.TOUCH_ATTACK
 
+    def get_lunges(self):
+        return False
+
     def get_loot(self, level, potential_attack=None):
         return LootFactory.gen_loot(level, potential_attack=potential_attack)
 
@@ -82,6 +86,15 @@ class EnemyTemplate:
         return attacks.ALL_SPECIAL_ATTACKS
 
     def can_drop_special_attack(self):
+        return True
+
+
+class FlappumTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Flappum", spriteref.enemy_flappum_all, spriteref.medium_shadow)
+
+    def get_lunges(self):
         return True
 
 
@@ -125,12 +138,13 @@ class TrillaTemplate(EnemyTemplate):
 
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = EnemyTemplate("Trillite", spriteref.enemy_small_trilla_all, spriteref.medium_shadow)
+TEMPLATE_FLAPPUM = FlappumTemplate()
 
 RAND_SPAWN_TEMPLATES = [EnemyTemplate("Muncher", spriteref.enemy_muncher_all, spriteref.large_shadow),
                         EnemyTemplate("Dark Muncher", spriteref.enemy_muncher_alt_all, spriteref.large_shadow),
                         EnemyTemplate("Glorple", spriteref.enemy_glorple_all, spriteref.medium_shadow),
                         EnemyTemplate("Dicel", spriteref.enemy_dicel_all, spriteref.medium_shadow),
-                        EnemyTemplate("Flappum", spriteref.enemy_flappum_all, spriteref.medium_shadow),
+                        TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA]
 
 

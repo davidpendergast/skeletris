@@ -104,6 +104,13 @@ inv_panel_top = make(480, 0, 160, 128)
 inv_panel_mid = make(480, 128, 160, 16)
 inv_panel_bot = make(480, 144, 160, 16)
 
+"""
+0 1 2
+3 4 5
+6 7 8
+"""
+text_panel_edges = [make(480 + 8*(i % 3), 232 + 8*(i // 3), 8, 8) for i in range(0, 9)]
+
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
@@ -124,7 +131,7 @@ def get_health_bar(pcnt_full):
 
 
 _chars = [letter for letter in string.ascii_lowercase]
-_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":", "'"])
+_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":", "'", ">", "<"])
 _qmark = make(160, 115, 5, 5)
 alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):
@@ -221,6 +228,12 @@ def _draw_ellipse(sheet, center, width, height, opacity):
                 continue
             if sheet.get_at((x, y)) == color:
                 sheet.set_at((x, y), (color[0], color[1], color[2], int(opacity*255)))
+
+
+cooldown_overlays = []
+
+def get_cooldown_img(progress):
+    return cooldown_overlays[int(progress * len(cooldown_overlays))]
 
 
 def build_spritesheet(raw_image):

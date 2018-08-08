@@ -410,6 +410,27 @@ class EnemyState(ActorState):
         self.movement_ai_state = {}
         self._anim_offset = int(60 * random.random())
 
+        self._lunge_duration = 45
+        self._lunge_count = self._lunge_duration
+        self._lunge_direction = (0, 0)
+
+    def lunge_progress(self):
+        return Utils.bound(self._lunge_count / self._lunge_duration, 0.0, 1.0)
+
+    def _get_movespeed_mult(self):
+        res = 1
+
+        if self.is_lunging():
+            if self.lunge_progress() < 0.2:
+                res *= 0.2  # bit of slowdown at the beginning to serve as visual indicator
+            else:
+                res *= 5
+
+        if self.recoil_progress() < 1.0:
+            res *= 0.5
+
+        return res
+
     def duplicate(self):
         res = EnemyState(self.template, self.level(), dict(self.stats))
         res.set_special_attack(self.special_attack)
@@ -489,28 +510,37 @@ class EnemyState(ActorState):
                         self.is_aggro = dist <= self.aggro_radius
 
             # doing attacks
-            if random.random() < 0.1:
-                if self.is_aggro and self._should_attack(entity, world):
-                    self.attack_state.start_attack(self)
+            if random.random() < 0.1 and self._should_attack(entity, world):
+                self.attack_state.start_attack(self)
 
             self.attack_state.update(entity, world, gs)
 
-            if world.get_hidden_at(*entity.center()) or not self.is_aggro:
+            if self.is_lunging():
+                move_dir = self._lunge_direction if self.lunge_progress() > 0.3 else (0, 0)
+            elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
                 move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
             else:
                 move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
+
+            # doing lunges
+            if random.random() < 0.02 and self._should_lunge(entity, world):
+                self._lunge_count = 0
+                self._lunge_direction = move_dir
 
             move_x, move_y = move_dir
             move_x *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
             move_y *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
 
-            if self.recoil_progress() < 1.0:
-                move_x /= 2
-                move_y /= 2
+            ms_mult = self._get_movespeed_mult()
+            move_x *= ms_mult
+            move_y *= ms_mult
 
-            if self.recoil_progress() < 1:
+            if self.recoil_progress() < 1.0:
                 move_x += self.current_knockback[0] * (1 - self.recoil_progress())
                 move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+
+            if self.is_lunging():
+                self._lunge_count += 1
 
             entity.move(move_x, move_y, world=world, and_search=True)
 
@@ -544,6 +574,18 @@ class EnemyState(ActorState):
             radius = self.attack_state.get_attack_range(entity.state)
 
             return Utils.dist(p.center(), entity.center()) < radius * 1.5
+        else:
+            return False
+
+    def is_lunging(self):
+        return self.lunge_progress() < 1.0
+
+    def _should_lunge(self, entity, world):
+        return (self.template.get_lunges() and
+                self.attack_state.can_attack() and
+                self.is_aggro and
+                self.took_damage_x_ticks_ago >= self.damage_recoil and
+                not self.is_lunging())
 
     def set_special_attack(self, attack):
         self.special_attack = attack
