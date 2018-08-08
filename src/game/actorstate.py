@@ -202,6 +202,10 @@ class PlayerState(ActorState):
         self._default_attack = attacks.GROUND_POUND
         self.attack_state.set_attack(self._default_attack)
 
+        self._potion_cooldown = 1  # set whenever a potion is activated
+        self._potion_tick_count = self._potion_cooldown
+        self._num_potions = 5
+
         self._damage_last_tick = 0
         self._healing_last_tick = 0
 
@@ -219,6 +223,20 @@ class PlayerState(ActorState):
         else:
             return ActorState.hp(self)
 
+    def num_potions(self):
+        return self._num_potions
+
+    def get_cooldown_progress(self, slot_num):
+        if slot_num == 0:
+            if self.attack_state.is_active():
+                return self.attack_state.total_progress()
+            else:
+                return 1.0
+        elif slot_num == 1:
+            return Utils.bound(self._potion_tick_count / self._potion_cooldown, 0, 1)
+        else:
+            return 1.0
+
     def inventory(self):
         return self._inventory
 
@@ -232,8 +250,7 @@ class PlayerState(ActorState):
         print("picked up {}".format(pickup_entity))
 
         if pickup_entity.is_potion():
-            # TODO - actual potions
-            self.do_heal(20)
+            self._num_potions += 1
 
     def damage_and_healing_last_tick(self):
         return self._damage_last_tick, self._healing_last_tick
@@ -257,6 +274,24 @@ class PlayerState(ActorState):
         death_anim.set_vel(Utils.mult(self.current_knockback, 2), fric=0.90, collides=True)
 
         world.add(death_anim)
+
+    def _can_use_potion(self):
+        return (self._num_potions > 0 and
+                self._potion_tick_count >= self._potion_cooldown and
+                self.hp() < self.max_hp())
+
+    def _handle_potions(self, try_to_use):
+        if self._potion_tick_count < self._potion_cooldown:
+            self._potion_tick_count += 1
+
+        if try_to_use and self._can_use_potion():
+            pot_heal = 10 + self.stat_value(StatType.POTION_HEALING)
+            self.do_heal(pot_heal)
+            self._num_potions -= 1
+
+            pot_cd = round(max(1, 180 * (1 - 0.01 * self.stat_value(StatType.POTION_COOLDOWN))))
+            self._potion_cooldown = pot_cd
+            self._potion_tick_count = 0
 
     def stat_value(self, stat_type):
         """
@@ -305,6 +340,8 @@ class PlayerState(ActorState):
             self._handle_death(player_entity, world)
             self._damage_last_tick = 0
             return
+
+        self._handle_potions(input_state.was_pressed(inputs.POTION))
 
         if gs.tick_counter % 60 == 0:
             regen = self.stat_value(StatType.LIFE_REGEN)

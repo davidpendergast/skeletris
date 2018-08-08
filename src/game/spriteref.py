@@ -73,9 +73,9 @@ enemy_flappum_all = [make(96, 144, 32, 32), make(96, 176, 32, 32)]
 enemy_muncher_all = [make(128, 144, 32, 32), make(128, 176, 32, 32)]
 enemy_muncher_alt_all = [make(160, 144, 32, 32), make(160, 176, 32, 32)]
 enemy_small_trilla_all = [make(192, 176 + i * 16, 16, 16) for i in range(0, 2)]
-enemies_all = [enemy_glorple_all, enemy_trilla_all, enemy_dicel_all,
-               enemy_flappum_all, enemy_muncher_all, enemy_muncher_alt_all,
-               enemy_small_trilla_all]
+enemy_cyclops_all = [make(208, 144 + i * 32, 32, 32) for i in range(0, 2)]
+enemy_the_fallen_all = [make(240, 144 + i * 32, 16, 32) for i in range(0, 2)]
+enemy_skelekid_all = [make(256, 144 + i * 32, 16, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
@@ -232,8 +232,21 @@ def _draw_ellipse(sheet, center, width, height, opacity):
 
 cooldown_overlays = []
 
+
 def get_cooldown_img(progress):
     return cooldown_overlays[int(progress * len(cooldown_overlays))]
+
+
+def _draw_cd_image(sheet, rect, prog, color):
+    c_x = rect[0] + rect[2] / 2
+    c_y = rect[1] + rect[3] / 2
+    for x in range(rect[0], rect[0] + rect[2]):
+        for y in range(rect[1], rect[1] + rect[3]):
+            if x % 2 == y % 2:
+                continue
+            angle_prog = (math.atan2(c_y - y, c_x - x) + math.pi) / (2 * math.pi)
+            if angle_prog > prog:
+                sheet.set_at((x, y), color)
 
 
 def build_spritesheet(raw_image):
@@ -368,6 +381,22 @@ def build_spritesheet(raw_image):
             draw_x += w
 
     draw_y += circle_art_heights[-1]
+
+    n_cooldowns = 20
+    cd_size = 28
+    cd_color = (255, 255, 255)  # (196, 196, 196)
+    print("drawing {} cooldown overlays...".format(n_cooldowns))
+
+    for i in range(0, n_cooldowns):
+        if draw_x + cd_size > sheet_size[0]:
+            draw_x = 0
+            draw_y += cd_size
+        rect = [draw_x, draw_y, cd_size, cd_size]
+        _draw_cd_image(sheet, rect, i / n_cooldowns, cd_color)
+        cooldown_overlays.append(make(*rect))
+        draw_x += cd_size
+
+    draw_y += cd_size
 
     for img in all_imgs:
         img.set_sheet_size(sheet_size)

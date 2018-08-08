@@ -10,6 +10,7 @@ INTERACT = [pygame.K_e]
 KILL = [pygame.K_k]
 ENTER = [pygame.K_RETURN]
 EXIT = [pygame.K_ESCAPE]
+POTION = [pygame.K_q]
 
 
 class InputState:

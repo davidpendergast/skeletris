@@ -144,6 +144,8 @@ RAND_SPAWN_TEMPLATES = [EnemyTemplate("Muncher", spriteref.enemy_muncher_all, sp
                         EnemyTemplate("Dark Muncher", spriteref.enemy_muncher_alt_all, spriteref.large_shadow),
                         EnemyTemplate("Glorple", spriteref.enemy_glorple_all, spriteref.medium_shadow),
                         EnemyTemplate("Dicel", spriteref.enemy_dicel_all, spriteref.medium_shadow),
+                        EnemyTemplate("The Fallen", spriteref.enemy_the_fallen_all, spriteref.medium_shadow),
+                        EnemyTemplate("Cycloi", spriteref.enemy_cyclops_all, spriteref.large_shadow),
                         TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA]
 
