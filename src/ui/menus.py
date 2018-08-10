@@ -3,7 +3,7 @@ import random
 from src.game import spriteref as spriteref, inputs as inputs
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
-from src.ui.ui import HealthBarPanel, InventoryPanel, TextImage, ItemImage
+from src.ui.ui import HealthBarPanel, InventoryPanel, TextImage, ItemImage, DialogPanel
 from src.utils.util import Utils
 from src.world.entities import ItemEntity, PickupEntity
 
@@ -350,6 +350,7 @@ class InGameUiState(Menu):
         Menu.__init__(self, MenuManager.IN_GAME_MENU)
         self.inventory_panel = None
         self.health_bar_panel = None
+        self.dialog_panel = None
 
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
@@ -408,10 +409,28 @@ class InGameUiState(Menu):
         if gs.player_state().is_dead() or obj_to_display is None:
             self.set_active_tooltip(None, render_eng)
 
+    def _update_dialog_panel(self, world, gs, input_state, render_eng):
+        should_destroy = (self.dialog_panel is not None and (not gs.dialog_manager().is_active() or
+                          self.dialog_panel.get_dialog() is not gs.dialog_manager().get_dialog()))
+
+        if should_destroy:
+            self._destroy_panel(self.dialog_panel, render_eng)
+            self.dialog_panel = None
+
+        if gs.dialog_manager().is_active():
+            if self.dialog_panel is None:
+                dialog = gs.dialog_manager().get_dialog()
+                self.dialog_panel = DialogPanel(dialog)
+
+        if self.dialog_panel is not None:
+            self.dialog_panel.update(gs, render_eng)
+
+
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
         if gs.player_state().is_dead():
             if self.inventory_panel is not None:
                 self._destroy_panel(self.inventory_panel, render_eng)
+                self.inventory_panel = None
 
         elif input_state.was_pressed(inputs.INVENTORY):
             if self.inventory_panel is None:
@@ -574,6 +593,7 @@ class InGameUiState(Menu):
         self._update_tooltip(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
+        self._update_dialog_panel(world, gs, input_state, render_eng)
 
     def cleanup(self):
         Menu.cleanup(self)
@@ -592,4 +612,7 @@ class InGameUiState(Menu):
                 yield bun
         if self.item_on_cursor_image is not None:
             for bun in self.item_on_cursor_image.all_bundles():
+                yield bun
+        if self.dialog_panel is not None:
+            for bun in self.dialog_panel.all_bundles():
                 yield bun

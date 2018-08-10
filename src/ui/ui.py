@@ -145,7 +145,107 @@ class InventoryPanel:
             yield bun
 
 
+class DialogPanel:
+
+    BORDER_SIZE = 8, 8
+    SIZE = (256 * 2 - 16 * 2, 48 * 2 - 16)
+
+    def __init__(self, dialog):
+        self._dialog = dialog
+        self._border_imgs = []
+        self._speaker_img = None
+        self._text_displaying = ""
+        self._text_img = None
+        self._bg_imgs = []
+
+    def get_dialog(self):
+        return self._dialog
+
+    def update_images(self, gs, text, sprite):
+        x = gs.screen_size[0] // 2 - DialogPanel.SIZE[0] // 2
+        y = gs.screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]
+        lay = spriteref.UI_0_LAYER
+
+        if len(self._border_imgs) == 0:
+            bw, bh = DialogPanel.BORDER_SIZE
+            right_x = x + DialogPanel.SIZE[0]
+            border_sprites = spriteref.text_panel_edges
+
+            for i in range(0, DialogPanel.SIZE[0] // bw):
+                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh, layer=lay, scale=2)
+                self._border_imgs.append(top_bord)
+            for i in range(0, DialogPanel.SIZE[1] // bh):
+                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i, layer=lay, scale=2)
+                self._border_imgs.append(l_bord)
+                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,  layer=lay, scale=2)
+                self._border_imgs.append(r_bord)
+            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh, layer=lay, scale=2))
+            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh, layer=lay, scale=2))
+
+        if len(self._bg_imgs) == 0:
+            bg_sprite = spriteref.text_panel_edges[4]
+            bg_w, bg_h = bg_sprite.size()
+            sc = min(DialogPanel.SIZE[0] // bg_w, DialogPanel.SIZE[1] // bg_h)
+            bg_w *= sc
+            bg_h *= sc
+            for x1 in range(0, DialogPanel.SIZE[0] // bg_w):
+                for y1 in range(0, DialogPanel.SIZE[1] // bg_h):
+                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h, layer=lay, scale=sc))
+
+        text_buffer = 6, 6
+        text_area = [x + text_buffer[0], y + text_buffer[1],
+                     DialogPanel.SIZE[0] - text_buffer[0] * 2,
+                     DialogPanel.SIZE[1] - text_buffer[1] * 2]
+
+        if sprite is not None:
+            sprite_buffer = 6, 4
+            if self._speaker_img is None:
+                y_pos = y + DialogPanel.SIZE[1] // 2 - sprite.height() * 2 // 2
+                self._speaker_img = ImageBundle(sprite, x + sprite_buffer[0], y_pos, layer=lay, scale=2)
+            self._speaker_img = self._speaker_img.update(new_model=sprite)
+            text_x = x + self._speaker_img.width() + sprite_buffer[0] * 2
+            text_area = [text_x, y + text_buffer[0],
+                         DialogPanel.SIZE[0] - (text_x - x) - text_buffer[0] * 2,
+                         DialogPanel.SIZE[1] - text_buffer[1] * 2]
+
+        if len(text) > 0 and self._text_img is None:
+            wrapped_text = TextImage.wrap_words_to_fit(text, 2, text_area[2])
+            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, y_kerning=3)
+
+    def update(self, gs, render_eng):
+        new_text = self._dialog.get_visible_text()
+        if self._text_displaying != new_text and self._text_img is not None:
+            for bun in self._text_img.all_bundles():
+                render_eng.remove(bun)
+            self._text_img = None
+
+        self._text_displaying = new_text
+
+        new_sprite = self._dialog.get_visible_sprite(gs)
+        if new_sprite is None and self._speaker_img is not None:
+            render_eng.remove(self._speaker_img)
+            self._speaker_img = None
+
+        self.update_images(gs, self._text_displaying, new_sprite)
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def all_bundles(self):
+        for bg in self._bg_imgs:
+            yield bg
+        for bord in self._border_imgs:
+            yield bord
+        if self._speaker_img is not None:
+            yield self._speaker_img
+        if self._text_img is not None:
+            for bun in self._text_img.all_bundles():
+                yield bun
+
+
 class HealthBarPanel:
+
+    SIZE = (400 * 2, 53 * 2)
 
     def __init__(self):
         self._top_img = None
@@ -266,7 +366,7 @@ class TextImage:
     X_KERNING = 1
     Y_KERNING = 1
 
-    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None):
+    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None, y_kerning=None):
         self.x = x
         self.center_w = center_w
         self.y = y
@@ -275,6 +375,7 @@ class TextImage:
         self.color = color
         self.scale = scale
         self._letter_images = []
+        self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
 
         self._text_chunks = spriteref.split_text(self.text) if try_split else list(self.text)
 
@@ -295,11 +396,12 @@ class TextImage:
             y_range[1] = img.y() + img.height() if y_range[1] is None else max(y_range[1], img.y() + img.height())
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
-    def _calc_width(self):
+    @staticmethod
+    def _calc_width(text, scale):
         max_line_w = 0
         cur_line_w = 0
-        char_w = (spriteref.alphabet["a"].width() + TextImage.X_KERNING) * self.scale
-        for c in self.text:
+        char_w = (spriteref.alphabet["a"].width() + TextImage.X_KERNING) * scale
+        for c in text:
             if c == "\n":
                 cur_line_w = 0
             else:
@@ -311,13 +413,13 @@ class TextImage:
         return self.actual_size
 
     def line_height(self):
-        return (spriteref.alphabet["a"].height() + TextImage.Y_KERNING) * self.scale
+        return (spriteref.alphabet["a"].height() + self.y_kerning) * self.scale
 
     def _build_images(self):
         ypos = TextImage.Y_KERNING
 
         if self.center_w is not None:
-            true_width = self._calc_width()
+            true_width = TextImage._calc_width(self.text, self.scale)
             x_shift = self.x + self.center_w // 2 - true_width // 2
         else:
             x_shift = TextImage.X_KERNING
@@ -330,7 +432,7 @@ class TextImage:
                 xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
             elif chunk == "\n":
                 xpos = x_shift
-                ypos += (TextImage.Y_KERNING + a_sprite.height()) * self.scale
+                ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
                 if len(chunk) == 1:
                     sprite = spriteref.alphabet[chunk]
@@ -364,6 +466,27 @@ class TextImage:
         for b in self._letter_images:
             if b is not None:
                 yield b
+
+    @staticmethod
+    def wrap_words_to_fit(text, scale, width):
+        text = text.replace("\n", " ")  # no newline boochery allowed here pls
+        words = text.split(" ")
+        lines = []
+        cur_line = []
+        while len(words) > 0:
+            if len(cur_line) == 0:
+                cur_line.append(words[0])
+                words = words[1:]
+            if len(words) == 0 or TextImage._calc_width(" ".join(cur_line + [words[0]]), scale) > width:
+                lines.append(" ".join(cur_line))
+                cur_line.clear()
+            elif len(words) > 0:
+                cur_line.append(words[0])
+                words = words[1:]
+                if len(words) == 0:
+                    lines.append(" ".join(cur_line))
+
+        return "\n".join(lines)
 
 
 class ItemImage:

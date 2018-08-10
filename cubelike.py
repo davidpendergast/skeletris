@@ -8,6 +8,9 @@ from src.ui.menus import MenuManager
 from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
+import src.game.debug as debug
+
+from src.game.dialog import Dialog
 
 from src.worldgen.worldgen import WorldFactory
 
@@ -138,7 +141,7 @@ def run():
             world = build_me_a_world(gs.dungeon_level)
             gs._needs_next_level = False
 
-        if input_state.was_pressed(pygame.K_RETURN):
+        if input_state.was_pressed(pygame.K_p) and debug.DEBUG:
             gs.next_level()
 
         if input_state.was_pressed(pygame.K_ESCAPE) or gs.needs_exit:
@@ -157,7 +160,7 @@ def run():
                 pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
             gs.is_fullscreen = not gs.is_fullscreen
 
-        if input_state.was_pressed(inputs.KILL):
+        if input_state.was_pressed(inputs.KILL) and debug.DEBUG:
             manager = gs.get_menu_manager()
             if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
                 gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
@@ -167,6 +170,14 @@ def run():
             gs.player_state().update(player, world, gs, input_state)
 
             world.update_all(gs, input_state, render_eng)
+
+            if input_state.was_pressed(pygame.K_i):
+                d1 = Dialog("something doesn't feel right about this place...", sprites=spriteref.player_faces)
+                d2 = Dialog("where am i?", sprites=spriteref.player_faces)
+                d1.set_next(d2)
+                gs.dialog_manager().set_dialog(d1)
+
+            gs.dialog_manager().update(world, gs, input_state)
 
             camera = gs.get_world_camera()
             for layer_id in spriteref.WORLD_LAYERS:

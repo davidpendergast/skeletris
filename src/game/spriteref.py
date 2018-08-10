@@ -45,6 +45,8 @@ player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
 player_squat = make(80, 240, 16, 32)
 player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
 
+player_faces = [make(96 + i * 32, 0, 32, 32) for i in range(0, 2)]
+
 att_circles = [make(112 + 48*i, 240, 48, 32) for i in range(0, 9)]
 
 att_circle_min_size = 48
@@ -109,7 +111,7 @@ inv_panel_bot = make(480, 144, 160, 16)
 3 4 5
 6 7 8
 """
-text_panel_edges = [make(480 + 8*(i % 3), 232 + 8*(i // 3), 8, 8) for i in range(0, 9)]
+text_panel_edges = [make(480 + 4*(i % 3), 232 + 4*(i // 3), 4, 4) for i in range(0, 9)]
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 

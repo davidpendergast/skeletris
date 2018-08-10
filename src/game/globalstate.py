@@ -1,4 +1,5 @@
 from src.ui.menus import MenuManager
+from src.game.dialog import DialogManager
 
 
 DEBUG_MODE = True
@@ -26,10 +27,15 @@ class GlobalState:
 
         self._menu_manager = MenuManager(menu_id)
 
+        self._dialog_manager = DialogManager()
+
         self.needs_exit = False
 
     def get_menu_manager(self):
         return self._menu_manager
+
+    def dialog_manager(self):
+        return self._dialog_manager
         
     def set_player_state(self, state):
         self._player_state = state
