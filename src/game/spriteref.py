@@ -6,6 +6,7 @@ import collections
 
 from src.items.item import ItemFactory
 from src.utils.util import Utils
+from src.game.messages import Messages
 
 from src.renderengine.img import ImageModel 
 
@@ -142,13 +143,19 @@ for i in range(0, 10):
     c = "0123456789"[i]
     alphabet[c] = make(5*i, 120, 5, 5)
 
-_cached_text = ["att:", "def:", "vit:", "miss", "dodge", "inventory", "lvl:", "room:",
-                "kill:", "hp:", "dps:"]
+_cached_text = set()
+_cached_text.update(["att:", "def:", "vit:", "miss", "dodge", "inventory",
+                     "lvl:", "room:", "kill:", "hp:", "dps:"])
 for i in range(1, 10):
-    _cached_text.append("+0.{}".format(i))
+    _cached_text.add("+0.{}".format(i))
 for i in range(1, 100):
-    _cached_text.append("+{}".format(i))
-    _cached_text.append("-{}".format(i))
+    _cached_text.add("+{}".format(i))
+    _cached_text.add("-{}".format(i))
+for message in Messages:
+    for word in message.value.split():  # split on whitespace
+        _cached_text.add(word)
+
+print("caching text: {}".format(_cached_text))
 
 _cached_lengths = set([len(t) for t in _cached_text])
 cached_text_imgs = {}

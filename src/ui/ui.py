@@ -162,6 +162,11 @@ class DialogPanel:
         return self._dialog
 
     def update_images(self, gs, text, sprite):
+        """
+            returns: True if needs a full render engine update, else False
+        """
+        needs_update = False
+
         x = gs.screen_size[0] // 2 - DialogPanel.SIZE[0] // 2
         y = gs.screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]
         lay = spriteref.UI_0_LAYER
@@ -181,6 +186,7 @@ class DialogPanel:
                 self._border_imgs.append(r_bord)
             self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh, layer=lay, scale=2))
             self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh, layer=lay, scale=2))
+            needs_update = True
 
         if len(self._bg_imgs) == 0:
             bg_sprite = spriteref.text_panel_edges[4]
@@ -191,6 +197,7 @@ class DialogPanel:
             for x1 in range(0, DialogPanel.SIZE[0] // bg_w):
                 for y1 in range(0, DialogPanel.SIZE[1] // bg_h):
                     self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h, layer=lay, scale=sc))
+            needs_update = True
 
         text_buffer = 6, 6
         text_area = [x + text_buffer[0], y + text_buffer[1],
@@ -207,10 +214,14 @@ class DialogPanel:
             text_area = [text_x, y + text_buffer[0],
                          DialogPanel.SIZE[0] - (text_x - x) - text_buffer[0] * 2,
                          DialogPanel.SIZE[1] - text_buffer[1] * 2]
+            # gets updated automatically
 
         if len(text) > 0 and self._text_img is None:
             wrapped_text = TextImage.wrap_words_to_fit(text, 2, text_area[2])
             self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, y_kerning=3)
+            needs_update = True
+
+        return needs_update
 
     def update(self, gs, render_eng):
         new_text = self._dialog.get_visible_text()
@@ -226,10 +237,13 @@ class DialogPanel:
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
 
-        self.update_images(gs, self._text_displaying, new_sprite)
+        full_update = self.update_images(gs, self._text_displaying, new_sprite)
 
-        for bun in self.all_bundles():
-            render_eng.update(bun)
+        if full_update:
+            for bun in self.all_bundles():
+                render_eng.update(bun)
+        elif self._speaker_img is not None:
+            render_eng.update(self._speaker_img)
 
     def all_bundles(self):
         for bg in self._bg_imgs:

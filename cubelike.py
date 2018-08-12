@@ -11,6 +11,7 @@ from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
 
 from src.game.dialog import Dialog
+from src.game.messages import Messages
 
 from src.worldgen.worldgen import WorldFactory
 
@@ -172,8 +173,8 @@ def run():
             world.update_all(gs, input_state, render_eng)
 
             if input_state.was_pressed(pygame.K_i):
-                d1 = Dialog("something doesn't feel right about this place...", sprites=spriteref.player_faces)
-                d2 = Dialog("where am i?", sprites=spriteref.player_faces)
+                d1 = Dialog(Messages.MSG_SOMETHING_DOESNT_FEEL_RIGHT.value, sprites=spriteref.player_faces)
+                d2 = Dialog(Messages.MSG_WHERE_AM_I.value, sprites=spriteref.player_faces)
                 d1.set_next(d2)
                 gs.dialog_manager().set_dialog(d1)
 
