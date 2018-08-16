@@ -544,7 +544,7 @@ class InGameUiState(Menu):
                         self._drop_item_on_cursor(p_center, drop_dir, world)
                         destroy_image = True
 
-        if input_state.was_pressed(inputs.INTERACT) and self.item_on_cursor is not None:
+        if input_state.was_pressed(inputs.ROTATE_CW) and self.item_on_cursor is not None:
             self.item_on_cursor = item_module.ItemFactory.rotate_item(self.item_on_cursor)
             create_image = True
             destroy_image = True

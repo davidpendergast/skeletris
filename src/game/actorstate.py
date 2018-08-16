@@ -6,7 +6,7 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, AttackPickupEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
@@ -280,6 +280,9 @@ class PlayerState(ActorState):
                 self._potion_tick_count >= self._potion_cooldown and
                 self.hp() < self.max_hp())
 
+    def _can_interact(self):
+        return not self.attack_state.is_active()
+
     def _handle_potions(self, try_to_use):
         if self._potion_tick_count < self._potion_cooldown:
             self._potion_tick_count += 1
@@ -322,81 +325,96 @@ class PlayerState(ActorState):
         return ("+{}", 3, ActorState.G_TEXT_COLOR)
 
     def update(self, player_entity, world, gs, input_state):
-        if self._is_dead:
-            if self.death_seq_tick >= self.death_seq_duration:
-                gs.player_died()
-            else:
-                self.death_seq_tick += 1
 
-        if player_entity is None:
-            return
+        if not gs.world_updates_paused():
 
-        self._damage_last_tick = sum(self.damage_amounts)
-        self._healing_last_tick = sum(self.damage_amounts)
-        self.handle_floating_text(player_entity, world)
+            if self._is_dead:
+                if self.death_seq_tick >= self.death_seq_duration:
+                    gs.player_died()
+                else:
+                    self.death_seq_tick += 1
 
-        if self.hp() <= 0:
-            self._is_dead = True
-            self._handle_death(player_entity, world)
-            self._damage_last_tick = 0
-            return
+            if player_entity is None:
+                return
 
-        self._handle_potions(input_state.was_pressed(inputs.POTION))
+            self._damage_last_tick = sum(self.damage_amounts)
+            self._healing_last_tick = sum(self.damage_amounts)
+            self.handle_floating_text(player_entity, world)
 
-        if gs.tick_counter % 60 == 0:
-            regen = self.stat_value(StatType.LIFE_REGEN)
-            self.do_heal(regen)
+            if self.hp() <= 0:
+                self._is_dead = True
+                self._handle_death(player_entity, world)
+                self._damage_last_tick = 0
+                return
 
-        self.update_status_effects(player_entity, world, gs)
+            self._handle_potions(input_state.was_pressed(inputs.POTION))
 
-        if self.took_damage_x_ticks_ago < self.damage_recoil:
-            self.took_damage_x_ticks_ago += 1
+            if gs.tick_counter % 60 == 0:
+                regen = self.stat_value(StatType.LIFE_REGEN)
+                self.do_heal(regen)
 
-        if self.set_color_x_ticks_ago < self.damage_recoil:
-            self.set_color_x_ticks_ago += 1
+            self.update_status_effects(player_entity, world, gs)
 
-        if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
-            self.attack_state.start_attack(self)
+            if self.took_damage_x_ticks_ago < self.damage_recoil:
+                self.took_damage_x_ticks_ago += 1
 
-        eq_attacks = self.inventory().get_equipped_attacks()
-        inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[-1]
-        if self.attack_state.get_next_or_current_attack() is not inv_attack:
-            self.attack_state.set_attack(inv_attack)
-            if len(eq_attacks) > 0:
-                self.set_color_x_ticks_ago = 0
-                self.dmg_color = inv_attack.dmg_color
+            if self.set_color_x_ticks_ago < self.damage_recoil:
+                self.set_color_x_ticks_ago += 1
 
-                pos = player_entity.center()
-                circle = AttackCircleArt(pos[0], pos[1], 32, 60, inv_attack.dmg_color, (0, 0, 0))
-                world.add(circle)
+            if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
+                self.attack_state.start_attack(self)
 
-        self.attack_state.update(player_entity, world, gs)
+            eq_attacks = self.inventory().get_equipped_attacks()
+            inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[-1]
+            if self.attack_state.get_next_or_current_attack() is not inv_attack:
+                self.attack_state.set_attack(inv_attack)
+                if len(eq_attacks) > 0:
+                    self.set_color_x_ticks_ago = 0
+                    self.dmg_color = inv_attack.dmg_color
 
-        # you can keep moving during the attack windup
-        move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT))
-        move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP))
+                    pos = player_entity.center()
+                    circle = AttackCircleArt(pos[0], pos[1], 32, 60, inv_attack.dmg_color, (0, 0, 0))
+                    world.add(circle)
 
-        self.is_moving = move_x != 0 or move_y != 0
+            self.attack_state.update(player_entity, world, gs)
 
-        if move_x != 0 and move_y != 0:
-            move_x /= 1.4142
-            move_y /= 1.4142
+            if self._can_interact() and input_state.was_pressed(inputs.INTERACT):
+                p_center = player_entity.center()
+                inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
+                inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
+                for i in range(0, len(inter)):
+                    #  trying to find the closest interactable in range
+                    dist = Utils.dist(inter[i].center(), p_center)
+                    if dist <= inter[i].interact_radius():
+                        inter[i].interact(world, gs)
+                        print("interacted with {}".format(inter[i]))
+                        break
 
-        if self.attack_state.is_delaying() or self.recoil_progress() < 1:
-            # half speed after attacking or being attacked
-            move_x /= 2
-            move_y /= 2
+            # you can keep moving during the attack windup
+            move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT))
+            move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP))
 
-        if self.recoil_progress() < 1:
-            move_x += self.current_knockback[0] * (1 - self.recoil_progress())
-            move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+            self.is_moving = move_x != 0 or move_y != 0
 
-        move_x *= self.move_speed()
-        move_y *= self.move_speed()
+            if move_x != 0 and move_y != 0:
+                move_x /= 1.4142
+                move_y /= 1.4142
 
-        player_entity.move(move_x, move_y, world=world, and_search=True)
-        if move_x != 0:
-            self.facing_right = move_x > 0
+            if self.attack_state.is_delaying() or self.recoil_progress() < 1:
+                # half speed after attacking or being attacked
+                move_x /= 2
+                move_y /= 2
+
+            if self.recoil_progress() < 1:
+                move_x += self.current_knockback[0] * (1 - self.recoil_progress())
+                move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+
+            move_x *= self.move_speed()
+            move_y *= self.move_speed()
+
+            player_entity.move(move_x, move_y, world=world, and_search=True)
+            if move_x != 0:
+                self.facing_right = move_x > 0
 
         color = self.recoil_color()
 
@@ -520,86 +538,84 @@ class EnemyState(ActorState):
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
 
-        if self.hp() <= 0:
-            self._handle_death(entity, world, gs)
-        else:
-
-            if (gs.tick_counter + self._anim_offset) % 60 == 0:
-                regen = self.stat_value(StatType.LIFE_REGEN)
-                self.do_heal(regen)
-
-            self.update_status_effects(entity, world, gs)
-
-            if self.took_damage_x_ticks_ago < self.damage_recoil:
-                self.took_damage_x_ticks_ago += 1
-
-            if self.set_color_x_ticks_ago < self.damage_recoil:
-                self.set_color_x_ticks_ago += 1
-
-            # updating aggro
-            if random.random() < 0.05:
-                p = world.get_player()
-                if p is not None:
-                    dist = Utils.dist(p.center(), entity.center())
-                    if self.is_aggro:
-                        self.is_aggro = dist <= self.forget_radius
-                    else:
-                        self.is_aggro = dist <= self.aggro_radius
-
-            # doing attacks
-            if random.random() < 0.1 and self._should_attack(entity, world):
-                self.attack_state.start_attack(self)
-
-            self.attack_state.update(entity, world, gs)
-
-            if self.is_lunging():
-                move_dir = self._lunge_direction if self.lunge_progress() > 0.3 else (0, 0)
-            elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
-                move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
+        if not gs.world_updates_paused():
+            if self.hp() <= 0:
+                self._handle_death(entity, world, gs)
             else:
-                move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
 
-            # doing lunges
-            if random.random() < 0.02 and self._should_lunge(entity, world):
-                self._lunge_count = 0
-                self._lunge_direction = move_dir
+                if (gs.tick_counter + self._anim_offset) % 60 == 0:
+                    regen = self.stat_value(StatType.LIFE_REGEN)
+                    self.do_heal(regen)
 
-            move_x, move_y = move_dir
-            move_x *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
-            move_y *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
+                self.update_status_effects(entity, world, gs)
 
-            ms_mult = self._get_movespeed_mult()
-            move_x *= ms_mult
-            move_y *= ms_mult
+                if self.took_damage_x_ticks_ago < self.damage_recoil:
+                    self.took_damage_x_ticks_ago += 1
 
-            if self.recoil_progress() < 1.0:
-                move_x += self.current_knockback[0] * (1 - self.recoil_progress())
-                move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+                if self.set_color_x_ticks_ago < self.damage_recoil:
+                    self.set_color_x_ticks_ago += 1
 
-            if self.is_lunging():
-                self._lunge_count += 1
+                # updating aggro
+                if random.random() < 0.05:
+                    p = world.get_player()
+                    if p is not None:
+                        dist = Utils.dist(p.center(), entity.center())
+                        if self.is_aggro:
+                            self.is_aggro = dist <= self.forget_radius
+                        else:
+                            self.is_aggro = dist <= self.aggro_radius
 
-            entity.move(move_x, move_y, world=world, and_search=True)
+                # doing attacks
+                if random.random() < 0.1 and self._should_attack(entity, world):
+                    self.attack_state.start_attack(self)
 
-            if move_x != 0:
-                # don't actually turn until we've been moving that direction for two frames
-                if self.facing_left_last_frame == (move_x < 0):
-                    self.facing_left = move_x < 0
+                self.attack_state.update(entity, world, gs)
 
-                self.facing_left_last_frame = move_x < 0
-            else:
-                self.facing_left_last_frame = None
+                if self.is_lunging():
+                    move_dir = self._lunge_direction if self.lunge_progress() > 0.3 else (0, 0)
+                elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
+                    move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
+                else:
+                    move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
 
-            color = self.recoil_color()
+                # doing lunges
+                if random.random() < 0.02 and self._should_lunge(entity, world):
+                    self._lunge_count = 0
+                    self._lunge_direction = move_dir
 
-            sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
+                move_x, move_y = move_dir
+                move_x *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
+                move_y *= 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100
 
-            health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
+                ms_mult = self._get_movespeed_mult()
+                move_x *= ms_mult
+                move_y *= ms_mult
 
-            hp_color = self.get_hp_color()
+                if self.recoil_progress() < 1.0:
+                    move_x += self.current_knockback[0] * (1 - self.recoil_progress())
+                    move_y += self.current_knockback[1] * (1 - self.recoil_progress())
 
-            entity.update_images(sprite, self.facing_left, health_ratio, color=color, hp_color=hp_color,
-                                 shadow_sprite=self.template.get_shadow_sprite())
+                if self.is_lunging():
+                    self._lunge_count += 1
+
+                entity.move(move_x, move_y, world=world, and_search=True)
+
+                if move_x != 0:
+                    # don't actually turn until we've been moving that direction for two frames
+                    if self.facing_left_last_frame == (move_x < 0):
+                        self.facing_left = move_x < 0
+
+                    self.facing_left_last_frame = move_x < 0
+                else:
+                    self.facing_left_last_frame = None
+
+        color = self.recoil_color()
+        sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
+        health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
+        hp_color = self.get_hp_color()
+
+        entity.update_images(sprite, self.facing_left, health_ratio, color=color, hp_color=hp_color,
+                             shadow_sprite=self.template.get_shadow_sprite())
 
     def _should_attack(self, entity, world):
         p = world.get_player()

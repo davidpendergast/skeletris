@@ -1,4 +1,5 @@
 from src.ui.menus import MenuManager
+from src.game.npc import NpcState
 from src.game.dialog import DialogManager
 
 
@@ -27,6 +28,7 @@ class GlobalState:
 
         self._menu_manager = MenuManager(menu_id)
 
+        self._npc_state = NpcState()
         self._dialog_manager = DialogManager()
 
         self.needs_exit = False
@@ -34,8 +36,14 @@ class GlobalState:
     def get_menu_manager(self):
         return self._menu_manager
 
+    def world_updates_paused(self):
+        return self.dialog_manager().is_active()
+
     def dialog_manager(self):
         return self._dialog_manager
+
+    def npc_state(self):
+        return self._npc_state
         
     def set_player_state(self, state):
         self._player_state = state

@@ -161,7 +161,7 @@ class DialogPanel:
     def get_dialog(self):
         return self._dialog
 
-    def update_images(self, gs, text, sprite):
+    def update_images(self, gs, text, sprite, left_side):
         """
             returns: True if needs a full render engine update, else False
         """
@@ -208,11 +208,20 @@ class DialogPanel:
             sprite_buffer = 6, 4
             if self._speaker_img is None:
                 y_pos = y + DialogPanel.SIZE[1] // 2 - sprite.height() * 2 // 2
-                self._speaker_img = ImageBundle(sprite, x + sprite_buffer[0], y_pos, layer=lay, scale=2)
+                if left_side:
+                    x_pos = x + sprite_buffer[0]
+                else:
+                    x_pos = x + DialogPanel.SIZE[0] - sprite.width() * 2 - sprite_buffer[0]
+                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2)
             self._speaker_img = self._speaker_img.update(new_model=sprite)
-            text_x = x + self._speaker_img.width() + sprite_buffer[0] * 2
+
+            if left_side:
+                text_x = x + self._speaker_img.width() + sprite_buffer[0] + text_buffer[0]
+            else:
+                text_x = x + text_buffer[0]
+
             text_area = [text_x, y + text_buffer[0],
-                         DialogPanel.SIZE[0] - (text_x - x) - text_buffer[0] * 2,
+                         DialogPanel.SIZE[0] - self._speaker_img.width() - text_buffer[0] - sprite_buffer[0],
                          DialogPanel.SIZE[1] - text_buffer[1] * 2]
             # gets updated automatically
 
@@ -237,7 +246,7 @@ class DialogPanel:
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
 
-        full_update = self.update_images(gs, self._text_displaying, new_sprite)
+        full_update = self.update_images(gs, self._text_displaying, new_sprite, self._dialog.get_sprite_side())
 
         if full_update:
             for bun in self.all_bundles():

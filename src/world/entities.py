@@ -8,6 +8,7 @@ import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.utils.util import Utils
 from src.game.loot import LootFactory
+import src.game.npc as npc
 
 ENTITY_UID_COUNTER = 0
 
@@ -166,6 +167,18 @@ class Entity:
     def is_potion(self):
         return False
 
+    def is_npc(self):
+        return False
+
+    def is_interactable(self):
+        return False
+
+    def interact(self, world, gs):
+        pass
+
+    def interact_radius(self):
+        return 64
+
     def can_damage(self, other):
         return ((self.is_player() and other.is_enemy()) or
                 (self.is_enemy() and other.is_player()))
@@ -215,25 +228,30 @@ class ProjectileEntity(Entity):
         self._img = self._img.update(new_color=color, new_x=x, new_y=y)
 
     def update(self, world, gs, input_state, render_engine):
-        if 0 < self._duration <= self._tick_count:
-            world.remove(self)
-        else:
-            vel = self.get_vel(world, gs)
+        was_removed = False
+        if not gs.world_updates_paused():
+            if 0 < self._duration <= self._tick_count:
+                world.remove(self)
+                was_removed = True
+            else:
+                vel = self.get_vel(world, gs)
 
-            self.move(vel[0], vel[1])
+                self.move(vel[0], vel[1])
 
-            # check every five-ish ticks, lol
-            if random.random() < self._poll_rate:
-                potential_hits = self.get_potential_hits(world)
-                for e in potential_hits:
-                    self_destroyed = self.touched_entity(e, world, gs)
-                    if self_destroyed:
-                        break
+                # check every five-ish ticks, lol
+                if random.random() < self._poll_rate:
+                    potential_hits = self.get_potential_hits(world)
+                    for e in potential_hits:
+                        self_destroyed = self.touched_entity(e, world, gs)
+                        if self_destroyed:
+                            break
 
-            spr = self.get_sprite(world, gs)
+        if not was_removed:
             color = self.get_color(world, gs)
-
+            spr = self.get_sprite(world, gs)
             self._update_images(spr, color, gs)
+
+        if not gs.world_updates_paused():
             self._tick_count += 1
 
     def get_potential_hits(self, world):
@@ -413,6 +431,7 @@ class AnimationEntity(Entity):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
 
         def update(self, world, gs, input_state, render_engine):
+            # these keep updating when game is paused
             if self.tick_count >= self.duration and self.on_finish_mode == AnimationEntity.DELETE_ON_FINISH:
                 world.remove(self)
                 return
@@ -493,6 +512,7 @@ class FloatingTextEntity(Entity):
         self.text_img.update(new_x=x, new_y=y)
 
     def update(self, world, gs, input_state, render_engine):
+        # these keep updating even when updates are paused
         if self.tick_count >= self.duration:
             world.remove(self)
         else:
@@ -547,8 +567,9 @@ class Player(Entity):
         render_engine.remove(self._shadow)
             
     def update(self, world, gs, input_state, render_engine):
-        if self.inputs_blocked_for_x_ticks > 0:
-            self.inputs_blocked_for_x_ticks -= 1
+        if not gs.world_updates_paused():
+            if self.inputs_blocked_for_x_ticks > 0:
+                self.inputs_blocked_for_x_ticks -= 1
 
     def block_inputs(self, duration):
         self.inputs_blocked_for_x_ticks = duration
@@ -664,7 +685,7 @@ class ChestEntity(Entity):
             
     def update(self, world, gs, input_state, render_engine):
         
-        if not self.is_open():
+        if not gs.world_updates_paused() and not self.is_open():
             player_nearby = False
             p = world.get_player()
             if p is not None:
@@ -753,32 +774,33 @@ class PickupEntity(Entity):
                 return (0, 0)
 
     def update(self, world, gs, input_state, render_engine):
-        vel_before = Utils.mag(self.vel)
+        if not gs.world_updates_paused():
+            vel_before = Utils.mag(self.vel)
 
-        if vel_before > 0:
-            pushes = self._get_pushes(world)
-            self.vel = Utils.add(self.vel, pushes)
-            self.vel = Utils.set_length(self.vel, vel_before)
+            if vel_before > 0:
+                pushes = self._get_pushes(world)
+                self.vel = Utils.add(self.vel, pushes)
+                self.vel = Utils.set_length(self.vel, vel_before)
 
-            if Utils.mag(self.vel) < 0.05:
-                self.vel = (0, 0)
-            else:
-                self.vel = Utils.mult(self.vel, self.fric)
+                if Utils.mag(self.vel) < 0.05:
+                    self.vel = (0, 0)
+                else:
+                    self.vel = Utils.mult(self.vel, self.fric)
 
-            self.move(*self.vel, world=world, and_search=True)
+                self.move(*self.vel, world=world, and_search=True)
 
-        # lol, this is weird but w/evs
-        pickup_polling = 5
-        if random.random() < 1 / pickup_polling:
-            p = world.get_player()
-            if p is not None and Utils.dist(p.center(), self.center()) <= self.pickup_radius:
-                self.time_touched += pickup_polling
-            else:
-                self.time_touched = 0
+            # lol, this is weird but w/evs
+            pickup_polling = 5
+            if random.random() < 1 / pickup_polling:
+                p = world.get_player()
+                if p is not None and Utils.dist(p.center(), self.center()) <= self.pickup_radius:
+                    self.time_touched += pickup_polling
+                else:
+                    self.time_touched = 0
 
         self.update_images(gs.anim_tick)
 
-        if self.can_pickup():
+        if not gs.world_updates_paused() and self.can_pickup():
             self.on_pickup(world, gs)
             world.remove(self)
 
@@ -826,45 +848,6 @@ class PotionEntity(PickupEntity):
 
     def is_potion(self):
         return True
-
-
-class AttackPickupEntity(PickupEntity):
-    def __init__(self, attack, cx, cy, vel=None):
-        self.attack = attack
-        PickupEntity.__init__(self, cx, cy, spriteref.spinny_cubes, vel=vel)
-        self.pickup_delay = 90
-
-    def get_attack(self):
-        return self.attack
-
-    def get_sprite_offset(self):
-        prog = self.get_pickup_progress()
-        jiggle = round(6 * prog * (random.random() - 0.5))
-        return (jiggle, -16 * prog)
-
-    def get_color(self):
-        color = self.attack.dmg_color
-        scale = 0.25 + 0.75 * self.get_pickup_progress()
-        return (1 - (1 - color[0]) * scale,
-                1 - (1 - color[1]) * scale,
-                1 - (1 - color[2]) * scale)
-
-    def is_attack_pickup(self):
-        return True
-
-    def get_sprite(self, anim_tick):
-        if self.time_touched <= 0:
-            return PickupEntity.get_sprite(self, anim_tick)
-        else:
-            idx = anim_tick % len(spriteref.spinny_cubes_fat)
-            return spriteref.spinny_cubes_fat[idx]
-
-    def on_pickup(self, world, gs):
-        PickupEntity.on_pickup(self, world, gs)
-        splosion = AnimationEntity(self.x(), self.y() - 24,
-                                   spriteref.explosions, 40, spriteref.ENTITY_LAYER, w=self.w(), scale=3)
-        splosion.set_color(self.get_color())
-        world.add(splosion)
 
 
 class DoorEntity(Entity):
@@ -922,31 +905,33 @@ class DoorEntity(Entity):
             self._is_horz = self._calc_is_horz(world)
             self.sprites = spriteref.door_h if self._is_horz else spriteref.door_v
 
-        if self.opening_count >= self.opening_duration:
-            # XXX kinda jank, we set the geo value to FLOOR when the door is set to open
-            # but we don't update the surrounding tile sprites until the opening animation
-            # is finished. This allows the player to pass through while the door is partially
-            # open, while also keeping the wall sprites correct.
-            #
-            # TODO this <will> cause bugs in the future
-            grid_xy = world.to_grid_coords(*self.center())
-            world.update_geo_bundle(*grid_xy, and_neighbors=True)
-            world.door_opened(*grid_xy)
-            world.remove(self)
-        elif self.opening_count > 0:
-            self.opening_count += 1
-        else:
-            p = world.get_player()
-            if p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius:
-                self.delay_count += 1
-                if self.delay_count >= self.delay_duration:
-                    # door will open now
-                    self.delay_count = 0
-                    self.opening_count = 1
-                    grid_xy = world.to_grid_coords(*self.center())
-                    world.set_geo(*grid_xy, World.FLOOR)
+        if not gs.world_updates_paused():
+
+            if self.opening_count >= self.opening_duration:
+                # XXX kinda jank, we set the geo value to FLOOR when the door is set to open
+                # but we don't update the surrounding tile sprites until the opening animation
+                # is finished. This allows the player to pass through while the door is partially
+                # open, while also keeping the wall sprites correct.
+                #
+                # TODO this <will> cause bugs in the future
+                grid_xy = world.to_grid_coords(*self.center())
+                world.update_geo_bundle(*grid_xy, and_neighbors=True)
+                world.door_opened(*grid_xy)
+                world.remove(self)
+            elif self.opening_count > 0:
+                self.opening_count += 1
             else:
-                self.delay_count = 0
+                p = world.get_player()
+                if p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius:
+                    self.delay_count += 1
+                    if self.delay_count >= self.delay_duration:
+                        # door will open now
+                        self.delay_count = 0
+                        self.opening_count = 1
+                        grid_xy = world.to_grid_coords(*self.center())
+                        world.set_geo(*grid_xy, World.FLOOR)
+                else:
+                    self.delay_count = 0
 
         self.update_images()
 
@@ -1020,24 +1005,69 @@ class ExitEntity(Entity):
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
     def update(self, world, gs, input_state, render_engine):
-        if self.count >= self.delay_duration + self.final_cinematic_duration:
-            gs.trigger_next_level_seq()
+        if not gs.world_updates_paused():
 
-        p = world.get_player()
-        if self.count >= self.delay_duration:
-            self.count += 1
-        else:
-            search_center = Utils.add(self.center(), (16, 0))
-            in_range = p is not None and Utils.dist(p.center(), search_center) <= self.radius
+            if self.count >= self.delay_duration + self.final_cinematic_duration:
+                gs.trigger_next_level_seq()
 
-            if in_range:
+            p = world.get_player()
+            if self.count >= self.delay_duration:
                 self.count += 1
-            elif self.count > 0:
-                self.count -= 1
+            else:
+                search_center = Utils.add(self.center(), (16, 0))
+                in_range = p is not None and Utils.dist(p.center(), search_center) <= self.radius
 
-        self._update_player_if_needed(world, p)
+                if in_range:
+                    self.count += 1
+                elif self.count > 0:
+                    self.count -= 1
+
+            self._update_player_if_needed(world, p)
 
         self.update_images(gs.anim_tick)
+
+
+class NpcEntity(Entity):
+
+    def __init__(self, npc_id):
+        Entity.__init__(self, 0, 0, 24, 12)
+        self.npc_id = npc_id
+        self._shadow_sprite = None
+
+    def get_shadow_sprite(self):
+        return self._shadow_sprite
+
+    def update_images(self, sprite, facing_left, color=(1, 1, 1), shadow_sprite=None):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+        depth = self.get_depth()
+        xflip = not facing_left
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_xflip=xflip, new_color=color)
+
+        self._shadow_sprite = shadow_sprite
+        Entity.update_images(self, 0)  # just updating shadow
+
+    def update(self, world, gs, input_state, render_engine):
+        gs.npc_state().update(self, world, gs, input_state, render_engine)
+
+    def get_id(self):
+        return self.npc_id
+
+    def is_npc(self):
+        return True
+
+    def is_interactable(self):
+        return True
+
+    def interact(self, world, gs):
+        gs.npc_state().interacted_with(self.get_id(), world, gs)
+
+    def __repr__(self):
+        return "NpcEntity({})".format(self.get_id())
 
 
     

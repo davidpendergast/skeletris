@@ -36,6 +36,22 @@ def build_me_a_world(level):
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
 
+    # just for debugging
+
+    import src.world.entities as entities
+    import src.game.npc as npc
+    mayor = entities.NpcEntity(npc.NpcID.MAYOR)
+    mayor.set_x(p.x() + 64)
+    mayor.set_y(p.y())
+    w.add(mayor)
+    mary_skelly = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
+    mary_skelly.set_x(p.x() + 72)
+    mary_skelly.set_y(p.y() + 48)
+    w.add(mary_skelly)
+    beanskull = entities.NpcEntity(npc.NpcID.BEANSKULL)
+    beanskull.set_x(p.x() - 16)
+    beanskull.set_y(p.y() + 32)
+    w.add(beanskull)
     return w
 
 
