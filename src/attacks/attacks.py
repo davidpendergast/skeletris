@@ -6,6 +6,7 @@ from src.game.stats import StatType
 
 
 class AttackState:
+
     def __init__(self):
         self.attack_tick = 0
 
@@ -101,7 +102,11 @@ class AttackState:
         if num_hit > 0:
             healing = stat_lookup.stat_value(StatType.LIFE_ON_HIT) * num_hit
             healing += stat_lookup.stat_value(StatType.LIFE_LEECH) * 0.01 * dmg_dealt
-            stat_lookup.do_heal(healing)
+            if healing >= 0:
+                stat_lookup.do_heal(healing)
+            else:
+                # negative healing stats damage you
+                stat_lookup.deal_damage(-healing)
 
     def _resolve_attack(self, attack, stat_lookup, source_pos, t_state, t_ent):
         """

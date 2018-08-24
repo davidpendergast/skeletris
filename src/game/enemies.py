@@ -88,6 +88,15 @@ class EnemyTemplate:
     def can_drop_special_attack(self):
         return True
 
+    def show_death_explosion(self):
+        return True
+
+    def increment_kill_count_on_death(self):
+        return True
+
+    def can_attack(self):
+        return True
+
 
 class FlappumTemplate(EnemyTemplate):
 
@@ -136,13 +145,75 @@ class TrillaTemplate(EnemyTemplate):
         return []
 
 
+class SmallMuncherTemplate(EnemyTemplate):
+
+    def __init__(self, alt=False):
+        self._is_alt = alt
+        name = "Dark Muncher" if alt else "Muncher"
+        sprite = spriteref.enemy_muncher_small_alt_all if alt else spriteref.enemy_muncher_small_all
+        EnemyTemplate.__init__(self, name, sprite, spriteref.medium_shadow)
+
+    def get_pathfinding(self):
+        return PathfindingType.BASIC_CHASE
+
+    def get_base_stats(self):
+        base_stats = EnemyTemplate.get_base_stats(self)
+        base_stats[StatType.MOVEMENT_SPEED] -= 35
+        base_stats[StatType.VIT] = 1  # one hit kill
+        base_stats[StatType.LIFE_ON_HIT] = -500  # transforms upon successful attack
+        return base_stats
+
+    def special_death_action(self, level, entity, world):
+        base_stats = entity.state.get_base_stats()
+
+        base_stats[StatType.VIT] = EnemyTemplate.get_base_stats(self)[StatType.VIT]
+        base_stats[StatType.ATTACK_DAMAGE] += 35
+        base_stats[StatType.MOVEMENT_SPEED] += 65  # fast boys
+
+        template = TEMPLATE_MUNCHER_ALT if self._is_alt else TEMPLATE_MUNCHER
+        e_state = EnemyState(template, level, dict(base_stats))
+        e_state.set_special_attack(entity.state.special_attack)
+
+        new_muncher = Enemy(0, 0, e_state)
+        pos = entity.center()
+        new_muncher.set_center(pos[0], pos[1])
+        world.add(new_muncher, next_update=True)
+
+    def can_drop_special_attack(self):
+        return False
+
+    def get_loot(self, level, potential_attack=None):
+        return []
+
+    def show_death_explosion(self):
+        return False
+
+    def increment_kill_count_on_death(self):
+        return False
+
+
+class MuncherTemplate(EnemyTemplate):
+
+    def __init__(self, alt=False):
+        self._is_alt = alt
+        name = "Dark Muncher" if alt else "Muncher"
+        sprite = spriteref.enemy_muncher_alt_all if alt else spriteref.enemy_muncher_all
+        EnemyTemplate.__init__(self, name, sprite, spriteref.large_shadow)
+
+    def get_lunges(self):
+        return True
+
+
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = EnemyTemplate("Trillite", spriteref.enemy_small_trilla_all, spriteref.medium_shadow)
 TEMPLATE_FLAPPUM = FlappumTemplate()
+TEMPLATE_MUNCHER = MuncherTemplate(alt=False)
+TEMPLATE_MUNCHER_ALT = MuncherTemplate(alt=True)
+TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
+TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
 
-RAND_SPAWN_TEMPLATES = [EnemyTemplate("Muncher", spriteref.enemy_muncher_all, spriteref.large_shadow),
-                        EnemyTemplate("Dark Muncher", spriteref.enemy_muncher_alt_all, spriteref.large_shadow),
-                        EnemyTemplate("Glorple", spriteref.enemy_glorple_all, spriteref.medium_shadow),
+RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
+                        TEMPLATE_MUNCHER_SMALL_ALT,
                         EnemyTemplate("Dicel", spriteref.enemy_dicel_all, spriteref.medium_shadow),
                         EnemyTemplate("The Fallen", spriteref.enemy_the_fallen_all, spriteref.medium_shadow),
                         EnemyTemplate("Cycloi", spriteref.enemy_cyclops_all, spriteref.large_shadow),

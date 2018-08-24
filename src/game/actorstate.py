@@ -529,11 +529,16 @@ class EnemyState(ActorState):
         self.template.special_death_action(self.level(), entity, world)
 
         world.remove(entity)
-        splosion = AnimationEntity(entity.x(), entity.y() - 24,
-                                   spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
-        splosion.set_color((0, 0, 0))
-        world.add(splosion)
-        gs.kill_count += 1
+
+        if self.template.show_death_explosion():
+            splosion = AnimationEntity(entity.x(), entity.y() - 24,
+                                       spriteref.explosions, 40,
+                                       spriteref.ENTITY_LAYER, scale=4)
+            splosion.set_color((0, 0, 0))
+            world.add(splosion)
+
+        if self.template.increment_kill_count_on_death():
+            gs.kill_count += 1
 
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
@@ -573,7 +578,8 @@ class EnemyState(ActorState):
 
                 if self.is_lunging():
                     move_dir = self._lunge_direction if self.lunge_progress() > 0.3 else (0, 0)
-                elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
+                elif (world.get_hidden_at(*entity.center()) or not self.is_aggro
+                      or self.template.get_pathfinding() == PathfindingType.PASSIVE):
                     move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
                 else:
                     move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
@@ -620,6 +626,7 @@ class EnemyState(ActorState):
     def _should_attack(self, entity, world):
         p = world.get_player()
         if (self.attack_state.can_attack() and
+                self.template.can_attack() and
                 self.is_aggro and
                 p is not None and
                 self.took_damage_x_ticks_ago >= self.damage_recoil and

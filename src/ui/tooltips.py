@@ -148,7 +148,8 @@ class EnemyInfoTooltip(TitleImageAndStatsTooltip):
         for stat_type in stat_map:
             if not isinstance(stat_type, StatType):
                 continue
-            stat_val = stat_map[stat_type] - enemies.TRUE_BASE_STATS[stat_type]
+            base_val = enemies.TRUE_BASE_STATS[stat_type] if stat_type in enemies.TRUE_BASE_STATS else 0
+            stat_val = stat_map[stat_type] - base_val
 
             if stat_val != 0:
                 stats.append(item.ItemStat(stat_type, stat_val))

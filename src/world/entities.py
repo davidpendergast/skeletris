@@ -47,6 +47,10 @@ class Entity:
         
     def center(self):
         return self.rect.center
+
+    def set_center(self, cx, cy):
+        self.set_x(cx - self.w() / 2)
+        self.set_y(cy - self.h() / 2)
         
     def set_x(self, x):
         self._x = x
