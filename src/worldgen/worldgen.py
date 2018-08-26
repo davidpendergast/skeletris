@@ -2,7 +2,7 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, DoorEntity, ChestEntity
+from src.world.entities import Player, ExitEntity, BossExitEntity, DoorEntity, ChestEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -208,7 +208,8 @@ class WorldBlueprint:
             w.add(ChestEntity(0, 0), gridcell=chest_pos, next_update=False)
 
         w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
-        w.add(ExitEntity(*self.exit_spawn), next_update=False)
+        #w.add(ExitEntity(*self.exit_spawn), next_update=False)
+        w.add(BossExitEntity(*self.exit_spawn), next_update=False)
 
         return w
 

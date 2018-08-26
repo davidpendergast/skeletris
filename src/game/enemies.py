@@ -160,7 +160,7 @@ class SmallMuncherTemplate(EnemyTemplate):
         base_stats = EnemyTemplate.get_base_stats(self)
         base_stats[StatType.MOVEMENT_SPEED] -= 35
         base_stats[StatType.VIT] = 1  # one hit kill
-        base_stats[StatType.LIFE_ON_HIT] = -500  # transforms upon successful attack
+        base_stats[StatType.LIFE_ON_HIT] = -4  # transforms upon successful attack
         return base_stats
 
     def special_death_action(self, level, entity, world):
@@ -169,6 +169,7 @@ class SmallMuncherTemplate(EnemyTemplate):
         base_stats[StatType.VIT] = EnemyTemplate.get_base_stats(self)[StatType.VIT]
         base_stats[StatType.ATTACK_DAMAGE] += 35
         base_stats[StatType.MOVEMENT_SPEED] += 65  # fast boys
+        base_stats[StatType.LIFE_ON_HIT] += 4  # gotta undo the negative LoH
 
         template = TEMPLATE_MUNCHER_ALT if self._is_alt else TEMPLATE_MUNCHER
         e_state = EnemyState(template, level, dict(base_stats))

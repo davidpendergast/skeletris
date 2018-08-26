@@ -957,7 +957,6 @@ class ExitEntity(Entity):
     def _update_player_if_needed(self, world, player):
         if self.count < self.delay_duration:
             return
-
         else:
             if player is not None:
                 offs = (0, -88)
@@ -1029,6 +1028,59 @@ class ExitEntity(Entity):
             self._update_player_if_needed(world, p)
 
         self.update_images(gs.anim_tick)
+
+
+class BossExitEntity(Entity):
+
+    def __init__(self, grid_x, grid_y):
+        Entity.__init__(self, grid_x * 64, grid_y * 64, 64, 2)
+
+        self.count = 0
+        self.open_duration = 60
+        self.radius = 48
+
+    def update_images(self, anim_tick):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+
+        if self.count == 0:
+            sprite = spriteref.boss_door_idle[(anim_tick // 2) % 2]
+        else:
+            idx = int(self.get_progress() * len(spriteref.boss_door_opening))
+            sprite = spriteref.boss_door_opening[idx]
+
+        x = self.x()
+        y = self.y() - sprite.height() * 4
+        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+
+    def get_progress(self):
+        return Utils.bound(self.count / self.open_duration, 0.0, 0.999)
+
+    def is_open(self):
+        return self.count >= self.open_duration
+
+    def update(self, world, gs, input_state, render_engine):
+        if not gs.world_updates_paused():
+            if self.count < self.open_duration:
+                player = world.get_player()
+                if player is not None:
+                    p_center = player.center()
+                    if Utils.dist(p_center, self.center()) <= self.radius:
+                        self.count += 1
+                    else:
+                        self.count -= 2
+                    self.count = Utils.bound(self.count, 0, self.open_duration)
+            else:
+                #  deal with being interacted w/ and stuff
+                pass
+
+        self.update_images(gs.anim_tick)
+
+    def is_interactable(self):
+        return self.is_open()
+
+    def interact(self, world, gs):
+        pass
 
 
 class NpcEntity(Entity):

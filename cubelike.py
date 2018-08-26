@@ -26,7 +26,7 @@ SCREEN_SIZE = (800, 600)
 
 
 def build_me_a_world(level):
-    w = WorldFactory.gen_world_from_rooms(level, num_rooms=25).build_world()
+    w = WorldFactory.gen_world_from_rooms(level, num_rooms=5).build_world()
     # w = WorldFactory.gen_test_world(5).build_world()
 
     w.hide_all_floors()
