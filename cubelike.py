@@ -52,6 +52,10 @@ def build_me_a_world(level):
     beanskull.set_x(p.x() - 16)
     beanskull.set_y(p.y() + 32)
     w.add(beanskull)
+    glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
+    glorple.set_x(p.x() - 50)
+    glorple.set_y(p.y() - 50)
+    w.add(glorple)
     return w
 
 

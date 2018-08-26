@@ -10,6 +10,7 @@ class NpcID(Enum):
     MAYOR = "MAYOR"
     MARY_SKELLY = "MARY_SKELLY"
     BEANSKULL = "BEANSKULL"
+    GLORPLE = "GLORPLE"
 
 
 class NpcTemplate:
@@ -27,7 +28,9 @@ TEMPLATES = {
     NpcID.MAYOR: NpcTemplate(NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
                              shadow_sprite=sr.large_shadow),
     NpcID.BEANSKULL: NpcTemplate(NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces),
+    NpcID.GLORPLE: NpcTemplate(NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces)
 }
+
 
 def get_sprites(npc_id):
     return TEMPLATES[npc_id].talking_sprites
@@ -55,11 +58,12 @@ class NpcState:
             NpcDialog("I need those! for.. stew purposes.. ", get_sprites(NpcID.MARY_SKELLY)),
             PlayerDialog("..."),
             PlayerDialog("Are there any other survivors?"),
+            NpcDialog("Glorple survived!", get_sprites(NpcID.GLORPLE)),
             NpcDialog("I think my potatoes are ok.. but i can't say the same about my tomatoes.", get_sprites(NpcID.BEANSKULL)),
             NpcDialog("they were trampled during the attack.", get_sprites(NpcID.BEANSKULL)),
             PlayerDialog("I meant people."),
             NpcDialog("In that case.. I don't think so.", get_sprites(NpcID.BEANSKULL)),
-            PlayerDialog("we need to keep moving.")
+            PlayerDialog("we need to keep moving."),
         ]
 
         d = dialog.link_em_up(chain)

@@ -93,6 +93,8 @@ mayor_pumpkin_faces = [make(304, 208 + i*32, 32, 32) for i in range(0, 2)]
 beanskull_all = [make(336, 144 + i*32, 16, 32) for i in range(0, 2)]
 beanskull_faces = [make(336, 208 + i*32, 32, 32) for i in range(0, 2)]
 
+glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
+
 spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 6)]
 spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 
