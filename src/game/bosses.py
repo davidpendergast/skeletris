@@ -45,7 +45,7 @@ class CaveHorrorController(BossFightController):
         w.add(Player(0, 0), gridcell=(2, 2), next_update=False)
 
         return w
-    
+
 
 def get_boss_controller(boss_id):
     if boss_id == BossID.CAVE_HORROR:

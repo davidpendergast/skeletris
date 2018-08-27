@@ -31,6 +31,8 @@ class GlobalState:
         self._npc_state = NpcState()
         self._dialog_manager = DialogManager()
 
+        self._cinematics_queue = []
+
         self.needs_exit = False
 
     def get_menu_manager(self):
@@ -47,6 +49,9 @@ class GlobalState:
         
     def set_player_state(self, state):
         self._player_state = state
+
+    def get_cinematics_queue(self):
+        return self._cinematics_queue
         
     def player_state(self):
         return self._player_state

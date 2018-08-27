@@ -123,6 +123,9 @@ inv_panel_top = make(480, 0, 160, 128)
 inv_panel_mid = make(480, 128, 160, 16)
 inv_panel_bot = make(480, 144, 160, 16)
 
+cine_blank = make(256, 480, 128, 72)
+cine_cave_horrors = [make(0 + 128*i, 480, 128, 72) for i in range(0, 2)]
+
 """
 0 1 2
 3 4 5

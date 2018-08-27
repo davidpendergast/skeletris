@@ -541,3 +541,48 @@ class ItemImage:
     def calc_size(item, scale):
         sprite = spriteref.item_piece_bigs[0]
         return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
+
+
+class CinematicPanel:
+
+    IMAGE_SCALE = 6
+    TEXT_SCALE = 3
+
+    def __init__(self):
+        self.current_image_img = None
+        self.current_text = ""
+        self.text_img = None
+        self.border = 32
+
+    def update(self, gs, render_engine, new_sprite, new_text):
+        scale = CinematicPanel.IMAGE_SCALE
+        if self.current_image_img is None:
+            self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale)
+
+        image_w = new_sprite.width() * scale
+        new_x = gs.screen_size[0] // 2 - image_w // 2
+        new_y = 0 + self.border
+        self.current_image_img = self.current_image_img.update(new_model=new_sprite, new_x=new_x, new_y=new_y)
+
+        if new_text != self.current_text:
+            if self.text_img is not None:
+                for bun in self.text_img.all_bundles():
+                    render_engine.remove(bun)
+                self.text_img = None
+
+        if self.text_img is None and new_text != "":
+            text_scale = CinematicPanel.TEXT_SCALE
+            text_w = gs.screen_size[0] - self.border*2
+            text_x = self.border
+            text_h = gs.screen_size[1] // 4 - self.border
+            text_y = gs.screen_size[1] - text_h - self.border
+            wrapped_text = TextImage.wrap_words_to_fit(new_text, text_scale, text_w)
+            self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=4)
+            self.current_text = new_text
+
+    def all_bundles(self):
+        if self.current_image_img is not None:
+            yield self.current_image_img
+        if self.text_img is not None:
+            for bun in self.text_img.all_bundles():
+                yield bun

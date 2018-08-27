@@ -122,6 +122,11 @@ class ImageBundle:
         i = 0 if len(indices) == 0 else indices[-1] + 1
         indices.extend([i, i+1, i+2, i, i+2, i+3])
 
+    def __repr__(self):
+        return "ImageBundle({}, {}, {}, {}, {}, {}, {}, {}, {})".format(
+                self.model(), self.x(), self.y(), self.layer(),
+                self.scale(), self.depth(), self.xflip(), self.color(), self.uid())
+
 
 class ImageModel:
 

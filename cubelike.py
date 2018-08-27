@@ -9,6 +9,7 @@ from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
+from src.game.cinematics import Cinematic
 
 from src.game.dialog import Dialog
 from src.game.messages import Messages

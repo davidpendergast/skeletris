@@ -8,6 +8,8 @@ import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.utils.util import Utils
 from src.game.loot import LootFactory
+from src.game.cinematics import Cinematic
+
 import src.game.npc as npc
 
 ENTITY_UID_COUNTER = 0
@@ -1039,6 +1041,9 @@ class BossExitEntity(Entity):
         self.open_duration = 60
         self.radius = 48
 
+        self._was_interacted_with = False
+        self._interact_countdown = 15
+
     def update_images(self, anim_tick):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
@@ -1071,8 +1076,31 @@ class BossExitEntity(Entity):
                         self.count -= 2
                     self.count = Utils.bound(self.count, 0, self.open_duration)
             else:
-                #  deal with being interacted w/ and stuff
-                pass
+                if self._was_interacted_with:
+                    player = world.get_player()
+                    if player is not None:
+                        pass  # TODO - setup dummy player + walking animation
+                    if self._interact_countdown > 1:
+                        self._interact_countdown -= 1
+                    else:
+                        # TODO - make the next world
+                        gs.next_level()
+
+                        cine_queue = gs.get_cinematics_queue()
+                        cine_queue.clear()
+
+                        sample_cines = [
+                            Cinematic([spriteref.cine_blank], "it's very dark, but you can sense that you aren't alone"),
+                            Cinematic([spriteref.cine_blank], "your eyes begin to adjust to the darkness"),
+                            Cinematic(spriteref.cine_cave_horrors, ""),
+                            Cinematic(spriteref.cine_cave_horrors,
+                                      "you've entered the cave horror's lair. prepare to fight")
+                        ]
+
+                        cine_queue.extend(sample_cines)
+
+                        from src.ui.menus import MenuManager  # this is temporary don't @ me
+                        gs.get_menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
 
         self.update_images(gs.anim_tick)
 
@@ -1080,7 +1108,7 @@ class BossExitEntity(Entity):
         return self.is_open()
 
     def interact(self, world, gs):
-        pass
+        self._was_interacted_with = True
 
 
 class NpcEntity(Entity):

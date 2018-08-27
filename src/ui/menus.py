@@ -3,7 +3,7 @@ import random
 from src.game import spriteref as spriteref, inputs as inputs
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
-from src.ui.ui import HealthBarPanel, InventoryPanel, TextImage, ItemImage, DialogPanel
+from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
 from src.utils.util import Utils
 from src.world.entities import ItemEntity, PickupEntity
 
@@ -13,6 +13,7 @@ class MenuManager:
     DEATH_MENU = 0
     IN_GAME_MENU = 1
     START_MENU = 2
+    CINEMATIC_MENU = 3
 
     def __init__(self, menu_id):
         self._active_menu = self._get_menu(menu_id)
@@ -39,6 +40,8 @@ class MenuManager:
             return InGameUiState()
         elif menu_id == MenuManager.START_MENU:
             return StartMenu()
+        elif menu_id == MenuManager.CINEMATIC_MENU:
+            return CinematicMenu()
         raise ValueError("Unknown menu id: " + str(menu_id))
 
     def should_draw_world(self):
@@ -66,8 +69,7 @@ class Menu:
         return self._menu_type
 
     def update(self, world, gs, input_state, render_eng):
-        state = gs.get_in_game_ui_state()
-        state.update(world, gs, input_state, render_eng)
+        pass
 
     def all_bundles(self):
         tooltip = self.get_active_tooltip()
@@ -192,6 +194,70 @@ class StartMenu(Menu):
             if opt_img is not None:
                 for bun in opt_img.all_bundles():
                     yield bun
+
+
+class CinematicMenu(Menu):
+
+    def __init__(self):
+        Menu.__init__(self, MenuManager.CINEMATIC_MENU)
+        self._next_menu = MenuManager.IN_GAME_MENU
+        self.active_scene = None
+
+        self.letter_reveal_speed = 3
+        self.active_tick_count = 0  # how many ticks the current cinematic has been showing
+
+        self.cinematic_panel = None
+
+    def update(self, world, gs, input_state, render_eng):
+        if self.active_scene is None:
+            cine_queue = gs.get_cinematics_queue()
+            if len(cine_queue) == 0:
+                gs.get_menu_manager().set_active_menu(self._next_menu)
+                return
+            else:
+                self.active_scene = cine_queue.pop(0)
+                self.active_tick_count = 0
+
+        if self.active_scene is not None:
+            if self.cinematic_panel is None:
+                self.cinematic_panel = CinematicPanel()
+
+            img_idx = (gs.anim_tick // 2) % len(self.active_scene.images)
+            current_image = self.active_scene.images[img_idx]
+            num_chars_to_display = 1 + self.active_tick_count // self.letter_reveal_speed
+            text_finished_scrolling = len(self.active_scene.text) <= num_chars_to_display
+            full_text = self.active_scene.text
+
+            if text_finished_scrolling:
+                current_text = full_text
+            else:
+                current_text = full_text[0:num_chars_to_display]
+
+            self.cinematic_panel.update(gs, render_eng, current_image, current_text)
+
+            if self.active_tick_count > 10 and input_state.was_pressed(inputs.INTERACT):
+                if text_finished_scrolling:
+                    self.active_scene = None
+                else:
+                    self.active_tick_count = len(full_text) * self.letter_reveal_speed
+
+            self.active_tick_count += 1
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def get_clear_color(self):
+        return (0.0, 0.0, 0.0)
+
+    def set_next_menu(self, next_menu_id):
+        self._next_menu = next_menu_id
+
+    def all_bundles(self):
+        for bun in Menu.all_bundles(self):
+            yield bun
+        if self.cinematic_panel is not None:
+            for bun in self.cinematic_panel.all_bundles():
+                yield bun
 
 
 class DeathMenu(Menu):
@@ -424,7 +490,6 @@ class InGameUiState(Menu):
 
         if self.dialog_panel is not None:
             self.dialog_panel.update(gs, render_eng)
-
 
     def _update_inventory_panel(self, world, gs, input_state, render_eng):
         if gs.player_state().is_dead():
