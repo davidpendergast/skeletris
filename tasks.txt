@@ -1,0 +1,16 @@
+
+bugs:
+    trillites can get stuck in walls
+    text jumps while wrapping
+    
+new features:
+    + 'impulse entities' that can push/pull player
+    + 'bomb throw attack' toss a thing that makes a AoE attack
+    
+    cycloi: 
+        + special ability is pulling the player in (impulse attack while attacking)
+        + some type of graphic
+        
+    boss fight:
+        + everything
+        

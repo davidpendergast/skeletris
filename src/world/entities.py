@@ -182,6 +182,9 @@ class Entity:
     def interact(self, world, gs):
         pass
 
+    def is_pushable(self):
+        return isinstance(self, Pushable)
+
     def interact_radius(self):
         return 64
 
@@ -209,7 +212,54 @@ class Entity:
                 yield bun
 
 
+class Pushable:
+
+    class Push:
+        def __init__(self, vector, duration):
+            self.vector = vector
+            self.duration = duration
+            self.tick_count = 0
+
+        def __hash__(self):
+            return hash((self.vector, self.duration))
+
+    def __init__(self):
+        self.active_pushes = set()
+
+    def update_pushes(self):
+        to_remove = []
+        for push in self.active_pushes:
+            push.tick_count += 1
+            if push.tick_count >= push.duration:
+                to_remove.append(push)
+
+        if len(to_remove) > 0:
+            for push in to_remove:
+                self.active_pushes.remove(push)
+
+    def get_total_push(self, max_vel=None):
+        if len(self.active_pushes) == 0:
+            return (0, 0)
+        else:
+            x_sum = 0
+            y_sum = 0
+
+            for push in self.active_pushes:
+                x_sum += push.vector[0] * max(0, 1 - push.tick_count / push.duration)
+                y_sum += push.vector[1] * max(0, 1 - push.tick_count / push.duration)
+
+            vel = (x_sum, y_sum)
+            if max_vel is not None and Utils.mag(vel) > max_vel:
+                return Utils.set_length(vel, max_vel)
+            else:
+                return vel
+
+    def push(self, vector, duration):
+        self.active_pushes.add(Pushable.Push(vector, duration))
+
+
 class ProjectileEntity(Entity):
+
     def __init__(self, cx, cy, radius, source, duration, source_state, attack):
         Entity.__init__(self, cx-radius, cy-radius, radius*2, radius*2)
         self._sprite_offset = (0, 0)
@@ -541,12 +591,9 @@ class Player(Entity):
 
     def __init__(self, x, y):
         Entity.__init__(self, x, y, 24, 12)
+
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
-        self.inputs_blocked_for_x_ticks = 0
-
-    def inputs_blocked(self):
-        return self.inputs_blocked_for_x_ticks > 0
     
     def set_shadow_sprite(self, sprite):
         self._shadow_sprite = sprite
@@ -573,12 +620,8 @@ class Player(Entity):
         render_engine.remove(self._shadow)
             
     def update(self, world, gs, input_state, render_engine):
-        if not gs.world_updates_paused():
-            if self.inputs_blocked_for_x_ticks > 0:
-                self.inputs_blocked_for_x_ticks -= 1
-
-    def block_inputs(self, duration):
-        self.inputs_blocked_for_x_ticks = duration
+        # player updates are handled by PlayerState
+        pass
         
     def is_player(self):
         return True
@@ -1093,8 +1136,7 @@ class BossExitEntity(Entity):
                             Cinematic([spriteref.cine_blank], "it's very dark, but you can sense that you aren't alone"),
                             Cinematic([spriteref.cine_blank], "your eyes begin to adjust to the darkness"),
                             Cinematic(spriteref.cine_cave_horrors, ""),
-                            Cinematic(spriteref.cine_cave_horrors,
-                                      "you've entered the cave horror's lair. prepare to fight")
+                            Cinematic(spriteref.cine_cave_horrors, "you've entered the cave horror's lair. prepare to fight")
                         ]
 
                         cine_queue.extend(sample_cines)

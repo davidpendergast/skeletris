@@ -134,7 +134,7 @@ class TrillaTemplate(EnemyTemplate):
             e_state.dmg_color = (1, 1, 1)
             e_state.took_damage_x_ticks_ago = 0
             e_state.set_color_x_ticks_ago = 0
-            e_state.current_knockback = Utils.rand_vec(3)
+            e_state.push(Utils.rand_vec(3), 15)
             e_state.set_special_attack(entity.state.special_attack)
             world.add(Enemy(pos[0], pos[1], e_state), next_update=True)
 

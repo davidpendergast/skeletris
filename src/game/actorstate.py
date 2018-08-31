@@ -6,7 +6,7 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, Pushable
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
@@ -21,13 +21,15 @@ def show_floating_text(text, color, scale, entity, world):
     world.add(text)
 
 
-class ActorState:
+class ActorState(Pushable):
 
     R_TEXT_COLOR = (0.75, 0.0, 0.0)
     G_TEXT_COLOR = (0.2, 0.85, 0.2)
     B_TEXT_COLOR = (0.2, 0.2, 0.85)
 
     def __init__(self, name, level, base_values):
+        Pushable.__init__(self)
+
         self._name = name
         self._level = level
         self._base_values = base_values
@@ -38,7 +40,6 @@ class ActorState:
         self.damage_recoil = 15
         self.took_damage_x_ticks_ago = self.damage_recoil
         self.set_color_x_ticks_ago = self.damage_recoil
-        self.current_knockback = (0, 0)
         self.dmg_color = (1, 0, 0)
 
         self.damage_amounts = []
@@ -143,8 +144,12 @@ class ActorState:
             self.took_damage_x_ticks_ago = 0
             self.set_color_x_ticks_ago = 0
             self.dmg_color = color
-            self.current_knockback = knockback
             self.damage_amounts.append(damage)
+
+            if knockback != (0, 0):
+                # faster implies lighter, implies easier to knock back, lol
+                knockback = Utils.mult(knockback, 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
+                self.push(knockback, self.damage_recoil)
 
     def do_heal(self, amount):
         if amount > 0:
@@ -271,7 +276,7 @@ class PlayerState(ActorState):
         death_anim.set_sprite_offset((0, -24))
         death_anim.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
         death_anim.set_xflipped(not self.facing_right)
-        death_anim.set_vel(Utils.mult(self.current_knockback, 2), fric=0.90, collides=True)
+        death_anim.set_vel(Utils.mult(player_entity.get_total_push(), 2), fric=0.90, collides=True)
 
         world.add(death_anim)
 
@@ -405,12 +410,13 @@ class PlayerState(ActorState):
                 move_x /= 2
                 move_y /= 2
 
-            if self.recoil_progress() < 1:
-                move_x += self.current_knockback[0] * (1 - self.recoil_progress())
-                move_y += self.current_knockback[1] * (1 - self.recoil_progress())
-
             move_x *= self.move_speed()
             move_y *= self.move_speed()
+
+            total_push = self.get_total_push()
+            move_x += total_push[0] * 2
+            move_y += total_push[1] * 2
+            self.update_pushes()
 
             player_entity.move(move_x, move_y, world=world, and_search=True)
             if move_x != 0:
@@ -597,9 +603,10 @@ class EnemyState(ActorState):
                 move_x *= ms_mult
                 move_y *= ms_mult
 
-                if self.recoil_progress() < 1.0:
-                    move_x += self.current_knockback[0] * (1 - self.recoil_progress())
-                    move_y += self.current_knockback[1] * (1 - self.recoil_progress())
+                total_push = self.get_total_push()
+                move_x += total_push[0]
+                move_y += total_push[1]
+                self.update_pushes()
 
                 if self.is_lunging():
                     self._lunge_count += 1
