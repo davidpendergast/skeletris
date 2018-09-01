@@ -9,10 +9,11 @@ from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
-from src.game.cinematics import Cinematic
 
 from src.game.dialog import Dialog
 from src.game.messages import Messages
+
+import src.game.readme_writer as readme_writer
 
 from src.worldgen.worldgen import WorldFactory
 
@@ -22,6 +23,11 @@ import src.utils.profiling as profiling
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
 
+if debug.DEBUG:
+    print("generating readme...")
+    readme_writer.write_readme(Utils.resource_path("readme_template.txt"),
+                               Utils.resource_path("README.md"),
+                               Utils.resource_path("gifs"))
 
 SCREEN_SIZE = (800, 600)
 
