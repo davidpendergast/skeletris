@@ -216,12 +216,12 @@ class Pushable:
 
     class Push:
         def __init__(self, vector, duration):
-            self.vector = vector
+            self.vector = tuple(vector)
             self.duration = duration
             self.tick_count = 0
 
         def __hash__(self):
-            return hash((self.vector, self.duration))
+            return hash((self.vector[0], self.vector[1], self.duration))
 
     def __init__(self):
         self.active_pushes = set()

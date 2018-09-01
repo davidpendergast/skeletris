@@ -205,6 +205,24 @@ class MuncherTemplate(EnemyTemplate):
         return True
 
 
+class CycloiTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Cycloi", spriteref.enemy_cyclops_all, spriteref.large_shadow)
+
+    def get_lunges(self):
+        return True
+
+    def get_pathfinding(self):
+        return PathfindingType.BASIC_CUT_OFF
+
+    def get_base_stats(self):
+        base_stats = EnemyTemplate.get_base_stats(self)
+        base_stats[StatType.DEF] += 15
+
+        return base_stats
+
+
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = EnemyTemplate("Trillite", spriteref.enemy_small_trilla_all, spriteref.medium_shadow)
 TEMPLATE_FLAPPUM = FlappumTemplate()
@@ -212,12 +230,13 @@ TEMPLATE_MUNCHER = MuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_ALT = MuncherTemplate(alt=True)
 TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
+TEMPLATE_CYCLOI = CycloiTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER_SMALL_ALT,
                         EnemyTemplate("Dicel", spriteref.enemy_dicel_all, spriteref.medium_shadow),
                         EnemyTemplate("The Fallen", spriteref.enemy_the_fallen_all, spriteref.medium_shadow),
-                        EnemyTemplate("Cycloi", spriteref.enemy_cyclops_all, spriteref.large_shadow),
+                        TEMPLATE_CYCLOI,
                         TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA]
 

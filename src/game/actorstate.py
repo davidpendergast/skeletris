@@ -584,11 +584,18 @@ class EnemyState(ActorState):
 
                 if self.is_lunging():
                     move_dir = self._lunge_direction if self.lunge_progress() > 0.3 else (0, 0)
-                elif (world.get_hidden_at(*entity.center()) or not self.is_aggro
-                      or self.template.get_pathfinding() == PathfindingType.PASSIVE):
+                elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
                     move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
                 else:
-                    move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
+                    path_type = self.template.get_pathfinding()
+                    if path_type == PathfindingType.PASSIVE:
+                        move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
+                    elif path_type == PathfindingType.BASIC_CUT_OFF:
+                        move_dir = BasicCutOffAI.get_move_dir(entity, self.movement_ai_state, world)
+                    elif path_type == PathfindingType.BASIC_CHASE:
+                        move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
+                    else:
+                        move_dir = BasicChaseAI.get_move_dir(entity, self.movement_ai_state, world)
 
                 # doing lunges
                 if random.random() < 0.02 and self._should_lunge(entity, world):
@@ -670,7 +677,8 @@ class EnemyState(ActorState):
 class PathfindingType(Enum):
     PASSIVE = 0,
     BASIC_CHASE = 1,
-    SMART_CHASE = 2
+    SMART_CHASE = 2,
+    BASIC_CUT_OFF = 3
 
 
 class MovementAI():
@@ -681,6 +689,24 @@ class MovementAI():
 
 
 class BasicChaseAI(MovementAI):
+    @staticmethod
+    def basic_move_towards_target(ai_state, start_pos, target_pos):
+        if "basic_angle_offset_degrees" not in ai_state:
+            ai_state["basic_angle_offset_degrees"] = 0
+
+        if random.random() < 0.03:
+            dist = Utils.dist(start_pos, target_pos)
+            max_angle_range = 80  # plus or minus
+            angle = random.random() * max_angle_range * Utils.bound((400 - dist) / 400, 0.25, 1.0)
+            angle *= 1.0 if random.random() < 0.5 else -1.0
+
+            ai_state["basic_angle_offset_degrees"] = angle
+
+        rotate_rads = Utils.to_rads(ai_state["basic_angle_offset_degrees"])
+
+        towards_player = Utils.set_length(Utils.sub(target_pos, start_pos), 1.0)
+
+        return Utils.rotate(towards_player, rotate_rads)
 
     @staticmethod
     def get_move_dir(entity, ai_state, world):
@@ -691,21 +717,23 @@ class BasicChaseAI(MovementAI):
             e_pos = entity.center()
             p_pos = p.center()
 
-            if "basic_angle_offset_degrees" not in ai_state:
-                ai_state["basic_angle_offset_degrees"] = 0
+            return BasicChaseAI.basic_move_towards_target(ai_state, e_pos, p_pos)
 
-            if random.random() < 0.03:
-                dist = Utils.dist(e_pos, p_pos)
-                max_angle_range = 80  # plus or minus
-                angle = random.random() * max_angle_range * Utils.bound((400 - dist) / 400, 0.25, 1.0)
-                angle *= 1.0 if random.random() < 0.5 else -1.0
 
-                ai_state["basic_angle_offset_degrees"] = angle
+class BasicCutOffAI(MovementAI):
 
-            rotate_rads = Utils.to_rads(ai_state["basic_angle_offset_degrees"])
+    @staticmethod
+    def get_move_dir(entity, ai_state, world):
+        p = world.get_player()
+        if p is None:
+            return (0, 0)
+        else:
+            e_pos = entity.center()
+            p_pos = p.center()
+            p_vel = p.get_vel()
+            target_pos = Utils.add(p_pos, Utils.mult(p_vel, 64 + 256 * random.random()))
 
-            towards_player = Utils.set_length(Utils.sub(p_pos, e_pos), 1.0)
-            return Utils.rotate(towards_player, rotate_rads)
+            return BasicChaseAI.basic_move_towards_target(ai_state, e_pos, target_pos)
 
 
 class IdleAI(MovementAI):
