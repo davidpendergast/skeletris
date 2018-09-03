@@ -574,7 +574,7 @@ class CinematicPanel:
             text_scale = CinematicPanel.TEXT_SCALE
             text_w = gs.screen_size[0] - self.border*2
             text_x = self.border
-            text_h = gs.screen_size[1] // 4 - self.border
+            text_h = gs.screen_size[1] // 5 - self.border
             text_y = gs.screen_size[1] - text_h - self.border
             wrapped_text = TextImage.wrap_words_to_fit(new_text, text_scale, text_w)
             self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=4)

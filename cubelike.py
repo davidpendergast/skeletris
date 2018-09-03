@@ -9,6 +9,7 @@ from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
+import src.game.cinematics as cinematics
 
 from src.game.dialog import Dialog
 from src.game.messages import Messages
@@ -113,9 +114,11 @@ def run():
             "ui_tooltips", 25,
             False, COLOR)
 
-    img_path = Utils.resource_path("assets/image.png")
-    raw_sheet = pygame.image.load(img_path)
-    img_surface = spriteref.build_spritesheet(raw_sheet)
+    raw_sheet = pygame.image.load(Utils.resource_path("assets/image.png"))
+    cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
+
+    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img)
+    cinematics.init_cinematics()
     
     window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
     window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())

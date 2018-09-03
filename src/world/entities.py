@@ -8,9 +8,7 @@ import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.utils.util import Utils
 from src.game.loot import LootFactory
-from src.game.cinematics import Cinematic
-
-import src.game.npc as npc
+import src.game.cinematics as cinematics
 
 ENTITY_UID_COUNTER = 0
 
@@ -1132,12 +1130,7 @@ class BossExitEntity(Entity):
                         cine_queue = gs.get_cinematics_queue()
                         cine_queue.clear()
 
-                        sample_cines = [
-                            Cinematic([spriteref.cine_blank], "it's very dark, but you can sense that you aren't alone"),
-                            Cinematic([spriteref.cine_blank], "your eyes begin to adjust to the darkness"),
-                            Cinematic(spriteref.cine_cave_horrors, ""),
-                            Cinematic(spriteref.cine_cave_horrors, "you've entered the cave horror's lair. prepare to fight")
-                        ]
+                        sample_cines = cinematics.opening_cinematic
 
                         cine_queue.extend(sample_cines)
 

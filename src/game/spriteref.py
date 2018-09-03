@@ -24,7 +24,34 @@ WORLD_LAYERS = (FLOOR_LAYER, SHADOW_LAYER,
 all_imgs = []
 
 
-def make(x, y, w, h):
+class Cinematics:
+    cine_size = (128, 72)
+
+    # all of these are lists of ImageModels
+    blank = None
+    cave_horrors = None
+    intro_skel_ghost_things = None
+    intro_skel_slide = None
+    intro_thing_slide = None
+    intro_ghost_slide = None
+    intro_fighting_slide = None
+
+    @staticmethod
+    def convert(orig_coords, offset):
+        if isinstance(orig_coords, list):
+            return [Cinematics._convert_single(x, offset) for x in orig_coords]
+        else:
+            return Cinematics._convert_single(orig_coords, offset)
+
+    @staticmethod
+    def _convert_single(coord, offset):
+        size = Cinematics.cine_size
+        return make(offset[0] + coord[0] * size[0],
+                   offset[1] + coord[1] * size[1],
+                   size[0], size[1])
+
+
+def make(x, y, w, h, filename="images.png"):
     img = ImageModel(x, y, w, h)
     all_imgs.append(img)
     return img
@@ -122,9 +149,6 @@ item_panel_bottom_1 = make(640, 80, 112, 8)  # if no bonus attributes
 inv_panel_top = make(480, 0, 160, 128)
 inv_panel_mid = make(480, 128, 160, 16)
 inv_panel_bot = make(480, 144, 160, 16)
-
-cine_blank = make(256, 480, 128, 72)
-cine_cave_horrors = [make(0 + 128*i, 480, 128, 72) for i in range(0, 2)]
 
 """
 0 1 2
@@ -277,15 +301,33 @@ def _draw_cd_image(sheet, rect, prog, color):
                 sheet.set_at((x, y), color)
 
 
-def build_spritesheet(raw_image):
+def build_cine_sheet(start_pos, raw_cine_img, sheet):
+    sheet.blit(raw_cine_img, start_pos)
+
+    cs = Cinematics
+    cs.blank = cs.convert([(4, 0)], start_pos)
+    cs.cave_horrors = cs.convert([(0, 0), (1, 0)], start_pos)
+    cs.intro_skel_ghost_things = cs.convert([(2, 0), (3, 0)], start_pos)
+    cs.intro_thing_vs_skeleton = cs.convert([(0, 1), (1, 1)], start_pos)
+    cs.intro_fighting_slide = cs.convert([(0, 1), (1, 1)], start_pos)
+    cs.intro_skel_slide = cs.convert([(2, 1), (3, 1)], start_pos)
+    cs.intro_ghost_slide = cs.convert([(0, 2), (1, 2)], start_pos)
+    cs.intro_thing_slide = cs.convert([(4, 1), (5, 1)], start_pos)
+
+
+def build_spritesheet(raw_image, raw_cine_img):
     """
         returns: Surface
     """
     global walls
-    sheet_size = (raw_image.get_width(), raw_image.get_height() + 2000)
+    sheet_size = (raw_image.get_width() + raw_cine_img.get_width(),
+                  raw_image.get_height() + 2000)
     sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
     sheet.fill((255, 255, 255, 0))
     sheet.blit(raw_image, (0, 0))
+
+    print("building cinematics sheet")
+    build_cine_sheet((raw_image.get_width(), 0), raw_cine_img, sheet)
 
     print("building approx 256 wall sprites...")
 
@@ -436,7 +478,8 @@ def build_spritesheet(raw_image):
 
 if __name__ == "__main__":
     raw = pygame.image.load("assets/image.png")
-    output = build_spritesheet(raw)
+    raw2 = pygame.image.load("assets/cinematics.png")
+    output = build_spritesheet(raw, raw2)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     
