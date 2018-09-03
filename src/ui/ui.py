@@ -50,7 +50,7 @@ class InventoryPanel:
 
         sc = 2
         
-        self.total_rect = [0, 0, spriteref.inv_panel_top.width()*sc, 
+        self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width()*sc,
                 (128 + 16*self.state.rows)*sc]
         self.equip_grid_rect = [8*sc, 24*sc, 80*sc, 80*sc]
         self.inv_grid_rect = [8*sc, 112*sc, 144*sc, 16*self.state.rows*sc]
@@ -74,12 +74,12 @@ class InventoryPanel:
                 self.dungeon_level != gs.dungeon_level)
         
     def _build_images(self, sc, gs):
-        self.top_img = ImageBundle(spriteref.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
+        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
-            self.mid_imgs.append(ImageBundle(spriteref.inv_panel_mid, 0, y, layer=self.layer, scale=sc))
+            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=sc))
         y = (128 + self.state.rows*16 - 16)*sc
-        self.bot_img = ImageBundle(spriteref.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
+        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
         
         self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(sc*3/2))
         
@@ -174,7 +174,7 @@ class DialogPanel:
         if len(self._border_imgs) == 0:
             bw, bh = DialogPanel.BORDER_SIZE
             right_x = x + DialogPanel.SIZE[0]
-            border_sprites = spriteref.text_panel_edges
+            border_sprites = spriteref.UI.text_panel_edges
 
             for i in range(0, DialogPanel.SIZE[0] // bw):
                 top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh, layer=lay, scale=2)
@@ -189,7 +189,7 @@ class DialogPanel:
             needs_update = True
 
         if len(self._bg_imgs) == 0:
-            bg_sprite = spriteref.text_panel_edges[4]
+            bg_sprite = spriteref.UI.text_panel_edges[4]
             bg_w, bg_h = bg_sprite.size()
             sc = min(DialogPanel.SIZE[0] // bg_w, DialogPanel.SIZE[1] // bg_h)
             bg_w *= sc
@@ -282,7 +282,7 @@ class HealthBarPanel:
 
     def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing, cooldowns):
         if self._top_img is None:
-            self._top_img = ImageBundle(spriteref.status_bar_base, 0, 0,
+            self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2)
         if self._bar_img is None:
             self._bar_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
@@ -291,13 +291,13 @@ class HealthBarPanel:
         y = gs.screen_size[1] - self._top_img.height()
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
-        bar_w = spriteref.health_bar_full.width() * 2
+        bar_w = spriteref.UI.health_bar_full.width() * 2
         bar_x = gs.screen_size[0] // 2 - bar_w // 2
 
         if new_damage > 0:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
             dmg_x = int(bar_x + hp_pcnt_full * bar_w)
-            dmg_sprite = spriteref.get_health_bar(pcnt_full)
+            dmg_sprite = spriteref.UI.get_health_bar(pcnt_full)
             dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
             self._floating_bars.append([dmg_img, 0])
 
@@ -313,7 +313,7 @@ class HealthBarPanel:
             self._floating_bars[i][0] = img.update(new_y=(y - h_offs), new_color=(1.0, g, b))
 
         self._top_img = self._top_img.update(new_x=x, new_y=y)
-        bar_sprite = spriteref.get_health_bar(hp_pcnt_full)
+        bar_sprite = spriteref.UI.get_health_bar(hp_pcnt_full)
 
         glow_factor = (1 - hp_pcnt_full) * 0.2 * math.cos(((gs.anim_tick % 6) / 6) * 2 * (3.1415))
         color = (bar_color[0], bar_color[1] + glow_factor, bar_color[2] + glow_factor)

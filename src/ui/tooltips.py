@@ -56,17 +56,17 @@ class TitleImageAndStatsTooltip(Tooltip):
 
     def _build_images(self):
         sc = 2
-        self.top_panel = ImageBundle(spriteref.item_panel_top, 0, 0, layer=self.layer, scale=sc)
+        self.top_panel = ImageBundle(spriteref.UI.item_panel_top, 0, 0, layer=self.layer, scale=sc)
         h = self.top_panel.height()
         for i in range(0, len(self.non_core_stats)):
-            img = ImageBundle(spriteref.item_panel_middle, 0, h, layer=self.layer, scale=sc)
+            img = ImageBundle(spriteref.UI.item_panel_middle, 0, h, layer=self.layer, scale=sc)
             h += img.height()
             self.mid_panels.append(img)
 
         if len(self.mid_panels) > 0:
-            bot_sprite = spriteref.item_panel_bottom_0
+            bot_sprite = spriteref.UI.item_panel_bottom_0
         else:
-            bot_sprite = spriteref.item_panel_bottom_1
+            bot_sprite = spriteref.UI.item_panel_bottom_1
             h -= bot_sprite.height() * sc  # covers up part of the top
         self.bot_panel = ImageBundle(bot_sprite, 0, h, layer=self.layer, scale=sc)
 

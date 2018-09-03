@@ -51,8 +51,35 @@ class Cinematics:
                    size[0], size[1])
 
 
-def make(x, y, w, h, filename="images.png"):
-    img = ImageModel(x, y, w, h)
+class UI:
+    item_panel_top = None
+    item_panel_middle = None
+    item_panel_bottom_0 = None
+    item_panel_bottom_1 = None  # if no bonus attributes
+
+    inv_panel_top = None
+    inv_panel_mid = None
+    inv_panel_bot = None
+
+    """
+    0 1 2
+    3 4 5
+    6 7 8
+    """
+    text_panel_edges = []
+
+    status_bar_base = None
+    health_bar_top = None
+    health_bar_full = None
+    health_bars_with_length = []
+
+    @staticmethod
+    def get_health_bar(pcnt_full):
+        return UI.health_bars_with_length[round(pcnt_full * 256)]
+
+
+def make(x, y, w, h, shift=(0, 0)):
+    img = ImageModel(x + shift[0], y + shift[1], w, h)
     all_imgs.append(img)
     return img
 
@@ -141,39 +168,9 @@ medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 chest_shadow = make(96, 40, 32, 8)
 
-item_panel_top = make(640, 0, 112, 64)
-item_panel_middle = make(640, 64, 112, 8)
-item_panel_bottom_0 = make(640, 72, 112, 8)
-item_panel_bottom_1 = make(640, 80, 112, 8)  # if no bonus attributes
-
-inv_panel_top = make(480, 0, 160, 128)
-inv_panel_mid = make(480, 128, 160, 16)
-inv_panel_bot = make(480, 144, 160, 16)
-
-"""
-0 1 2
-3 4 5
-6 7 8
-"""
-text_panel_edges = [make(480 + 4*(i % 3), 232 + 4*(i // 3), 4, 4) for i in range(0, 9)]
-
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
-
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
-
-progress_bars = [make((i // 4)*16, (i % 4)*4 + 336, 16, 4) for i in range(0, 16)]
-
-status_bar_base = make(480, 176, 400, 53)
-health_bar_top = make(544, 160, 256, 16)
-health_bar_full = make(544, 160, 256, 16)
-health_bars_with_length = []
-for i in range(0, 256):
-    health_bars_with_length.append(make(544, 160, i, 16))
-health_bars_with_length.append(health_bar_full)
-
-
-def get_health_bar(pcnt_full):
-    return health_bars_with_length[round(pcnt_full * 256)]
+progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
 
 
 _chars = [letter for letter in string.ascii_lowercase]
@@ -315,19 +312,61 @@ def build_cine_sheet(start_pos, raw_cine_img, sheet):
     cs.intro_thing_slide = cs.convert([(4, 1), (5, 1)], start_pos)
 
 
-def build_spritesheet(raw_image, raw_cine_img):
+def build_ui_sheet(start_pos, raw_ui_img, sheet):
+    sheet.blit(raw_ui_img, start_pos)
+
+    UI.item_panel_top = make(160, 0, 112, 64, shift=start_pos)
+    UI.item_panel_middle = make(160, 64, 112, 8, shift=start_pos)
+    UI.item_panel_bottom_0 = make(160, 72, 112, 8, shift=start_pos)
+    UI.item_panel_bottom_1 = make(160, 80, 112, 8, shift=start_pos)  # if no bonus attributes
+
+    UI.inv_panel_top = make(0, 0, 160, 128, shift=start_pos)
+    UI.inv_panel_mid = make(0, 128, 160, 16, shift=start_pos)
+    UI.inv_panel_bot = make(0, 144, 160, 16, shift=start_pos)
+
+    """
+    0 1 2
+    3 4 5
+    6 7 8
+    """
+    UI.text_panel_edges = [make(4 * (i % 3), 232 + 4 * (i // 3), 4, 4, shift=start_pos) for i in range(0, 9)]
+
+    UI.status_bar_base = make(0, 176, 400, 53, shift=start_pos)
+    UI.health_bar_top = make(64, 160, 256, 16, shift=start_pos)
+    UI.health_bar_full = make(64, 160, 256, 16, shift=start_pos)
+    UI.health_bars_with_length = []
+
+    for i in range(0, 256):
+        UI.health_bars_with_length.append(make(64, 160, i, 16, shift=start_pos))
+    UI.health_bars_with_length.append(UI.health_bar_full)
+
+
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
     """
         returns: Surface
+        Here's how the final sheet is arranged:
+        *-------------------------------*
+        | image.png   | cinematics.png  |
+        |             |-----------------*
+        |-------------| ui.png          |
+        | gen'd stuff |                 |
+        *-------------*-----------------*
+
     """
     global walls
-    sheet_size = (raw_image.get_width() + raw_cine_img.get_width(),
-                  raw_image.get_height() + 2000)
+    sheet_w = raw_image.get_width() + max(raw_cine_img.get_width(), raw_ui_img.get_width())
+    sheet_h = max(raw_image.get_height() + 2000, raw_cine_img.get_height() + raw_ui_img.get_height())
+    sheet_size = (sheet_w, sheet_h)
+
     sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
     sheet.fill((255, 255, 255, 0))
     sheet.blit(raw_image, (0, 0))
 
-    print("building cinematics sheet")
+    print("building cinematics sheet...")
     build_cine_sheet((raw_image.get_width(), 0), raw_cine_img, sheet)
+
+    print("building ui sheet...")
+    build_ui_sheet((raw_image.get_width(), raw_cine_img.get_height()), raw_ui_img, sheet)
 
     print("building approx 256 wall sprites...")
 
@@ -479,7 +518,8 @@ def build_spritesheet(raw_image, raw_cine_img):
 if __name__ == "__main__":
     raw = pygame.image.load("assets/image.png")
     raw2 = pygame.image.load("assets/cinematics.png")
-    output = build_spritesheet(raw, raw2)
+    raw3 = pygame.image.load("assets/ui.png")
+    output = build_spritesheet(raw, raw2, raw3)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

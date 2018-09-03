@@ -25,7 +25,7 @@ def init_cinematics():
         Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony"),
         Cinematic(spriteref.Cinematics.intro_skel_slide, "skeletons built towns, farmed crops, and raised families"),
         Cinematic(spriteref.Cinematics.intro_thing_slide, "things lived in tribes, migrating with the seasons to find food"),
-        Cinematic(spriteref.Cinematics.intro_ghost_slide, "ghosts mostly just chatted and drifted around"),
+        Cinematic(spriteref.Cinematics.intro_ghost_slide, "ghosts mostly just chatted"),
         Cinematic(spriteref.Cinematics.blank, "but one day everything changed"),
         Cinematic(spriteref.Cinematics.intro_fighting_slide, "the skeletons and things began fighting a brutal, endless war"),
         Cinematic(spriteref.Cinematics.blank, "the ghosts vanished without a trace"),

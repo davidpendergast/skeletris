@@ -662,8 +662,8 @@ class Enemy(Entity):
             self._healthbar_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         if self._healthbar_img is not None:
-            n = len(spriteref.progress_bars)
-            hp_sprite = spriteref.progress_bars[int(min(0.99, health_ratio) * n)]
+            n = len(spriteref.progress_spinner)
+            hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
             hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
             hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
             self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
