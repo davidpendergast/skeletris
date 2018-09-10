@@ -2,6 +2,7 @@ import math
 import random
 import os
 import sys
+import numbers
 
 
 class Utils:
@@ -68,7 +69,10 @@ class Utils:
 
     @staticmethod
     def linear_interp(v1, v2, a):
-        return tuple([v1[i] * (1 - a) + v2[i] * a for i in range(0, len(v1))])
+        if isinstance(v1, numbers.Number):
+            return v1 * (1 - a) + v2 * a
+        else:
+            return tuple([v1[i] * (1 - a) + v2[i] * a for i in range(0, len(v1))])
 
     @staticmethod
     def round(v):
