@@ -2,7 +2,7 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, BossExitEntity, DoorEntity, ChestEntity
+from src.world.entities import Player, ExitEntity, TreeEntity, BossExitEntity, DoorEntity, ChestEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -198,6 +198,9 @@ class WorldBlueprint:
                 w.set_geo(x, y, self.geo[x][y])
                 if self.geo[x][y] == World.DOOR:
                     w.add(DoorEntity(x, y), next_update=False)
+
+                if self.geo[x][y] == World.FLOOR and random.random() < 0.05:
+                    w.add(TreeEntity(), gridcell=(x, y))
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)

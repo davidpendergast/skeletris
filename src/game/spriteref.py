@@ -78,6 +78,18 @@ class UI:
         return UI.health_bars_with_length[round(pcnt_full * 256)]
 
 
+class Trees:
+
+    trees = []  # list of lists
+
+    @staticmethod
+    def get_tree(tree_id, lean_ratio):
+        """lean_ratio: 0 is fully left, 1.0 is fully right"""
+        tree_frames = Trees.trees[tree_id % len(Trees.trees)]
+        lean_ratio = Utils.bound(lean_ratio, 0.0, 0.999)
+        return tree_frames[int(lean_ratio * (len(tree_frames)))]
+
+
 def make(x, y, w, h, shift=(0, 0)):
     img = ImageModel(x + shift[0], y + shift[1], w, h)
     all_imgs.append(img)
@@ -341,7 +353,22 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.health_bars_with_length.append(UI.health_bar_full)
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
+def build_tree_sheet(start_pos, raw_tree_img, sheet):
+    sheet.blit(raw_tree_img, start_pos)
+    tree_size = (256, 256)
+    n_trees = raw_tree_img.get_height() // tree_size[1]
+    n_frames = raw_tree_img.get_width() // tree_size[0]
+    print("making {} trees with {} frames each".format(n_trees, n_frames))
+    for y in range(0, n_trees):
+        cur_tree = []
+        for x in range(0, n_frames):
+            x_pos = start_pos[0] + x*tree_size[0]
+            y_pos = start_pos[1] + y*tree_size[1]
+            cur_tree.append(make(x_pos, y_pos, tree_size[0], tree_size[1]))
+        Trees.trees.append(cur_tree)
+
+
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -350,23 +377,36 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
         |             |-----------------*
         |-------------| ui.png          |
         | gen'd stuff |                 |
+        |             *-----------------*
+        |             | trees.png       |
         *-------------*-----------------*
+
 
     """
     global walls
-    sheet_w = raw_image.get_width() + max(raw_cine_img.get_width(), raw_ui_img.get_width())
-    sheet_h = max(raw_image.get_height() + 2000, raw_cine_img.get_height() + raw_ui_img.get_height())
+    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img]
+    sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
+    sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
+    left_size = (raw_image.get_width(), sheet_size[1])
 
-    sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32) 
+    sheet = pygame.Surface(sheet_size, pygame.SRCALPHA, 32)
     sheet.fill((255, 255, 255, 0))
     sheet.blit(raw_image, (0, 0))
 
+    _x = raw_image.get_width()
+    _y = 0
     print("building cinematics sheet...")
-    build_cine_sheet((raw_image.get_width(), 0), raw_cine_img, sheet)
+    build_cine_sheet((_x, _y), raw_cine_img, sheet)
+    _y += raw_cine_img.get_height()
 
     print("building ui sheet...")
-    build_ui_sheet((raw_image.get_width(), raw_cine_img.get_height()), raw_ui_img, sheet)
+    build_ui_sheet((_x, _y), raw_ui_img, sheet)
+    _y += raw_ui_img.get_height()
+
+    print("building tree sheet...")
+    build_tree_sheet((_x, _y), raw_tree_img, sheet)
+    _y += raw_tree_img.get_height()
 
     print("building approx 256 wall sprites...")
 
@@ -395,7 +435,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
             dupe_preventer[key] = model
             
             draw_x += 16
-            if draw_x > sheet_size[0] - 16:
+            if draw_x > left_size[0] - 16:
                 draw_x = 0
                 draw_y += 16
 
@@ -404,7 +444,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
 
     for text in _cached_text:
         width = len(text) * (5 + 1) - 1
-        if draw_x + width >= sheet_size[0]:
+        if draw_x + width >= left_size[0]:
             draw_y += 6
             draw_x = 0
 
@@ -451,7 +491,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
             item_entities[item] = make(draw_x, draw_y, w * 4, h * 4)
 
         draw_x += 20
-        if draw_x > sheet_size[0] - 20:
+        if draw_x > left_size[0] - 20:
             draw_x = 0
             draw_y += 20
 
@@ -471,7 +511,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
         h = circle_art_heights[i]
         att_circles_real.append([])
         for frame in range(0, num_frames):
-            if draw_x + w > sheet_size[0]:
+            if draw_x + w > left_size[0]:
                 draw_x = 0
                 draw_y += h
             rect = [draw_x, draw_y, w, h]
@@ -497,7 +537,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img):
     print("drawing {} cooldown overlays...".format(n_cooldowns))
 
     for i in range(0, n_cooldowns):
-        if draw_x + cd_size > sheet_size[0]:
+        if draw_x + cd_size > left_size[0]:
             draw_x = 0
             draw_y += cd_size
         rect = [draw_x, draw_y, cd_size, cd_size]
@@ -519,7 +559,8 @@ if __name__ == "__main__":
     raw = pygame.image.load("assets/image.png")
     raw2 = pygame.image.load("assets/cinematics.png")
     raw3 = pygame.image.load("assets/ui.png")
-    output = build_spritesheet(raw, raw2, raw3)
+    raw4 = pygame.image.load("assets/trees.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

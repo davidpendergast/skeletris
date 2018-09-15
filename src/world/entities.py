@@ -1146,6 +1146,37 @@ class BossExitEntity(Entity):
         self._was_interacted_with = True
 
 
+class TreeEntity(Entity):
+
+    def __init__(self):
+        Entity.__init__(self, 0, 0, 8, 8)
+        self._tree_id = int(999 * random.random())
+        self.lean_ratio = random.random()
+        self.wind_offset = int(random.random() * 10)
+
+    def get_shadow_sprite(self):
+        return spriteref.medium_shadow
+
+    def update_images(self, anim_tick, lean_ratio):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+
+        sprite = spriteref.Trees.get_tree(self._tree_id, lean_ratio)
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+        depth = self.get_depth()
+
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+
+        Entity.update_images(self, anim_tick)
+
+    def update(self, world, gs, input_state, render_engine):
+        num = gs.anim_tick + self.wind_offset
+        cool_lean = ((num % 480) / 480 + (num % 200) / 200) / 2
+        self.lean_ratio = Utils.bound(cool_lean, 0, 0.999)
+        self.update_images(gs.anim_tick, self.lean_ratio)
+
+
 class NpcEntity(Entity):
 
     def __init__(self, npc_id):

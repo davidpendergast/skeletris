@@ -153,7 +153,7 @@ def draw_tree(surface, tree):
 
 
 if __name__ == "__main__":
-    grid_size = (8, 8)
+    grid_size = (12, 8)
     tree_size = (256, 256)
     test_surface = pygame.Surface((grid_size[0] * tree_size[0], grid_size[1] * tree_size[1]))
     test_surface.fill((255, 255, 255))
