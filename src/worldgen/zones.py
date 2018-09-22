@@ -1,3 +1,5 @@
+import random
+
 from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, BuilderUtils
 import src.world.entities as entities
 import src.game.spriteref as spriteref
@@ -121,6 +123,11 @@ class CaveHorrorZone(Zone):
         bp.player_spawn = (3, 22)
 
         w = bp.build_world()
+        w.set_wall_type(spriteref.WALL_NORMAL_ID)
+
+        for floor_xy in boss_room.all_floors():
+            if random.random() < 0.15:
+                w.set_floor_type(spriteref.FLOOR_CRACKED_ID, xy=floor_xy)
 
         tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle, 60, spriteref.ENTITY_LAYER, w=64*5, h=8)
         tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)

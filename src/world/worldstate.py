@@ -41,6 +41,12 @@ class World:
         self._ents_to_add = []
         self._onscreen_entities = set()
 
+        self._wall_type = spriteref.WALL_NORMAL_ID
+        self._floor_type = spriteref.FLOOR_NORMAL_ID
+
+        self._wall_art_overrides = {}  # x,y -> wall_type_id
+        self._floor_art_overrides = {}  # x,y -> floor_type_id
+
     def cellsize(self):
         return CELLSIZE
         
@@ -87,8 +93,38 @@ class World:
         
         res.sort(key=lambda e: Utils.dist(center, e.center()))
         
-        return res       
-        
+        return res
+
+    def set_wall_type(self, wall_id, xy=None):
+        if xy is None:
+            self._wall_type = wall_id
+        elif wall_id is None:
+            if xy in self._wall_art_overrides:
+                del self._wall_art_overrides[xy]
+        else:
+            self._wall_art_overrides[xy] = wall_id
+
+    def wall_type_at(self, grid_xy):
+        if grid_xy in self._wall_art_overrides:
+            return self._wall_art_overrides[grid_xy]
+        else:
+            return self._wall_type
+
+    def set_floor_type(self, floor_id, xy=None):
+        if xy is None:
+            self._floor_type = floor_id
+        elif floor_id is None:
+            if xy in self._floor_art_overrides:
+                del self._floor_art_overrides[xy]
+        else:
+            self._floor_art_overrides[xy] = floor_id
+
+    def floor_type_at(self, grid_xy):
+        if grid_xy in self._floor_art_overrides:
+            return self._floor_art_overrides[grid_xy]
+        else:
+            return self._floor_type
+
     def set_geo(self, grid_x, grid_y, geo_id):
         if self.is_valid(grid_x, grid_y):
             self._level_geo[grid_x][grid_y] = geo_id
@@ -184,7 +220,7 @@ class World:
             n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
             mults = [1, 2, 4, 8, 16, 32, 64, 128]
             wall_img_id = sum(n_info[i] * mults[i] for i in range(0, 8))
-            return spriteref.walls[wall_img_id]
+            return spriteref.get_wall(wall_img_id, wall_type_id=self.wall_type_at((grid_x, grid_y)))
 
         elif geo == World.DOOR:
             return spriteref.floor_totally_dark
@@ -197,7 +233,7 @@ class World:
                 n_info = self.get_neighbor_info(grid_x, grid_y, mapping=mapping)
 
                 floor_img_id = 2 * n_info[0] + 4 * n_info[1] + 1 * n_info[7]
-                return spriteref.floors[floor_img_id]
+                return spriteref.get_floor(floor_img_id, floor_type_id=self.floor_type_at((grid_x, grid_y)))
 
         return None
 

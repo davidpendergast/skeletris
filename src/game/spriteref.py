@@ -252,6 +252,23 @@ def split_text(text, add_to=None):
        6    5    4
 """
 walls = [None] * 256
+walls_black = [None] * 256
+walls_cracked = [None] * 256
+
+WALL_NORMAL_ID = 0
+WALL_BLACK_ID = 1
+WALL_CRACKED_ID = 2
+
+_wall_lookup = [walls, walls_black, walls_cracked]
+_root_pos = (472, 32)
+_wall_types = [(walls, [_root_pos[0], _root_pos[1], 64, 32]),
+               (walls_cracked, [_root_pos[0], _root_pos[1] + 32, 64, 32]),
+               (walls_black, [_root_pos[0], _root_pos[1] + 64, 64, 32])]
+
+
+def get_wall(encoding, wall_type_id=WALL_NORMAL_ID):
+    return _wall_lookup[wall_type_id][encoding]
+
 
 """Lookup table for floor sprites:
     * -- * -- *
@@ -260,13 +277,23 @@ walls = [None] * 256
     |  1 |  x |
     * -- * -- * 
 """
-floors = [make(i*16, 48, 16, 16) for i in range(0, 8)]
-floor_totally_dark = make(128, 48, 16, 16)
-floor_hidden = make(144, 48, 16, 16)
+floor_hidden = make(608, 16, 16, 16)
+floor_totally_dark = make(624, 16, 16, 16)
+floors = [make(608 + i*16, 32, 16, 16) for i in range(0, 8)]
+floors_alt = [make(608 + i*16, 48, 16, 16) for i in range(0, 8)]
+floors_cracked = [make(608 + i*16, 64, 16, 16) for i in range(0, 8)]
+
+FLOOR_NORMAL_ID = 0
+FLOOR_QUAD_ID = 1
+FLOOR_CRACKED_ID = 2
+_floor_lookup = [floors, floors_alt, floors_cracked]
 
 
-def _get_wall_corner_loc(spot, bools):
-    orig_walls = [0, 64, 64, 32]  # x, y, w, h
+def get_floor(encoding, floor_type_id=FLOOR_NORMAL_ID):
+    return _floor_lookup[floor_type_id][encoding]
+
+
+def _get_wall_corner_loc(spot, bools, wall_pieces):
     if spot == "TL":
         y = 0
         x = 1*bools[7] + 2*bools[0] + 4*bools[1]
@@ -280,7 +307,7 @@ def _get_wall_corner_loc(spot, bools):
         y = 3
         x = 1*bools[3] + 2*bools[4] + 4*bools[5]
         
-    return (orig_walls[0] + x*8, orig_walls[1] + y*8, 8, 8)
+    return (wall_pieces[0] + x*8, wall_pieces[1] + y*8, 8, 8)
 
 
 def _draw_ellipse(sheet, center, width, height, opacity):
@@ -396,8 +423,6 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
         |             *-----------------*
         |             | bosses.png      |
         *-------------*-----------------*
-
-
     """
     global walls
     right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img]
@@ -428,36 +453,41 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
     _y += raw_boss_img.get_height()
 
-    print("building approx 256 wall sprites...")
-
-    dupe_preventer = {}
-    draw_x = 0
     draw_y = raw_image.get_height()
-    
-    for i in range(0, 256):
-        bools = [int(x) for x in reversed(list('{0:0b}'.format(i)))]
-        bools= bools + [0]*(8 - len(bools))
-        
-        tl = _get_wall_corner_loc("TL", bools)
-        tr = _get_wall_corner_loc("TR", bools)
-        bl = _get_wall_corner_loc("BL", bools)
-        br = _get_wall_corner_loc("BR", bools)
-        key = (tl, tr, bl, br)
-        if key in dupe_preventer:
-            walls[i] = dupe_preventer[key]
-        else:
-            sheet.blit(raw_image, (draw_x, draw_y), tl)
-            sheet.blit(raw_image, (draw_x + 8, draw_y), tr)
-            sheet.blit(raw_image, (draw_x, draw_y + 8), bl)
-            sheet.blit(raw_image, (draw_x + 8, draw_y + 8), br)
-            model = make(draw_x, draw_y, 16, 16)
-            walls[i] = model
-            dupe_preventer[key] = model
-            
-            draw_x += 16
-            if draw_x > left_size[0] - 16:
-                draw_x = 0
-                draw_y += 16
+
+    print("building approx {} wall sprites...".format(256 * len(_wall_types)))
+
+    for wall_type in _wall_types:
+        wall_array = wall_type[0]
+        pieces_location = wall_type[1]
+        dupe_preventer = {}
+
+        draw_x = 0
+
+        for i in range(0, 256):
+            bools = [int(x) for x in reversed(list('{0:0b}'.format(i)))]
+            bools= bools + [0]*(8 - len(bools))
+
+            tl = _get_wall_corner_loc("TL", bools, pieces_location)
+            tr = _get_wall_corner_loc("TR", bools, pieces_location)
+            bl = _get_wall_corner_loc("BL", bools, pieces_location)
+            br = _get_wall_corner_loc("BR", bools, pieces_location)
+            key = (tl, tr, bl, br)
+            if key in dupe_preventer:
+                wall_array[i] = dupe_preventer[key]
+            else:
+                sheet.blit(raw_image, (draw_x, draw_y), tl)
+                sheet.blit(raw_image, (draw_x + 8, draw_y), tr)
+                sheet.blit(raw_image, (draw_x, draw_y + 8), bl)
+                sheet.blit(raw_image, (draw_x + 8, draw_y + 8), br)
+                model = make(draw_x, draw_y, 16, 16)
+                wall_array[i] = model
+                dupe_preventer[key] = model
+
+                draw_x += 16
+                if draw_x > left_size[0] - 16:
+                    draw_x = 0
+                    draw_y += 16
 
     draw_x = 0
     draw_y += 16
