@@ -26,6 +26,7 @@ class Room:
     def set_offset(self, x, y):
         self.x = x
         self.y = y
+        return self
 
     def add_neighbor(self, room, door_pos):
         self._adj_rooms.append(room)
@@ -60,6 +61,17 @@ class Room:
                     res.append(w)
         return res
 
+    def get_bounds(self):
+        wallz = [w for w in self.all_walls()]
+        if len(wallz) == 0:
+            return None
+        else:
+            min_x = min(w[0] for w in wallz)
+            min_y = min(w[1] for w in wallz)
+            max_x = max(w[0] for w in wallz)
+            max_y = max(w[0] for w in wallz)
+            return [min_x, min_y, max_x - min_x + 1, max_y - min_y + 1]
+
     def autofill_walls(self):
         for f in self._floor:
             for n in NEIGHBORS:
@@ -76,14 +88,6 @@ class Room:
     def has_floor_at(self, xy):
         return (xy[0] - self.x, xy[1] - self.y) in self._floor
 
-    def add_to_blueprint(self, bp):
-        for w in self.all_walls():
-            bp.set(*w, World.WALL)
-        for f in self.all_floors():
-            bp.set(*f, World.FLOOR)
-        for d in self.all_doors():
-            bp.set(*d, World.DOOR)
-
 
 class RoomFactory:
 
@@ -99,6 +103,7 @@ class RoomFactory:
 
     @staticmethod
     def gen_rectangular_room(w, h):
+        """generates a room with floor tiles w x h"""
         res = Room()
         for x in range(0, w):
             for y in range(0, h):
@@ -173,10 +178,10 @@ class WorldBlueprint:
         for i in range(0, size[0]):
             self.geo.append([World.EMPTY] * size[1])
 
-        self.player_spawn = [1, 1]
+        self.player_spawn = (1, 1)
         self.enemy_spawns = []
         self.chest_spawns = []
-        self.exit_spawn = [2, 1]
+        self.exit_spawn = None
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -190,6 +195,14 @@ class WorldBlueprint:
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
+
+    def add_room(self, room):
+        for w in room.all_walls():
+            self.set(*w, World.WALL)
+        for f in room.all_floors():
+            self.set(*f, World.FLOOR)
+        for d in room.all_doors():
+            self.set(*d, World.DOOR)
 
     def build_world(self):
         w = World(*self.size)
@@ -211,8 +224,9 @@ class WorldBlueprint:
             w.add(ChestEntity(0, 0), gridcell=chest_pos, next_update=False)
 
         w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
-        #w.add(ExitEntity(*self.exit_spawn), next_update=False)
-        w.add(BossExitEntity(*self.exit_spawn), next_update=False)
+        if self.exit_spawn is not None:
+            # w.add(ExitEntity(*self.exit_spawn), next_update=False)
+            w.add(BossExitEntity(*self.exit_spawn), next_update=False)
 
         return w
 
@@ -263,9 +277,9 @@ class WorldFactory:
 
         bp = WorldBlueprint(size, level)
         for room in rooms:
-            room.add_to_blueprint(bp)
+            bp.add_room(room)
 
-        WorldFactory._fill_corners(bp)
+        WorldFactory.fill_corners(bp)
 
         flrs = [f for f in rooms[0].all_floors()]
         random.shuffle(flrs)
@@ -296,7 +310,7 @@ class WorldFactory:
         return res
 
     @staticmethod
-    def _fill_corners(bp):
+    def fill_corners(bp):
         for x in range(0, bp.size[0]):
             for y in range(0, bp.size[1]):
                 if bp.get(x, y) == World.FLOOR:

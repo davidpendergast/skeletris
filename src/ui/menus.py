@@ -28,7 +28,8 @@ class MenuManager:
 
             self._active_menu = self._get_menu(self._next_active_menu_id)
             self._next_active_menu_id = None
-            render_eng.set_clear_color(*self._active_menu.get_clear_color())
+            if not self.should_draw_world():
+                render_eng.set_clear_color(*self._active_menu.get_clear_color())
 
         menu = self.get_active_menu()
         menu.update(world, gs, input_state, render_eng)

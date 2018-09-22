@@ -24,6 +24,7 @@ class World:
         self._hidden = []
         self._active_light_events = []
         self._light_update_freq = 1  # ticks per update
+        self._bg_color = (92, 92, 92)
 
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
@@ -34,7 +35,7 @@ class World:
         self._onscreen_bundles = set()
 
         self._dirty_bundles = []
-            
+
         self.entities = []
         self._ents_to_remove = []
         self._ents_to_add = []
@@ -120,6 +121,12 @@ class World:
             return self._hidden[grid_x][grid_y]
         else:
             return False
+
+    def set_bg_color(self, color):
+        self._bg_color = color
+
+    def get_bg_color(self):
+        return self._bg_color
 
     def set_hidden(self, grid_x, grid_y, val, and_fill_adj_floors=True):
         if self.get_geo(grid_x, grid_y) == World.FLOOR and self._hidden[grid_x][grid_y] != val:
