@@ -89,8 +89,9 @@ def run():
     cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
     ui_img = pygame.image.load(Utils.resource_path("assets/ui.png"))
     tree_img = pygame.image.load(Utils.resource_path("assets/trees.png"))
+    boss_img = pygame.image.load(Utils.resource_path("assets/bosses.png"))
 
-    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, tree_img)
+    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, tree_img, boss_img)
     cinematics.init_cinematics()
     
     window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)

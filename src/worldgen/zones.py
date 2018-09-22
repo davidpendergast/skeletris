@@ -1,5 +1,6 @@
 from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, BuilderUtils
 import src.world.entities as entities
+import src.game.spriteref as spriteref
 
 _ALL_ZONES = {}
 
@@ -103,8 +104,8 @@ class CaveHorrorZone(Zone):
     def build_world(self, gs):
         bp = WorldBlueprint((35, 35), self.get_level())
         rooms = []
-        boss_room = RoomFactory.gen_rectangular_room(5, 3)  # 7 x 7 total
-        boss_room.set_offset(1, 3)
+        boss_room = RoomFactory.gen_rectangular_room(5, 5)  # 7 x 7 total
+        boss_room.set_offset(1, 1)
         rooms.append(boss_room)
 
         boss_hallway = RoomFactory.gen_rectangular_room(1, 16)  # 3 x 17
@@ -119,7 +120,18 @@ class CaveHorrorZone(Zone):
 
         bp.player_spawn = (3, 22)
 
-        return bp.build_world()
+        w = bp.build_world()
+
+        tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle, 60, spriteref.ENTITY_LAYER, w=64*5, h=8)
+        tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
+        room_bounds = boss_room.get_bounds()
+        tree_sprite.set_x_centered(False)
+        tree_sprite.set_y_centered(False)
+        tree_sprite.set_x(room_bounds[0])
+        tree_sprite.set_y(room_bounds[1] - 112*2)
+        w.add(tree_sprite)
+
+        return w
 
 
 def init_zones():

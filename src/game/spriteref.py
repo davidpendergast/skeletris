@@ -90,6 +90,12 @@ class Trees:
         return tree_frames[int(lean_ratio * (len(tree_frames)))]
 
 
+class Bosses:
+
+    cave_horror_idle = []
+    frog_idle = []
+
+
 def make(x, y, w, h, shift=(0, 0)):
     img = ImageModel(x + shift[0], y + shift[1], w, h)
     all_imgs.append(img)
@@ -368,7 +374,15 @@ def build_tree_sheet(start_pos, raw_tree_img, sheet):
         Trees.trees.append(cur_tree)
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img):
+def build_boss_sheet(start_pos, raw_boss_img, sheet):
+    sheet.blit(raw_boss_img, start_pos)
+    Bosses.cave_horror_idle = [make(0, 80, 240, 240, shift=start_pos),
+                               make(240, 80, 240, 240, shift=start_pos)]
+    Bosses.frog_idle = [make(0, 0, 48, 48, shift=start_pos),
+                        make(48, 0, 48, 48, shift=start_pos)]
+
+
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -379,12 +393,14 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img):
         | gen'd stuff |                 |
         |             *-----------------*
         |             | trees.png       |
+        |             *-----------------*
+        |             | bosses.png      |
         *-------------*-----------------*
 
 
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img]
+    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img]
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
     sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
@@ -407,6 +423,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img):
     print("building tree sheet...")
     build_tree_sheet((_x, _y), raw_tree_img, sheet)
     _y += raw_tree_img.get_height()
+
+    print("building boss sheet...")
+    build_boss_sheet((_x, _y), raw_boss_img, sheet)
+    _y += raw_boss_img.get_height()
 
     print("building approx 256 wall sprites...")
 
@@ -560,7 +580,8 @@ if __name__ == "__main__":
     raw2 = pygame.image.load("assets/cinematics.png")
     raw3 = pygame.image.load("assets/ui.png")
     raw4 = pygame.image.load("assets/trees.png")
-    output = build_spritesheet(raw, raw2, raw3, raw4)
+    raw5 = pygame.image.load("assets/bosses.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     
