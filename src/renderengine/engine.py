@@ -215,7 +215,10 @@ class RenderEngine:
         self.size = (width, height)
 
     def set_clear_color(self, r, g, b):
-        glClearColor(r, g, b, 0.0)
+        """
+            params: ints r,g,b in range [0, 255]
+        """
+        glClearColor(r / 255, g / 255, b / 255, 0.0)
 
     def init(self, w, h):
         self.resize(w, h)

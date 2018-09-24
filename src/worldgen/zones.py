@@ -1,6 +1,9 @@
 import random
+import pygame
 
+from src.world.worldstate import World
 from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, BuilderUtils
+from src.utils.util import Utils
 import src.world.entities as entities
 import src.game.spriteref as spriteref
 
@@ -8,6 +11,64 @@ _ALL_ZONES = {}
 
 BLACK = (0, 0, 0)
 DARK_GREY = (92, 92, 92)
+
+
+class ZoneLoader:
+    EMPTY = (92, 92, 92)
+    WALL = (0, 0, 0)
+    FLOOR = (255, 255, 255)
+    DOOR = (0, 0, 255)
+    PLAYER_SPAWN = (0, 255, 0)
+    EXIT = (255, 0, 0)
+
+    @staticmethod
+    def load_blueprint_from_file(filename, level):
+        """
+        returns: (BluePrint bp, dict: color -> list of (int x, int y))
+        """
+        try:
+            filepath = "assets/zones/" + filename
+            raw_img = pygame.image.load(Utils.resource_path(filepath))
+            img_size = (raw_img.get_width(), raw_img.get_height())
+            bp = WorldBlueprint(img_size, level)
+            unknowns = {}
+
+            for x in range(0, img_size[0]):
+                for y in range(0, img_size[1]):
+                    color = raw_img.get_at((x, y))
+                    color = (color[0], color[1], color[2])
+
+                    if color == ZoneLoader.EMPTY:
+                        continue
+                    elif color == ZoneLoader.WALL:
+                        bp.set(x, y, World.WALL)
+                    elif color == ZoneLoader.FLOOR:
+                        bp.set(x, y, World.FLOOR)
+                    elif color == ZoneLoader.DOOR:
+                        bp.set(x, y, World.DOOR)
+                    elif color == ZoneLoader.EXIT:
+                        bp.set(x, y, World.FLOOR)
+                        bp.exit_spawn = (x, y)
+                    elif color == ZoneLoader.PLAYER_SPAWN:
+                        bp.set(x, y, World.FLOOR)
+                        bp.player_spawn = (x, y)
+                    else:
+                        if color[0] == ZoneLoader.FLOOR[0]:
+                            bp.set(x, y, World.FLOOR)
+                        elif color[0] == ZoneLoader.WALL[0]:
+                            bp.set(x, y, World.WALL)
+
+                        pos = (x, y)
+                        if color in unknowns:
+                            unknowns[color].append(pos)
+                        else:
+                            unknowns[color] = [pos]
+
+            return (bp, unknowns)
+
+        except ValueError as e:
+            print("failed to load " + str(filename))
+            raise e
 
 
 def build_world(zone_id, gs):
@@ -35,15 +96,19 @@ def make(zone):
 
 class Zone:
 
-    def __init__(self, name, level, bg_color=DARK_GREY, music_id=None):
+    def __init__(self, name, level, filename=None, bg_color=None, music_id=None):
         self.name = name
         self.zone_id = None  # gets set by init_zones()
-        self.bg_color = bg_color
+        self.bg_color = bg_color if bg_color is not None else DARK_GREY
         self.music_id = music_id
         self.level = level
+        self.blueprint_file = filename
 
     def get_name(self):
         return self.name
+
+    def get_file(self):
+        return self.blueprint_file
 
     def get_id(self):
         return self.zone_id
@@ -101,42 +166,27 @@ class CaveHorrorZone(Zone):
     ZONE_ID = "cave_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Cave Horror's Lair", 15, bg_color=BLACK)
+        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_lair.png", bg_color=BLACK)
+        self._tree_color = (255, 170, 170)
+        self._fight_end_door = (0, 170, 170)
 
     def build_world(self, gs):
-        bp = WorldBlueprint((35, 35), self.get_level())
-        rooms = []
-        boss_room = RoomFactory.gen_rectangular_room(5, 5)  # 7 x 7 total
-        boss_room.set_offset(1, 1)
-        rooms.append(boss_room)
-
-        boss_hallway = RoomFactory.gen_rectangular_room(1, 16)  # 3 x 17
-        boss_hallway.set_offset(3, 7)
-        boss_hallway.add_neighbor(boss_room, (3, 6))
-        rooms.append(boss_hallway)
-
-        for r in rooms:
-            bp.add_room(r)
-
-        WorldFactory.fill_corners(bp)
-
-        bp.player_spawn = (3, 22)
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
 
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
-        for floor_xy in boss_room.all_floors():
-            if random.random() < 0.15:
-                w.set_floor_type(spriteref.FLOOR_CRACKED_ID, xy=floor_xy)
-
-        tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle, 60, spriteref.ENTITY_LAYER, w=64*5, h=8)
+        tree_loc = unknowns[self._tree_color][0]
+        tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle,
+                                               60, spriteref.ENTITY_LAYER, w=64*5, h=8)
         tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
-        room_bounds = boss_room.get_bounds()
         tree_sprite.set_x_centered(False)
         tree_sprite.set_y_centered(False)
-        tree_sprite.set_x(room_bounds[0])
-        tree_sprite.set_y(room_bounds[1] - 112*2)
+        tree_sprite.set_x(64 * tree_loc[0] - 64)
+        tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
         w.add(tree_sprite)
+
+        fight_end_loc = unknowns[self._fight_end_door][0]
 
         return w
 

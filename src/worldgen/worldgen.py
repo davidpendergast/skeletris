@@ -175,9 +175,10 @@ class WorldBlueprint:
         self.size = size
         self.level = level
         self.geo = []
+        self.geo_alt_art = []
         for i in range(0, size[0]):
             self.geo.append([World.EMPTY] * size[1])
-
+            self.geo_alt_art.append([None] * size[1])
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
         self.chest_spawns = []
@@ -192,6 +193,10 @@ class WorldBlueprint:
     def set(self, x, y, val):
         if self.is_valid(x, y):
             self.geo[x][y] = val
+
+    def set_alt_art(self, x, y, val):
+        if self.is_valid(x, y):
+            self.geo_alt_art[x][y] = val
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
@@ -208,12 +213,18 @@ class WorldBlueprint:
         w = World(*self.size)
         for x in range(0, self.size[0]):
             for y in range(0, self.size[1]):
-                w.set_geo(x, y, self.geo[x][y])
+                xy_geo = self.geo[x][y]
+                w.set_geo(x, y, xy_geo)
+
+                alt_art = self.geo_alt_art[x][y]
+                if alt_art is not None:
+                    if xy_geo == World.WALL:
+                        w.set_wall_type(alt_art, xy=(x, y))
+                    elif xy_geo == World.FLOOR:
+                        w.set_floor_type(alt_art, xy=(x, y))
+
                 if self.geo[x][y] == World.DOOR:
                     w.add(DoorEntity(x, y), next_update=False)
-
-                if self.geo[x][y] == World.FLOOR and random.random() < 0.05:
-                    w.add(TreeEntity(), gridcell=(x, y))
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)
