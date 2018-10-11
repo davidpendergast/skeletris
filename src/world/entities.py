@@ -1146,4 +1146,77 @@ class NpcEntity(Entity):
         return "NpcEntity({})".format(self.get_id())
 
 
+class HoverTextEntity(Entity):
+    def __init__(self, text, target_entity, offset=(0, 0)):
+        Entity.__init__(self, 0, 0, 8, 8)
+        self.text = text
+        self.target_entity = target_entity
+        self.offset = offset
+        self.anchor_point = (0.5, 1.0)
+
+        self._text_img = None
+        self._border_imgs = []  # [TL, T, TR, R, BR, B1, B2, B3, BL, L, C]
+        self._update_position()
+        self._dirty = True
+
+    def _update_position(self):
+        """sets self.center to target_entity.center() + offset
+            returns: True if position changed, else False
+        """
+        if self.target_entity is not None:
+            t_center = self.target_entity.center()
+            x_pos = t_center[0] + self.offset[0]
+            y_pos = t_center[1] + self.offset[1]
+            changed = self.center() != (x_pos, y_pos)
+            if changed:
+                self.set_center(x_pos, y_pos)
+                return True
+        return False
+
+    def update(self, world, gs, input_state, render_engine):
+        if self._dirty:
+            if self._text_img is not None:
+                render_engine.remove(self._text_img)
+                self._text_img = None
+            for border_img in self._border_imgs:
+                render_engine.remove(border_img)
+            self._border_imgs.clear()
+
+        sc = 2
+
+        if self._text_img is None:
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=sc)
+
+        if len(self._border_imgs) == 0:
+            text_size = self._text_img.size()
+            piece_size = Utils.mult(spriteref.UI.hover_text_edges[4].size(), sc)
+            # TODO build border images
+
+        moved = self._update_position()
+        if self._dirty or moved:
+            text_size = self._text_img.size()
+            text_x = self.center()[0] - text_size[0] * self.anchor_point[0]
+            text_y = self.center()[1] - text_size[1] * self.anchor_point[1]
+            self._text_img = self._text_img.update(new_x=text_x, new_y=text_y, new_depth=self.get_depth())
+
+        self._dirty = False
+
+    def set_target_entity(self, entity, offset=(0, 0)):
+        self.target_entity = entity
+        self.offset = offset
+        self._dirty = True
+
+    def set_text(self, text):
+        if text != self.text:
+            self._dirty = True
+        self.text = text
+
+    def all_bundles(self, extras=[]):
+        for bun in Entity.all_bundles(self, extras=extras):
+            yield bun
+        if self._text_img is not None:
+            for bun in self._text_img.all_bundles():
+                yield bun
+
+
     

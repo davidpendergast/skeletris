@@ -134,6 +134,43 @@ class Zone:
         pass
 
 
+class TestZone(Zone):
+
+    ZONE_ID = "test_zone"
+
+    def __init__(self):
+        Zone.__init__(self, "Test Zone", 5)
+
+    def build_world(self, gs):
+        w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
+
+        # just for debugging
+
+        p = w.get_player()
+
+        hover_text = entities.HoverTextEntity("test text", p, offset=(0, -64))
+        w.add(hover_text)
+
+        import src.game.npc as npc
+        mayor = entities.NpcEntity(npc.NpcID.MAYOR)
+        mayor.set_x(p.x() + 64)
+        mayor.set_y(p.y())
+        w.add(mayor)
+        mary_skelly = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
+        mary_skelly.set_x(p.x() + 72)
+        mary_skelly.set_y(p.y() + 48)
+        w.add(mary_skelly)
+        beanskull = entities.NpcEntity(npc.NpcID.BEANSKULL)
+        beanskull.set_x(p.x() - 16)
+        beanskull.set_y(p.y() + 32)
+        w.add(beanskull)
+        glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
+        glorple.set_x(p.x() - 50)
+        glorple.set_y(p.y() - 50)
+        w.add(glorple)
+        return w
+
+
 class SleepyForestZone(Zone):
 
     ZONE_ID = "sleepy_forest"
@@ -148,7 +185,6 @@ class SleepyForestZone(Zone):
 
         p = w.get_player()
 
-        import src.world.entities as entities
         import src.game.npc as npc
         mayor = entities.NpcEntity(npc.NpcID.MAYOR)
         mayor.set_x(p.x() + 64)
