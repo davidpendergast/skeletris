@@ -986,96 +986,6 @@ class DoorEntity(Entity):
 class ExitEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
-        Entity.__init__(self, grid_x*64, grid_y*64, 64, 2)
-
-        self.count = 0
-        self.delay_duration = 90                # lights flashing, then panel scrolling open
-        self.final_cinematic_duration = 30      # 'player' jumping down hole
-        self.radius = 48
-
-        self._dummy_player_animation = None
-        self._start_xy = None  # starting and ending positions of the jumping animation
-        self._end_xy = None
-
-    def _update_player_if_needed(self, world, player):
-        if self.count < self.delay_duration:
-            return
-        else:
-            if player is not None:
-                offs = (0, -88)
-                self._start_xy = (player.x(), player.y())
-                self._end_xy = (self.x() + 17*2, self.y() + 20)
-                world.remove(player)
-
-                self._dummy_player_animation = AnimationEntity(*self._start_xy, spriteref.player_little_jump_down,
-                                                               self.final_cinematic_duration, spriteref.ENTITY_LAYER,
-                                                               w=player.w(), h=player.h(),
-                                                               scale=2)
-
-                self._dummy_player_animation.set_sprite_offset(offs)
-                self._dummy_player_animation.set_x_centered(True)
-                self._dummy_player_animation.set_y_centered(False)
-                self._dummy_player_animation.set_xflipped(self._start_xy[0] > self._end_xy[0])
-                world.add(self._dummy_player_animation)
-
-            progress = min(1.0, (self.count - self.delay_duration) / self.final_cinematic_duration)
-            xpos = round(self._start_xy[0] + progress * (self._end_xy[0] - self._start_xy[0]))
-            ypos = round(self._start_xy[1] + progress * (self._end_xy[1] - self._start_xy[1]))
-            self._dummy_player_animation.set_x(xpos)
-            self._dummy_player_animation.set_y(ypos)
-
-    def update_images(self, anim_tick):
-        if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
-
-        n = len(spriteref.end_level_consoles)
-        count = self.count
-        if count > 0:
-            if count <= self.delay_duration / 3:
-                # slow blinking for first third
-                sprite = spriteref.end_level_consoles[(anim_tick // 2) % 2]
-            elif count <= self.delay_duration:
-                progress = min(0.99, (count - self.delay_duration / 3) / (2/3*self.delay_duration))
-                sprite = spriteref.end_level_consoles[2 + int(progress*(n - 2))]
-
-            count -= self.delay_duration
-            if count > 0:
-                sprite = spriteref.end_level_consoles[n - 2 + (anim_tick % 2)]
-        else:
-            sprite = spriteref.end_level_consoles[0]
-
-        x = self.x() + 13 * 2
-        y = self.y() - 16 * 2
-        depth = self.get_depth()
-
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
-
-    def update(self, world, gs, input_state, render_engine):
-        if not gs.world_updates_paused():
-
-            if self.count >= self.delay_duration + self.final_cinematic_duration:
-                gs.trigger_next_level_seq()
-
-            p = world.get_player()
-            if self.count >= self.delay_duration:
-                self.count += 1
-            else:
-                search_center = Utils.add(self.center(), (16, 0))
-                in_range = p is not None and Utils.dist(p.center(), search_center) <= self.radius
-
-                if in_range:
-                    self.count += 1
-                elif self.count > 0:
-                    self.count -= 1
-
-            self._update_player_if_needed(world, p)
-
-        self.update_images(gs.anim_tick)
-
-
-class BossExitEntity(Entity):
-
-    def __init__(self, grid_x, grid_y):
         Entity.__init__(self, grid_x * 64, grid_y * 64, 64, 2)
 
         self.count = 0
@@ -1085,15 +995,22 @@ class BossExitEntity(Entity):
         self._was_interacted_with = False
         self._interact_countdown = 15
 
+    def idle_sprites(self):
+        return spriteref.normal_door_idle
+
+    def opening_sprites(self):
+        return spriteref.normal_door_opening
+
     def update_images(self, anim_tick):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
         if self.count == 0:
-            sprite = spriteref.boss_door_idle[(anim_tick // 2) % 2]
+            sprite = self.idle_sprites()[(anim_tick // 2) % 2]
         else:
-            idx = int(self.get_progress() * len(spriteref.boss_door_opening))
-            sprite = spriteref.boss_door_opening[idx]
+            open_spr = self.opening_sprites()
+            idx = int(self.get_progress() * len(open_spr))
+            sprite = open_spr[idx]
 
         x = self.x()
         y = self.y() - sprite.height() * 4
@@ -1144,6 +1061,15 @@ class BossExitEntity(Entity):
 
     def interact(self, world, gs):
         self._was_interacted_with = True
+
+
+class BossExitEntity(ExitEntity):
+
+    def idle_sprites(self):
+        return spriteref.boss_door_idle
+
+    def opening_sprites(self):
+        return spriteref.boss_door_opening
 
 
 class TreeEntity(Entity):

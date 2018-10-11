@@ -236,8 +236,8 @@ class WorldBlueprint:
 
         w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
         if self.exit_spawn is not None:
-            # w.add(ExitEntity(*self.exit_spawn), next_update=False)
-            w.add(BossExitEntity(*self.exit_spawn), next_update=False)
+            w.add(ExitEntity(*self.exit_spawn), next_update=False)
+            # w.add(BossExitEntity(*self.exit_spawn), next_update=False)
 
         return w
 

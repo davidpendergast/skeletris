@@ -35,7 +35,7 @@ SCREEN_SIZE = (800, 600)
 
 
 def build_me_a_world(gs):
-    return zones.build_world(zones.CaveHorrorZone.ZONE_ID, gs)
+    return zones.build_world(zones.HauntedForestZone1.ZONE_ID, gs)
 
 
 def new_gs(menu_id):

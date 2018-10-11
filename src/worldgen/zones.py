@@ -19,6 +19,8 @@ class ZoneLoader:
     FLOOR = (255, 255, 255)
     DOOR = (0, 0, 255)
     PLAYER_SPAWN = (0, 255, 0)
+    MONSTER_SPAWN = (255, 255, 0)
+    CHEST_SPAWN = (255, 0, 255)
     EXIT = (255, 0, 0)
 
     @staticmethod
@@ -49,6 +51,12 @@ class ZoneLoader:
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.exit_spawn = (x, y)
+                    elif color == ZoneLoader.CHEST_SPAWN:
+                        bp.set(x, y, World.FLOOR)
+                        bp.chest_spawns.append((x, y))
+                    elif color == ZoneLoader.MONSTER_SPAWN:
+                        bp.set(x, y, World.FLOOR)
+                        bp.enemy_spawns.append((x, y))
                     elif color == ZoneLoader.PLAYER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.player_spawn = (x, y)
@@ -161,6 +169,21 @@ class SleepyForestZone(Zone):
         return w
 
 
+class HauntedForestZone1(Zone):
+
+    ZONE_ID = "haunted_forest_1"
+
+    def __init__(self):
+        Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=DARK_GREY)
+
+    def build_world(self, gs):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        print("unknowns={}".format(unknowns))
+        w = bp.build_world()
+
+        return w
+
+
 class CaveHorrorZone(Zone):
 
     ZONE_ID = "cave_lair"
@@ -172,7 +195,6 @@ class CaveHorrorZone(Zone):
 
     def build_world(self, gs):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
-
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
