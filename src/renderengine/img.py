@@ -19,7 +19,7 @@ class ImageBundle:
     def new_bundle(layer_id, scale=1):
         return ImageBundle(None, 0, 0, layer=layer_id, scale=scale)
 
-    def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, color=(1, 1, 1), uid=None):
+    def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, color=(1, 1, 1), ratio=(1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
@@ -29,10 +29,10 @@ class ImageBundle:
         self._depth = depth
         self._xflip = xflip
         self._color = color
+        self._ratio = ratio
             
-    def update(self, new_model=None, new_x=None, new_y=None, 
-                new_scale=None, new_depth=None,
-                new_xflip=None, new_color=None):
+    def update(self, new_model=None, new_x=None, new_y=None, new_scale=None, new_depth=None,
+               new_xflip=None, new_color=None, new_ratio=None):
                 
         model = self.model() if new_model is None else new_model
         x = self.x() if new_x is None else new_x
@@ -41,6 +41,7 @@ class ImageBundle:
         depth = self.depth() if new_depth is None else new_depth
         xflip = self.xflip() if new_xflip is None else new_xflip
         color = self.color() if new_color is None else new_color
+        ratio = self.ratio() if new_ratio is None else new_ratio
         
         if (model == self.model() and 
                 x == self.x() and 
@@ -48,11 +49,12 @@ class ImageBundle:
                 scale == self.scale() and
                 depth == self.depth() and 
                 xflip == self.xflip() and
-                color == self.color()):
+                color == self.color() and
+                ratio == self.ratio()):
             return self
         else:
-            return ImageBundle(model, x, y, scale=scale, 
-                    depth=depth, xflip=xflip, layer=self.layer(), color=color, uid=self.uid())
+            return ImageBundle(model, x, y, scale=scale, depth=depth, xflip=xflip,
+                               layer=self.layer(), color=color, ratio=ratio, uid=self.uid())
         
     def model(self):
         return self._model
@@ -68,7 +70,10 @@ class ImageBundle:
         
     def height(self):
         return self.model().height() * self.scale() if self.model() is not None else 0
-        
+
+    def size(self):
+        return (self.width(), self.height())
+
     def scale(self):
         return self._scale
         
@@ -83,6 +88,9 @@ class ImageBundle:
         
     def color(self):
         return self._color
+
+    def ratio(self):
+        return self._ratio
         
     def uid(self):
         return self._unique_id
@@ -95,8 +103,8 @@ class ImageBundle:
         if model is None:
             return
 
-        w = model.w * self.scale()
-        h = model.h * self.scale()
+        w = int(model.w * self.scale() * self.ratio()[0])
+        h = int(model.h * self.scale() * self.ratio()[1])
         color = self.color()
         
         vertices.extend([
@@ -123,9 +131,9 @@ class ImageBundle:
         indices.extend([i, i+1, i+2, i, i+2, i+3])
 
     def __repr__(self):
-        return "ImageBundle({}, {}, {}, {}, {}, {}, {}, {}, {})".format(
+        return "ImageBundle({}, {}, {}, {}, {}, {}, {}, {}, {}. {})".format(
                 self.model(), self.x(), self.y(), self.layer(),
-                self.scale(), self.depth(), self.xflip(), self.color(), self.uid())
+                self.scale(), self.depth(), self.xflip(), self.color(), self.ratio(), self.uid())
 
 
 class ImageModel:

@@ -414,7 +414,7 @@ class TextImage:
         y_range = [None, None]
         for img in self.all_bundles():
             x_range[0] = img.x() if x_range[0] is None else min(x_range[0], img.x())
-            x_range[1] = img.x() + img.width() if x_range[1] is None else max(x_range[0], img.x() + img.width())
+            x_range[1] = img.x() + img.width() if x_range[1] is None else max(x_range[1], img.x() + img.width())
             y_range[0] = img.y() if y_range[0] is None else min(y_range[0], img.y())
             y_range[1] = img.y() + img.height() if y_range[1] is None else max(y_range[1], img.y() + img.height())
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])

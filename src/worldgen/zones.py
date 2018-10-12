@@ -148,9 +148,6 @@ class TestZone(Zone):
 
         p = w.get_player()
 
-        hover_text = entities.HoverTextEntity("test text", p, offset=(0, -64))
-        w.add(hover_text)
-
         import src.game.npc as npc
         mayor = entities.NpcEntity(npc.NpcID.MAYOR)
         mayor.set_x(p.x() + 64)

@@ -68,6 +68,7 @@ class UI:
     """
     text_panel_edges = []
     hover_text_edges = []
+    hover_text_bottom_arrow = None
 
     status_bar_base = None
     health_bar_top = None
@@ -379,7 +380,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     """
     UI.text_panel_edges = [make(4 * (i % 3), 232 + 4 * (i // 3), 4, 4, shift=start_pos) for i in range(0, 9)]
     UI.hover_text_edges = [make(15 + 5 * (i % 3), 230 + 5 * (i // 3), 5, 5, shift=start_pos) for i in range(0, 9)]
-    UI.hover_text_bottom_arrow = make(30, 240, 8, 8)
+    UI.hover_text_bottom_arrow = make(30, 240, 5, 5, shift=start_pos)
 
     UI.status_bar_base = make(0, 176, 400, 53, shift=start_pos)
     UI.health_bar_top = make(64, 160, 256, 16, shift=start_pos)
