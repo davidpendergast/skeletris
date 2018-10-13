@@ -144,6 +144,18 @@ class TestZone(Zone):
     def build_world(self, gs):
         w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
 
+        for grid_x in range(0, w.size()[0]):
+            for grid_y in range(0, w.size()[1]):
+                geo = w.get_geo(grid_x, grid_y)
+                geo_above = w.get_geo(grid_x, grid_y - 1)
+                if geo_above == World.WALL and geo == World.FLOOR and random.random() < 0.6:
+                    wall_decor = []
+                    wall_decor.extend(spriteref.wall_decoration_mushrooms)
+                    to_use = random.choice(wall_decor)
+
+                    decor = entities.DecorationEntity.wall_decoration(to_use, grid_x, grid_y)
+                    w.add(decor)
+
         # just for debugging
 
         p = w.get_player()

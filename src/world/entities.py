@@ -1074,6 +1074,41 @@ class ExitEntity(Entity):
         self._was_interacted_with = True
 
 
+class DecorationEntity(Entity):
+
+    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0)):
+        Entity.__init__(self, x_center, y_bottom, 1, 0)
+        self._draw_offset = draw_offset
+        self._sprite = sprite
+        self._scale = scale
+
+    def update(self, world, gs, input_state, render_engine):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
+
+        sprite = self._sprite
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + self._draw_offset[0]
+        y = self.y() - (sprite.height() * self._img.scale() - self.h()) + self._draw_offset[1]
+        depth = self.get_depth()
+
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+
+    def all_bundles(self, extras=[]):
+        for bun in Entity.all_bundles(self, extras=extras):
+            yield bun
+        if self._img is not None:
+            yield self._img
+
+    @staticmethod
+    def wall_decoration(sprite, grid_x, grid_y, scale=2):
+        h = sprite.height() * scale
+        CELLSIZE = 64  # this better never change~
+        offset = (0, h // 2)
+        x_center = (grid_x + 0.5) * CELLSIZE
+        y_bottom = (grid_y) * CELLSIZE
+        return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset)
+
+
 class BossExitEntity(ExitEntity):
 
     def idle_sprites(self):

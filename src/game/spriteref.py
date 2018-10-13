@@ -148,6 +148,9 @@ boss_door_opening = [make(256 + i*16, 80, 16, 32) for i in range(0, 7)]
 normal_door_idle = [make(224 + i*16, 112, 16, 32) for i in range(0, 2)]
 normal_door_opening = [make(256 + i*16, 112, 16, 32) for i in range(0, 7)]
 
+wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 32) for i in range(0, 3)]
+wall_decoration_bucket = make(0, 384, 8, 16)
+
 enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
 enemy_dicel_all = [make(64, 144, 32, 32), make(64, 176, 32, 32)]
