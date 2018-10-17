@@ -1,7 +1,7 @@
 # cubelike
-babby's first roguelike 
+babby's first ~~roguelike~~ action rpg 
 
-here are the five most recent gifs commited:
+here are the five most recent gifs committed:
 
 ![{file_0}](gifs/{file_0}?raw=true "{name_0}")
 

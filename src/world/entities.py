@@ -9,6 +9,7 @@ from src.world.worldstate import World
 from src.utils.util import Utils
 from src.game.loot import LootFactory
 import src.game.cinematics as cinematics
+from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 
 ENTITY_UID_COUNTER = 0
 
@@ -1076,8 +1077,16 @@ class ExitEntity(Entity):
 
 class DecorationEntity(Entity):
 
-    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0)):
+    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), interact_text=None):
+        """
+        interact_text: str or a list of str
+        """
         Entity.__init__(self, x_center, y_bottom, 1, 0)
+        if isinstance(interact_text, str):
+            self._interact_text_list = [interact_text]
+        else:
+            self._interact_text_list = interact_text
+
         self._draw_offset = draw_offset
         self._sprite = sprite
         self._scale = scale
@@ -1100,13 +1109,24 @@ class DecorationEntity(Entity):
             yield self._img
 
     @staticmethod
-    def wall_decoration(sprite, grid_x, grid_y, scale=2):
+    def wall_decoration(sprite, grid_x, grid_y, scale=2, interact_text=None):
+        """
+        interact_text: str or a list of str
+        """
         h = sprite.height() * scale
         CELLSIZE = 64  # this better never change~
-        offset = (0, h // 2)
+        offset = (0, 8 * scale)
         x_center = (grid_x + 0.5) * CELLSIZE
         y_bottom = (grid_y) * CELLSIZE
-        return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset)
+        return DecorationEntity(sprite, x_center, y_bottom, scale=scale,
+                                draw_offset=offset, interact_text=interact_text)
+
+    def is_interactable(self):
+        return self._interact_text_list is not None
+
+    def interact(self, world, gs):
+        dialogs = [PlayerDialog(text) for text in self._interact_text_list]
+        gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs))
 
 
 class BossExitEntity(ExitEntity):
@@ -1227,7 +1247,6 @@ class HoverTextEntity(Entity):
         if gs is not None:
             new_bob_height = round(self._y_bob_range + (0.5 * self._y_bob_range * math.cos(6.28 * gs.anim_tick / 15)))
             if new_bob_height != self.bob_height:
-                print("bob height changed")
                 changed = True
                 self.bob_height = new_bob_height
 
@@ -1314,7 +1333,6 @@ class HoverTextEntity(Entity):
             if self._bottom_imgs[1] is not None:  # Bottom Middle
                 bm_w = self._bottom_imgs[1].width()
                 bm_x = text_x + text_w / 2 - bm_w / 2
-                print("text_x={}, text_w={}, bm_x={}, bm_w={}".format(text_x, text_w, bm_x, bm_w))
                 self._bottom_imgs[1] = self._bottom_imgs[1].update(new_x=bm_x, new_y=text_y + text_h,
                                                                    new_depth=depth)
                 if self._bottom_imgs[0] is not None:  # Bottom Left

@@ -144,16 +144,27 @@ class TestZone(Zone):
     def build_world(self, gs):
         w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
 
+        decs = [
+            (spriteref.wall_decoration_mushrooms[0], ["it's a large cluster of mushrooms.",
+                                                      "normally this species would be edible, but these ones have overgrown."]),
+            (spriteref.wall_decoration_mushrooms[1], ["it's a large cluster of mushrooms.",
+                                                      "normally this species would be edible, but these ones have overgrown."]),
+            (spriteref.wall_decoration_mushrooms[2], ["it's a large cluster of mushrooms.",
+                                                      "normally this species would be edible, but these ones have overgrown."]),
+            (spriteref.wall_decoration_bucket, "it's a bucket. there are small pieces of mushrooms inside."),
+            (spriteref.wall_decoration_plant_1, "it's a small fern inside a pot."),
+            (spriteref.wall_decoration_rake, "it's a rake."),
+            (spriteref.wall_decoration_sign, "the sign says:\n\"Mary Skelly's Mushroom's -- DON'T TOUCH\"")
+        ]
+
         for grid_x in range(0, w.size()[0]):
             for grid_y in range(0, w.size()[1]):
                 geo = w.get_geo(grid_x, grid_y)
                 geo_above = w.get_geo(grid_x, grid_y - 1)
                 if geo_above == World.WALL and geo == World.FLOOR and random.random() < 0.6:
-                    wall_decor = []
-                    wall_decor.extend(spriteref.wall_decoration_mushrooms)
-                    to_use = random.choice(wall_decor)
+                    sprite_to_use, text_to_use = random.choice(decs)
 
-                    decor = entities.DecorationEntity.wall_decoration(to_use, grid_x, grid_y)
+                    decor = entities.DecorationEntity.wall_decoration(sprite_to_use, grid_x, grid_y, interact_text=text_to_use)
                     w.add(decor)
 
         # just for debugging

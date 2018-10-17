@@ -46,6 +46,14 @@ class Dialog:
         else:
             return all_text[0:self.scroll_pos]
 
+    @staticmethod
+    def link_em_up(dialog_list):
+        for i in range(0, len(dialog_list) - 1):
+            d1 = dialog_list[i]
+            d2 = dialog_list[i + 1]
+            d1.set_next(d2)
+        return dialog_list[0]
+
 
 class PlayerDialog(Dialog):
 
@@ -57,14 +65,6 @@ class NpcDialog(Dialog):
 
     def __init__(self, text, sprites):
         Dialog.__init__(self, text, sprites=sprites, left_side=False)
-
-
-def link_em_up(dialog_list):
-    for i in range(0, len(dialog_list) - 1):
-        d1 = dialog_list[i]
-        d2 = dialog_list[i + 1]
-        d1.set_next(d2)
-    return dialog_list[0]
 
 
 class DialogManager:

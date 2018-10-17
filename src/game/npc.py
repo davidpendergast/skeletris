@@ -1,8 +1,7 @@
 
 from enum import Enum
 import src.game.spriteref as sr
-import src.game.dialog as dialog
-from src.game.dialog import NpcDialog, PlayerDialog
+from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 
 
 class NpcID(Enum):
@@ -66,7 +65,7 @@ class NpcState:
             PlayerDialog("we need to keep moving."),
         ]
 
-        d = dialog.link_em_up(chain)
+        d = Dialog.link_em_up(chain)
         gs.dialog_manager().set_dialog(d)
         print("setting dialog to {}".format(d.get_text()))
 

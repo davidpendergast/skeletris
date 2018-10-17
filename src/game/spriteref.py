@@ -98,9 +98,13 @@ class Bosses:
     frog_idle = []
 
 
-def make(x, y, w, h, shift=(0, 0)):
+def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
     img = ImageModel(x + shift[0], y + shift[1], w, h)
     all_imgs.append(img)
+
+    if and_add_to_list is not None:
+        and_add_to_list.append(img)
+
     return img
 
 
@@ -148,8 +152,17 @@ boss_door_opening = [make(256 + i*16, 80, 16, 32) for i in range(0, 7)]
 normal_door_idle = [make(224 + i*16, 112, 16, 32) for i in range(0, 2)]
 normal_door_opening = [make(256 + i*16, 112, 16, 32) for i in range(0, 7)]
 
-wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 32) for i in range(0, 3)]
-wall_decoration_bucket = make(0, 384, 8, 16)
+large_decs = []
+wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 24, and_add_to_list=large_decs) for i in range(0, 3)]
+
+smol_decs = []
+wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
+wall_decoration_plant_1 = make(8, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_plant_2 = make(16, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_rake = make(24, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_bones = make(32, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
+
 
 enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
