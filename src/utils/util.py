@@ -79,6 +79,10 @@ class Utils:
         return tuple([round(i) for i in v])
 
     @staticmethod
+    def replace_all_except(text, replace_txt, except_for=()):
+        return "".join(x if (x in except_for) else replace_txt for x in text)
+
+    @staticmethod
     def resource_path(relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
         try:

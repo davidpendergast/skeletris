@@ -1,5 +1,6 @@
 import src.game.inputs as inputs
 import src.game.spriteref as spriteref
+from src.utils.util import Utils
 
 
 class Dialog:
@@ -48,8 +49,8 @@ class Dialog:
                 return all_text[0:self.scroll_pos]
             else:
                 visible_text = all_text[0:self.scroll_pos]
-                invisible_text = all_text[self.scroll_pos:]
-                subbed_invis_text = "".join(x if (x == " " or x == "\n") else invisible_sub for x in invisible_text)
+                invis_text = all_text[self.scroll_pos:]
+                subbed_invis_text = Utils.replace_all_except(invis_text, invisible_sub, except_for=(" ", "\n"))
                 return visible_text + subbed_invis_text
 
     @staticmethod

@@ -232,7 +232,11 @@ class CinematicMenu(Menu):
             if text_finished_scrolling:
                 current_text = full_text
             else:
-                current_text = full_text[0:num_chars_to_display]
+                vis_text = full_text[0:num_chars_to_display]
+                invis_text = full_text[num_chars_to_display:]
+                invis_text = Utils.replace_all_except(invis_text, TextImage.INVISIBLE_CHAR, except_for=(" ", "\n"))
+
+                current_text = vis_text + invis_text
 
             self.cinematic_panel.update(gs, render_eng, current_image, current_text)
 
