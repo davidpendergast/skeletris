@@ -233,7 +233,7 @@ class DialogPanel:
         return needs_update
 
     def update(self, gs, render_eng):
-        new_text = self._dialog.get_visible_text()
+        new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
         if self._text_displaying != new_text and self._text_img is not None:
             for bun in self._text_img.all_bundles():
                 render_eng.remove(bun)
@@ -386,6 +386,8 @@ class HealthBarPanel:
 
 class TextImage:
 
+    INVISIBLE_CHAR = "`"
+
     X_KERNING = 1
     Y_KERNING = 1
 
@@ -417,6 +419,10 @@ class TextImage:
             x_range[1] = img.x() + img.width() if x_range[1] is None else max(x_range[1], img.x() + img.width())
             y_range[0] = img.y() if y_range[0] is None else min(y_range[0], img.y())
             y_range[1] = img.y() + img.height() if y_range[1] is None else max(y_range[1], img.y() + img.height())
+
+        if x_range[0] is None:
+            return (0, 0)
+
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
     @staticmethod
@@ -451,7 +457,7 @@ class TextImage:
 
         a_sprite = spriteref.alphabet["a"]
         for chunk in self._text_chunks:
-            if chunk == " ":
+            if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
                 xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
             elif chunk == "\n":
                 xpos = x_shift

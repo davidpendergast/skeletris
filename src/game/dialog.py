@@ -39,12 +39,18 @@ class Dialog:
         else:
             return None
 
-    def get_visible_text(self):
+    def get_visible_text(self, invisible_sub=''):
         all_text = self.get_text()
         if self.scroll_pos >= len(all_text):
             return all_text
         else:
-            return all_text[0:self.scroll_pos]
+            if len(invisible_sub) == 0:
+                return all_text[0:self.scroll_pos]
+            else:
+                visible_text = all_text[0:self.scroll_pos]
+                invisible_text = all_text[self.scroll_pos:]
+                subbed_invis_text = "".join(x if (x == " " or x == "\n") else invisible_sub for x in invisible_text)
+                return visible_text + subbed_invis_text
 
     @staticmethod
     def link_em_up(dialog_list):
