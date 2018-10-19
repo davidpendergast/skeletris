@@ -302,10 +302,12 @@ floor_totally_dark = make(624, 16, 16, 16)
 floors = [make(608 + i*16, 32, 16, 16) for i in range(0, 8)]
 floors_alt = [make(608 + i*16, 48, 16, 16) for i in range(0, 8)]
 floors_cracked = [make(608 + i*16, 64, 16, 16) for i in range(0, 8)]
+floors_dark_cracked = [make(608 + i*16, 80, 16, 16) for i in range(0, 8)]
 
 FLOOR_NORMAL_ID = 0
 FLOOR_QUAD_ID = 1
 FLOOR_CRACKED_ID = 2
+FLOOR_DARK_CRACKED_ID = 3
 _floor_lookup = [floors, floors_alt, floors_cracked]
 
 

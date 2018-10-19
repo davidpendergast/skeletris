@@ -1175,6 +1175,7 @@ class NpcEntity(Entity):
         Entity.__init__(self, 0, 0, 24, 12)
         self.npc_id = npc_id
         self._shadow_sprite = None
+        self.facing_player = True
 
     def get_shadow_sprite(self):
         return self._shadow_sprite

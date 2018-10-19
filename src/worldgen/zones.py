@@ -6,6 +6,7 @@ from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, Bui
 from src.utils.util import Utils
 import src.world.entities as entities
 import src.game.spriteref as spriteref
+import src.game.npc as npc
 
 _ALL_ZONES = {}
 
@@ -16,7 +17,12 @@ DARK_GREY = (92, 92, 92)
 class ZoneLoader:
     EMPTY = (92, 92, 92)
     WALL = (0, 0, 0)
+
     FLOOR = (255, 255, 255)
+    FLOOR_CRACKED = (225, 225, 225)
+    FLOOR_ID_LOOKUP = {FLOOR: spriteref.FLOOR_NORMAL_ID,
+              FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
+
     DOOR = (0, 0, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
@@ -46,6 +52,9 @@ class ZoneLoader:
                         bp.set(x, y, World.WALL)
                     elif color == ZoneLoader.FLOOR:
                         bp.set(x, y, World.FLOOR)
+                    elif color in ZoneLoader.FLOOR_ID_LOOKUP:
+                        bp.set(x, y, World.FLOOR)
+                        bp.set_alt_art(x, y, ZoneLoader.FLOOR_ID_LOOKUP[color])
                     elif color == ZoneLoader.DOOR:
                         bp.set(x, y, World.DOOR)
                     elif color == ZoneLoader.EXIT:
@@ -191,6 +200,44 @@ class TestZone(Zone):
         return w
 
 
+class DesolateCaveZone(Zone):
+    """This is the tutorial / intro zone"""
+
+    ZONE_ID = "desolate_cave"
+
+    GLORPLE_POS_1 = (255, 150, 255)
+    MUSHROOM_COLOR = (255, 175, 175)
+    RAKE_COLOR = (255, 220, 175)
+
+    def __init__(self):
+        Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png")
+
+    def build_world(self, gs):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+
+        w = bp.build_world()
+
+        print("unknowns={}".format(unknowns))
+
+        glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
+        w.add(glorple, gridcell=unknowns[DesolateCaveZone.GLORPLE_POS_1][0])
+
+        for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
+            m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+            text = "it's a large cluster of mushrooms."
+            mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_text=text)
+            w.add(mushroom_entity)
+
+        for pos in unknowns[DesolateCaveZone.RAKE_COLOR]:
+            text = "it's a rake."
+            rake_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_rake,
+                                                                    pos[0], pos[1], interact_text=text)
+            w.add(rake_entity)
+
+
+        return w
+
+
 class SleepyForestZone(Zone):
 
     ZONE_ID = "sleepy_forest"
@@ -200,28 +247,6 @@ class SleepyForestZone(Zone):
 
     def build_world(self, gs):
         w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
-
-        # just for debugging
-
-        p = w.get_player()
-
-        import src.game.npc as npc
-        mayor = entities.NpcEntity(npc.NpcID.MAYOR)
-        mayor.set_x(p.x() + 64)
-        mayor.set_y(p.y())
-        w.add(mayor)
-        mary_skelly = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
-        mary_skelly.set_x(p.x() + 72)
-        mary_skelly.set_y(p.y() + 48)
-        w.add(mary_skelly)
-        beanskull = entities.NpcEntity(npc.NpcID.BEANSKULL)
-        beanskull.set_x(p.x() - 16)
-        beanskull.set_y(p.y() + 32)
-        w.add(beanskull)
-        glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
-        glorple.set_x(p.x() - 50)
-        glorple.set_y(p.y() - 50)
-        w.add(glorple)
         return w
 
 

@@ -44,7 +44,13 @@ class NpcState:
         npc_id = npc_entity.get_id()
         sprites = TEMPLATES[npc_id].world_sprites
         cur_sprite = sprites[(gs.anim_tick // 2) % len(sprites)]
+
         facing_left = True
+        if npc_entity.facing_player:
+            p = world.get_player()
+            if p is not None:
+                facing_left = p.center()[0] <= npc_entity.center()[0]
+
         shadow_spr = TEMPLATES[npc_id].shadow_sprite
 
         npc_entity.update_images(cur_sprite, facing_left, shadow_sprite=shadow_spr)
