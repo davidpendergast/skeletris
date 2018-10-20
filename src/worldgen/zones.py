@@ -208,6 +208,9 @@ class DesolateCaveZone(Zone):
     GLORPLE_POS_1 = (255, 150, 255)
     MUSHROOM_COLOR = (255, 175, 175)
     RAKE_COLOR = (255, 220, 175)
+    SIGNS = {(255, 133, 0): ["it's a schedule. it says:\n\n" +
+                             "planted:    5.164  5.162  8.164\n" +
+                             "harvests:       3      9      2"]}
 
     def __init__(self):
         Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png")
@@ -224,7 +227,7 @@ class DesolateCaveZone(Zone):
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
-            text = "it's a large cluster of mushrooms."
+            text = "it's a large cluster of mushrooms. they're overgrown and rotten."
             mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_text=text)
             w.add(mushroom_entity)
 
@@ -233,6 +236,13 @@ class DesolateCaveZone(Zone):
             rake_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_rake,
                                                                     pos[0], pos[1], interact_text=text)
             w.add(rake_entity)
+
+        for key in unknowns:
+            if key in DesolateCaveZone.SIGNS:
+                pos = unknowns[key][0]
+                sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
+                                                                 interact_text=DesolateCaveZone.SIGNS[key])
+                w.add(sign)
 
 
         return w

@@ -404,9 +404,6 @@ class TextImage:
 
         self._text_chunks = spriteref.split_text(self.text) if try_split else list(self.text)
 
-        #if try_split and max(map(lambda _x: len(_x), self._text_chunks)) == 1:
-        #    print("couldn't split: {}".format(self.text))
-
         self._build_images()
 
         self.actual_size = self._recalc_size()
@@ -498,7 +495,13 @@ class TextImage:
 
     @staticmethod
     def wrap_words_to_fit(text, scale, width):
-        text = text.replace("\n", " ")  # no newline boochery allowed here pls
+        split_on_newlines = text.split("\n")
+        if len(split_on_newlines) > 1:
+            """if it's got newlines, split it, call this method again, and re-combine"""
+            wrapped_substrings = [TextImage.wrap_words_to_fit(line, scale, width) for line in split_on_newlines]
+            return "\n".join(wrapped_substrings)
+
+        text = text.replace("\n", " ")  # shouldn't be any at this point, but just to be safe~
         words = text.split(" ")
         lines = []
         cur_line = []
