@@ -30,6 +30,7 @@ class Entity:
         self._img = None     # main image: ImageBundle
         self._shadow = None  # shadow image: ImageBundle
         self._last_vel = (0, 0)
+        self._alive = False  # World sets this upon adding/removing the entity
         
     def x(self):
         return self.rect[0]
@@ -119,7 +120,11 @@ class Entity:
         return True
         
     def update(self, world, gs, input_state, render_engine):
-        pass 
+        pass
+
+    def alive(self):
+        """whether the entity is in a World"""
+        return self._alive
         
     def cleanup(self, gs, render_engine):
         for bundle in self.all_bundles():
@@ -1213,15 +1218,45 @@ class NpcEntity(Entity):
         return "NpcEntity({})".format(self.get_id())
 
 
+class MessageBox(Entity):
+    """displays a message on the player when the player enters the box"""
+    def __init__(self, text, grid_pos, grid_size=(1, 1), just_once=False, delay=0):
+        cell_size = 64  # ehhh
+        Entity.__init__(self, grid_pos[0]*cell_size, grid_pos[1]*cell_size,
+                        cell_size*grid_size[0], cell_size*grid_size[1])
+        self.text = text
+        self.player_in_range_count = 0
+        self.delay = delay
+        self.just_once = just_once
+        self._hover_text = None
+
+    def update(self, world, gs, input_state, render_engine):
+        if self._hover_text is None:
+            p = world.get_player()
+            if p is not None and Utils.rect_contains(self.rect, p.center()):
+                self.player_in_range_count += 1
+                if self.player_in_range_count > self.delay:
+                    self._hover_text = HoverTextEntity(self.text, p, offset=(0, -90), bounds=self.rect)
+                    world.add(self._hover_text)
+                    if self.just_once:
+                        world.remove(self)  # we done son
+            else:
+                self.player_in_range_count = 0
+
+        elif not self._hover_text.alive():
+                self._hover_text = None
+
+
 class HoverTextEntity(Entity):
 
-    def __init__(self, text, target_entity, offset=(0, 0)):
+    def __init__(self, text, target_entity, offset=(0, 0), bounds=None):
         Entity.__init__(self, 0, 0, 8, 8)
         self.text = text
         self.target_entity = target_entity
         self.offset = offset
         self.anchor_point = (0.5, 1.0)
         self.inset = 5
+        self.bounds = bounds
 
         self._text_img = None
         self._border_imgs = [None] * 9  # [TL, T, TR, L, C, R, BL, None, BR]
@@ -1231,6 +1266,12 @@ class HoverTextEntity(Entity):
         self._update_position(None)
         self._dirty = True
 
+    def should_remove(self):
+        if self.bounds is not None:
+            return not Utils.rect_contains(self.bounds, self.center())
+
+        return False
+
     def _update_position(self, gs):
         """sets self.center to target_entity.center() + offset
             returns: True if position changed, else False
@@ -1239,8 +1280,8 @@ class HoverTextEntity(Entity):
 
         if self.target_entity is not None:
             t_center = self.target_entity.center()
-            x_pos = t_center[0] + self.offset[0]
-            y_pos = t_center[1] + self.offset[1]
+            x_pos = t_center[0]
+            y_pos = t_center[1]
             if self.center() != (x_pos, y_pos):
                 changed = True
                 self.set_center(x_pos, y_pos)
@@ -1278,6 +1319,12 @@ class HoverTextEntity(Entity):
             self._bottom_imgs[2] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc, layer=spriteref.ENTITY_LAYER)
 
         moved = self._update_position(gs)
+
+        if self.should_remove():
+            print("removing message box")
+            world.remove(self)
+            return
+
         if self._dirty or moved:
 
             if self.target_entity is not None:
@@ -1286,8 +1333,8 @@ class HoverTextEntity(Entity):
                 depth = self.get_depth()
 
             text_size = self._text_img.size()
-            text_x = self.center()[0] - text_size[0] * self.anchor_point[0]
-            text_y = self.center()[1] - text_size[1] * self.anchor_point[1] + self.bob_height
+            text_x = self.center()[0] - text_size[0] * self.anchor_point[0] + self.offset[0]
+            text_y = self.center()[1] - text_size[1] * self.anchor_point[1] + self.offset[1] + self.bob_height
             self._text_img = self._text_img.update(new_x=text_x, new_y=text_y, new_depth=depth)
             text_w, text_h = self._text_img.size()
 

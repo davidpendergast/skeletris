@@ -67,9 +67,13 @@ class World:
             self._ents_to_add.append(entity)
         else:
             self.entities.append(entity)
+            entity._alive = True
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)
+
+    def __contains__(self, entity):
+        return entity in self.entities
         
     def get_player(self):
         for e in self.entities:
@@ -288,10 +292,12 @@ class World:
     def update_all(self, gs, input_state, render_engine):
         for e in self._ents_to_add:
             self.entities.append(e)
+            e._alive = True
         self._ents_to_add.clear()
 
         for e in self._ents_to_remove:
             self.entities.remove(e)  # n^2 but whatever
+            e._alive = False
             if e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
             e.cleanup(gs, render_engine)

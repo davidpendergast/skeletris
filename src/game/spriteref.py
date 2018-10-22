@@ -217,8 +217,10 @@ _qmark = make(160, 115, 5, 5)
 alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):
     alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
-for i in range(0, 10):
-    c = "0123456789"[i]
+
+_chars_2 = "0123456789[]()"
+for i in range(0, len(_chars_2)):
+    c = _chars_2[i]
     alphabet[c] = make(5*i, 120, 5, 5)
 
 _cached_text = set()

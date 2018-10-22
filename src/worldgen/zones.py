@@ -244,6 +244,10 @@ class DesolateCaveZone(Zone):
                                                                  interact_text=DesolateCaveZone.SIGNS[key])
                 w.add(sign)
 
+        wasd_message_pos = bp.player_spawn
+        wasd_message_box = entities.MessageBox("[WASD] to move", wasd_message_pos, delay=120, just_once=True)
+        w.add(wasd_message_box)
+
 
         return w
 
