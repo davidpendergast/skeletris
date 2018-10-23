@@ -1,9 +1,9 @@
+import traceback
+
 from src.ui.menus import MenuManager
 from src.game.npc import NpcState
 from src.game.dialog import DialogManager
-
-
-DEBUG_MODE = True
+import src.game.events as events
 
 
 class GlobalState:
@@ -31,9 +31,42 @@ class GlobalState:
         self._npc_state = NpcState()
         self._dialog_manager = DialogManager()
 
+        self._current_zone_id = None
+
         self._cinematics_queue = []
 
+        self._event_queue = events.EventQueue()
+        self._event_triggers = {}  # EventType -> list(EventListener)
+
+        """
+        some of the zones require additional updating logic to handle story / boss fight stuff. 
+        these Updaters handle that
+        """
+        self._zone_updaters = []
+
         self.needs_exit = False
+
+    def event_queue(self):
+        return self._event_queue
+
+    def add_trigger(self, trigger):
+        if trigger.event_type not in self._event_triggers:
+            self._event_triggers[trigger.event_type] = []
+
+        self._event_triggers[trigger.event_type].append(trigger)
+
+    def add_zone_updater(self, updater):
+        self._zone_updaters.append(updater)
+
+    def prepare_for_new_zone(self, zone_id):
+        self._zone_updaters.clear()
+        self.clear_triggers(events.EventListenerScope.ZONE)
+
+        self._current_zone_id = zone_id
+
+    def clear_triggers(self, scope):
+        for e_type in self._event_triggers:
+            self._event_triggers[e_type] = [e for e in self._event_triggers[e_type] if e.scope is not scope]
 
     def get_menu_manager(self):
         return self._menu_manager
@@ -74,7 +107,29 @@ class GlobalState:
         cam = self.get_world_camera()
         return (cam[0] + point[0], cam[1] + point[1])
         
-    def update(self):
+    def update(self, world, input_state, render_engine):
+        if world is not None:
+            self.event_queue().flip()
+            for e in self.event_queue().all_events():
+                print(e)
+                triggers_to_remove = []
+                if e.get_type() in self._event_triggers:
+                    for trigger in self._event_triggers[e.get_type()]:
+                        if trigger.predicate(e):
+                            try:
+                                trigger.action(e, world, self)
+                            except ValueError:
+                                traceback.print_exc()
+
+                            if trigger.single_use:
+                                triggers_to_remove.append(trigger)
+
+                for t in triggers_to_remove:
+                    self._event_triggers[t.trigger.event_type].remove(t)
+
+            for zone_update in self._zone_updaters:
+                zone_update.update(world, self, input_state, render_engine)
+
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
             self.anim_tick += 1

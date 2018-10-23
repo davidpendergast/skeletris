@@ -7,6 +7,8 @@ from src.utils.util import Utils
 import src.world.entities as entities
 import src.game.spriteref as spriteref
 import src.game.npc as npc
+import src.game.events as events
+import src.game.dialog as dialog
 
 _ALL_ZONES = {}
 
@@ -92,6 +94,8 @@ def build_world(zone_id, gs):
     zone = _ALL_ZONES[zone_id]
     if zone is None:
         raise ValueError("unknown zone id: {}".format(zone_id))
+
+    gs.prepare_for_new_zone(zone_id)
 
     w = zone.build_world(gs)
     w.set_bg_color(zone.get_bg_color())
@@ -208,6 +212,7 @@ class DesolateCaveZone(Zone):
     GLORPLE_POS_1 = (255, 150, 255)
     MUSHROOM_COLOR = (255, 175, 175)
     RAKE_COLOR = (255, 220, 175)
+    DIALOG_TRIGGER_1_COLOR = (255, 95, 95)
     SIGNS = {(255, 133, 0): ["it's a schedule. it says:\n\n" +
                              "planted:    5.164  5.162  8.164\n" +
                              "harvests:       3      9      2"]}
@@ -219,8 +224,6 @@ class DesolateCaveZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
 
         w = bp.build_world()
-
-        print("unknowns={}".format(unknowns))
 
         glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
         w.add(glorple, gridcell=unknowns[DesolateCaveZone.GLORPLE_POS_1][0])
@@ -245,9 +248,23 @@ class DesolateCaveZone(Zone):
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
-        wasd_message_box = entities.MessageBox("[WASD] to move", wasd_message_pos, delay=120, just_once=True)
+        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
         w.add(wasd_message_box)
 
+        dial = [dialog.PlayerDialog("this must be the lost city."), # \n\n\npress [ENTER]"),
+                dialog.PlayerDialog("if the treasure is still here, it will be hidden."),
+                dialog.PlayerDialog("i hope i can find it without waking anything up...")]
+        intro_dial = dialog.Dialog.link_em_up(dial)
+
+        grid_xy = (Utils.min_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 0),
+                   Utils.min_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 1))
+        grid_x2y2 = (Utils.max_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 0),
+                   Utils.max_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 1))
+        grid_size = (grid_x2y2[0] - grid_xy[0] + 1, grid_x2y2[1] - grid_xy[1] + 1)
+
+        dialog_box = entities.DialogTriggerBox(intro_dial, grid_xy, grid_size=grid_size, just_once=True)
+
+        w.add(dialog_box)
 
         return w
 

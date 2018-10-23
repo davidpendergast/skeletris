@@ -119,7 +119,7 @@ def run():
             gs = new_gs(menu_id)
             world = None
 
-        gs.update()
+        gs.update(world, input_state, render_eng)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

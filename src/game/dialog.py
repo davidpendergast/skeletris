@@ -1,6 +1,7 @@
 import src.game.inputs as inputs
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
+import src.game.events as events
 
 
 class Dialog:
@@ -39,6 +40,9 @@ class Dialog:
             return self.sprites[(gs.anim_tick // 2) % len(self.sprites)]
         else:
             return None
+
+    def is_cutscene(self):
+        return False
 
     def get_visible_text(self, invisible_sub=''):
         all_text = self.get_text()
@@ -86,9 +90,14 @@ class DialogManager:
     def get_dialog(self):
         return self._active_dialog
 
-    def set_dialog(self, dialog):
+    def set_dialog(self, dialog, gs):
+        if self._active_dialog is not None and self._active_dialog.is_cutscene():
+            gs.event_queue().add(events.CutsceneEvent.new_end_event(self._active_dialog.get_cutscene_id()))
+
         if dialog is not None:
-            print("setting dialog to: {}".format(dialog.get_text()))
+            if dialog.is_cutscene():
+                gs.event_queue().add(events.CutsceneEvent.new_start_event(dialog.get_cutscene_id()))
+
         self._active_dialog = dialog
 
     def update(self, world, gs, input_state):
@@ -96,11 +105,24 @@ class DialogManager:
             dialog = self._active_dialog
             if dialog.scroll_pos > 0 and input_state.was_pressed(inputs.ENTER):
                 if dialog.is_done_scrolling():
-                    self.set_dialog(dialog.get_next())
+                    self.set_dialog(dialog.get_next(), gs)
                 else:
                     dialog.scroll_pos = len(dialog.get_text())
             elif not dialog.is_done_scrolling() and gs.tick_counter % self._scroll_freq == 0:
                 dialog.scroll_pos += 1
+
+
+class Cutscene(Dialog):
+    def __init__(self, cutscene_id):
+        Dialog.__init__(self, "...")
+        self.cutscene_id = cutscene_id
+
+    def is_cutscene(self):
+        return True
+
+    def get_cutscene_id(self):
+        return self.cutscene_id
+
 
 
 

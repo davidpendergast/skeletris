@@ -10,11 +10,13 @@ from src.utils.util import Utils
 from src.game.loot import LootFactory
 import src.game.cinematics as cinematics
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
+import src.game.events as events
+from src.game.updatable import Updateable
 
 ENTITY_UID_COUNTER = 0
 
 
-class Entity:
+class Entity(Updateable):
 
     @staticmethod
     def gen_uid():
@@ -971,6 +973,8 @@ class DoorEntity(Entity):
                 world.update_geo_bundle(*grid_xy, and_neighbors=True)
                 world.door_opened(*grid_xy)
                 world.remove(self)
+                gs.event_queue().add(events.DoorOpenEvent(*grid_xy))
+
             elif self.opening_count > 0:
                 self.opening_count += 1
             else:
@@ -1212,39 +1216,86 @@ class NpcEntity(Entity):
         return True
 
     def interact(self, world, gs):
-        gs.npc_state().interacted_with(self.get_id(), world, gs)
+        gs.event_queue().add(events.NpcInteractEvent(self.get_id()))
 
     def __repr__(self):
         return "NpcEntity({})".format(self.get_id())
 
 
-class MessageBox(Entity):
-    """displays a message on the player when the player enters the box"""
-    def __init__(self, text, grid_pos, grid_size=(1, 1), just_once=False, delay=0):
+class TriggerBox(Entity):
+    """performs an action when the player enters or leaves the box"""
+    def __init__(self, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
         cell_size = 64  # ehhh
-        Entity.__init__(self, grid_pos[0]*cell_size, grid_pos[1]*cell_size,
-                        cell_size*grid_size[0], cell_size*grid_size[1])
-        self.text = text
+        Entity.__init__(self, grid_pos[0] * cell_size, grid_pos[1] * cell_size,
+                        cell_size * grid_size[0], cell_size * grid_size[1])
+        self.player_inside = False
         self.player_in_range_count = 0
         self.delay = delay
         self.just_once = just_once
-        self._hover_text = None
+        self.no_more_firings = False
+        self.ignore_updates_paused = ignore_updates_paused
+        self.box_id = box_id
 
     def update(self, world, gs, input_state, render_engine):
-        if self._hover_text is None:
-            p = world.get_player()
-            if p is not None and Utils.rect_contains(self.rect, p.center()):
-                self.player_in_range_count += 1
-                if self.player_in_range_count > self.delay:
-                    self._hover_text = HoverTextEntity(self.text, p, offset=(0, -90), bounds=self.rect)
-                    world.add(self._hover_text)
-                    if self.just_once:
-                        world.remove(self)  # we done son
-            else:
-                self.player_in_range_count = 0
+        if gs.world_updates_paused() and not self.ignore_updates_paused:
+            return
 
-        elif not self._hover_text.alive():
-                self._hover_text = None
+        p = world.get_player()
+        inside = p is not None and Utils.rect_contains(self.rect, p.center())
+        if self.player_inside != inside:
+            if inside:
+                gs.event_queue().add(events.TriggerBoxEvent.new_enter_event(self.box_id))
+                self.player_entered(p, world, gs, input_state, render_engine)
+            else:
+                gs.event_queue().add(events.TriggerBoxEvent.new_exit_event(self.box_id))
+                self.player_left(p, world, gs, input_state, render_engine)
+            self.player_inside = inside
+            self.player_in_range_count = 0
+
+        if self.player_inside:
+            if not self.no_more_firings and self.player_in_range_count == self.delay:
+                gs.event_queue().add(events.TriggerBoxEvent.new_trigger_event(self.box_id))
+                self.fire_action(p, world, gs, input_state, render_engine)
+                if self.just_once:
+                    self.no_more_firings = True
+
+            self.player_in_range_count += 1
+
+    def player_entered(self, player, world, gs, input_state, render_action):
+        pass
+
+    def fire_action(self, player, world, gs, input_state, render_action):
+        pass
+
+    def player_left(self, player, world, gs, input_state, render_action):
+        pass
+
+
+class DialogTriggerBox(TriggerBox):
+
+    def __init__(self, dialog, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
+        TriggerBox.__init__(self, grid_pos, grid_size=grid_size, just_once=just_once, delay=delay,
+                            ignore_updates_paused=ignore_updates_paused, box_id=box_id)
+        self.dialog = dialog
+
+    def fire_action(self, player, world, gs, input_state, render_action):
+        gs.dialog_manager().set_dialog(self.dialog, gs)
+
+
+class MessageTriggerBox(TriggerBox):
+
+    def __init__(self, text, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
+        TriggerBox.__init__(self, grid_pos, grid_size=grid_size, just_once=just_once, delay=delay,
+                            ignore_updates_paused=ignore_updates_paused, box_id=box_id)
+        self.text = text
+        self._hover_text = None
+
+    def fire_action(self, player, world, gs, input_state, render_action):
+        self._hover_text = HoverTextEntity(self.text, player, offset=(0, -90), bounds=self.rect)
+        world.add(self._hover_text)
+
+    def player_left(self, player, world, gs, input_state, render_action):
+        self._hover_text = None
 
 
 class HoverTextEntity(Entity):
@@ -1321,7 +1372,6 @@ class HoverTextEntity(Entity):
         moved = self._update_position(gs)
 
         if self.should_remove():
-            print("removing message box")
             world.remove(self)
             return
 

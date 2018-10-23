@@ -83,6 +83,29 @@ class Utils:
         return "".join(x if (x in except_for) else replace_txt for x in text)
 
     @staticmethod
+    def listify(obj):
+        if (isinstance(obj, list)):
+            return obj
+        else:
+            return [obj]
+
+    @staticmethod
+    def min_component(v_list, i):
+        res = None
+        for v in v_list:
+            if i < len(v):
+                res = min(v[i], res) if res is not None else v[i]
+        return res
+
+    @staticmethod
+    def max_component(v_list, i):
+        res = None
+        for v in v_list:
+            if i < len(v):
+                res = max(v[i], res) if res is not None else v[i]
+        return res
+
+    @staticmethod
     def resource_path(relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
         try:
