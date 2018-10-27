@@ -80,6 +80,12 @@ class World:
             if e.is_player():
                 return e
         return None
+
+    def get_npc(self, npc_id):
+        for e in self.entities:
+            if e.is_npc() and e.get_id() == npc_id:
+                return e
+        return None
     
     def entities_in_circle(self, center, radius, onscreen=True):
         """

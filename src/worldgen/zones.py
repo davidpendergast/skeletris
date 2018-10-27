@@ -23,7 +23,7 @@ class ZoneLoader:
     FLOOR = (255, 255, 255)
     FLOOR_CRACKED = (225, 225, 225)
     FLOOR_ID_LOOKUP = {FLOOR: spriteref.FLOOR_NORMAL_ID,
-              FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
+                       FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
 
     DOOR = (0, 0, 255)
     PLAYER_SPAWN = (0, 255, 0)
@@ -72,8 +72,10 @@ class ZoneLoader:
                         bp.set(x, y, World.FLOOR)
                         bp.player_spawn = (x, y)
                     else:
-                        if color[0] == ZoneLoader.FLOOR[0]:
+                        mock_color = (color[0], color[0], color[0])
+                        if mock_color in ZoneLoader.FLOOR_ID_LOOKUP:
                             bp.set(x, y, World.FLOOR)
+                            bp.set_alt_art(x, y, ZoneLoader.FLOOR_ID_LOOKUP[mock_color])
                         elif color[0] == ZoneLoader.WALL[0]:
                             bp.set(x, y, World.WALL)
 
@@ -216,6 +218,7 @@ class DesolateCaveZone(Zone):
     SIGNS = {(255, 133, 0): ["it's a schedule. it says:\n\n" +
                              "planted:    5.164  5.162  8.164\n" +
                              "harvests:       3      9      2"]}
+    GLORPLE_WALKTO_POS = (225, 33, 225)
 
     def __init__(self):
         Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png")
@@ -225,8 +228,9 @@ class DesolateCaveZone(Zone):
 
         w = bp.build_world()
 
+        glorple_spawn_pos = unknowns[DesolateCaveZone.GLORPLE_POS_1][0]
         glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
-        w.add(glorple, gridcell=unknowns[DesolateCaveZone.GLORPLE_POS_1][0])
+        w.add(glorple, gridcell=glorple_spawn_pos)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -251,9 +255,17 @@ class DesolateCaveZone(Zone):
         wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
         w.add(wasd_message_box)
 
-        dial = [dialog.PlayerDialog("this must be the lost city."), # \n\n\npress [ENTER]"),
-                dialog.PlayerDialog("if the treasure is still here, it will be hidden."),
-                dialog.PlayerDialog("i hope i can find it without waking anything up...")]
+        glorple_walk_pos = unknowns.get(DesolateCaveZone.GLORPLE_WALKTO_POS)[0]
+
+        dial = [dialog.PlayerDialog("this must be the lost city.\n\n\npress [ENTER]"),
+                dialog.PlayerDialog("it looks like it hasn't been touched in ages."),
+                dialog.NpcDialog("does that mean the treasure is really here?!", spriteref.glorple_faces),
+                dialog.PlayerDialog("after all that digging, it better be. let's look around."),
+                dialog.Cutscene("pause_n_walk_0", [dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_walk_pos)]),
+                dialog.NpcDialog("it's locked. we need to find a key.", spriteref.glorple_faces),
+                dialog.Cutscene("pause_n_walk_1", [dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_spawn_pos)]),
+                dialog.PlayerDialog("this place gives me the creeps.")]
+
         intro_dial = dialog.Dialog.link_em_up(dial)
 
         grid_xy = (Utils.min_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 0),

@@ -47,7 +47,11 @@ class NpcState:
         cur_sprite = sprites[(gs.anim_tick // 2) % len(sprites)]
 
         facing_left = True
-        if npc_entity.facing_player:
+        if npc_entity.get_vel()[0] < 0:
+            facing_left = True
+        elif npc_entity.get_vel()[0] > 0:
+            facing_left = False
+        elif npc_entity.facing_player:
             p = world.get_player()
             if p is not None:
                 facing_left = p.center()[0] <= npc_entity.center()[0]
