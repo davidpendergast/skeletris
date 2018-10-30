@@ -82,6 +82,6 @@ class NpcState:
         ]
 
         d = Dialog.link_em_up(chain)
-        gs.dialog_manager().set_dialog(d)
+        gs.dialog_manager().set_dialog(d, gs)
         print("setting dialog to {}".format(d.get_text()))
 

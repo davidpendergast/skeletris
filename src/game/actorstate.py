@@ -7,6 +7,7 @@ from src.game import spriteref as spriteref, inputs as inputs
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, Pushable
+import src.game.events as events
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
@@ -392,7 +393,7 @@ class PlayerState(ActorState):
                     dist = Utils.dist(inter[i].center(), p_center)
                     if dist <= inter[i].interact_radius():
                         inter[i].interact(world, gs)
-                        print("interacted with {}".format(inter[i]))
+                        gs.event_queue().add(events.EntityInteractEvent(inter[i]))
                         break
 
             # you can keep moving during the attack windup

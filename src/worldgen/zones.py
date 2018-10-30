@@ -26,6 +26,7 @@ class ZoneLoader:
                        FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
 
     DOOR = (0, 0, 255)
+    LOCKED_DOOR = (0, 0, 130)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
     CHEST_SPAWN = (255, 0, 255)
@@ -59,6 +60,8 @@ class ZoneLoader:
                         bp.set_alt_art(x, y, ZoneLoader.FLOOR_ID_LOOKUP[color])
                     elif color == ZoneLoader.DOOR:
                         bp.set(x, y, World.DOOR)
+                    elif color == ZoneLoader.LOCKED_DOOR:
+                        bp.set_locked_door(x, y, "FIXME: PUZZLE")
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.exit_spawn = (x, y)

@@ -938,7 +938,7 @@ class DoorEntity(Entity):
 
         x = self.x()
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
-        depth = 100
+        depth = 100  ## umm what
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
     def _calc_is_horz(self, world):
@@ -955,10 +955,19 @@ class DoorEntity(Entity):
         # invalid door, hopefully shouldn't happen
         return random.random() < 0.5
 
+    def player_in_range(self, in_range):
+        if in_range:
+            self.delay_count += 1
+        else:
+            self.delay_count = 0
+
+    def _get_sprites(self, is_horz):
+        return spriteref.door_h if is_horz else spriteref.door_v
+
     def update(self, world, gs, input_state, render_engine):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
-            self.sprites = spriteref.door_h if self._is_horz else spriteref.door_v
+            self.sprites = self._get_sprites(self._is_horz)
 
         if not gs.world_updates_paused():
 
@@ -979,18 +988,47 @@ class DoorEntity(Entity):
                 self.opening_count += 1
             else:
                 p = world.get_player()
-                if p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius:
-                    self.delay_count += 1
-                    if self.delay_count >= self.delay_duration:
-                        # door will open now
-                        self.delay_count = 0
-                        self.opening_count = 1
-                        grid_xy = world.to_grid_coords(*self.center())
-                        world.set_geo(*grid_xy, World.FLOOR)
-                else:
+                p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
+                self.player_in_range(p_in_range)
+
+                if self.delay_count >= self.delay_duration:
+                    # door will open now
                     self.delay_count = 0
+                    self.opening_count = 1
+                    grid_xy = world.to_grid_coords(*self.center())
+                    world.set_geo(*grid_xy, World.FLOOR)
 
         self.update_images()
+
+
+class LockedDoorEntity(DoorEntity):
+
+    def __init__(self, grid_x, grid_y, puzzle):
+        self.puzzle = puzzle  # TODO - implement door puzzle
+        DoorEntity.__init__(self, grid_x, grid_y)
+        self.is_locked = True
+
+    def player_in_range(self, in_range):
+        # do nothing, we're locked
+        pass
+
+    def _get_sprites(self, is_horz):
+        return spriteref.door_h_locked if is_horz else spriteref.door_v_locked
+
+    def is_interactable(self):
+        return True
+
+    def interact_radius(self):
+        return self.open_radius
+
+    def interact(self, world, gs):
+        # TODO - open ui
+        self.do_unlock()
+        print("interacted with a locked door")
+        return
+
+    def do_unlock(self):
+        self.delay_count = self.delay_duration
 
 
 class ExitEntity(Entity):
@@ -1135,7 +1173,7 @@ class DecorationEntity(Entity):
 
     def interact(self, world, gs):
         dialogs = [PlayerDialog(text) for text in self._interact_text_list]
-        gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs))
+        gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
 
 
 class BossExitEntity(ExitEntity):

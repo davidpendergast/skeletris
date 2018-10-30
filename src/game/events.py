@@ -58,6 +58,7 @@ class EventType(Enum):
     PLAYER_DIED = "PLAYER_DIED",
     DOOR_OPENED = "DOOR_OPENED",
     NPC_INTERACT = "NPC_INTERACT",
+    ENTITY_INTERACT = "ENTITY_INTERACT",
     DIALOG_EXIT = "DIALOG_EXIT",
     ENTERED_BOX = "ENTERED_BOX",
     EXITED_BOX = "EXITED_BOX",
@@ -123,6 +124,14 @@ class NpcInteractEvent(Event):
         Event.__init__(self, EventType.NPC_INTERACT, npc_id, "interacted with npc: {}".format(npc_id))
 
     def get_npc_id(self):
+        return self.get_data()
+
+
+class EntityInteractEvent(Event):
+    def __init__(self, entity):
+        Event.__init__(self, EventType.ENTITY_INTERACT, entity, "interacted with entity: {}".format(entity))
+
+    def get_entity(self):
         return self.get_data()
 
 

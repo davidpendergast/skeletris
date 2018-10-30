@@ -183,7 +183,7 @@ def run():
                 d1 = Dialog(Messages.MSG_SOMETHING_DOESNT_FEEL_RIGHT.value, sprites=spriteref.player_faces)
                 d2 = Dialog(Messages.MSG_WHERE_AM_I.value, sprites=spriteref.player_faces)
                 d1.set_next(d2)
-                gs.dialog_manager().set_dialog(d1)
+                gs.dialog_manager().set_dialog(d1, gs)
 
             gs.dialog_manager().update(world, gs, input_state)
 

@@ -2,7 +2,7 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, TreeEntity, BossExitEntity, DoorEntity, ChestEntity
+from src.world.entities import Player, ExitEntity, LockedDoorEntity, TreeEntity, BossExitEntity, DoorEntity, ChestEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -183,6 +183,7 @@ class WorldBlueprint:
         self.enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawn = None
+        self.locked_doors = {}  # (x, y) -> puzzle
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -193,10 +194,16 @@ class WorldBlueprint:
     def set(self, x, y, val):
         if self.is_valid(x, y):
             self.geo[x][y] = val
+            if (x, y) in self.locked_doors and val != World.DOOR:
+                raise ValueError("just stamped out a locked door at {}, {}".format(x, y))
 
     def set_alt_art(self, x, y, val):
         if self.is_valid(x, y):
             self.geo_alt_art[x][y] = val
+
+    def set_locked_door(self, x, y, puzzle):
+        self.set(x, y, World.DOOR)
+        self.locked_doors[(x, y)] = puzzle
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
@@ -224,7 +231,10 @@ class WorldBlueprint:
                         w.set_floor_type(alt_art, xy=(x, y))
 
                 if self.geo[x][y] == World.DOOR:
-                    w.add(DoorEntity(x, y), next_update=False)
+                    if (x, y) in self.locked_doors:
+                        w.add(LockedDoorEntity(x, y, self.locked_doors[(x, y)]), next_update=False)
+                    else:
+                        w.add(DoorEntity(x, y), next_update=False)
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)
