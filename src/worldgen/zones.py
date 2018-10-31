@@ -8,6 +8,7 @@ import src.world.entities as entities
 import src.game.spriteref as spriteref
 import src.game.npc as npc
 import src.game.events as events
+from src.game.updatable import Updateable
 import src.game.dialog as dialog
 
 _ALL_ZONES = {}
@@ -280,6 +281,13 @@ class DesolateCaveZone(Zone):
         dialog_box = entities.DialogTriggerBox(intro_dial, grid_xy, grid_size=grid_size, just_once=True)
 
         w.add(dialog_box)
+
+        def update_lambda(_world, _gs, _input_state, _render_engine):
+            pass
+
+        z_updater = Updateable()
+        z_updater.update = update_lambda
+        gs.add_zone_updater(z_updater)
 
         return w
 
