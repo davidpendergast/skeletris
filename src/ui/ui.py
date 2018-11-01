@@ -266,6 +266,84 @@ class DialogPanel:
                 yield bun
 
 
+class PopupPanel:
+
+    def __init__(self, w, h):
+        self.rect = [0, 0, w, h]
+
+    def set_xy(self, x, y):
+        """Note that this gets set by MenuState every frame"""
+        self.rect[0] = x
+        self.rect[1] = y
+
+    def get_rect(self):
+        return self.rect
+
+    def size(self):
+        return (self.rect[2], self.rect[3])
+
+    def update(self, world, gs, input_state, render_eng):
+        pass
+
+    def should_destroy(self, world, gs, input_state, render_eng):
+        return False
+
+    def prepare_to_destroy(self, world, gs, input_state, render_eng):
+        pass
+
+    def all_bundles(self):
+        pass
+
+
+class LockedDoorPopupPanel(PopupPanel):
+
+    def __init__(self, puzzle, door_uid, name="Locked Door"):
+        PopupPanel.__init__(self, 96*2, 112*2)
+        self.door_uid = door_uid
+        self.puzzle = puzzle
+        self.panel_name = name
+        self.items = {}  # (x, y) -> item
+
+        self.panel_bg_image = None
+        self.title_text_img = None
+        self._destroy = False
+
+    def update_images(self):
+        if self.panel_bg_image is None:
+            self.panel_bg_image = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
+
+        rect = self.get_rect()
+
+        if self.title_text_img is None:
+            self.title_text_img = TextImage(0, 0, self.panel_name, spriteref.UI_0_LAYER, scale=2, center_w=rect[2])
+
+        self.panel_bg_image = self.panel_bg_image.update(new_model=spriteref.UI.locked_door_panel,
+                                                         new_x=rect[0], new_y=rect[1])
+        self.title_text_img = self.title_text_img.update(new_x=rect[0], new_y=rect[1] + 8*2)
+
+    def update(self, world, gs, input_state, render_eng):
+        if self._destroy:
+            return
+        else:
+            self.update_images()
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def should_destroy(self, world, gs, input_state, render_eng):
+        return self._destroy
+
+    def prepare_to_destroy(self, world, gs, input_state, render_eng):
+        pass
+
+    def all_bundles(self):
+        if self.panel_bg_image is not None:
+            yield self.panel_bg_image
+        if self.title_text_img is not None:
+            for bun in self.title_text_img.all_bundles():
+                yield bun
+
+
 class HealthBarPanel:
 
     SIZE = (400 * 2, 53 * 2)

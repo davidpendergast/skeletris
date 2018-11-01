@@ -207,6 +207,9 @@ class Entity(Updateable):
     def __hash__(self):
         return self._uid
 
+    def get_uid(self):
+        return self._uid
+
     def all_bundles(self, extras=[]):
         if self._shadow is not None:
             yield self._shadow
@@ -1003,8 +1006,8 @@ class DoorEntity(Entity):
 
 class LockedDoorEntity(DoorEntity):
 
-    def __init__(self, grid_x, grid_y, puzzle):
-        self.puzzle = puzzle  # TODO - implement door puzzle
+    def __init__(self, grid_x, grid_y, interact_text_list=["it's locked."]):
+        self._interact_text_list = interact_text_list
         DoorEntity.__init__(self, grid_x, grid_y)
         self.is_locked = True
 
@@ -1016,16 +1019,15 @@ class LockedDoorEntity(DoorEntity):
         return spriteref.door_h_locked if is_horz else spriteref.door_v_locked
 
     def is_interactable(self):
-        return True
+        return (self.is_locked and self._interact_text_list is not None)
 
     def interact_radius(self):
         return self.open_radius
 
     def interact(self, world, gs):
-        # TODO - open ui
-        self.do_unlock()
-        print("interacted with a locked door")
-        return
+        if self._interact_text_list is not None:
+            dialogs = [PlayerDialog(text) for text in self._interact_text_list]
+            gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
 
     def do_unlock(self):
         self.delay_count = self.delay_duration

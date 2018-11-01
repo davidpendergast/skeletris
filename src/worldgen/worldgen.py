@@ -183,7 +183,7 @@ class WorldBlueprint:
         self.enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawn = None
-        self.locked_doors = {}  # (x, y) -> puzzle
+        self.locked_doors = []
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -201,9 +201,9 @@ class WorldBlueprint:
         if self.is_valid(x, y):
             self.geo_alt_art[x][y] = val
 
-    def set_locked_door(self, x, y, puzzle):
+    def set_locked_door(self, x, y):
         self.set(x, y, World.DOOR)
-        self.locked_doors[(x, y)] = puzzle
+        self.locked_doors.append((x, y))
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
@@ -232,7 +232,7 @@ class WorldBlueprint:
 
                 if self.geo[x][y] == World.DOOR:
                     if (x, y) in self.locked_doors:
-                        w.add(LockedDoorEntity(x, y, self.locked_doors[(x, y)]), next_update=False)
+                        w.add(LockedDoorEntity(x, y), next_update=False)
                     else:
                         w.add(DoorEntity(x, y), next_update=False)
 

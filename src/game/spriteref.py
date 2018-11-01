@@ -75,6 +75,8 @@ class UI:
     health_bar_full = None
     health_bars_with_length = []
 
+    locked_door_panel = None
+
     @staticmethod
     def get_health_bar(pcnt_full):
         return UI.health_bars_with_length[round(pcnt_full * 256)]
@@ -412,6 +414,8 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     for i in range(0, 256):
         UI.health_bars_with_length.append(make(64, 160, i, 16, shift=start_pos))
     UI.health_bars_with_length.append(UI.health_bar_full)
+
+    UI.locked_door_panel = make(272, 0, 96, 112, shift=start_pos)
 
 
 def build_tree_sheet(start_pos, raw_tree_img, sheet):

@@ -56,6 +56,13 @@ class MenuManager:
             raise ValueError("Can't set null menu")
         self._next_active_menu_id = menu_id
 
+    def get_world_menu_if_active(self):
+        active = self.get_active_menu()
+        if active is not None and active.get_type() == MenuManager.IN_GAME_MENU:
+            return active
+        else:
+            return None
+
 
 class Menu:
 
@@ -422,6 +429,7 @@ class InGameUiState(Menu):
         self.inventory_panel = None
         self.health_bar_panel = None
         self.dialog_panel = None
+        self.world_ui_panel = None  # for things like locked door UIs
 
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
@@ -517,11 +525,41 @@ class InGameUiState(Menu):
             self.health_bar_panel = HealthBarPanel()
         self.health_bar_panel.update(world, gs, input_state, render_eng)
 
+    def _update_world_ui_panel(self, world, gs, input_state, render_eng):
+        if self.world_ui_panel is not None:
+            inv_rect = self.get_inventory_rect()
+            if inv_rect is None:
+                center = (gs.screen_size[0] // 2, gs.screen_size[1] // 2)
+            else:
+                center = (inv_rect[2] + (gs.screen_size[0] - inv_rect[2]) // 2, gs.screen_size[1] // 2)
+            size = self.world_ui_panel.size()
+            self.world_ui_panel.set_xy(center[0] - size[0] // 2, center[1] - size[1] // 2)
+
+            self.world_ui_panel.update(world, gs, input_state, render_eng)
+            if self.world_ui_panel.should_destroy(world, gs, input_state, render_eng):
+                self.world_ui_panel.prepare_to_destroy(world, gs, input_state, render_eng)
+                for bun in self.world_ui_panel.all_bundles():
+                    render_eng.remove(bun)
+
+    def showing_popup_panel(self):
+        return self.world_ui_panel is not None
+
+    def add_popup_panel(self, panel):
+        """panel: PopupPanel"""
+        self.world_ui_panel = panel
+
     def in_inventory_panel(self, screen_pos):
-        if self.inventory_panel is None:
+        rect = self.get_inventory_rect()
+        if rect is None:
             return False
         else:
-            return Utils.rect_contains(self.inventory_panel.total_rect, screen_pos)
+            return Utils.rect_contains(rect, screen_pos)
+
+    def get_inventory_rect(self):
+        if self.inventory_panel is None:
+            return None
+        else:
+            return self.inventory_panel.total_rect
 
     def get_clicked_inventory_grid_and_cell(self, screen_pos):
         pos_in_panel = (screen_pos[0] - self.inventory_panel.total_rect[0],
@@ -664,12 +702,14 @@ class InGameUiState(Menu):
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
         self._update_dialog_panel(world, gs, input_state, render_eng)
+        self._update_world_ui_panel(world, gs, input_state, render_eng)
 
     def cleanup(self):
         Menu.cleanup(self)
         self.inventory_panel = None
         self.item_on_cursor_image = None
         self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
+        self.world_ui_panel = None
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
@@ -679,6 +719,9 @@ class InGameUiState(Menu):
                 yield bun
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
+                yield bun
+        if self.world_ui_panel is not None:
+            for bun in self.world_ui_panel.all_bundles():
                 yield bun
         if self.item_on_cursor_image is not None:
             for bun in self.item_on_cursor_image.all_bundles():

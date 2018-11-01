@@ -105,6 +105,17 @@ class World:
         
         return res
 
+    def get_entity(self, uid, onscreen=True):
+        if onscreen:
+            for e in self._onscreen_entities:
+                if e.get_uid() == uid:
+                    return e
+        else:
+            for e in self.entities:
+                if e.get_uid() == uid:
+                    return e
+        return None
+
     def set_wall_type(self, wall_id, xy=None):
         if xy is None:
             self._wall_type = wall_id

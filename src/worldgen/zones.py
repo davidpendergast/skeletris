@@ -62,7 +62,7 @@ class ZoneLoader:
                     elif color == ZoneLoader.DOOR:
                         bp.set(x, y, World.DOOR)
                     elif color == ZoneLoader.LOCKED_DOOR:
-                        bp.set_locked_door(x, y, "FIXME: PUZZLE")
+                        bp.set_locked_door(x, y)
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.exit_spawn = (x, y)
