@@ -87,7 +87,7 @@ class World:
                 return e
         return None
     
-    def entities_in_circle(self, center, radius, onscreen=True):
+    def entities_in_circle(self, center, radius, onscreen=True, cond=None):
         """
             returns: list of entities in circle, sorted by distance from center 
         """
@@ -95,11 +95,12 @@ class World:
         res = []
         search_space = self._onscreen_entities if onscreen else self.entities
         for e in search_space:
-            e_c = e.center()
-            dx = e_c[0] - center[0]
-            dy = e_c[1] - center[1]
-            if dx*dx + dy*dy <= r2:
-                res.append(e)
+            if cond is None or cond(e):
+                e_c = e.center()
+                dx = e_c[0] - center[0]
+                dy = e_c[1] - center[1]
+                if dx*dx + dy*dy <= r2:
+                    res.append(e)
         
         res.sort(key=lambda e: Utils.dist(center, e.center()))
         

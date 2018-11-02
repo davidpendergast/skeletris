@@ -217,6 +217,7 @@ class DesolateCaveZone(Zone):
 
     GLORPLE_POS_1 = (255, 150, 255)
     MUSHROOM_COLOR = (255, 175, 175)
+    MUSHROOM_COLOR_SP = (255, 175, 177)  # these can have a switch behind them
     RAKE_COLOR = (255, 220, 175)
     DIALOG_TRIGGER_1_COLOR = (255, 95, 95)
     SIGNS = {(255, 133, 0): ["it's a schedule. it says:\n\n" +
@@ -240,6 +241,21 @@ class DesolateCaveZone(Zone):
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
             text = "it's a large cluster of mushrooms. they're overgrown and rotten."
             mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_text=text)
+            w.add(mushroom_entity)
+
+        sp_mushrooms = unknowns[DesolateCaveZone.MUSHROOM_COLOR_SP]
+        hidden_switch_idx = random.randint(0, len(sp_mushrooms) - 1)
+        for i in range(0, len(sp_mushrooms)):
+            m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+            pos = sp_mushrooms[i]
+            if i == hidden_switch_idx:
+                text = "you find a hidden switch behind the mushrooms."
+                mushroom_entity = entities.DecorationEntity.nearest_door_unlock_switch(m_sprite, pos[0], pos[1],
+                                                                                       interact_text=text)
+            else:
+                text = "it's a large cluster of mushrooms. they're overgrown and rotten."
+                mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+                                                                            interact_text=text)
             w.add(mushroom_entity)
 
         for pos in unknowns[DesolateCaveZone.RAKE_COLOR]:

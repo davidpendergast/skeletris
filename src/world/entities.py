@@ -1009,7 +1009,7 @@ class LockedDoorEntity(DoorEntity):
     def __init__(self, grid_x, grid_y, interact_text_list=["it's locked."]):
         self._interact_text_list = interact_text_list
         DoorEntity.__init__(self, grid_x, grid_y)
-        self.is_locked = True
+        self._is_locked = True
 
     def player_in_range(self, in_range):
         # do nothing, we're locked
@@ -1019,7 +1019,7 @@ class LockedDoorEntity(DoorEntity):
         return spriteref.door_h_locked if is_horz else spriteref.door_v_locked
 
     def is_interactable(self):
-        return (self.is_locked and self._interact_text_list is not None)
+        return (self.is_locked() and self._interact_text_list is not None)
 
     def interact_radius(self):
         return self.open_radius
@@ -1030,7 +1030,11 @@ class LockedDoorEntity(DoorEntity):
             gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
 
     def do_unlock(self):
+        self._is_locked = False
         self.delay_count = self.delay_duration
+
+    def is_locked(self):
+        return self._is_locked
 
 
 class ExitEntity(Entity):
@@ -1126,25 +1130,29 @@ class ExitEntity(Entity):
 
 class DecorationEntity(Entity):
 
-    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), interact_text=None):
+    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), interact_text=None, interact_action=None):
         """
+        sprite: ImageModel or a list of ImageModels
         interact_text: str or a list of str
+        interact_action: (entity, world, gs) -> None
         """
         Entity.__init__(self, x_center, y_bottom, 1, 0)
-        if isinstance(interact_text, str):
-            self._interact_text_list = [interact_text]
-        else:
-            self._interact_text_list = interact_text
 
+        if interact_text is None:
+            self._interact_text_list = None
+        else:
+            self._interact_text_list = Utils.listify(interact_text)
+
+        self._interact_action = interact_action
         self._draw_offset = draw_offset
-        self._sprite = sprite
+        self._sprites = Utils.listify(sprite)
         self._scale = scale
 
     def update(self, world, gs, input_state, render_engine):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
-        sprite = self._sprite
+        sprite = self._sprites[gs.anim_tick % len(self._sprites)]
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + self._draw_offset[0]
         y = self.y() - (sprite.height() * self._img.scale() - self.h()) + self._draw_offset[1]
         depth = self.get_depth()
@@ -1158,9 +1166,11 @@ class DecorationEntity(Entity):
             yield self._img
 
     @staticmethod
-    def wall_decoration(sprite, grid_x, grid_y, scale=2, interact_text=None):
+    def wall_decoration(sprite, grid_x, grid_y, scale=2, interact_text=None, interact_action=None):
         """
+        sprite: ImageModel or a list of ImageModels
         interact_text: str or a list of str
+        interact_action: (entity, world, gs) -> None
         """
         h = sprite.height() * scale
         CELLSIZE = 64  # this better never change~
@@ -1168,14 +1178,38 @@ class DecorationEntity(Entity):
         x_center = (grid_x + 0.5) * CELLSIZE
         y_bottom = (grid_y) * CELLSIZE
         return DecorationEntity(sprite, x_center, y_bottom, scale=scale,
-                                draw_offset=offset, interact_text=interact_text)
+                                draw_offset=offset, interact_text=interact_text,
+                                interact_action=interact_action)
+
+    @staticmethod
+    def nearest_door_unlock_switch(sprite, grid_x, grid_y, scale=2, interact_text=None):
+        done = [False]
+
+        def unlock_nearest_door(entity, world, gs):
+            if done[0]:
+                return
+            cond = lambda e : isinstance(e, LockedDoorEntity) and e.is_locked()
+            e_in_range = world.entities_in_circle(entity.center(), 600, onscreen=False, cond=cond)
+            if len(e_in_range) == 0:
+                print("WARN: No nearby doors to unlock")
+            else:
+                e_in_range[0].do_unlock()
+                done[0] = True
+
+        return DecorationEntity.wall_decoration(sprite, grid_x, grid_y, scale=scale,
+                                                interact_text=interact_text, interact_action=unlock_nearest_door)
+
 
     def is_interactable(self):
-        return self._interact_text_list is not None
+        return self._interact_text_list is not None or self._interact_action is not None
 
     def interact(self, world, gs):
-        dialogs = [PlayerDialog(text) for text in self._interact_text_list]
-        gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
+        if self._interact_text_list is not None:
+            dialogs = [PlayerDialog(text) for text in self._interact_text_list]
+            gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
+
+        if self._interact_action is not None:
+            self._interact_action(self, world, gs)
 
 
 class BossExitEntity(ExitEntity):
