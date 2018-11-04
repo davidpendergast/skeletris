@@ -28,6 +28,7 @@ class ZoneLoader:
 
     DOOR = (0, 0, 255)
     LOCKED_DOOR = (0, 0, 130)
+    SENSOR_DOOR = (100, 100, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
     CHEST_SPAWN = (255, 0, 255)
@@ -63,6 +64,8 @@ class ZoneLoader:
                         bp.set(x, y, World.DOOR)
                     elif color == ZoneLoader.LOCKED_DOOR:
                         bp.set_locked_door(x, y)
+                    elif color == ZoneLoader.SENSOR_DOOR:
+                        bp.set_sensor_door(x, y)
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.exit_spawn = (x, y)
@@ -282,8 +285,9 @@ class DesolateCaveZone(Zone):
         for key in unknowns:
             if key in DesolateCaveZone.SIGNS:
                 pos = unknowns[key][0]
+                d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in DesolateCaveZone.SIGNS[key]])
                 sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                    interact_dialog=dialog.PlayerDialog(DesolateCaveZone.SIGNS[key]))
+                                                                 interact_dialog=d)
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn

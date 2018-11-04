@@ -970,7 +970,6 @@ class DoorEntity(Entity):
     def update(self, world, gs, input_state, render_engine):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
-            self.sprites = self._get_sprites(self._is_horz)
 
         if not gs.world_updates_paused():
 
@@ -986,22 +985,25 @@ class DoorEntity(Entity):
                 world.door_opened(*grid_xy)
                 world.remove(self)
                 gs.event_queue().add(events.DoorOpenEvent(*grid_xy))
-
             elif self.opening_count > 0:
                 self.opening_count += 1
             else:
-                p = world.get_player()
-                p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
-                self.player_in_range(p_in_range)
+                self._update_internal(world, gs, input_state, render_engine)
 
-                if self.delay_count >= self.delay_duration:
-                    # door will open now
-                    self.delay_count = 0
-                    self.opening_count = 1
-                    grid_xy = world.to_grid_coords(*self.center())
-                    world.set_geo(*grid_xy, World.FLOOR)
-
+        self.sprites = self._get_sprites(self._is_horz)
         self.update_images()
+
+    def _update_internal(self, world, gs, input_state, render_engine):
+        p = world.get_player()
+        p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
+        self.player_in_range(p_in_range)
+
+        if self.delay_count >= self.delay_duration:
+            # door will open now
+            self.delay_count = 0
+            self.opening_count = 1
+            grid_xy = world.to_grid_coords(*self.center())
+            world.set_geo(*grid_xy, World.FLOOR)
 
 
 class LockedDoorEntity(DoorEntity):
@@ -1035,6 +1037,66 @@ class LockedDoorEntity(DoorEntity):
 
     def is_locked(self):
         return self._is_locked
+
+
+class SensorDoorEntity(DoorEntity):
+    def __init__(self, grid_x, grid_y, sensor_radius=64*6, interact_dialog=None):
+        DoorEntity.__init__(self, grid_x, grid_y)
+        self.delay_duration = 90  # will unlock when no enemies are in range for this many frames
+        self.sensor_radius = sensor_radius
+        self.interact_dialog = interact_dialog
+
+    def _get_sprites(self, is_horz):
+        if self.opening_count > 0:
+            use_white = False
+        elif self.delay_count == 0:
+            use_white = True
+        else:
+            # flash colors while detecting that enemies are missing
+            if (self.delay_count // 8) % 2 == 0:
+                use_white = True
+            else:
+                use_white = False
+
+        if use_white:
+            return spriteref.door_h_sensor if is_horz else spriteref.door_v_sensor
+        else:
+            return spriteref.door_h if is_horz else spriteref.door_v
+
+    def is_interactable(self):
+        return self.delay_count < self.delay_duration
+
+    def interact(self, world, gs):
+        print("interacted with sensor door")
+        if self.is_interactable():
+            if self.interact_dialog is None:
+                gs.dialog_manager().set_dialog(PlayerDialog("this door won't open while enemies are nearby."), gs)
+            else:
+                gs.dialog_manager().set_dialog(self.interact_dialog)
+
+    def _update_internal(self, world, gs, input_state, render_engine):
+        p = world.get_player()
+        p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
+
+        if not p_in_range:
+            self.delay_count = 0
+            return
+
+        e_in_range = world.entities_in_circle(self.center(), self.sensor_radius, onscreen=True,
+                                              cond=lambda e: e.is_enemy() and not world.get_hidden_at(*e.center()))
+
+        if len(e_in_range) > 0:
+            print("e in range, resetting")
+            self.delay_count = 0
+        else:
+            self.delay_count += 1
+
+            if self.delay_count >= self.delay_duration:
+                # door will open now
+                self.delay_count = 0
+                self.opening_count = 1
+                grid_xy = world.to_grid_coords(*self.center())
+                world.set_geo(*grid_xy, World.FLOOR)
 
 
 class ExitEntity(Entity):

@@ -148,8 +148,11 @@ chest_open_all = [chest_open_0, chest_open_1]
 
 door_v = [make(736 + i*16, 0, 16, 16) for i in range(0, 6)]
 door_v_locked = [make(736 + i*16, 48, 16, 16) for i in range(0, 6)]
+door_v_sensor = [make(736 + i*16, 96, 16, 16) for i in range(0, 6)]
+
 door_h = [make(736 + i*16, 16, 16, 32) for i in range(0, 6)]
 door_h_locked = [make(736 + i*16, 64, 16, 32) for i in range(0, 6)]
+door_h_sensor = [make(736 + i*16, 112, 16, 32) for i in range(0, 6)]
 
 boss_door_idle = [make(224 + i*16, 80, 16, 32) for i in range(0, 2)]
 boss_door_opening = [make(256 + i*16, 80, 16, 32) for i in range(0, 7)]

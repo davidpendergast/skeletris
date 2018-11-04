@@ -2,7 +2,7 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, LockedDoorEntity, TreeEntity, BossExitEntity, DoorEntity, ChestEntity
+from src.world.entities import Player, ExitEntity, LockedDoorEntity, SensorDoorEntity, TreeEntity, BossExitEntity, DoorEntity, ChestEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -184,6 +184,7 @@ class WorldBlueprint:
         self.chest_spawns = []
         self.exit_spawn = None
         self.locked_doors = []
+        self.sensor_doors = []
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -196,6 +197,8 @@ class WorldBlueprint:
             self.geo[x][y] = val
             if (x, y) in self.locked_doors and val != World.DOOR:
                 raise ValueError("just stamped out a locked door at {}, {}".format(x, y))
+            if (x, y) in self.sensor_doors and val != World.DOOR:
+                raise ValueError("just stamped out a sensor door at {}, {}".format(x, y))
 
     def set_alt_art(self, x, y, val):
         if self.is_valid(x, y):
@@ -204,6 +207,10 @@ class WorldBlueprint:
     def set_locked_door(self, x, y):
         self.set(x, y, World.DOOR)
         self.locked_doors.append((x, y))
+
+    def set_sensor_door(self, x, y):
+        self.set(x, y, World.DOOR)
+        self.sensor_doors.append((x, y))
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
@@ -233,6 +240,8 @@ class WorldBlueprint:
                 if self.geo[x][y] == World.DOOR:
                     if (x, y) in self.locked_doors:
                         w.add(LockedDoorEntity(x, y), next_update=False)
+                    elif (x, y) in self.sensor_doors:
+                        w.add(SensorDoorEntity(x, y), next_update=False)
                     else:
                         w.add(DoorEntity(x, y), next_update=False)
 
