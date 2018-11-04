@@ -50,6 +50,9 @@ class GlobalState:
         return self._event_queue
 
     def add_trigger(self, trigger):
+        """
+        trigger: EventListener
+        """
         if trigger.event_type not in self._event_triggers:
             self._event_triggers[trigger.event_type] = []
 
@@ -125,7 +128,7 @@ class GlobalState:
                                 triggers_to_remove.append(trigger)
 
                 for t in triggers_to_remove:
-                    self._event_triggers[t.trigger.event_type].remove(t)
+                    self._event_triggers[t.event_type].remove(t)
 
             for zone_update in self._zone_updaters:
                 zone_update.update(world, self, input_state, render_engine)

@@ -5,6 +5,14 @@ import src.game.events as events
 
 
 class Dialog:
+
+    NEXT_UID = 0
+
+    @staticmethod
+    def _gen_uid():
+        Dialog.NEXT_UID += 1
+        return Dialog.NEXT_UID - 1
+
     """Represents one panel of dialog"""
 
     def __init__(self, text, sprites=None, left_side=True):
@@ -19,9 +27,19 @@ class Dialog:
         self.left_side = left_side
 
         self.scroll_pos = 0
+        self.uid = Dialog._gen_uid()
 
     def set_next(self, next):
         self.next = next
+
+    def last_dialog(self):
+        if self.next is None:
+            return self
+        else:
+            return self.next.last_dialog()
+
+    def get_uid(self):
+        return self.uid
 
     def get_next(self):
         return self.next
@@ -91,12 +109,8 @@ class DialogManager:
         return self._active_dialog
 
     def set_dialog(self, dialog, gs):
-        if self._active_dialog is not None and self._active_dialog.is_cutscene():
-            gs.event_queue().add(events.CutsceneEvent.new_end_event(self._active_dialog.get_cutscene_id()))
-
-        if dialog is not None:
-            if dialog.is_cutscene():
-                gs.event_queue().add(events.CutsceneEvent.new_start_event(dialog.get_cutscene_id()))
+        if self._active_dialog is not None:
+            gs.event_queue().add(events.DialogExitEvent(self._active_dialog.get_uid()))
 
         self._active_dialog = dialog
 
@@ -121,9 +135,8 @@ class DialogManager:
 
 class Cutscene(Dialog):
 
-    def __init__(self, cutscene_id, action_list):
+    def __init__(self, action_list):
         Dialog.__init__(self, "...")
-        self.cutscene_id = cutscene_id
         self.action_list = action_list
         self._action_idx = 0
         self.scroll_pos = len(self.text)
@@ -144,9 +157,6 @@ class Cutscene(Dialog):
 
     def is_cutscene(self):
         return True
-
-    def get_cutscene_id(self):
-        return self.cutscene_id
 
 
 class CutSceneAction:

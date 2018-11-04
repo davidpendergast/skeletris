@@ -183,7 +183,8 @@ class TestZone(Zone):
                 if geo_above == World.WALL and geo == World.FLOOR and random.random() < 0.6:
                     sprite_to_use, text_to_use = random.choice(decs)
 
-                    decor = entities.DecorationEntity.wall_decoration(sprite_to_use, grid_x, grid_y, interact_text=text_to_use)
+                    decor = entities.DecorationEntity.wall_decoration(sprite_to_use, grid_x, grid_y,
+                                                                      interact_dialog=dialog.PlayerDialog(text_to_use))
                     w.add(decor)
 
         # just for debugging
@@ -240,7 +241,8 @@ class DesolateCaveZone(Zone):
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
             text = "it's a large cluster of mushrooms. they're overgrown and rotten."
-            mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_text=text)
+            mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+                                                                        interact_dialog=dialog.PlayerDialog(text))
             w.add(mushroom_entity)
 
         sp_mushrooms = unknowns[DesolateCaveZone.MUSHROOM_COLOR_SP]
@@ -250,25 +252,38 @@ class DesolateCaveZone(Zone):
             pos = sp_mushrooms[i]
             if i == hidden_switch_idx:
                 text = "you find a hidden switch behind the mushrooms."
-                mushroom_entity = entities.DecorationEntity.nearest_door_unlock_switch(m_sprite, pos[0], pos[1],
-                                                                                       interact_text=text)
-            else:
-                text = "it's a large cluster of mushrooms. they're overgrown and rotten."
+                unlock_dialog = dialog.PlayerDialog(text)
+                switch_pos = ((pos[0] + 0.5) * 64, (pos[1] + 0.5) * 64)
+                doors = w.entities_in_circle(switch_pos, 800, onscreen=False,
+                                             cond=lambda ent: isinstance(ent, entities.LockedDoorEntity))
+                nearest_door = doors[0]
+                action = lambda _e, _w, _gs, : nearest_door.do_unlock()
+                listener = events.EventListener(action, events.EventType.DIALOG_EXIT,
+                                                lambda event: event.get_uid() == unlock_dialog.get_uid(),
+                                                single_use=True)
+                gs.add_trigger(listener)
                 mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
-                                                                            interact_text=text)
+                                                                            interact_dialog=unlock_dialog)
+            else:
+                if i == (hidden_switch_idx + 1) % len(sp_mushrooms):
+                    text = "there's nothing interesting here. it's just a large cluster of mushrooms."
+                else:
+                    text = "this won't help us open the door. it's just a large cluster of mushrooms."
+                mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+                                                                            interact_dialog=dialog.PlayerDialog(text))
             w.add(mushroom_entity)
 
         for pos in unknowns[DesolateCaveZone.RAKE_COLOR]:
             text = "it's a rake."
             rake_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_rake,
-                                                                    pos[0], pos[1], interact_text=text)
+                                                            pos[0], pos[1], interact_dialog=dialog.PlayerDialog(text))
             w.add(rake_entity)
 
         for key in unknowns:
             if key in DesolateCaveZone.SIGNS:
                 pos = unknowns[key][0]
                 sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                                 interact_text=DesolateCaveZone.SIGNS[key])
+                                                    interact_dialog=dialog.PlayerDialog(DesolateCaveZone.SIGNS[key]))
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
@@ -281,9 +296,9 @@ class DesolateCaveZone(Zone):
                 dialog.PlayerDialog("it looks like it hasn't been touched in ages."),
                 dialog.NpcDialog("does that mean the treasure is really here?!", spriteref.glorple_faces),
                 dialog.PlayerDialog("after all that digging, it better be. let's look around."),
-                dialog.Cutscene("pause_n_walk_0", [dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_walk_pos)]),
+                dialog.Cutscene([dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_walk_pos)]),
                 dialog.NpcDialog("it's locked. we need to find a key.", spriteref.glorple_faces),
-                dialog.Cutscene("pause_n_walk_1", [dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_spawn_pos)]),
+                dialog.Cutscene([dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_spawn_pos)]),
                 dialog.PlayerDialog("this place gives me the creeps.")]
 
         intro_dial = dialog.Dialog.link_em_up(dial)

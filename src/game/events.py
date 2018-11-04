@@ -63,8 +63,6 @@ class EventType(Enum):
     ENTERED_BOX = "ENTERED_BOX",
     EXITED_BOX = "EXITED_BOX",
     TRIGGERED_BOX = "TRIGGERED_BOX",
-    CUTSCENE_STARTED = "CUTSCENE_START",
-    CUTSCENE_FINISHED = "CUTSCENE_FINISH"
 
     # these are "please do something" events
     PLAY_SOUND = "PLAY_SOUND"
@@ -155,14 +153,9 @@ class TriggerBoxEvent(Event):
         return TriggerBoxEvent(box_id, EventType.TRIGGERED_BOX, "triggered box with id: {}".format(box_id))
 
 
-class CutsceneEvent(Event):
-    def __init__(self, started, cutscene_id):
-        Event.__init__(self, EventType.CUTSCENE_STARTED if started else EventType.CUTSCENE_FINISHED, cutscene_id, )
+class DialogExitEvent(Event):
+    def __init__(self, uid):
+        Event.__init__(self, EventType.DIALOG_EXIT, uid, description="exited dialog with uid: " + str(uid))
 
-    @staticmethod
-    def new_start_event(cutscene_id):
-        return CutsceneEvent(True, cutscene_id)
-
-    @staticmethod
-    def new_end_event(cutscene_id):
-        return CutsceneEvent(False, cutscene_id)
+    def get_uid(self):
+        return self.get_data()
