@@ -4,6 +4,7 @@ from src.ui.menus import MenuManager
 from src.game.npc import NpcState
 from src.game.dialog import DialogManager
 import src.game.events as events
+from src.game.settings import Settings
 
 
 class GlobalState:
@@ -17,6 +18,8 @@ class GlobalState:
 
         self.dungeon_level = 0
         self.kill_count = 0
+
+        self._settings = Settings()
         
         self._world_camera_center = [0, 0]
         self._player_state = None
@@ -82,6 +85,9 @@ class GlobalState:
 
     def npc_state(self):
         return self._npc_state
+
+    def settings(self):
+        return self._settings
         
     def set_player_state(self, state):
         self._player_state = state

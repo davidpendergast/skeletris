@@ -31,6 +31,9 @@ if debug.DEBUG:
                                Utils.resource_path("README.md"),
                                Utils.resource_path("gifs"))
 
+print("initializing sounds...")
+pygame.mixer.init()
+
 SCREEN_SIZE = (800, 600)
 
 

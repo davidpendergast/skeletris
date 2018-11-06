@@ -6,6 +6,7 @@ from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
 from src.utils.util import Utils
 from src.world.entities import ItemEntity, PickupEntity
+import src.game.music as music
 
 
 class MenuManager:
@@ -27,6 +28,11 @@ class MenuManager:
             self._active_menu.cleanup()
 
             self._active_menu = self._get_menu(self._next_active_menu_id)
+
+            new_song = self._active_menu.get_song()
+            if new_song is not None:
+                music.play_song(new_song)
+
             self._next_active_menu_id = None
             if not self.should_draw_world():
                 render_eng.set_clear_color(*self._active_menu.get_clear_color())
@@ -79,6 +85,9 @@ class Menu:
     def update(self, world, gs, input_state, render_eng):
         pass
 
+    def get_song(self):
+        return None
+
     def all_bundles(self):
         tooltip = self.get_active_tooltip()
         if tooltip is not None:
@@ -126,6 +135,9 @@ class StartMenu(Menu):
 
     def get_clear_color(self):
         return (0, 0, 0)
+
+    def get_song(self):
+        return music.Songs.MENU_THEME
 
     def _build_imgs(self):
         if self._title_img is None:
@@ -216,6 +228,9 @@ class CinematicMenu(Menu):
 
         self.cinematic_panel = None
 
+    def get_song(self):
+        return music.Songs.SILENCE
+
     def update(self, world, gs, input_state, render_eng):
         if self.active_scene is None:
             cine_queue = gs.get_cinematics_queue()
@@ -295,6 +310,9 @@ class DeathMenu(Menu):
         self._flavor_text = self._get_flavor_text()
 
         self._build_imgs()
+
+    def get_song(self):
+        return None
 
     def get_flavor_progress(self):
         return Utils.bound(self._flavor_tick / self._flavor_duration, 0.0, 1.0)
@@ -434,6 +452,9 @@ class InGameUiState(Menu):
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
+
+    def get_song(self):
+        return music.Songs.SILENCE
 
     def keep_drawing_world_underneath(self):
         return True
