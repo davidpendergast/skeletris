@@ -198,9 +198,10 @@ def run():
 
             gs.dialog_manager().update(world, gs, input_state)
 
+            shake = gs.get_screenshake()
             camera = gs.get_world_camera()
             for layer_id in spriteref.WORLD_LAYERS:
-                render_eng.set_layer_offset(layer_id, *camera)
+                render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 
         elif world is not None:
             world.cleanup_active_bundles(render_eng)

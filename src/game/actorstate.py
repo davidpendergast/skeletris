@@ -347,6 +347,11 @@ class PlayerState(ActorState):
             self._healing_last_tick = sum(self.damage_amounts)
             self.handle_floating_text(player_entity, world)
 
+            if self._damage_last_tick / self.max_hp() > 0.15:
+                shake_strength = 45 * self._damage_last_tick / self.max_hp()
+                duration = 25
+                gs.add_screenshake(shake_strength, duration, freq=3)
+
             if self.hp() <= 0:
                 self._is_dead = True
                 self._handle_death(player_entity, world)

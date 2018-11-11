@@ -33,7 +33,7 @@ class _Layer:
     
     def set_offset(self, x, y):
         self._offset = (x, y)
-        
+
     def offset(self):
         return self._offset
     

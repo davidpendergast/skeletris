@@ -1,10 +1,14 @@
 import traceback
+import math
+import random
+import queue
 
 from src.ui.menus import MenuManager
 from src.game.npc import NpcState
 from src.game.dialog import DialogManager
 import src.game.events as events
 from src.game.settings import Settings
+from src.utils.util import Utils
 
 
 class GlobalState:
@@ -37,6 +41,8 @@ class GlobalState:
         self._current_zone_id = None
 
         self._cinematics_queue = []
+
+        self._current_screenshakes = []  # list of stacks of (x, y) pairs
 
         self._event_queue = events.EventQueue()
         self._event_triggers = {}  # EventType -> list(EventListener)
@@ -92,6 +98,46 @@ class GlobalState:
     def set_player_state(self, state):
         self._player_state = state
 
+    def add_screenshake(self, strength, duration, falloff=3, freq=6):
+        """
+        int strength: max pixel offset of shake
+        int duration: ticks for which the shake will remain active
+        int freq: "speed" of the shake. 1 is really fast, higher is slower
+        """
+        decay = lambda t: math.exp(-falloff*(t / duration))
+        num_keypoints = int(duration / freq)
+        x_pts = [round(2 * (0.5 - random.random()) * strength * decay(t * freq)) for t in range(0, num_keypoints)]
+        y_pts = [round(2 * (0.5 - random.random()) * strength * decay(t * freq)) for t in range(0, num_keypoints)]
+        x_pts.append(0)
+        y_pts.append(0)
+
+        shake_pts = []
+        for i in range(0, duration):
+            if i % freq == 0:
+                shake_pts.append((x_pts[i // freq], y_pts[i // freq]))
+            else:
+                prev_pt = (x_pts[i // freq], y_pts[i // freq])
+                next_pt = (x_pts[i // freq + 1], y_pts[i // freq + 1])
+                shake_pts.append(Utils.linear_interp(prev_pt, next_pt, (i % freq) / freq))
+
+        if len(shake_pts) == 0:
+            return  # this shouldn't happen but ehh
+
+        shake_pts.reverse()  # this is used as a stack
+        self._current_screenshakes.append(shake_pts)
+
+    def get_screenshake(self):
+        if len(self._current_screenshakes) == 0:
+            return (0, 0)
+        else:
+            x_sum = 0
+            y_sum = 0
+            for shake in self._current_screenshakes:
+                x_sum += shake[-1][0]
+                y_sum += shake[-1][1]
+
+            return (round(x_sum), round(y_sum))
+
     def get_cinematics_queue(self):
         return self._cinematics_queue
         
@@ -138,6 +184,16 @@ class GlobalState:
 
             for zone_update in self._zone_updaters:
                 zone_update.update(world, self, input_state, render_engine)
+
+        if len(self._current_screenshakes) > 0:
+            any_empty = False
+            for shake_stack in self._current_screenshakes:
+                shake_stack.pop()
+                if len(shake_stack) == 0:
+                    any_empty = True
+
+            if any_empty:
+                self._current_screenshakes = [sh for sh in self._current_screenshakes if len(sh) > 0]
 
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:

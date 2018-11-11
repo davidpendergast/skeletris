@@ -1086,7 +1086,6 @@ class SensorDoorEntity(DoorEntity):
                                               cond=lambda e: e.is_enemy() and not world.get_hidden_at(*e.center()))
 
         if len(e_in_range) > 0:
-            print("e in range, resetting")
             self.delay_count = 0
         else:
             self.delay_count += 1
