@@ -863,7 +863,7 @@ class PickupEntity(Entity):
             world.remove(self)
 
     def on_pickup(self, world, gs):
-        gs.player_state().picked_up(self, world)
+        gs.player_state().picked_up(self, world, gs)
 
     def is_pickup(self):
         return True
@@ -1096,6 +1096,31 @@ class SensorDoorEntity(DoorEntity):
                 self.opening_count = 1
                 grid_xy = world.to_grid_coords(*self.center())
                 world.set_geo(*grid_xy, World.FLOOR)
+
+
+class SaveStationEntity(Entity):
+
+    def __init__(self, grid_x, grid_y):
+        Entity.__init__(self, grid_x * 64 + 16, grid_y * 64, 32, 32)
+
+    def update_images(self, anim_tick):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+
+        sprite = spriteref.save_stations[anim_tick % len(spriteref.save_stations)]
+
+        x = self.x()
+        y = self.y() - sprite.height() * 4
+        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+
+    def update(self, world, gs, input_state, render_engine):
+        self.update_images(gs.anim_tick)
+
+    def is_interactable(self):
+        return True
+
+    def interact(self, world, gs):
+        gs.do_save()
 
 
 class ExitEntity(Entity):

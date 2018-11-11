@@ -1,6 +1,7 @@
 import math
 import random
 import os
+import json
 import sys
 import numbers
 
@@ -115,3 +116,42 @@ class Utils:
             base_path = os.path.abspath(".")
 
         return os.path.join(base_path, relative_path)
+
+    @staticmethod
+    def load_json_from_path(filepath):
+        with open(filepath) as f:
+            data = json.load(f)
+            return data
+
+    @staticmethod
+    def save_json_to_path(json_blob, filepath):
+        directory = os.path.dirname(filepath)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        with open(filepath, 'w') as outfile:
+            json.dump(json_blob, outfile)
+
+    @staticmethod
+    def read_int(json_blob, key, default):
+        return Utils.read_safely(json_blob, key, default, mapper=lambda x: int(x))
+
+    @staticmethod
+    def read_string(json_blob, key, default):
+        return Utils.read_safely(json_blob, key, default, mapper=lambda x: str(x))
+
+    @staticmethod
+    def read_bool(json_blob, key, default):
+        return Utils.read_safely(json_blob, key, default, mapper=lambda x: bool(x))
+
+    @staticmethod
+    def read_safely(json_blob, key, default, mapper=lambda x: x):
+        if key not in json_blob or json_blob[key] is None:
+            print("returning default {} for key {}".format(default, key))
+            return default
+        else:
+            try:
+                return mapper(json_blob[key])
+            except ValueError:
+                return default
+

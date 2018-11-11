@@ -1,7 +1,7 @@
 import traceback
 import math
 import random
-import queue
+import os
 
 from src.ui.menus import MenuManager
 from src.game.npc import NpcState
@@ -11,20 +11,87 @@ from src.game.settings import Settings
 from src.utils.util import Utils
 
 
+class SaveData:
+
+    def __init__(self, filename):
+        self._filename = filename
+
+        self.kill_count = 0
+        self.num_potions = 0
+        self.current_zone_id = None
+
+    def get_path(self):
+        return SaveData.path_for_filename(self._filename)
+
+    @staticmethod
+    def path_for_filename(filename):
+        return os.path.join("save_data", filename)
+
+    @staticmethod
+    def exists_on_disk(filename):
+        return os.path.exists(SaveData.path_for_filename(filename))
+
+    @staticmethod
+    def create_new_save_file(filename):
+        data = SaveData(filename)
+        data.save_to_disk()
+        print("INFO: created new save file {}".format(filename))
+        return data
+
+    @staticmethod
+    def load_from_disk(filename):
+        res = SaveData(filename)
+        dest_file = res.get_path()
+        try:
+            json_blob = Utils.load_json_from_path(dest_file)
+
+            print("json_blob={}".format(json_blob))
+            res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
+            res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
+            res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
+
+            print("INFO: loaded save data {} from disk".format(filename))
+            return res
+        except ValueError:
+            print("ERROR: failed to load " + dest_file)
+            return None
+
+    def to_json(self):
+        return {
+            "version": 0,
+            "kill_count": self.kill_count,
+            "num_potions": self.num_potions,
+            "current_zone_id": self.current_zone_id,
+        }
+
+    def save_to_disk(self):
+        json_blob = self.to_json()
+        dest_file = self.get_path()
+        try:
+            Utils.save_json_to_path(json_blob, dest_file)
+            print("INFO: saved save data {} to disk".format(self._filename))
+        except ValueError:
+            print("ERROR: failed to save to " + dest_file)
+
+    def __repr__(self):
+        return str(self.to_json())
+
+
 class GlobalState:
 
-    def __init__(self, menu_id=MenuManager.START_MENU):
+    def __init__(self, save_data, menu_id=MenuManager.START_MENU):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
         self.tick_counter = 0
         self.anim_tick = 0
 
-        self.dungeon_level = 0
-        self.kill_count = 0
+        self.dungeon_level = 0  # this needs to be zone-level
 
         self._settings = Settings()
-        
+
+        self._save_data = save_data
+
         self._world_camera_center = [0, 0]
         self._player_state = None
 
@@ -37,8 +104,6 @@ class GlobalState:
 
         self._npc_state = NpcState()
         self._dialog_manager = DialogManager()
-
-        self._current_zone_id = None
 
         self._cinematics_queue = []
 
@@ -54,6 +119,12 @@ class GlobalState:
         self._zone_updaters = []
 
         self.needs_exit = False
+
+    def settings(self):
+        return self._settings
+
+    def save_data(self):
+        return self._save_data
 
     def event_queue(self):
         return self._event_queue
@@ -74,7 +145,7 @@ class GlobalState:
         self._zone_updaters.clear()
         self.clear_triggers(events.EventListenerScope.ZONE)
 
-        self._current_zone_id = zone_id
+        self.save_data().current_zone_id = zone_id
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:
@@ -91,9 +162,6 @@ class GlobalState:
 
     def npc_state(self):
         return self._npc_state
-
-    def settings(self):
-        return self._settings
         
     def set_player_state(self, state):
         self._player_state = state

@@ -172,6 +172,7 @@ wall_decoration_bones = make(32, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_switches = [make(64, 376, 8, 24), make(72, 376, 8, 24)]
 
+save_stations = [make(0 + 16*i, 304, 16, 32) for i in range(0, 8)]
 
 enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]

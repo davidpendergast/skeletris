@@ -2,7 +2,7 @@ import pygame
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
-from src.game.globalstate import GlobalState
+from src.game.globalstate import GlobalState, SaveData
 import src.game.inputs as inputs
 from src.ui.menus import MenuManager
 from src.game.inventory import InventoryState
@@ -18,15 +18,13 @@ from src.game.messages import Messages
 
 import src.game.readme_writer as readme_writer
 
-from src.worldgen.worldgen import WorldFactory
-
 import src.utils.profiling as profiling
 
 
 print("launching Cubelike...")
 print("running pygame version: " + pygame.version.ver)
 
-if debug.DEBUG:
+if debug.IS_DEV:
     print("generating readme...")
     readme_writer.write_readme(Utils.resource_path("readme_template.txt"),
                                Utils.resource_path("README.md"),
@@ -43,7 +41,12 @@ def build_me_a_world(gs):
 
 
 def new_gs(menu_id):
-    gs = GlobalState(menu_id=menu_id)
+    data_file = "save_data.json"
+    if SaveData.exists_on_disk(data_file):
+        save_data = SaveData.load_from_disk(data_file)
+    else:
+        save_data = SaveData.create_new_save_file(data_file)
+    gs = GlobalState(save_data, menu_id=menu_id)
     gs.set_player_state(PlayerState("ghast", InventoryState()))
     return gs
 
@@ -182,6 +185,9 @@ def run():
             manager = gs.get_menu_manager()
             if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
                 gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+
+        if debug.DEBUG and input_state.was_pressed(pygame.K_F7):
+            gs.save_data().save_to_disk()
 
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())

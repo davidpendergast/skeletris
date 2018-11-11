@@ -40,7 +40,7 @@ class InventoryPanel:
         self.player_state = gs.player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
-        self.kill_count = gs.kill_count
+        self.kill_count = gs.save_data().kill_count
         self.dungeon_level = gs.dungeon_level
 
         self.top_img = None
@@ -70,7 +70,7 @@ class InventoryPanel:
         self._build_images(sc, gs)
 
     def gs_info_is_outdated(self, gs):
-        return (self.kill_count != gs.kill_count or
+        return (self.kill_count != gs.save_data().kill_count or
                 self.dungeon_level != gs.dungeon_level)
         
     def _build_images(self, sc, gs):
@@ -433,7 +433,7 @@ class HealthBarPanel:
                 render_eng.remove(self._cooldown_imgs[i])
                 self._cooldown_imgs[i] = None
 
-        n_potions = p_state.num_potions()
+        n_potions = gs.save_data().num_potions
 
         if n_potions != self._num_potions:
             self._num_potions = n_potions
