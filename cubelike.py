@@ -11,6 +11,7 @@ from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
 import src.game.cinematics as cinematics
 import src.worldgen.zones as zones
+import src.game.settings as settings
 
 from src.game.dialog import Dialog
 from src.game.messages import Messages
@@ -169,6 +170,13 @@ def run():
             else:
                 pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
             gs.is_fullscreen = not gs.is_fullscreen
+
+        if input_state.was_pressed(pygame.K_o):
+            cur_value = gs.settings().get(settings.MUSIC_VOLUME)
+            if cur_value > 0:
+                gs.settings().set(settings.MUSIC_VOLUME, 0)
+            else:
+                gs.settings().set(settings.MUSIC_VOLUME, 100)
 
         if input_state.was_pressed(inputs.KILL) and debug.DEBUG:
             manager = gs.get_menu_manager()

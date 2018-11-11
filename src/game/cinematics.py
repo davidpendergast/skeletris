@@ -1,11 +1,13 @@
 import src.game.spriteref as spriteref
+import src.game.music as music
 
 
 class Cinematic:
 
-    def __init__(self, images, text):
+    def __init__(self, images, text, music_id=None):
         self.images = images
         self.text = text
+        self.music_id = music_id
 
 
 _already_inited = False
@@ -22,7 +24,8 @@ def init_cinematics():
 
     print("initializing cinematics...")
     opening_cinematic.extend([
-        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony"),
+        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony",
+                  music_id=music.Songs.AN_ADVENTURE_UNFOLDS),
         Cinematic(spriteref.Cinematics.intro_skel_slide, "skeletons built towns, farmed crops, and raised families"),
         Cinematic(spriteref.Cinematics.intro_thing_slide, "things lived in tribes, migrating with the seasons to find food"),
         Cinematic(spriteref.Cinematics.intro_ghost_slide, "ghosts mostly just chatted"),

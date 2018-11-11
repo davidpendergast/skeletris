@@ -10,6 +10,7 @@ import src.game.npc as npc
 import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.dialog as dialog
+import src.game.music as music
 
 _ALL_ZONES = {}
 
@@ -105,6 +106,7 @@ def build_world(zone_id, gs):
         raise ValueError("unknown zone id: {}".format(zone_id))
 
     gs.prepare_for_new_zone(zone_id)
+    music.play_song(zone.get_music_id())
 
     w = zone.build_world(gs)
     w.set_bg_color(zone.get_bg_color())
@@ -230,7 +232,8 @@ class DesolateCaveZone(Zone):
     GLORPLE_WALKTO_POS = (225, 33, 225)
 
     def __init__(self):
-        Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png")
+        Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png",
+                      music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self, gs):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())

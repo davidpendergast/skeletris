@@ -229,7 +229,8 @@ class CinematicMenu(Menu):
         self.cinematic_panel = None
 
     def get_song(self):
-        return music.Songs.SILENCE
+        # each scene will specify its song
+        return music.Songs.CONTINUE_CURRENT
 
     def update(self, world, gs, input_state, render_eng):
         if self.active_scene is None:
@@ -240,6 +241,7 @@ class CinematicMenu(Menu):
             else:
                 self.active_scene = cine_queue.pop(0)
                 self.active_tick_count = 0
+                music.play_song(self.active_scene.music_id)
 
         if self.active_scene is not None:
             if self.cinematic_panel is None:
@@ -454,7 +456,8 @@ class InGameUiState(Menu):
         self.item_on_cursor_image = None
 
     def get_song(self):
-        return music.Songs.SILENCE
+        # zones specify their songs
+        return music.Songs.CONTINUE_CURRENT
 
     def keep_drawing_world_underneath(self):
         return True

@@ -385,9 +385,11 @@ class TeleportAttack(Attack):
         if len(res) == 0 and entity.get_vel() != (0, 0):
             length = self.get_base_range() * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
             move_xy = Utils.set_length(entity.get_vel(), length)
-            entity.move(*move_xy, world, and_search=True)
 
-            res = Attack.activate(self, gs, entity, world, stat_lookup)
+            # definitely don't want player or entities porting through closed doors
+            if world.get_hidden_at(*move_xy) is not True:
+                entity.move(*move_xy, world, and_search=True)
+                res = Attack.activate(self, gs, entity, world, stat_lookup)
 
         self.place_attack_circle(entity.center(), stat_lookup, world)
         return res
