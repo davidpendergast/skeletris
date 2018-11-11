@@ -1,4 +1,6 @@
 
-1. trilla babies can appear in walls
+1. trilla babies can appear in walls (and stay stuck there until killed)
 
 2. pausing (via dialog) while taking damage blurs the health bar up across the screen
+
+3. enemies using Teleport can warp into hidden rooms

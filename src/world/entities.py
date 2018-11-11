@@ -1101,17 +1101,25 @@ class SensorDoorEntity(DoorEntity):
 class SaveStationEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
-        Entity.__init__(self, grid_x * 64 + 16, grid_y * 64, 32, 32)
+        Entity.__init__(self, grid_x * 64 + 16, grid_y * 64, 32, 8)
+
+    def get_shadow_sprite(self):
+        return spriteref.chest_shadow
 
     def update_images(self, anim_tick):
-        if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+        Entity.update_images(self, anim_tick)  # update shadow
 
-        sprite = spriteref.save_stations[anim_tick % len(spriteref.save_stations)]
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
+
+        sprite = spriteref.save_stations[(anim_tick // 3) % len(spriteref.save_stations)]
 
         x = self.x()
-        y = self.y() - sprite.height() * 4
+        y = self.y() - sprite.height() * 2 + 8
         self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+
+        if self._shadow is not None:
+            self._shadow = self._shadow.update(new_x=x)
 
     def update(self, world, gs, input_state, render_engine):
         self.update_images(gs.anim_tick)
@@ -1120,7 +1128,11 @@ class SaveStationEntity(Entity):
         return True
 
     def interact(self, world, gs):
-        gs.do_save()
+        result = gs.save_data().save_to_disk()
+        if result:
+            gs.dialog_manager().set_dialog(Dialog("game saved."), gs)
+        else:
+            gs.dialog_manager().set_dialog(Dialog("failed to save."), gs)
 
 
 class ExitEntity(Entity):

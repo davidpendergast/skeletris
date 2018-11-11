@@ -42,6 +42,7 @@ class SaveData:
     def load_from_disk(filename):
         res = SaveData(filename)
         dest_file = res.get_path()
+
         try:
             json_blob = Utils.load_json_from_path(dest_file)
 
@@ -52,6 +53,7 @@ class SaveData:
 
             print("INFO: loaded save data {} from disk".format(filename))
             return res
+
         except ValueError:
             print("ERROR: failed to load " + dest_file)
             return None
@@ -70,8 +72,11 @@ class SaveData:
         try:
             Utils.save_json_to_path(json_blob, dest_file)
             print("INFO: saved save data {} to disk".format(self._filename))
+            return True
         except ValueError:
             print("ERROR: failed to save to " + dest_file)
+            traceback.print_exc()
+            return False
 
     def __repr__(self):
         return str(self.to_json())

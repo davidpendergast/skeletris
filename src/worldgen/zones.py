@@ -33,6 +33,7 @@ class ZoneLoader:
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
     CHEST_SPAWN = (255, 0, 255)
+    SAVE_STATION = (0, 255, 255)
     EXIT = (255, 0, 0)
 
     @staticmethod
@@ -79,6 +80,9 @@ class ZoneLoader:
                     elif color == ZoneLoader.PLAYER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.player_spawn = (x, y)
+                    elif color == ZoneLoader.SAVE_STATION:
+                        bp.set(x, y, World.FLOOR)
+                        bp.save_station = (x, y)
                     else:
                         mock_color = (color[0], color[0], color[0])
                         if mock_color in ZoneLoader.FLOOR_ID_LOOKUP:
