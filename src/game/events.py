@@ -96,9 +96,9 @@ class EventListener:
 
     def __init__(self, action, event_type, predicate, scope=EventListenerScope.ZONE, single_use=False):
         """
+        Event, World, GlobalState -> () action: runnable action to perform when event occurs
         EventType event_type: type of event to listen for
         Event -> bool predicate: predicate for events to accept
-        Event, World, GlobalState -> () action: runnable action to perform when event occurs
         EventListenerScope scope: scope of listener
         bool single_use: whether to auto-remove listener after one trigger
         """
@@ -154,8 +154,11 @@ class TriggerBoxEvent(Event):
 
 
 class DialogExitEvent(Event):
-    def __init__(self, uid):
-        Event.__init__(self, EventType.DIALOG_EXIT, uid, description="exited dialog with uid: " + str(uid))
+    def __init__(self, uid, opt_idx):
+        Event.__init__(self, EventType.DIALOG_EXIT, (uid, opt_idx), description="exited dialog with uid: " + str(uid))
 
     def get_uid(self):
-        return self.get_data()
+        return self.get_data()[0]
+
+    def get_option_idx(self):
+        return self.get_data()[1]

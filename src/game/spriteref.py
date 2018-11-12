@@ -173,6 +173,7 @@ wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_switches = [make(64, 376, 8, 24), make(72, 376, 8, 24)]
 
 save_stations = [make(0 + 16*i, 304, 16, 32) for i in range(0, 8)]
+save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
@@ -222,13 +223,13 @@ progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range
 
 
 _chars = [letter for letter in string.ascii_lowercase]
-_chars.extend(["+", "-", "\"", ".", ",", "!", "?", "_", "~", "%", "=", ":", "'", ">", "<"])
+_chars.extend(c for c in "+-\".,!?_~%=:'><")
 _qmark = make(160, 115, 5, 5)
 alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):
     alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
 
-_chars_2 = "0123456789[]()"
+_chars_2 = "0123456789[](){}"
 for i in range(0, len(_chars_2)):
     c = _chars_2[i]
     alphabet[c] = make(5*i, 120, 5, 5)

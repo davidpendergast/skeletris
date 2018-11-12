@@ -1128,11 +1128,20 @@ class SaveStationEntity(Entity):
         return True
 
     def interact(self, world, gs):
-        result = gs.save_data().save_to_disk()
-        if result:
-            gs.dialog_manager().set_dialog(Dialog("game saved."), gs)
-        else:
-            gs.dialog_manager().set_dialog(Dialog("failed to save."), gs)
+        question = NpcDialog("save game?\n\n" +
+                             "{yes} {no}", spriteref.save_station_faces)
+
+        def _do_save(event, w, gs):
+            if event.get_option_idx() == 0:
+                result = gs.save_data().save_to_disk()
+                if result:
+                    gs.dialog_manager().set_dialog(NpcDialog("game saved.", spriteref.save_station_faces), gs)
+                else:
+                    gs.dialog_manager().set_dialog(Dialog("failed to save.", spriteref.save_station_faces), gs)
+        e_listener = question.build_listener(_do_save, single_use=True)
+
+        gs.add_trigger(e_listener)
+        gs.dialog_manager().set_dialog(question, gs)
 
 
 class ExitEntity(Entity):

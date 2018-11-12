@@ -155,6 +155,7 @@ class DialogPanel:
         self._border_imgs = []
         self._speaker_img = None
         self._text_displaying = ""
+        self._option_selected = None
         self._text_img = None
         self._bg_imgs = []
 
@@ -227,26 +228,54 @@ class DialogPanel:
 
         if len(text) > 0 and self._text_img is None:
             wrapped_text = TextImage.wrap_words_to_fit(text, 2, text_area[2])
-            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, y_kerning=3)
+            custom_colors = {}
+            print("self._option_selected = {}".format(self._option_selected))
+            if self._option_selected is not None:
+                opt_text = self._dialog.get_options()[self._option_selected]
+
+                try:
+                    pos = wrapped_text.index(opt_text)
+                    for i in range(pos, pos + len(opt_text)):
+                        custom_colors[i] = (255, 0, 0)
+                    print("custom_colors={}".format(custom_colors))
+                except ValueError:
+                    print("ERROR: option \"{}\" missing from dialog \"{}\"".format(opt_text, wrapped_text))
+
+            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, y_kerning=3,
+                                       custom_colors=custom_colors)
             needs_update = True
 
         return needs_update
 
     def update(self, gs, render_eng):
+        do_text_rebuild = False
+
         new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
         if self._text_displaying != new_text and self._text_img is not None:
-            for bun in self._text_img.all_bundles():
-                render_eng.remove(bun)
-            self._text_img = None
+            do_text_rebuild = True
 
         self._text_displaying = new_text
+
+        option_idx = None
+        if len(self._dialog.get_options()) > 0 and self._dialog.is_done_scrolling():
+            option_idx = self._dialog.get_selected_opt_idx()
+
+        if option_idx != self._option_selected:
+            do_text_rebuild = True
+            self._option_selected = option_idx
 
         new_sprite = self._dialog.get_visible_sprite(gs)
         if new_sprite is None and self._speaker_img is not None:
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
 
-        full_update = self.update_images(gs, self._text_displaying, new_sprite, self._dialog.get_sprite_side())
+        if do_text_rebuild:
+            for bun in self._text_img.all_bundles():
+                render_eng.remove(bun)
+            self._text_img = None
+
+        full_update = self.update_images(gs, self._text_displaying, new_sprite,
+                                         self._dialog.get_sprite_side())
 
         if full_update:
             for bun in self.all_bundles():
@@ -469,15 +498,18 @@ class TextImage:
     X_KERNING = 1
     Y_KERNING = 1
 
-    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None, y_kerning=None):
+    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None, y_kerning=None,
+                 custom_colors=None):
         self.x = x
         self.center_w = center_w
         self.y = y
         self.text = text.lower()
         self.layer = layer
         self.color = color
+        self.custom_colors = {} if custom_colors is None else custom_colors  # int index -> (int, int, int) color
         self.scale = scale
         self._letter_images = []
+        self._letter_image_indexes = []
         self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
 
         self._text_chunks = spriteref.split_text(self.text) if try_split else list(self.text)
@@ -531,6 +563,7 @@ class TextImage:
         xpos = x_shift
 
         a_sprite = spriteref.alphabet["a"]
+        idx = 0
         for chunk in self._text_chunks:
             if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
                 xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
@@ -543,25 +576,40 @@ class TextImage:
                 else:
                     sprite = spriteref.cached_text_imgs[chunk]
 
+                if idx in self.custom_colors:
+                    color = self.custom_colors[idx]
+                else:
+                    color = self.color
+
                 img = ImageBundle(sprite, self.x + xpos, self.y + ypos, layer=self.layer,
-                        scale=self.scale, color=self.color)
+                                  scale=self.scale, color=color)
+
                 self._letter_images.append(img)
+                self._letter_image_indexes.append(idx)
                 xpos += (TextImage.X_KERNING + sprite.width()) * self.scale
 
-    def update(self, new_x=None, new_y=None, new_depth=None, new_color=None):
+            idx += len(chunk)
+
+    def update(self, new_x=None, new_y=None, new_depth=None, new_color=None, new_custom_colors=None):
         dx = 0 if new_x is None else new_x - self.x
         dy = 0 if new_y is None else new_y - self.y
+        self.custom_colors = new_custom_colors if new_custom_colors is not None else self.custom_colors
+        self.color = new_color if new_color is not None else self.color
+
         new_imgs = []
-        for letter in self._letter_images:
+        for letter, idx in zip(self._letter_images, self._letter_image_indexes):
             letter_new_x = letter.x() + dx
             letter_new_y = letter.y() + dy
+            if idx in self.custom_colors:
+                color = self.custom_colors[idx]
+            else:
+                color = self.color
             new_imgs.append(letter.update(new_x=letter_new_x, new_y=letter_new_y,
-                                          new_depth=new_depth, new_color=new_color))
+                                          new_depth=new_depth, new_color=color))
 
         self._letter_images = new_imgs
         self.x = new_x if new_x is not None else self.x
         self.y = new_y if new_y is not None else self.y
-        self.color = new_color if new_color is not None else self.color
         self.actual_size = self._recalc_size()
 
         return self
