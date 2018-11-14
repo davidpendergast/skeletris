@@ -94,6 +94,9 @@ class ImageBundle:
         
     def uid(self):
         return self._unique_id
+
+    def all_bundles(self):
+        yield self
         
     def add_urself(self, vertices, texts, colors, indices):
         x = self.x()

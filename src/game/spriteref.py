@@ -77,6 +77,11 @@ class UI:
 
     locked_door_panel = None
 
+    attack_action = None
+    potion_action = None
+    inspect_action = None
+    inventory_action = None
+
     @staticmethod
     def get_health_bar(pcnt_full):
         return UI.health_bars_with_length[round(pcnt_full * 256)]
@@ -403,6 +408,11 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.inv_panel_top = make(0, 0, 160, 128, shift=start_pos)
     UI.inv_panel_mid = make(0, 128, 160, 16, shift=start_pos)
     UI.inv_panel_bot = make(0, 144, 160, 16, shift=start_pos)
+
+    UI.attack_action = make(0, 252, 28, 28, shift=start_pos)
+    UI.potion_action = make(28, 252, 28, 28, shift=start_pos)
+    UI.inspect_action = make(56, 252, 28, 28, shift=start_pos)
+    UI.inventory_action = make(84, 252, 28, 28, shift=start_pos)
 
     """
     0 1 2

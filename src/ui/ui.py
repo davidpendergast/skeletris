@@ -381,13 +381,13 @@ class HealthBarPanel:
         self._top_img = None
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
-        self._cooldown_imgs = [None] * 6
-        self._potion_text = None
-        self._num_potions = -1
+
+        self._action_imgs = [(None, None, None, None)] * 6  # (base_img, cooldown_img, left text, right text)
+
         self._float_dur = 30
         self._float_height = 30
 
-    def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing, cooldowns):
+    def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing, action_states, render_eng):
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2)
@@ -427,21 +427,81 @@ class HealthBarPanel:
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
-        for i in range(0, len(cooldowns)):
-            if cooldowns[i] < 1.0:
-                if self._cooldown_imgs[i] is None:
-                    self._cooldown_imgs[i] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-                cd_x = x + 87 * 2 + 40 * 2 * i
-                cd_y = y + 19 * 2
-                cd_img = spriteref.get_cooldown_img(cooldowns[i])
-                self._cooldown_imgs[i] = self._cooldown_imgs[i].update(new_model=cd_img, new_x=cd_x, new_y=cd_y)
+        x_start = x + 87 * 2
+        x_spacing = 40 * 2
+        y_start = y + 19 * 2
+        for i in range(0, len(action_states)):
+            state = action_states[i]
+            cur_img = [img for img in self._action_imgs[i]]
+            print("cur_img={}".format(cur_img))
+            if state is None:
+                for img in cur_img:
+                    if img is not None:
+                        for bun in img.all_bundles():
+                            render_eng.remove(bun)
+                self._action_imgs[i] = (None, None, None, None)
+            else:
+                """Action Image"""
+                if cur_img[0] is None:
+                    cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
+                cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start + i * x_spacing, new_y=y_start)
 
-        if self._potion_text is None:
-            pot_img = TextImage(0, 0, str(self._num_potions), spriteref.UI_0_LAYER)
-            pot_x = x + 155*2 - pot_img.size()[0] - 4
-            pot_y = y + 47*2 - pot_img.size()[1] - 4
-            pot_color = (1, 1, 1) if self._num_potions > 0 else (1, 0.5, 0.5)
-            self._potion_text = pot_img.update(new_x=pot_x, new_y=pot_y, new_color=pot_color)
+                """Cooldown Image"""
+                if state[1] >= 1:
+                    if cur_img[1] is not None:
+                        render_eng.remove(cur_img[1])
+                        cur_img[1] = None
+                else:
+                    if cur_img[1] is None:
+                        cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
+                    cur_img[1] = cur_img[1].update(new_model=spriteref.get_cooldown_img(state[1]),
+                                                   new_x=x_start + i * x_spacing, new_y=y_start)
+
+                """Left Text"""
+                incorrect_text = state[2] is not None and cur_img[2] is not None and state[2] != cur_img[2].text
+                if state[2] is None or incorrect_text:
+                    if cur_img[2] is not None:
+                        for bun in cur_img[2].all_bundles():
+                            render_eng.remove(bun)
+                        cur_img[2] = None
+                if state[2] is not None:
+                    if cur_img[2] is None:
+                        cur_img[2] = TextImage(0, 0, state[2], spriteref.UI_0_LAYER)
+                    cur_img[2] = cur_img[2].update(new_x=x_start + i * x_spacing + 2,
+                                                   new_y=y_start + 28*2 - cur_img[2].size()[1] - 2)
+
+            self._action_imgs[i] = tuple(cur_img)
+
+#                if cur_img[i] is None and self.
+#            if cooldowns[i] < 1.0:
+#                if self._cooldown_imgs[i] is None:
+#                    self._cooldown_imgs[i] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
+#                cd_x = x + 87 * 2 + 40 * 2 * i
+#                cd_y = y + 19 * 2
+#                cd_img = spriteref.get_cooldown_img(cooldowns[i])
+#                self._cooldown_imgs[i] = self._cooldown_imgs[i].update(new_model=cd_img, new_x=cd_x, new_y=cd_y)
+
+#        if self._potion_text is None:
+#            pot_img = TextImage(0, 0, str(self._num_potions), spriteref.UI_0_LAYER)
+#            pot_x = x + 155*2 - pot_img.size()[0] - 4
+#            pot_y = y + 47*2 - pot_img.size()[1] - 4
+#            pot_color = (1, 1, 1) if self._num_potions > 0 else (1, 0.5, 0.5)
+#            self._potion_text = pot_img.update(new_x=pot_x, new_y=pot_y, new_color=pot_color)
+
+    def get_action_item_state(self, idx, gs):
+        """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
+        p_state = gs.player_state()
+        cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
+        if idx == 0:
+            return (spriteref.UI.attack_action, cooldowns[idx], "j", None)
+        elif idx == 1:
+            return (spriteref.UI.potion_action, cooldowns[idx], "k", str(gs.save_data().num_potions))
+        elif idx == 2:
+            return (spriteref.UI.inspect_action, cooldowns[idx], "i", None)
+        elif idx == 4:
+            return (spriteref.UI.inventory_action, cooldowns[idx], "r", None)
+        else:
+            return None
 
     def update(self, world, gs, input_state, render_eng):
         p_state = gs.player_state()
@@ -456,22 +516,8 @@ class HealthBarPanel:
                     new_bars.append([fb[0], fb[1] + 1])
             self._floating_bars = new_bars
 
-        cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
-        for i in range(0, 6):
-            if cooldowns[i] == 1.0 and self._cooldown_imgs[i] is not None:
-                render_eng.remove(self._cooldown_imgs[i])
-                self._cooldown_imgs[i] = None
-
-        n_potions = gs.save_data().num_potions
-
-        if n_potions != self._num_potions:
-            self._num_potions = n_potions
-            if self._potion_text is not None:
-                for bun in self._potion_text.all_bundles():
-                    render_eng.remove(bun)
-                self._potion_text = None
-
-        self.update_images(gs, p_state.hp(), p_state.max_hp(), new_dmg, new_healing, cooldowns)
+        action_states = [self.get_action_item_state(i, gs) for i in range(0, 6)]
+        self.update_images(gs, p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states, render_eng)
 
         for bun in self.all_bundles():
             render_eng.update(bun)
@@ -483,12 +529,11 @@ class HealthBarPanel:
             yield self._top_img
         for floating_bar in self._floating_bars:
             yield floating_bar[0]
-        if self._potion_text is not None:
-            for bun in self._potion_text.all_bundles():
-                yield bun
-        for cd_img in self._cooldown_imgs:
-            if cd_img is not None:
-                yield cd_img
+        for img_tuple in self._action_imgs:
+            for img in img_tuple:
+                if img is not None:
+                    for bun in img.all_bundles():
+                        yield bun
 
 
 class TextImage:
