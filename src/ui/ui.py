@@ -1,5 +1,7 @@
 import math
 
+import pygame
+
 import src.game.stats
 from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
@@ -467,36 +469,41 @@ class HealthBarPanel:
                     cur_img[2] = cur_img[2].update(new_x=x_start[i] + 1,
                                                    new_y=y_start + 28*2 - cur_img[2].size()[1] - 2)
 
+                """Right Text"""
+                incorrect_text = state[3] is not None and cur_img[3] is not None and state[3] != cur_img[3].text
+                if state[3] is None or incorrect_text:
+                    if cur_img[3] is not None:
+                        for bun in cur_img[3].all_bundles():
+                            render_eng.remove(bun)
+                        cur_img[3] = None
+                if state[3] is not None:
+                    if cur_img[3] is None:
+                        cur_img[3] = TextImage(0, 0, state[3], spriteref.UI_0_LAYER)
+                    color = (1, 0.5, 0.5) if state[3] == "0" else (1.0, 1.0, 1.0)
+                    cur_img[3] = cur_img[3].update(new_x=x_start[i] - 3 + 28*2 - cur_img[3].size()[0],
+                                                   new_y=y_start + 28 * 2 - cur_img[2].size()[1] - 2,
+                                                   new_color=color)
+
             self._action_imgs[i] = tuple(cur_img)
 
-#                if cur_img[i] is None and self.
-#            if cooldowns[i] < 1.0:
-#                if self._cooldown_imgs[i] is None:
-#                    self._cooldown_imgs[i] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-#                cd_x = x + 87 * 2 + 40 * 2 * i
-#                cd_y = y + 19 * 2
-#                cd_img = spriteref.get_cooldown_img(cooldowns[i])
-#                self._cooldown_imgs[i] = self._cooldown_imgs[i].update(new_model=cd_img, new_x=cd_x, new_y=cd_y)
-
-#        if self._potion_text is None:
-#            pot_img = TextImage(0, 0, str(self._num_potions), spriteref.UI_0_LAYER)
-#            pot_x = x + 155*2 - pot_img.size()[0] - 4
-#            pot_y = y + 47*2 - pot_img.size()[1] - 4
-#            pot_color = (1, 1, 1) if self._num_potions > 0 else (1, 0.5, 0.5)
-#            self._potion_text = pot_img.update(new_x=pot_x, new_y=pot_y, new_color=pot_color)
 
     def get_action_item_state(self, idx, gs):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
         p_state = gs.player_state()
         cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
         if idx == 0:
-            return (spriteref.UI.attack_action, cooldowns[idx], "j", None)
+            return (spriteref.UI.attack_action, cooldowns[idx],
+                    pygame.key.name(gs.settings().attack_key()[0]), None)
         elif idx == 1:
-            return (spriteref.UI.potion_action, cooldowns[idx], "k", str(gs.save_data().num_potions))
+            return (spriteref.UI.potion_action, cooldowns[idx],
+                    pygame.key.name(gs.settings().potion_key()[0]),
+                    str(gs.save_data().num_potions))
         elif idx == 2:
-            return (spriteref.UI.inspect_action, cooldowns[idx], "i", None)
+            return (spriteref.UI.inspect_action, cooldowns[idx],
+                    pygame.key.name(gs.settings().interact_key()[0]), None)
         elif idx == 4:
-            return (spriteref.UI.inventory_action, cooldowns[idx], "r", None)
+            return (spriteref.UI.inventory_action, cooldowns[idx],
+                    pygame.key.name(gs.settings().inventory_key()[0]), None)
         else:
             return None
 
