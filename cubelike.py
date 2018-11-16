@@ -114,17 +114,22 @@ def run():
         
     world = None
         
-    clock = pygame.time.Clock()    
-    
+    clock = pygame.time.Clock()
+
+
     running = True
-    
+
     while running:
 
         if gs is None or gs._needs_new_game:
             print("Starting new game")
             menu_id = MenuManager.START_MENU if gs is None else MenuManager.IN_GAME_MENU
+            # TODO - this is not gud
             gs = new_gs(menu_id)
             world = None
+
+            if debug.IS_DEV:
+                gs.settings().set(settings.MUSIC_VOLUME, 0)
 
         gs.update(world, input_state, render_eng)
 
@@ -181,7 +186,7 @@ def run():
             else:
                 gs.settings().set(settings.MUSIC_VOLUME, 100)
 
-        if input_state.was_pressed(inputs.KILL) and debug.DEBUG:
+        if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
             manager = gs.get_menu_manager()
             if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
                 gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)

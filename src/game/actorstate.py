@@ -3,7 +3,7 @@ import random
 from enum import Enum
 
 from src.attacks import attacks as attacks
-from src.game import spriteref as spriteref, inputs as inputs
+from src.game import spriteref as spriteref
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
 from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, Pushable
@@ -11,6 +11,7 @@ import src.game.events as events
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
+import src.game.settings as settings
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -352,7 +353,7 @@ class PlayerState(ActorState):
                 self._damage_last_tick = 0
                 return
 
-            self._handle_potions(input_state.was_pressed(inputs.POTION), gs)
+            self._handle_potions(input_state.was_pressed(gs.settings().potion_key()), gs)
 
             if gs.tick_counter % 60 == 0:
                 regen = self.stat_value(StatType.LIFE_REGEN)
@@ -366,7 +367,7 @@ class PlayerState(ActorState):
             if self.set_color_x_ticks_ago < self.damage_recoil:
                 self.set_color_x_ticks_ago += 1
 
-            if input_state.is_held(inputs.ATTACK) and self.attack_state.can_attack():
+            if input_state.is_held(gs.settings().attack_key()) and self.attack_state.can_attack():
                 self.attack_state.start_attack(self)
 
             eq_attacks = self.inventory().get_equipped_attacks()
@@ -383,7 +384,7 @@ class PlayerState(ActorState):
 
             self.attack_state.update(player_entity, world, gs)
 
-            if self._can_interact() and input_state.was_pressed(inputs.INTERACT):
+            if self._can_interact() and input_state.was_pressed(gs.settings().interact_key()):
                 p_center = player_entity.center()
                 inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
                 inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
@@ -396,8 +397,13 @@ class PlayerState(ActorState):
                         break
 
             # you can keep moving during the attack windup
-            move_x = int(input_state.is_held(inputs.RIGHT)) - int(input_state.is_held(inputs.LEFT))
-            move_y = int(input_state.is_held(inputs.DOWN)) - int(input_state.is_held(inputs.UP))
+            left_held = input_state.is_held(gs.settings().left_key())
+            right_held = input_state.is_held(gs.settings().right_key())
+            down_held = input_state.is_held(gs.settings().down_key())
+            up_held = input_state.is_held(gs.settings().up_key())
+
+            move_x = int(right_held) - int(left_held)
+            move_y = int(down_held) - int(up_held)
 
             self.is_moving = move_x != 0 or move_y != 0
 

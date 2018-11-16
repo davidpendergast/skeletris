@@ -1,6 +1,6 @@
 import random
 
-from src.game import spriteref as spriteref, inputs as inputs
+from src.game import spriteref as spriteref
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
@@ -167,11 +167,11 @@ class StartMenu(Menu):
             self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
     def update(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(inputs.UP):
+        if input_state.was_pressed(gs.settings().up_key()):
             self._selection = (self._selection - 1) % self._num_options
-        if input_state.was_pressed(inputs.DOWN):
+        if input_state.was_pressed(gs.settings().down_key()):
             self._selection = (self._selection + 1) % self._num_options
-        if input_state.was_pressed(inputs.ENTER):
+        if input_state.was_pressed(gs.settings().enter_key()):
             self._handle_enter_press(gs)
 
         if input_state.mouse_in_window():
@@ -264,7 +264,7 @@ class CinematicMenu(Menu):
 
             self.cinematic_panel.update(gs, render_eng, current_image, current_text)
 
-            if self.active_tick_count > 10 and input_state.was_pressed(inputs.INTERACT):
+            if self.active_tick_count > 10 and input_state.was_pressed(gs.settings().interact_key()):
                 if text_finished_scrolling:
                     self.active_scene = None
                 else:
@@ -358,11 +358,11 @@ class DeathMenu(Menu):
             self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
     def update(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(inputs.UP):
+        if input_state.was_pressed(gs.settings().up_key()):
             self._selection = (self._selection - 1) % self._num_options
-        if input_state.was_pressed(inputs.DOWN):
+        if input_state.was_pressed(gs.settings().down_key()):
             self._selection = (self._selection + 1) % self._num_options
-        if input_state.was_pressed(inputs.ENTER):
+        if input_state.was_pressed(gs.settings().enter_key()):
             self._handle_enter_press(gs)
 
         if input_state.mouse_in_window():
@@ -534,7 +534,7 @@ class InGameUiState(Menu):
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
 
-        elif input_state.was_pressed(inputs.INVENTORY):
+        elif input_state.was_pressed(gs.settings().inventory_key()):
             if self.inventory_panel is None:
                 self.rebuild_inventory(gs, render_eng)
             else:
@@ -676,7 +676,7 @@ class InGameUiState(Menu):
                         self._drop_item_on_cursor(p_center, drop_dir, world)
                         destroy_image = True
 
-        if input_state.was_pressed(inputs.ROTATE_CW) and self.item_on_cursor is not None:
+        if input_state.was_pressed(gs.settings().rotate_cw_key()) and self.item_on_cursor is not None:
             self.item_on_cursor = item_module.ItemFactory.rotate_item(self.item_on_cursor)
             create_image = True
             destroy_image = True

@@ -427,13 +427,11 @@ class HealthBarPanel:
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
-        x_start = x + 87 * 2
-        x_spacing = 40 * 2
+        x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
         y_start = y + 19 * 2
         for i in range(0, len(action_states)):
             state = action_states[i]
             cur_img = [img for img in self._action_imgs[i]]
-            print("cur_img={}".format(cur_img))
             if state is None:
                 for img in cur_img:
                     if img is not None:
@@ -444,7 +442,7 @@ class HealthBarPanel:
                 """Action Image"""
                 if cur_img[0] is None:
                     cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-                cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start + i * x_spacing, new_y=y_start)
+                cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start[i], new_y=y_start)
 
                 """Cooldown Image"""
                 if state[1] >= 1:
@@ -455,7 +453,7 @@ class HealthBarPanel:
                     if cur_img[1] is None:
                         cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
                     cur_img[1] = cur_img[1].update(new_model=spriteref.get_cooldown_img(state[1]),
-                                                   new_x=x_start + i * x_spacing, new_y=y_start)
+                                                   new_x=x_start[i], new_y=y_start)
 
                 """Left Text"""
                 incorrect_text = state[2] is not None and cur_img[2] is not None and state[2] != cur_img[2].text
@@ -467,7 +465,7 @@ class HealthBarPanel:
                 if state[2] is not None:
                     if cur_img[2] is None:
                         cur_img[2] = TextImage(0, 0, state[2], spriteref.UI_0_LAYER)
-                    cur_img[2] = cur_img[2].update(new_x=x_start + i * x_spacing + 2,
+                    cur_img[2] = cur_img[2].update(new_x=x_start[i] + 1,
                                                    new_y=y_start + 28*2 - cur_img[2].size()[1] - 2)
 
             self._action_imgs[i] = tuple(cur_img)

@@ -1,18 +1,3 @@
-import pygame
-
-UP = [pygame.K_w, pygame.K_UP]
-LEFT = [pygame.K_a, pygame.K_LEFT]
-RIGHT = [pygame.K_d, pygame.K_RIGHT]
-DOWN = [pygame.K_s, pygame.K_DOWN]
-ATTACK = [pygame.K_j, pygame.K_x, pygame.K_SPACE]
-INVENTORY = [pygame.K_r]
-ROTATE_CW = [pygame.K_e]
-INTERACT = [pygame.K_RETURN, pygame.K_i]
-KILL = [pygame.K_k]
-ENTER = [pygame.K_RETURN]
-EXIT = [pygame.K_ESCAPE]
-POTION = [pygame.K_q]
-
 
 class InputState:
     def __init__(self):

@@ -147,7 +147,7 @@ class DialogManager:
                 else:
                     cutscene.update(world, gs, input_state)
             else:
-                if dialog.scroll_pos > 0 and input_state.was_pressed(inputs.ENTER):
+                if dialog.scroll_pos > 0 and input_state.was_pressed(gs.settings().interact_key()):
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next(), gs)
                     else:
@@ -162,13 +162,13 @@ class DialogManager:
                     num_options = len(dialog.get_options())
                     if dialog.is_done_scrolling() and num_options > 1:
                         cur_option = dialog.get_selected_opt_idx()
-                        if input_state.was_pressed(inputs.LEFT):
+                        if input_state.was_pressed(gs.settings().left_key()):
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(inputs.RIGHT):
+                        if input_state.was_pressed(gs.settings().right_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
-                        if input_state.was_pressed(inputs.UP):
+                        if input_state.was_pressed(gs.settings().up_key()):
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(inputs.DOWN):
+                        if input_state.was_pressed(gs.settings().down_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
 
 class Cutscene(Dialog):
@@ -184,7 +184,7 @@ class Cutscene(Dialog):
             return
         else:
             current_action = self.action_list[self._action_idx]
-            if current_action.is_finished() or input_state.was_pressed(inputs.ENTER):
+            if current_action.is_finished() or input_state.was_pressed(gs.settings().interact_key()):
                 current_action.finalize(world, gs, input_state)
                 self._action_idx += 1
             else:
