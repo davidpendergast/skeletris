@@ -229,7 +229,6 @@ class DialogPanel:
         if len(text) > 0 and self._text_img is None:
             wrapped_text = TextImage.wrap_words_to_fit(text, 2, text_area[2])
             custom_colors = {}
-            print("self._option_selected = {}".format(self._option_selected))
             if self._option_selected is not None:
                 opt_text = self._dialog.get_options()[self._option_selected]
 

@@ -1,6 +1,5 @@
 import re
 
-import src.game.inputs as inputs
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.events as events
@@ -34,6 +33,10 @@ class Dialog:
 
         self.scroll_pos = 0
         self.uid = Dialog._gen_uid()
+
+    def reset(self):
+        self.scroll_pos = 0
+        self.selected_opt_idx = 0
 
     def build_listener(self, action, single_use=True):
         return events.EventListener(action,
@@ -130,10 +133,14 @@ class DialogManager:
         return self._active_dialog
 
     def set_dialog(self, dialog, gs):
+        print("setting dialog to" + str(dialog))
         if self._active_dialog is not None:
             opt_idx = self._active_dialog.get_selected_opt_idx()
             uid = self._active_dialog.get_uid()
             gs.event_queue().add(events.DialogExitEvent(uid, opt_idx))
+
+        if dialog is not None:
+            dialog.reset()
 
         self._active_dialog = dialog
 
@@ -170,6 +177,7 @@ class DialogManager:
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
                         if input_state.was_pressed(gs.settings().down_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
+
 
 class Cutscene(Dialog):
 

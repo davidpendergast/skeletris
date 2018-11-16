@@ -12,12 +12,7 @@ import src.game.debug as debug
 import src.game.cinematics as cinematics
 import src.worldgen.zones as zones
 import src.game.settings as settings
-
-from src.game.dialog import Dialog
-from src.game.messages import Messages
-
 import src.game.readme_writer as readme_writer
-
 import src.utils.profiling as profiling
 
 
