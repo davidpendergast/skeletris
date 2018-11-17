@@ -383,7 +383,7 @@ class HealthBarPanel:
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
 
-        self._action_imgs = [(None, None, None, None)] * 6  # (base_img, cooldown_img, left text, right text)
+        self._action_imgs = [(None, None, None, None)] * 6  # (base_img, cooldown_img, left text, right text, bonus_imgs)
 
         self._float_dur = 30
         self._float_height = 30

@@ -14,9 +14,10 @@ class World:
     EMPTY = 0
     WALL = 1
     DOOR = 2
-    FLOOR = 3 
+    FLOOR = 3
+    HOLE = 4
     
-    SOLIDS = [WALL, DOOR]
+    SOLIDS = [WALL, DOOR, HOLE]
     
     def __init__(self, width, height):
         self._size = (width, height)
@@ -144,6 +145,8 @@ class World:
     def floor_type_at(self, grid_xy):
         if grid_xy in self._floor_art_overrides:
             return self._floor_art_overrides[grid_xy]
+        elif self.get_geo(*grid_xy) == World.HOLE:
+            return spriteref.FLOOR_HOLE_ID
         else:
             return self._floor_type
 
@@ -247,7 +250,7 @@ class World:
         elif geo == World.DOOR:
             return spriteref.floor_totally_dark
 
-        elif geo == World.FLOOR:
+        elif geo == World.FLOOR or geo == World.HOLE:
             if self.get_hidden(grid_x, grid_y):
                 return spriteref.floor_hidden
             else:

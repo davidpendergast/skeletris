@@ -26,6 +26,7 @@ class ZoneLoader:
     FLOOR_CRACKED = (225, 225, 225)
     FLOOR_ID_LOOKUP = {FLOOR: spriteref.FLOOR_NORMAL_ID,
                        FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
+    HOLE = (100, 100, 100)
 
     DOOR = (0, 0, 255)
     LOCKED_DOOR = (0, 0, 130)
@@ -62,6 +63,8 @@ class ZoneLoader:
                     elif color in ZoneLoader.FLOOR_ID_LOOKUP:
                         bp.set(x, y, World.FLOOR)
                         bp.set_alt_art(x, y, ZoneLoader.FLOOR_ID_LOOKUP[color])
+                    elif color == ZoneLoader.HOLE:
+                        bp.set(x, y, World.HOLE)
                     elif color == ZoneLoader.DOOR:
                         bp.set(x, y, World.DOOR)
                     elif color == ZoneLoader.LOCKED_DOOR:

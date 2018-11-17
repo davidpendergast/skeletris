@@ -11,6 +11,7 @@ import src.game.events as events
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
+from src.world.worldstate import World
 import src.game.settings as settings
 
 
