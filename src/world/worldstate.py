@@ -1,6 +1,4 @@
-import random
 import math
-from collections import deque
 
 import src.renderengine.img as img
 import src.game.spriteref as spriteref

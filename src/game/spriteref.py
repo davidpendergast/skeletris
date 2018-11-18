@@ -175,7 +175,7 @@ wall_decoration_plant_2 = make(16, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_rake = make(24, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_bones = make(32, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
-wall_decoration_switches = [make(64, 376, 8, 24), make(72, 376, 8, 24)]
+wall_decoration_switches = [make(64, 376, 16, 24), make(80, 376, 16, 24)]
 
 save_stations = [make(0 + 16*i, 304, 16, 32) for i in range(0, 8)]
 save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]

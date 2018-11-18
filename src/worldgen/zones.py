@@ -264,7 +264,7 @@ class DesolateCaveZone(Zone):
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
             pos = sp_mushrooms[i]
             if i == hidden_switch_idx:
-                text = "you find a hidden switch behind the mushrooms."
+                text = "you flip the switch."
                 unlock_dialog = dialog.PlayerDialog(text)
                 switch_pos = ((pos[0] + 0.5) * 64, (pos[1] + 0.5) * 64)
                 doors = w.entities_in_circle(switch_pos, 800, onscreen=False,
@@ -275,7 +275,8 @@ class DesolateCaveZone(Zone):
                                                 lambda event: event.get_uid() == unlock_dialog.get_uid(),
                                                 single_use=True)
                 gs.add_trigger(listener)
-                mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+                mushroom_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_switches,
+                                                                            pos[0], pos[1],
                                                                             interact_dialog=unlock_dialog)
             else:
                 if i == (hidden_switch_idx + 1) % len(sp_mushrooms):

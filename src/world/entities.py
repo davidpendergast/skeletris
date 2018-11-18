@@ -1253,7 +1253,7 @@ class DecorationEntity(Entity):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
-        sprite = self._sprites[gs.anim_tick % len(self._sprites)]
+        sprite = self._sprites[gs.anim_tick // 2 % len(self._sprites)]
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + self._draw_offset[0]
         y = self.y() - (sprite.height() * self._img.scale() - self.h()) + self._draw_offset[1]
         depth = self.get_depth()
@@ -1267,17 +1267,18 @@ class DecorationEntity(Entity):
             yield self._img
 
     @staticmethod
-    def wall_decoration(sprite, grid_x, grid_y, scale=2, interact_dialog=None):
+    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
         """
-        h = sprite.height() * scale
+        sprites = Utils.listify(sprites)
+        h = sprites[0].height() * scale
         CELLSIZE = 64  # this better never change~
         offset = (0, 8 * scale)
         x_center = (grid_x + 0.5) * CELLSIZE
         y_bottom = (grid_y) * CELLSIZE
-        return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset,
+        return DecorationEntity(sprites, x_center, y_bottom, scale=scale, draw_offset=offset,
                                 interact_dialog=interact_dialog)
 
     def is_interactable(self):

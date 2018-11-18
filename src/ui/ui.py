@@ -325,55 +325,6 @@ class PopupPanel:
         pass
 
 
-class LockedDoorPopupPanel(PopupPanel):
-
-    def __init__(self, puzzle, door_uid, name="Locked Door"):
-        PopupPanel.__init__(self, 96*2, 112*2)
-        self.door_uid = door_uid
-        self.puzzle = puzzle
-        self.panel_name = name
-        self.items = {}  # (x, y) -> item
-
-        self.panel_bg_image = None
-        self.title_text_img = None
-        self._destroy = False
-
-    def update_images(self):
-        if self.panel_bg_image is None:
-            self.panel_bg_image = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-
-        rect = self.get_rect()
-
-        if self.title_text_img is None:
-            self.title_text_img = TextImage(0, 0, self.panel_name, spriteref.UI_0_LAYER, scale=2, center_w=rect[2])
-
-        self.panel_bg_image = self.panel_bg_image.update(new_model=spriteref.UI.locked_door_panel,
-                                                         new_x=rect[0], new_y=rect[1])
-        self.title_text_img = self.title_text_img.update(new_x=rect[0], new_y=rect[1] + 8*2)
-
-    def update(self, world, gs, input_state, render_eng):
-        if self._destroy:
-            return
-        else:
-            self.update_images()
-
-        for bun in self.all_bundles():
-            render_eng.update(bun)
-
-    def should_destroy(self, world, gs, input_state, render_eng):
-        return self._destroy
-
-    def prepare_to_destroy(self, world, gs, input_state, render_eng):
-        pass
-
-    def all_bundles(self):
-        if self.panel_bg_image is not None:
-            yield self.panel_bg_image
-        if self.title_text_img is not None:
-            for bun in self.title_text_img.all_bundles():
-                yield bun
-
-
 class HealthBarPanel:
 
     SIZE = (400 * 2, 53 * 2)
@@ -383,7 +334,10 @@ class HealthBarPanel:
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
 
-        self._action_imgs = [(None, None, None, None)] * 6  # (base_img, cooldown_img, left text, right text, bonus_imgs)
+        # (base_img, cooldown_img, left text, right text)
+        self._action_imgs = [(None, None, None, None)] * 6
+
+        self._item_images = {}  # (item, grid_pos) -> img
 
         self._float_dur = 30
         self._float_height = 30
@@ -445,6 +399,9 @@ class HealthBarPanel:
                     cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
                 cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start[i], new_y=y_start)
 
+                """Bonus Images"""
+                self.handle_bonus_images(i, x_start[i], y_start, gs, render_eng)
+
                 """Cooldown Image"""
                 if state[1] >= 1:
                     if cur_img[1] is not None:
@@ -486,6 +443,33 @@ class HealthBarPanel:
 
             self._action_imgs[i] = tuple(cur_img)
 
+    def handle_bonus_images(self, i, x_start, y_start, gs, render_eng):
+        if i == 4:
+            inv = gs.player_state().inventory()
+            items = inv.all_equipped_items()
+            needs_rebuilt = False
+            new_item_map = {}
+            for item in items:
+                pos = inv.equip_grid.get_pos(item)
+                if (item, pos) not in self._item_images:
+                    needs_rebuilt = True
+                new_item_map[(item, pos)] = None
+
+            if len(new_item_map) != len(self._item_images):
+                needs_rebuilt = True
+
+            if needs_rebuilt:
+                for key in self._item_images:
+                    render_eng.remove(self._item_images[key])
+                self._item_images = new_item_map
+                for key in self._item_images:
+                    item, pos = key
+                    img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
+                    self._item_images[key] = img.update(
+                        new_x=x_start + 8 + pos[0] * 8,
+                        new_y=y_start + 6 + pos[1] * 8,
+                        new_model=spriteref.item_entities[item.cubes],
+                        new_color=item.color)
 
     def get_action_item_state(self, idx, gs):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
@@ -538,6 +522,9 @@ class HealthBarPanel:
                 if img is not None:
                     for bun in img.all_bundles():
                         yield bun
+        for key in self._item_images:
+            if self._item_images[key] is not None:
+                yield self._item_images[key]
 
 
 class TextImage:
