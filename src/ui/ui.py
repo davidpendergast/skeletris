@@ -469,7 +469,7 @@ class HealthBarPanel:
                         new_x=x_start + 8 + pos[0] * 8,
                         new_y=y_start + 6 + pos[1] * 8,
                         new_model=spriteref.item_entities[item.cubes],
-                        new_color=item.color)
+                        new_color=(1, 1, 1))
 
     def get_action_item_state(self, idx, gs):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
