@@ -217,6 +217,16 @@ item_piece_small_inverted = make(76, 32, 4, 4)
 item_piece_bigs = [make(i*16, 96, 16, 16) for i in range(0, 6)]
 item_entities = {}  # cubes -> sprite
 
+
+def get_item_entity_sprite(cubes):
+    if cubes in item_entities:
+        return item_entities[cubes]
+    else:
+        # this could break in so many ways, better to fail somewhat gracefully
+        print("ERROR: Failed to get entity sprite for item: {}".format(cubes))
+        return player_idle_0
+
+
 small_shadow = make(80, 32, 16, 8)
 medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)

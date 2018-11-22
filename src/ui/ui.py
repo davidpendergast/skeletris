@@ -468,7 +468,7 @@ class HealthBarPanel:
                     self._item_images[key] = img.update(
                         new_x=x_start + 8 + pos[0] * 8,
                         new_y=y_start + 6 + pos[1] * 8,
-                        new_model=spriteref.item_entities[item.cubes],
+                        new_model=spriteref.get_item_entity_sprite(item.cubes),
                         new_color=(1, 1, 1))
 
     def get_action_item_state(self, idx, gs):

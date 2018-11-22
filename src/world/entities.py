@@ -875,12 +875,7 @@ class PickupEntity(Entity):
 class ItemEntity(PickupEntity):
     def __init__(self, item, cx, cy, vel=None):
         self.item = item
-        try:
-            sprite = spriteref.item_entities[self.item.cubes]
-        except:
-            # this could break in so many ways, better to fail somewhat gracefully
-            print("ERROR: Failed to get entity sprite for item: {}".format(self.item))
-            sprite = spriteref.player_idle_0
+        sprite = spriteref.get_item_entity_sprite(self.item.cubes)
         PickupEntity.__init__(self, cx, cy, [sprite], vel=vel)
 
     def get_color(self):
