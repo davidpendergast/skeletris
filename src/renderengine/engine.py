@@ -8,7 +8,7 @@ def assert_int(val):
 
 
 class _Layer:
-    def __init__(self, name, z_order, sort_sprites, use_color):
+    def __init__(self, name, layer_id, z_order, sort_sprites, use_color):
         """
             name: str -- used for logging
             z_order: number -- used to decide layer draw order
@@ -16,6 +16,7 @@ class _Layer:
             use_color: bool -- true if layer respects sprites' color value
         """
         self.name = name
+        self.layer_id = layer_id
         self.images = []  # ordered list of image ids
         self._image_set = set()
         self._offset = (0, 0)
@@ -176,12 +177,13 @@ class RenderEngine:
         self.camera_pos = [0, 0]
         self.size = (0, 0)
         self.layers = {}  # layer_id -> layer
+        self.hidden_layers = {} # layer_id -> None
         self.ordered_layers = []
         self.shader = None
         self.tex_id = None
         
     def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color):
-        l = _Layer(layer_name, z_order, sort_sprites, use_color)
+        l = _Layer(layer_name, layer_id, z_order, sort_sprites, use_color)
         self.layers[layer_id] = l
         
         self.ordered_layers = list(self.layers.values())
@@ -192,6 +194,13 @@ class RenderEngine:
         
         self.ordered_layers = list(self.layers.values())
         self.ordered_layers.sort(key=lambda x: x.z_order())
+
+    def hide_layer(self, layer_id):
+        self.hidden_layers[layer_id] = None
+
+    def show_layer(self, layer_id):
+        if layer_id in self.hidden_layers:
+            del self.hidden_layers[layer_id]
         
     def set_layer_offset(self, layer_id, offs_x, offs_y):
         self.layers[layer_id].set_offset(offs_x, offs_y)
@@ -312,6 +321,9 @@ class RenderEngine:
         for layer in self.ordered_layers:
             if layer.is_dirty():
                 layer.rebuild(self.bundles)
+
+            if layer.layer_id in self.hidden_layers:
+                continue
 
             glMatrixMode(GL_MODELVIEW)
             glLoadIdentity()

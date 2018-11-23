@@ -211,7 +211,13 @@ def run():
         render_eng.render_layers()
 
         pygame.display.flip()
-        clock.tick(60)
+
+        if debug.IS_DEV and input_state.is_held(pygame.K_TAB):
+            # if holding tab in dev activate slo-mo
+            clock.tick(1)
+        else:
+            clock.tick(60)
+
         if gs.tick_counter % 60 == 0:
             if clock.get_fps() < 59:
                 print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))

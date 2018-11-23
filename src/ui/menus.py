@@ -13,6 +13,7 @@ import src.game.settings as settings
 class MenuManager:
 
     DEATH_MENU = 0
+    DEATH_OPTION_MENU = 0.5
     IN_GAME_MENU = 1
     START_MENU = 2
     CINEMATIC_MENU = 3
@@ -40,13 +41,19 @@ class MenuManager:
             self._next_active_menu_id = None
             if not self.should_draw_world():
                 render_eng.set_clear_color(*self._active_menu.get_clear_color())
+                for layer in spriteref.WORLD_LAYERS:
+                    render_eng.hide_layer(layer)
+            else:
+                for layer in spriteref.WORLD_LAYERS:
+                    render_eng.show_layer(layer)
 
-        menu = self.get_active_menu()
-        menu.update(world, gs, input_state, render_eng)
+        self.get_active_menu().update(world, gs, input_state, render_eng)
 
     def _get_menu(self, menu_id):
         if menu_id == MenuManager.DEATH_MENU:
             return DeathMenu()
+        elif menu_id == MenuManager.DEATH_OPTION_MENU:
+            return DeathOptionMenu()
         elif menu_id == MenuManager.IN_GAME_MENU:
             return InGameUiState()
         elif menu_id == MenuManager.START_MENU:
@@ -56,9 +63,9 @@ class MenuManager:
         elif menu_id == MenuManager.PAUSE_MENU:
             return PauseMenu()
         elif menu_id == MenuManager.CONTROLS_PAUSE_MENU:
-            return ControlsMenu(MenuManager.PAUSE_MENU)
+            return ControlsMenu.that_goes_back_to_pause()
         elif menu_id == MenuManager.CONTROLS_START_MENU:
-            return ControlsMenu(MenuManager.START_MENU)
+            return ControlsMenu.that_goes_back_to_start()
         raise ValueError("Unknown menu id: " + str(menu_id))
 
     def should_draw_world(self):
@@ -132,106 +139,6 @@ class Menu:
             render_eng.clear_bundles(bundles)
 
 
-class StartMenu(Menu):
-    START_OPT = 0
-    OPTIONS_OPT = 1
-    EXIT_OPT = 2
-
-    def __init__(self):
-        Menu.__init__(self, MenuManager.START_MENU)
-        self._title_img = None
-        self._num_options = 3
-        self._option_imgs = [None] * self._num_options
-        self._selection = 0
-
-        self._title_pos = (0, 0)
-        self._option_rects = [(0, 0, 0, 0)] * self._num_options
-
-        self._build_imgs()
-
-    def get_clear_color(self):
-        return (0, 0, 0)
-
-    def get_song(self):
-        return music.Songs.MENU_THEME
-
-    def _build_imgs(self):
-        if self._title_img is None:
-            self._title_img = TextImage(0, 0, "cubelike", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=10)
-        if self._option_imgs[0] is None:
-            self._option_imgs[0] = TextImage(0, 0, "start", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
-        if self._option_imgs[1] is None:
-            self._option_imgs[1] = TextImage(0, 0, "options", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
-        if self._option_imgs[2] is None:
-            self._option_imgs[2] = TextImage(0, 0, "exit", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
-
-    def _handle_enter_press(self, gs):
-        if self._selection == StartMenu.START_OPT:
-            gs.new_game()
-        elif self._selection == StartMenu.EXIT_OPT:
-            gs.needs_exit = True
-        elif self._selection == StartMenu.OPTIONS_OPT:
-            pass  # TODO
-
-    def _update_imgs(self):
-        self._title_img.update(new_x=self._title_pos[0], new_y=self._title_pos[1])
-
-        for i in range(0, self._num_options):
-            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
-            x = self._option_rects[i][0]
-            y = self._option_rects[i][1]
-            self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
-
-    def update(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(gs.settings().up_key()):
-            self._selection = (self._selection - 1) % self._num_options
-        if input_state.was_pressed(gs.settings().down_key()):
-            self._selection = (self._selection + 1) % self._num_options
-        if input_state.was_pressed(gs.settings().enter_key()):
-            self._handle_enter_press(gs)
-
-        if input_state.mouse_in_window():
-            pos = input_state.mouse_pos()
-            if input_state.mouse_moved():
-                for i in range(0, self._num_options):
-                    if Utils.rect_contains(self._option_rects[i], pos):
-                        self._selection = i
-
-            if input_state.mouse_was_pressed():
-                for i in range(0, self._num_options):
-                    if Utils.rect_contains(self._option_rects[i], pos):
-                        self._handle_enter_press(gs)
-                        break
-
-        screensize = gs.screen_size
-        self._title_pos = (screensize[0] // 2 - self._title_img.size()[0] // 2,
-                           screensize[1] // 3 - self._title_img.size()[1] // 2)
-        gap = 16
-        opt_y = screensize[1] // 2
-        for i in range(0, self._num_options):
-            self._option_rects[i] = (screensize[0] // 2 - self._option_imgs[i].size()[0] // 2,
-                                     opt_y,
-                                     self._option_imgs[i].size()[0],
-                                     self._option_imgs[i].size()[1])
-            opt_y += self._option_imgs[i].size()[1] + gap
-
-        self._update_imgs()
-        for bun in self.all_bundles():
-            render_eng.update(bun)
-
-    def all_bundles(self):
-        for bun in Menu.all_bundles(self):
-            yield bun
-
-        if self._title_img is not None:
-            for bun in self._title_img.all_bundles():
-                yield bun
-        for opt_img in self._option_imgs:
-            if opt_img is not None:
-                for bun in opt_img.all_bundles():
-                    yield bun
-
-
 class OptionsMenu(Menu):
 
     def __init__(self, menu_id, title, options, title_size=5):
@@ -253,15 +160,24 @@ class OptionsMenu(Menu):
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
 
+    def get_title_color(self):
+        return (1, 1, 1)
+
+    def get_option_color(self, selected):
+        if selected:
+            return (1, 0, 0)
+        else:
+            return (1, 1, 1)
+
     def _build_imgs(self):
         if self.title_text is not None:
             if self._title_img is None:
                 self._title_img = TextImage(0, 0, self.title_text, layer=spriteref.UI_0_LAYER,
-                                            color=(1, 1, 1), scale=self.title_size)
+                                            color=self.get_title_color(), scale=self.title_size)
         for i in range(0, self._num_options):
             if self._option_imgs[i] is None:
                 self._option_imgs[i] = TextImage(0, 0, self.options_text[i], layer=spriteref.UI_0_LAYER,
-                                                 color=(1, 1, 1), scale=3)
+                                                 color=self.get_option_color(self._selection == i), scale=3)
 
     def _layout_rects(self, gs):
         total_height = 0
@@ -288,10 +204,10 @@ class OptionsMenu(Menu):
         if self._title_img is not None:
             x = self._title_rect[0]
             y = self._title_rect[1]
-            self._title_img = self._title_img.update(new_x=x, new_y=y)
+            self._title_img = self._title_img.update(new_x=x, new_y=y, new_color=self.get_title_color())
 
         for i in range(0, self._num_options):
-            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
+            color = self.get_option_color(self._selection == i)
             x = self._option_rects[i][0]
             y = self._option_rects[i][1]
             self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
@@ -346,6 +262,27 @@ class OptionsMenu(Menu):
                     yield bun
 
 
+class StartMenu(OptionsMenu):
+
+    START_OPT = 0
+    OPTIONS_OPT = 1
+    EXIT_OPT = 2
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.START_MENU, "cubelike", ["start", "controls", "exit"], title_size=10)
+
+    def get_song(self):
+        return music.Songs.MENU_THEME
+
+    def option_activated(self, idx, gs):
+        if idx == StartMenu.START_OPT:
+            gs.new_game()
+        elif idx == StartMenu.EXIT_OPT:
+            gs.needs_exit = True
+        elif idx == StartMenu.OPTIONS_OPT:
+            gs.menu_manager().set_active_menu(MenuManager.CONTROLS_START_MENU)
+
+
 class PauseMenu(OptionsMenu):
 
     CONTINUE_IDX = 0
@@ -371,25 +308,28 @@ class ControlsMenu(OptionsMenu):
 
     BACK_IDX = 0
 
-    def __init__(self, back_to_start):
-        if back_to_start:
-            menu_id = MenuManager.CONTROLS_START_MENU
-        else:
-            menu_id = MenuManager.CONTROLS_PAUSE_MENU
-        OptionsMenu.__init__(self, menu_id, "controls", ["back"])
+    @staticmethod
+    def that_goes_back_to_start():
+        res = ControlsMenu(MenuManager.CONTROLS_START_MENU)
+        res.prev = MenuManager.START_MENU
+        return res
 
-    def prev_menu(self):
-        if self.get_type() == MenuManager.CONTROLS_START_MENU:
-            return MenuManager.START_MENU
-        else:
-            return MenuManager.PAUSE_MENU
+    @staticmethod
+    def that_goes_back_to_pause():
+        res = ControlsMenu(MenuManager.CONTROLS_PAUSE_MENU)
+        res.prev = MenuManager.PAUSE_MENU
+        return res
+
+    def __init__(self, menu_id):
+        self.prev = MenuManager.START_MENU
+        OptionsMenu.__init__(self, menu_id, "controls", ["back"])
 
     def option_activated(self, idx, gs):
         if idx == ControlsMenu.BACK_IDX:
-            gs.menu_manager().set_active_menu(self.prev_menu())
+            gs.menu_manager().set_active_menu(self.prev)
 
     def esc_pressed(self, gs):
-        gs.menu_manager().set_active_menu(self.prev_menu())
+        gs.menu_manager().set_active_menu(self.prev)
 
 
 class CinematicMenu(Menu):
@@ -465,38 +405,8 @@ class CinematicMenu(Menu):
                 yield bun
 
 
-class DeathMenu(Menu):
-    RETRY_OPT = 0
-    EXIT_OPT = 1
-
-    def __init__(self):
-        Menu.__init__(self, MenuManager.DEATH_MENU)
-        self._you_died_img = None
-        self._flavor_img = None
-
-        self._num_options = 2
-        self._option_imgs = [None] * self._num_options
-        self._selection = 0
-
-        self._title_pos = (0, 0)
-        self._flavor_pos = (0, 0)
-        self._option_rects = [(0, 0, 0, 0)] * self._num_options
-
-        self._showing_flavor = True
-        self._flavor_duration = 100
-        self._flavor_tick = 0
-        self._flavor_text = self._get_flavor_text()
-
-        self._build_imgs()
-
-    def get_song(self):
-        return None
-
-    def get_flavor_progress(self):
-        return Utils.bound(self._flavor_tick / self._flavor_duration, 0.0, 1.0)
-
-    def get_clear_color(self):
-        return (0.0, 0.0, 0.0)
+class DeathMenu(OptionsMenu):
+    """Displays some flavor text, then becomes a death option menu"""
 
     ALL_FLAVOR = [
         "you'll do better next time!",
@@ -504,118 +414,59 @@ class DeathMenu(Menu):
         "ouch!"
     ]
 
+    def get_clear_color(self):
+        return (0, 0, 0)
+
     def _get_flavor_text(self):
         idx = int(random.random() * len(DeathMenu.ALL_FLAVOR))
         return DeathMenu.ALL_FLAVOR[idx]
 
-    def _build_imgs(self):
-        if self._you_died_img is None:
-            self._you_died_img = TextImage(0, 0, "game over", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=6)
-        if self._flavor_img is None:
-            self._flavor_img = TextImage(0, 0, self._flavor_text, layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=2)
-        if self._option_imgs[0] is None:
-            self._option_imgs[0] = TextImage(0, 0, "retry", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
-        if self._option_imgs[1] is None:
-            self._option_imgs[1] = TextImage(0, 0, "quit", layer=spriteref.UI_0_LAYER, color=(1, 1, 1), scale=3)
+    def get_flavor_progress(self):
+        return Utils.bound(self._flavor_tick / self._flavor_full_brightness_duration, 0.0, 1.0)
 
-    def _update_imgs(self):
-        if self.get_flavor_progress() < 0.15:
-            c = self.get_flavor_progress() / 0.15
-            color = (c, c, c)  # fade in
-        else:
-            color = (1, 1, 1)
-        self._flavor_img.update(new_x=self._flavor_pos[0], new_y=self._flavor_pos[1], new_color=color)
+    def get_title_color(self):
+        # fade in
+        return Utils.linear_interp(self.get_clear_color(), (1, 1, 1), self.get_flavor_progress())
 
-        self._you_died_img.update(new_x=self._title_pos[0], new_y=self._title_pos[1])
-        for i in range(0, self._num_options):
-            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
-            x = self._option_rects[i][0]
-            y = self._option_rects[i][1]
-            self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+    def get_option_color(self, selected):
+        return self.get_clear_color()
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.DEATH_MENU, self._get_flavor_text(), ["~hidden~"], title_size=3)
+        self._flavor_full_brightness_duration = 100
+        self._total_duration = 120
+        self._flavor_tick = 0
 
     def update(self, world, gs, input_state, render_eng):
-        if input_state.was_pressed(gs.settings().up_key()):
-            self._selection = (self._selection - 1) % self._num_options
-        if input_state.was_pressed(gs.settings().down_key()):
-            self._selection = (self._selection + 1) % self._num_options
-        if input_state.was_pressed(gs.settings().enter_key()):
-            self._handle_enter_press(gs)
+        OptionsMenu.update(self, world, gs, input_state, render_eng)
 
-        if input_state.mouse_in_window():
-            pos = input_state.mouse_pos()
-            if input_state.mouse_moved():
-                for i in range(0, self._num_options):
-                    if Utils.rect_contains(self._option_rects[i], pos):
-                        self._selection = i
+        self._flavor_tick += 1
+        if self._flavor_tick >= self._total_duration:
+            gs.menu_manager().set_active_menu(MenuManager.DEATH_OPTION_MENU)
 
-            if input_state.mouse_was_pressed():
-                for i in range(0, self._num_options):
-                    if Utils.rect_contains(self._option_rects[i], pos):
-                        self._handle_enter_press(gs)
-                        break
+    def get_song(self):
+        return None
 
-        screensize = gs.screen_size
-        flv_size = self._flavor_img.size()
-        self._flavor_pos = (screensize[0] // 2 - flv_size[0] // 2,
-                            screensize[1] // 2 - flv_size[1] // 2)
+    def option_activated(self, idx, gs):
+        pass
 
-        gap = 32
-        total_height = self._you_died_img.size()[1]
-        for img in self._option_imgs:
-            total_height += img.size()[1] + gap
 
-        total_width = self._you_died_img.size()[0]
+class DeathOptionMenu(OptionsMenu):
 
-        x_pos = screensize[0] // 2 - total_width // 2
-        y_pos = screensize[1] // 2 - total_height // 2
+    RETRY_OPT = 0
+    EXIT_OPT = 1
 
-        self._title_pos = (x_pos, y_pos)
-        y_pos += self._you_died_img.size()[1] + gap
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["retry", "quit"])
 
-        for i in range(0, self._num_options):
-            opt_size = self._option_imgs[i].size()
-            x_pos = screensize[0] // 2 - opt_size[0] // 2
-            self._option_rects[i] = (x_pos, y_pos, opt_size[0], opt_size[1])
+    def get_song(self):
+        return None
 
-            y_pos += opt_size[1] + gap
-
-        self._update_imgs()
-
-        if self._showing_flavor and self.get_flavor_progress() == 1.0:
-            self._showing_flavor = False
-            for bun in self._flavor_img.all_bundles():
-                render_eng.remove(bun)
-        elif self._showing_flavor:
-            self._flavor_tick += 1
-
-        for bun in self.all_bundles():
-            render_eng.update(bun)
-
-    def all_bundles(self):
-        for bun in Menu.all_bundles(self):
-            yield bun
-        if self._showing_flavor:
-            if self._flavor_img is not None:
-                for bun in self._flavor_img.all_bundles():
-                    yield bun
-        else:
-            if self._you_died_img is not None:
-                for bun in self._you_died_img.all_bundles():
-                    yield bun
-            for opt_img in self._option_imgs:
-                if opt_img is not None:
-                    for bun in opt_img.all_bundles():
-                        yield bun
-
-    def _handle_enter_press(self, gs):
-        if self.get_flavor_progress() < 1:
-            self._flavor_tick = self._flavor_duration
-        else:
-            sel = self._selection
-            if sel == DeathMenu.RETRY_OPT:
-                gs.new_game()
-            elif sel == DeathMenu.EXIT_OPT:
-                gs.menu_manager().set_active_menu(MenuManager.START_MENU)
+    def option_activated(self, idx, gs):
+        if idx == DeathOptionMenu.RETRY_OPT:
+            gs.new_game()
+        elif idx == DeathOptionMenu.EXIT_OPT:
+            gs.menu_manager().set_active_menu(MenuManager.START_MENU)
 
 
 class InGameUiState(Menu):
