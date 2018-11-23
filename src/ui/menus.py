@@ -7,6 +7,7 @@ from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage,
 from src.utils.util import Utils
 from src.world.entities import ItemEntity, PickupEntity
 import src.game.music as music
+import src.game.settings as settings
 
 
 class MenuManager:
@@ -15,6 +16,9 @@ class MenuManager:
     IN_GAME_MENU = 1
     START_MENU = 2
     CINEMATIC_MENU = 3
+    PAUSE_MENU = 4
+    CONTROLS_PAUSE_MENU = 5
+    CONTROLS_START_MENU = 6
 
     def __init__(self, menu_id):
         self._active_menu = self._get_menu(menu_id)
@@ -49,6 +53,12 @@ class MenuManager:
             return StartMenu()
         elif menu_id == MenuManager.CINEMATIC_MENU:
             return CinematicMenu()
+        elif menu_id == MenuManager.PAUSE_MENU:
+            return PauseMenu()
+        elif menu_id == MenuManager.CONTROLS_PAUSE_MENU:
+            return ControlsMenu(MenuManager.PAUSE_MENU)
+        elif menu_id == MenuManager.CONTROLS_START_MENU:
+            return ControlsMenu(MenuManager.START_MENU)
         raise ValueError("Unknown menu id: " + str(menu_id))
 
     def should_draw_world(self):
@@ -56,6 +66,12 @@ class MenuManager:
 
     def get_active_menu(self):
         return self._active_menu
+
+    def get_active_menu_id(self):
+        if self._active_menu is not None:
+            return self._active_menu.get_type()
+        else:
+            return None
 
     def set_active_menu(self, menu_id):
         if menu_id is None:
@@ -164,7 +180,7 @@ class StartMenu(Menu):
             color = (1, 0, 0) if self._selection == i else (1, 1, 1)
             x = self._option_rects[i][0]
             y = self._option_rects[i][1]
-            self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+            self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
     def update(self, world, gs, input_state, render_eng):
         if input_state.was_pressed(gs.settings().up_key()):
@@ -216,6 +232,166 @@ class StartMenu(Menu):
                     yield bun
 
 
+class OptionsMenu(Menu):
+
+    def __init__(self, menu_id, title, options, title_size=5):
+        Menu.__init__(self, menu_id)
+        self.title_text = title
+        self.title_size = title_size
+        self.options_text = options
+
+        self.spacing = 16
+        self.title_spacing = self.spacing * 4
+
+        self._num_options = len(options)
+        self._title_img = None
+        self._title_rect = (0, 0, 0, 0)
+        self._option_rects = [(0, 0, 0, 0)] * self._num_options
+        self._option_imgs = [None] * self._num_options
+        self._selection = 0
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+    def _build_imgs(self):
+        if self.title_text is not None:
+            if self._title_img is None:
+                self._title_img = TextImage(0, 0, self.title_text, layer=spriteref.UI_0_LAYER,
+                                            color=(1, 1, 1), scale=self.title_size)
+        for i in range(0, self._num_options):
+            if self._option_imgs[i] is None:
+                self._option_imgs[i] = TextImage(0, 0, self.options_text[i], layer=spriteref.UI_0_LAYER,
+                                                 color=(1, 1, 1), scale=3)
+
+    def _layout_rects(self, gs):
+        total_height = 0
+        if self._title_img is not None:
+            total_height += self._title_img.size()[1] + self.title_spacing
+        for opt in self._option_imgs:
+            if opt is not None:
+                total_height += opt.size()[1] + self.spacing
+        total_height -= self.spacing
+
+        y_pos = gs.screen_size[1] // 2 - total_height // 2
+        if self._title_img is not None:
+            title_x = gs.screen_size[0] // 2 - self._title_img.size()[0] // 2
+            self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
+            y_pos += self._title_img.size()[1] + self.title_spacing
+
+        for i in range(0, self._num_options):
+            if self._option_imgs[i] is not None:
+                opt_x = gs.screen_size[0] // 2 - self._option_imgs[i].size()[0] // 2
+                self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
+                y_pos += self._option_imgs[i].size()[1] + self.spacing
+
+    def _update_imgs(self):
+        if self._title_img is not None:
+            x = self._title_rect[0]
+            y = self._title_rect[1]
+            self._title_img = self._title_img.update(new_x=x, new_y=y)
+
+        for i in range(0, self._num_options):
+            color = (1, 0, 0) if self._selection == i else (1, 1, 1)
+            x = self._option_rects[i][0]
+            y = self._option_rects[i][1]
+            self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+
+    def update(self, world, gs, input_state, render_eng):
+        self._build_imgs()
+        self._layout_rects(gs)
+        self._update_imgs()
+
+        if input_state.was_pressed(gs.settings().exit_key()):
+            self.esc_pressed(gs)
+        else:
+            if input_state.was_pressed(gs.settings().up_key()):
+                self._selection = (self._selection - 1) % self._num_options
+            if input_state.was_pressed(gs.settings().down_key()):
+                self._selection = (self._selection + 1) % self._num_options
+            if input_state.was_pressed(gs.settings().enter_key()):
+                self.option_activated(self._selection, gs)
+
+            if input_state.mouse_in_window():
+                pos = input_state.mouse_pos()
+                if input_state.mouse_moved():
+                    for i in range(0, self._num_options):
+                        if Utils.rect_contains(self._option_rects[i], pos):
+                            self._selection = i
+
+                if input_state.mouse_was_pressed():
+                    for i in range(0, self._num_options):
+                        if Utils.rect_contains(self._option_rects[i], pos):
+                            self.option_activated(i, gs)
+                            break
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def option_activated(self, idx, gs):
+        pass
+
+    def esc_pressed(self, gs):
+        pass
+
+    def keep_drawing_world_underneath(self):
+        return False
+
+    def all_bundles(self):
+        if self._title_img is not None:
+            for bun in self._title_img.all_bundles():
+                yield bun
+        for opt in self._option_imgs:
+            if opt is not None:
+                for bun in opt.all_bundles():
+                    yield bun
+
+
+class PauseMenu(OptionsMenu):
+
+    CONTINUE_IDX = 0
+    HELP_IDX = 1
+    EXIT_IDX = 2
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["back", "controls", "quit"])
+
+    def option_activated(self, idx, gs):
+        if idx == PauseMenu.EXIT_IDX:
+            gs.menu_manager().set_active_menu(MenuManager.START_MENU)
+        elif idx == PauseMenu.HELP_IDX:
+            gs.menu_manager().set_active_menu(MenuManager.CONTROLS_PAUSE_MENU)
+        elif idx == PauseMenu.CONTINUE_IDX:
+            gs.menu_manager().set_active_menu(MenuManager.IN_GAME_MENU)
+
+    def esc_pressed(self, gs):
+        gs.menu_manager().set_active_menu(MenuManager.IN_GAME_MENU)
+
+
+class ControlsMenu(OptionsMenu):
+
+    BACK_IDX = 0
+
+    def __init__(self, back_to_start):
+        if back_to_start:
+            menu_id = MenuManager.CONTROLS_START_MENU
+        else:
+            menu_id = MenuManager.CONTROLS_PAUSE_MENU
+        OptionsMenu.__init__(self, menu_id, "controls", ["back"])
+
+    def prev_menu(self):
+        if self.get_type() == MenuManager.CONTROLS_START_MENU:
+            return MenuManager.START_MENU
+        else:
+            return MenuManager.PAUSE_MENU
+
+    def option_activated(self, idx, gs):
+        if idx == ControlsMenu.BACK_IDX:
+            gs.menu_manager().set_active_menu(self.prev_menu())
+
+    def esc_pressed(self, gs):
+        gs.menu_manager().set_active_menu(self.prev_menu())
+
+
 class CinematicMenu(Menu):
 
     def __init__(self):
@@ -236,7 +412,7 @@ class CinematicMenu(Menu):
         if self.active_scene is None:
             cine_queue = gs.get_cinematics_queue()
             if len(cine_queue) == 0:
-                gs.get_menu_manager().set_active_menu(self._next_menu)
+                gs.menu_manager().set_active_menu(self._next_menu)
                 return
             else:
                 self.active_scene = cine_queue.pop(0)
@@ -439,7 +615,7 @@ class DeathMenu(Menu):
             if sel == DeathMenu.RETRY_OPT:
                 gs.new_game()
             elif sel == DeathMenu.EXIT_OPT:
-                gs.get_menu_manager().set_active_menu(MenuManager.START_MENU)
+                gs.menu_manager().set_active_menu(MenuManager.START_MENU)
 
 
 class InGameUiState(Menu):
@@ -720,13 +896,15 @@ class InGameUiState(Menu):
             render_eng.update(bun)
 
     def update(self, world, gs, input_state, render_eng):
-        # TODO - need to better organize this mess
         self._update_item_on_cursor(world, gs, input_state, render_eng)
         self._update_tooltip(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
         self._update_dialog_panel(world, gs, input_state, render_eng)
         self._update_world_ui_panel(world, gs, input_state, render_eng)
+
+        if input_state.was_pressed(gs.settings().exit_key()):
+            gs.menu_manager().set_active_menu(MenuManager.PAUSE_MENU)
 
     def cleanup(self):
         Menu.cleanup(self)

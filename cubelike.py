@@ -148,7 +148,7 @@ def run():
 
         input_state.update(gs)
 
-        world_active = gs.get_menu_manager().should_draw_world()
+        world_active = gs.menu_manager().should_draw_world()
 
         if world_active and (world is None or gs._needs_next_level):
             render_eng.clear_all_sprites()
@@ -158,7 +158,7 @@ def run():
         if input_state.was_pressed(pygame.K_p) and debug.DEBUG:
             gs.next_level()
 
-        if input_state.was_pressed(pygame.K_ESCAPE) or gs.needs_exit:
+        if gs.needs_exit:
             running = False
             continue
 
@@ -182,9 +182,9 @@ def run():
                 gs.settings().set(settings.MUSIC_VOLUME, 100)
 
         if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
-            manager = gs.get_menu_manager()
+            manager = gs.menu_manager()
             if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
-                gs.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+                gs.menu_manager().set_active_menu(MenuManager.DEATH_MENU)
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F7):
             gs.save_data().save_to_disk()
@@ -206,7 +206,7 @@ def run():
         elif world is not None:
             world.cleanup_active_bundles(render_eng)
 
-        gs.get_menu_manager().update(world, gs, input_state, render_eng)
+        gs.menu_manager().update(world, gs, input_state, render_eng)
 
         render_eng.render_layers()
 

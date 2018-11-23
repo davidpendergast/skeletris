@@ -1219,7 +1219,7 @@ class ExitEntity(Entity):
                         cine_queue.extend(sample_cines)
 
                         from src.ui.menus import MenuManager  # this is temporary don't @ me
-                        gs.get_menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
+                        gs.menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
 
         self.update_images(gs.anim_tick)
 

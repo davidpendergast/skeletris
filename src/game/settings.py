@@ -2,10 +2,12 @@ import pygame
 from src.utils.util import Utils
 
 ALL_SETTINGS = {}
+ALL_KEY_SETTINGS = []
 
 
 class Setting:
-    def __init__(self, key, default):
+    def __init__(self, name, key, default):
+        self.name = name
         self.key = key
         self.default = default
         ALL_SETTINGS[key] = self
@@ -17,23 +19,30 @@ class Setting:
         pass
 
 
-KEY_UP = Setting("UP", [pygame.K_w, pygame.K_UP])
-KEY_LEFT = Setting("LEFT", [pygame.K_a, pygame.K_LEFT])
-KEY_RIGHT = Setting("RIGHT", [pygame.K_d, pygame.K_RIGHT])
-KEY_DOWN = Setting("DOWN", [pygame.K_s, pygame.K_DOWN])
-KEY_ATTACK = Setting("ATTACK", [pygame.K_j, pygame.K_SPACE])
-KEY_INVENTORY = Setting("INVENTORY", [pygame.K_r])
-KEY_ROTATE_CW = Setting("ROTATE_CW", [pygame.K_e])
-KEY_INTERACT = Setting("INTERACT", [pygame.K_i, pygame.K_RETURN])
-KEY_ENTER = Setting("ENTER", [pygame.K_RETURN])
-KEY_EXIT = Setting("EXIT", [pygame.K_ESCAPE])
-KEY_POTION = Setting("POTION", [pygame.K_k])
+class KeySetting(Setting):
+    def __init__(self, name, key, default, editable=True):
+        Setting.__init__(self, name, key, default)
+        self.editable = editable
+        ALL_KEY_SETTINGS.append(self)
 
-MASTER_VOLUME = Setting("MASTER_VOLUME", 100)
+
+KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP])
+KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT])
+KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT])
+KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN])
+KEY_ATTACK = Setting("attack", "ATTACK", [pygame.K_j, pygame.K_SPACE])
+KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r])
+KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
+KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i, pygame.K_RETURN])
+KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN])
+KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE])
+KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
+
+MASTER_VOLUME = Setting("master volume", "MASTER_VOLUME", 100)
 MASTER_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
 # MASTER_VOLUME.on_set = lambda o, n: pygame.mixer.set_volume(n / 100)
 
-MUSIC_VOLUME = Setting("MUSIC_VOLUME", 100)
+MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100)
 MUSIC_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
 MUSIC_VOLUME.on_set = lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100)
 

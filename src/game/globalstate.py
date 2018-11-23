@@ -156,11 +156,12 @@ class GlobalState:
         for e_type in self._event_triggers:
             self._event_triggers[e_type] = [e for e in self._event_triggers[e_type] if e.scope is not scope]
 
-    def get_menu_manager(self):
+    def menu_manager(self):
         return self._menu_manager
 
     def world_updates_paused(self):
-        return self.dialog_manager().is_active()
+        return (self.menu_manager().get_active_menu_id() is not MenuManager.IN_GAME_MENU
+                or self.dialog_manager().is_active())
 
     def dialog_manager(self):
         return self._dialog_manager
@@ -278,7 +279,7 @@ class GlobalState:
                 self.next_level()
 
     def player_died(self):
-        self.get_menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+        self.menu_manager().set_active_menu(MenuManager.DEATH_MENU)
 
     def new_game(self):
         self._needs_new_game = True
