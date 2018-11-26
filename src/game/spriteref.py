@@ -125,6 +125,9 @@ player_move_2 = make(64, 0, 16, 32)
 player_move_3 = make(80, 0, 16, 32)
 player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
+player_idle_arms_up_all = [make(160, 0, 16, 32), make(176, 0, 16, 32)]
+player_move_arms_up_all = [make(192 + 16*i, 0, 16, 32) for i in range(0, 4)]
+
 player_death_seq = [make(112 + 32*i, 208, 32, 32) for i in range(0, 5)]
 
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]

@@ -6,11 +6,12 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PotionEntity, Pushable
+from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PickupEntity, PotionEntity, Pushable
 import src.game.events as events
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
+from src.items.item import ItemFactory
 from src.world.worldstate import World
 import src.game.settings as settings
 
@@ -223,6 +224,9 @@ class PlayerState(ActorState):
         self.death_seq_duration = 120
         self.death_seq_tick = 0
 
+        self.held_item = None
+        self._held_item_image_entity_uid = None
+
     def hp(self):
         if debug.DEBUG:
             # no dying in debug mode
@@ -251,7 +255,7 @@ class PlayerState(ActorState):
             return (1.0, 0.5, 0.5)
 
     def picked_up(self, pickup_entity, world, gs):
-        print("picked up {}".format(pickup_entity))
+        print("INFO: picked up {}".format(pickup_entity))
 
         if pickup_entity.is_potion():
             gs.save_data().num_potions += 1
@@ -326,6 +330,17 @@ class PlayerState(ActorState):
     def get_heal_text_info(self):
         return ("+{}", 3, ActorState.G_TEXT_COLOR)
 
+    def drop_held_item(self, player_entity, world, gs):
+        if self.held_item is None:
+            return
+        else:
+            pos = player_entity.center()
+            vel = PickupEntity.rand_vel(direction=player_entity.get_vel())
+            vel = Utils.add(vel, player_entity.get_vel())
+            world.add(ItemEntity(self.held_item, pos[0], pos[1], vel=vel))
+            print("INFO: dropped item " + str(self.held_item))
+            self.held_item = None
+
     def update(self, player_entity, world, gs, input_state):
 
         if not gs.world_updates_paused():
@@ -369,6 +384,7 @@ class PlayerState(ActorState):
                 self.set_color_x_ticks_ago += 1
 
             if input_state.is_held(gs.settings().attack_key()) and self.attack_state.can_attack():
+                self.drop_held_item(player_entity, world, gs)
                 self.attack_state.start_attack(self)
 
             eq_attacks = self.inventory().get_equipped_attacks()
@@ -386,16 +402,24 @@ class PlayerState(ActorState):
             self.attack_state.update(player_entity, world, gs)
 
             if self._can_interact() and input_state.was_pressed(gs.settings().interact_key()):
-                p_center = player_entity.center()
-                inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
-                inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
-                for i in range(0, len(inter)):
-                    #  trying to find the closest interactable in range
-                    dist = Utils.dist(inter[i].center(), p_center)
-                    if dist <= inter[i].interact_radius():
-                        inter[i].interact(world, gs)
-                        gs.event_queue().add(events.EntityInteractEvent(inter[i]))
-                        break
+
+                if self.held_item is not None:
+                    self.drop_held_item(player_entity, world, gs)
+                else:
+                    p_center = player_entity.center()
+                    inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
+                    inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
+                    for i in range(0, len(inter)):
+                        #  trying to find the closest interactable in range
+                        dist = Utils.dist(inter[i].center(), p_center)
+                        if dist <= inter[i].interact_radius():
+                            inter[i].interact(world, gs)
+                            gs.event_queue().add(events.EntityInteractEvent(inter[i]))
+                            break
+
+            if self.held_item is not None and input_state.was_pressed(gs.settings().rotate_cw_key()):
+                self.held_item = ItemFactory.rotate_item(self.held_item)
+
 
             # you can keep moving during the attack windup
             left_held = input_state.is_held(gs.settings().left_key())
@@ -429,10 +453,45 @@ class PlayerState(ActorState):
             if move_x != 0:
                 self.facing_right = move_x > 0
 
-        color = self.recoil_color()
+        self._update_held_item(player_entity, world, gs)
 
+        color = self.recoil_color()
         player_entity.update_images(self.get_sprite(gs), self.facing_right, color=color)
         player_entity.set_shadow_sprite(self.get_shadow_sprite())
+
+    def _get_held_item_offset(self, gs, spr):
+        h = spr.height() * 2
+        # XXX this is pretty boo
+        if self.is_moving:
+            idx = gs.anim_tick % len(spriteref.player_move_arms_up_all)
+            return [(0, -54 - h), (0, -52 - h), (0, -50 - h), (0, -52 - h)][idx]
+        else:
+            idx = gs.anim_tick // 2 % len(spriteref.player_idle_arms_up_all)
+            return [(0, -54 - h), (0, -52 - h)][idx]
+
+    def _update_held_item(self, player_entity, world, gs):
+        if self._held_item_image_entity_uid is None:
+            current_anim = None
+        else:
+            current_anim = world.get_entity(self._held_item_image_entity_uid, onscreen=False)
+
+        if self.held_item is None and not current_anim is None:
+            world.remove(current_anim)
+            self._held_item_image_entity_uid = None
+        elif self.held_item is not None:
+            sprite = spriteref.get_item_entity_sprite(self.held_item.cubes)
+            pos = player_entity.center()
+            if current_anim is None:
+                current_anim = AnimationEntity(pos[0], pos[1], [sprite], 60, layer_id=spriteref.ENTITY_LAYER)
+                current_anim.on_finish_mode = AnimationEntity.LOOP_ON_FINISH
+                self._held_item_image_entity_uid = current_anim.get_uid()
+                world.add(current_anim)
+
+            current_anim.set_sprites([sprite])
+            current_anim.set_sprite_offset(self._get_held_item_offset(gs, sprite))
+            current_anim.set_center(pos[0], pos[1])
+            current_anim.set_y_centered(False)
+            current_anim.set_color(self.held_item.color)
 
     def get_sprite(self, gs):
         if self.attack_state.is_attacking():
@@ -442,9 +501,15 @@ class PlayerState(ActorState):
         elif self.attack_state.is_delaying():
             return spriteref.player_squat
         elif self.is_moving:
-            return spriteref.player_move_all[gs.anim_tick % len(spriteref.player_move_all)]
+            if self.held_item is not None:
+                return spriteref.player_move_arms_up_all[gs.anim_tick % len(spriteref.player_move_arms_up_all)]
+            else:
+                return spriteref.player_move_all[gs.anim_tick % len(spriteref.player_move_all)]
         else:
-            return spriteref.player_idle_all[(gs.anim_tick // 2) % len(spriteref.player_idle_all)]
+            if self.held_item is not None:
+                return spriteref.player_idle_arms_up_all[(gs.anim_tick // 2) % len(spriteref.player_idle_arms_up_all)]
+            else:
+                return spriteref.player_idle_all[(gs.anim_tick // 2) % len(spriteref.player_idle_all)]
 
     def get_shadow_sprite(self):
         if self.attack_state.is_attacking():

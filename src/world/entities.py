@@ -467,6 +467,9 @@ class AnimationEntity(Entity):
         def set_color(self, color):
             self._color = color
 
+        def set_sprites(self, new_sprites):
+            self.sprites = new_sprites
+
         def get_current_sprite(self):
             idx = int(self.get_progress() * len(self.sprites))
             return self.sprites[idx]
@@ -890,6 +893,17 @@ class ItemEntity(PickupEntity):
     def can_pickup(self):
         return False
 
+    def is_interactable(self):
+        return True
+
+    def interact(self, world, gs):
+        if gs.player_state().held_item is not None:
+            print("ERROR: cannot pick up item. already holding one.")
+            return
+        else:
+            gs.player_state().held_item = self.item
+            print("INFO: picked up item " + str(self.item))
+            world.remove(self)
 
 class PotionEntity(PickupEntity):
     def __init__(self, cx, cy, vel=None):
