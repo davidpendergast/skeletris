@@ -476,7 +476,8 @@ class InGameUiState(Menu):
         self.inventory_panel = None
         self.health_bar_panel = None
         self.dialog_panel = None
-        self.world_ui_panel = None  # for things like locked door UIs
+        self.world_ui_panel = None          # for things like locked door UIs
+        self.top_right_info_panel = None
 
         self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
@@ -498,6 +499,29 @@ class InGameUiState(Menu):
             return hover_over[0]
         else:
             return None
+
+    def _get_top_right_info_obj(self, world, gs):
+        return gs.player_state().held_item
+
+    def _update_top_right_info_panel(self, world, gs, input_state, render_eng):
+        obj_to_display = self._get_top_right_info_obj(world, gs)
+
+        if self.top_right_info_panel is not None:
+            if obj_to_display is None or self.top_right_info_panel.get_target() is not obj_to_display:
+                for bun in self.top_right_info_panel.all_bundles():
+                    render_eng.remove(bun)
+                self.top_right_info_panel = None
+
+        if self.top_right_info_panel is None and obj_to_display is not None:
+            new_panel = TooltipFactory.build_tooltip(obj_to_display, layer=spriteref.UI_0_LAYER)
+            w = new_panel.get_rect()[2]
+            xy = (gs.screen_size[0] - w - 16, 16)
+
+            # XXX building it twice because we don't know how wide it will be beforehand...
+            new_panel = TooltipFactory.build_tooltip(obj_to_display, xy=xy, layer=spriteref.UI_0_LAYER)
+            self.top_right_info_panel = new_panel
+            for bun in self.top_right_info_panel.all_bundles():
+                render_eng.update(bun)
 
     def _update_tooltip(self, world, gs, input_state, render_eng):
         needs_update = False
@@ -749,6 +773,7 @@ class InGameUiState(Menu):
     def update(self, world, gs, input_state, render_eng):
         self._update_item_on_cursor(world, gs, input_state, render_eng)
         self._update_tooltip(world, gs, input_state, render_eng)
+        self._update_top_right_info_panel(world, gs, input_state, render_eng)
         self._update_inventory_panel(world, gs, input_state, render_eng)
         self._update_health_bar_panel(world, gs, input_state, render_eng)
         self._update_dialog_panel(world, gs, input_state, render_eng)
@@ -763,6 +788,7 @@ class InGameUiState(Menu):
         self.item_on_cursor_image = None
         self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
         self.world_ui_panel = None
+        self.top_right_info_panel = None
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
@@ -772,6 +798,9 @@ class InGameUiState(Menu):
                 yield bun
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
+                yield bun
+        if self.top_right_info_panel is not None:
+            for bun in self.top_right_info_panel.all_bundles():
                 yield bun
         if self.world_ui_panel is not None:
             for bun in self.world_ui_panel.all_bundles():

@@ -75,6 +75,7 @@ class ItemGrid:
         
 
 class InventoryState:
+
     def __init__(self):
         self.rows = 7
         self.cols = 9

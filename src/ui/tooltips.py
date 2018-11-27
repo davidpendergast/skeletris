@@ -10,19 +10,20 @@ import src.game.enemies as enemies
 class TooltipFactory:
 
     @staticmethod
-    def build_tooltip(obj):
+    def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, item.Item):
-            return ItemInfoTooltip(obj)
+            return ItemInfoTooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, EnemyState):
-            return EnemyInfoTooltip(obj)
+            return EnemyInfoTooltip(obj, xy=xy, layer=layer)
         else:
             return None
 
 
 class Tooltip:
 
-    def __init__(self):
-        self.layer = spriteref.UI_TOOLTIP_LAYER
+    def __init__(self, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        self.layer = layer
+        self.xy = xy
 
     def all_bundles(self):
         return []
@@ -33,11 +34,14 @@ class Tooltip:
         """
         return None
 
+    def get_rect(self):
+        return [self.xy[0], self.xy[1], 0, 0]
+
 
 class TitleImageAndStatsTooltip(Tooltip):
 
-    def __init__(self, title, level, stat_list, title_color=(1, 1, 1)):
-        Tooltip.__init__(self)
+    def __init__(self, title, level, stat_list, title_color=(1, 1, 1), xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        Tooltip.__init__(self, xy=xy, layer=layer)
         self.title = title
         self.title_color = title_color
         self.level = level
@@ -52,14 +56,20 @@ class TitleImageAndStatsTooltip(Tooltip):
         self.non_core_texts = []
         self.special_bundles = None
 
+        self.size = (0, 0)
+
         self._build_images()
+
+    def get_rect(self):
+        r = Tooltip.get_rect(self)
+        return [r[0], r[1], self.size[0], self.size[1]]
 
     def _build_images(self):
         sc = 2
-        self.top_panel = ImageBundle(spriteref.UI.item_panel_top, 0, 0, layer=self.layer, scale=sc)
+        self.top_panel = ImageBundle(spriteref.UI.item_panel_top, self.xy[0], self.xy[1], layer=self.layer, scale=sc)
         h = self.top_panel.height()
         for i in range(0, len(self.non_core_stats)):
-            img = ImageBundle(spriteref.UI.item_panel_middle, 0, h, layer=self.layer, scale=sc)
+            img = ImageBundle(spriteref.UI.item_panel_middle, self.xy[0], self.xy[1] + h, layer=self.layer, scale=sc)
             h += img.height()
             self.mid_panels.append(img)
 
@@ -68,9 +78,11 @@ class TitleImageAndStatsTooltip(Tooltip):
         else:
             bot_sprite = spriteref.UI.item_panel_bottom_1
             h -= bot_sprite.height() * sc  # covers up part of the top
-        self.bot_panel = ImageBundle(bot_sprite, 0, h, layer=self.layer, scale=sc)
+        self.bot_panel = ImageBundle(bot_sprite, self.xy[0], self.xy[1] + h, layer=self.layer, scale=sc)
 
-        self.title_text = TextImage(8 * sc, 6 * sc, self.title, self.layer, scale=sc, color=self.title_color)
+        self.size = (self.top_panel.width(), h + self.bot_panel.height())
+
+        self.title_text = TextImage(self.xy[0] + 8 * sc, self.xy[1] + 6 * sc, self.title, self.layer, scale=sc, color=self.title_color)
 
         line_spacing = int(1.5 * sc)
 
@@ -78,24 +90,24 @@ class TitleImageAndStatsTooltip(Tooltip):
 
         if self.level is not None:
             lvl_str = "LVL:{}".format(self.level)
-            lvl_txt = TextImage(56 * sc, h, lvl_str, self.layer, scale=sc)
+            lvl_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, lvl_str, self.layer, scale=sc)
             self.core_texts.append(lvl_txt)
             h += lvl_txt.line_height()
 
         for stat in self.core_stats:
             h += line_spacing
-            stat_txt = TextImage(56 * sc, h, str(stat), self.layer, color=stat.color(), scale=sc)
+            stat_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(), scale=sc)
             self.core_texts.append(stat_txt)
             h += stat_txt.line_height()
 
         h = 64 * sc
         for stat in self.non_core_stats:
             h += line_spacing
-            stat_txt = TextImage(8 * sc, h, str(stat), self.layer, color=stat.color(), scale=sc)
+            stat_txt = TextImage(self.xy[0] + 8 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(), scale=sc)
             self.non_core_texts.append(stat_txt)
             h += stat_txt.line_height()
 
-        special_img_rect = [8*sc, 16*sc, 40*sc, 40*sc]
+        special_img_rect = [self.xy[0] + 8*sc, self.xy[1] + 16*sc, 40*sc, 40*sc]
         self.special_bundles = [x for x in self.get_special_image_bundles(special_img_rect, sc)]
 
     def get_special_image_bundles(self, rect, sc):
@@ -123,10 +135,10 @@ class TitleImageAndStatsTooltip(Tooltip):
 
 class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
-    def __init__(self, item):
+    def __init__(self, item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         self.item = item
         TitleImageAndStatsTooltip.__init__(self, item.name, item.level, item.all_stats(),
-                                           title_color=item.get_title_color())
+                                           title_color=item.get_title_color(), xy=xy, layer=layer)
 
     def get_target(self):
         return self.item
@@ -141,7 +153,7 @@ class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
 class EnemyInfoTooltip(TitleImageAndStatsTooltip):
 
-    def __init__(self, enemy_state):
+    def __init__(self, enemy_state, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         self.e_state = enemy_state
         stat_map = enemy_state.get_base_stats()
         stats = []
@@ -154,7 +166,7 @@ class EnemyInfoTooltip(TitleImageAndStatsTooltip):
             if stat_val != 0:
                 stats.append(item.ItemStat(stat_type, stat_val))
 
-        TitleImageAndStatsTooltip.__init__(self, enemy_state.name(), enemy_state.level(), stats)
+        TitleImageAndStatsTooltip.__init__(self, enemy_state.name(), enemy_state.level(), stats, xy=xy, layer=layer)
 
     def get_target(self):
         return self.e_state

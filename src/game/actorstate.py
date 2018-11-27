@@ -334,9 +334,10 @@ class PlayerState(ActorState):
         if self.held_item is None:
             return
         else:
+            p_vel = player_entity.get_vel()
+            vel = (0, 1)
+
             pos = player_entity.center()
-            vel = PickupEntity.rand_vel(direction=player_entity.get_vel())
-            vel = Utils.add(vel, player_entity.get_vel())
             world.add(ItemEntity(self.held_item, pos[0], pos[1], vel=vel))
             print("INFO: dropped item " + str(self.held_item))
             self.held_item = None
