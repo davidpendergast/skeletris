@@ -139,9 +139,9 @@ def run():
             elif event.type == pygame.MOUSEMOTION:
                 input_state.set_mouse_pos(event.pos)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                input_state.set_mouse_down(True)
+                input_state.set_mouse_down(True, button=event.button)
             elif event.type == pygame.MOUSEBUTTONUP:
-                input_state.set_mouse_down(False)
+                input_state.set_mouse_down(False, button=event.button)
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)

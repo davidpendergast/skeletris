@@ -43,4 +43,3 @@ class LootFactory:
             if random.random() < EnemyDroprate.RATE_PER_POTION:
                 num += 1
         return num
-        rng = random.random()

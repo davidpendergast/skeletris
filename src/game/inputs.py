@@ -1,10 +1,10 @@
 
 class InputState:
+
     def __init__(self):
         self._held_keys = {}  # keycode -> time pressed
         self._mouse_pos_last_update = (0, 0)
         self._mouse_pos = (0, 0)
-        self._mouse_down_time = None
         self._current_time = 0
     
     def set_key(self, key, held):
@@ -12,10 +12,17 @@ class InputState:
                 self._held_keys[key] = self._current_time
         elif not held and key in self._held_keys:
             del self._held_keys[key]
-            
-    def set_mouse_down(self, down):
-        self._mouse_down_time = self._current_time if down else None 
-            
+
+    def to_key_code(self, mouse_button):
+        if mouse_button not in (1, 2, 3):
+            raise ValueError("invalid mouse button: {}".format(mouse_button))
+        else:
+            return "MOUSE_BUTTON_" + str(mouse_button)
+
+    def set_mouse_down(self, down, button=1):
+        keycode = self.to_key_code(button)
+        self.set_key(keycode, down)
+
     def set_mouse_pos(self, pos):
         self._mouse_pos = pos
     
@@ -36,17 +43,17 @@ class InputState:
             else:
                 return self._current_time - self._held_keys[key]
     
-    def mouse_is_held(self):
-        return self._mouse_down_time is not None
+    def mouse_is_held(self, button=1):
+        keycode = self.to_key_code(button)
+        return self.is_held(keycode)
     
-    def mouse_held_time(self):
-        if self._mouse_down_time is None:
-            return -1
-        else:
-            return self._current_time - self._mouse_down_time  
-    
-    def mouse_was_pressed(self):
-        return self.mouse_held_time() == 1 and self.mouse_in_window()
+    def mouse_held_time(self, button=1):
+        keycode = self.to_key_code(button)
+        return self.time_held(keycode)
+
+    def mouse_was_pressed(self, button=1):
+        keycode = self.to_key_code(button)
+        return self.was_pressed(keycode) and self.mouse_in_window()
         
     def mouse_pos(self):
         return self._mouse_pos
