@@ -27,10 +27,12 @@ class LootFactory:
             if random.random() < EnemyDroprate.RATE_PER_ITEM:
                 loot.append(ItemFactory.gen_item(level))
 
-        if potential_attack is not None:
-            for _ in range(0, EnemyDroprate.ATT_ITEM_CHANCES):
-                if random.random() < EnemyDroprate.RATE_PER_ATT_ITEM:
-                    loot.append(ItemFactory.gen_item(level, attack=potential_attack))
+        # TODO - I don't think the game should actually have attacks implemented this
+        # TODO - way. just not going to have different player attacks for now.
+        # if potential_attack is not None:
+        #    for _ in range(0, EnemyDroprate.ATT_ITEM_CHANCES):
+        #        if random.random() < EnemyDroprate.RATE_PER_ATT_ITEM:
+        #            loot.append(ItemFactory.gen_item(level, attack=potential_attack))
 
         return loot
 
