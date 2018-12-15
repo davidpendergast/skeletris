@@ -81,7 +81,7 @@ class InventoryState:
         self.cols = 9
         self.equip_grid = ItemGrid((5, 5))
         self.inv_grid = ItemGrid((self.cols, self.rows))
-        
+
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
@@ -91,6 +91,14 @@ class InventoryState:
             if item.is_attack_item():
                 res.append(item.get_attack())
         return res
+
+    def to_json(self):
+        return {}
+
+    @staticmethod
+    def from_json(json_blob):
+        return InventoryState()
+
 
         
         

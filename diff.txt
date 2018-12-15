@@ -1,0 +1,237 @@
+diff --git a/assets/songs/03_amphibian.ogg b/assets/songs/03_amphibian.ogg
+index 2e8fedd..00e7143 100644
+Binary files a/assets/songs/03_amphibian.ogg and b/assets/songs/03_amphibian.ogg differ
+diff --git a/assets/ui.png b/assets/ui.png
+index 43df624..acabf6a 100644
+Binary files a/assets/ui.png and b/assets/ui.png differ
+diff --git a/src/game/globalstate.py b/src/game/globalstate.py
+index 49ca2e5..5aa9879 100644
+--- a/src/game/globalstate.py
++++ b/src/game/globalstate.py
+@@ -20,6 +20,8 @@ class SaveData:
+         self.num_potions = 0
+         self.current_zone_id = None
+ 
++        self.inventory_state = None  # not currently used heh
++
+     def get_path(self):
+         return SaveData.path_for_filename(self._filename)
+ 
+@@ -50,7 +52,7 @@ class SaveData:
+             res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
+             res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
+             res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
+-
++            res.inventory_state = Utils.read_map(json_blob, "inventory", {})
+             print("INFO: loaded save data {} from disk".format(filename))
+             return res
+ 
+@@ -64,6 +66,7 @@ class SaveData:
+             "kill_count": self.kill_count,
+             "num_potions": self.num_potions,
+             "current_zone_id": self.current_zone_id,
++            "inventory": self.inventory_state.to_json()
+         }
+ 
+     def save_to_disk(self):
+diff --git a/src/game/inventory.py b/src/game/inventory.py
+index f291cc9..76eb1c2 100644
+--- a/src/game/inventory.py
++++ b/src/game/inventory.py
+@@ -81,7 +81,11 @@ class InventoryState:
+         self.cols = 9
+         self.equip_grid = ItemGrid((5, 5))
+         self.inv_grid = ItemGrid((self.cols, self.rows))
+-        
++
++        self.cursor_in_inv = True  # false for equip grid
++        self.cursor_pos = (0, 0)
++        self.item_on_cursor = None
++
+     def all_equipped_items(self):
+         return self.equip_grid.all_items()
+ 
+@@ -92,6 +96,14 @@ class InventoryState:
+                 res.append(item.get_attack())
+         return res
+ 
++    def to_json(self):
++        return {}
++
++    @staticmethod
++    def from_json(json_blob):
++        return InventoryState()
++
++
+         
+         
+         
+diff --git a/src/game/spriteref.py b/src/game/spriteref.py
+index 82ce4a2..7a558a3 100644
+--- a/src/game/spriteref.py
++++ b/src/game/spriteref.py
+@@ -60,6 +60,9 @@ class UI:
+     inv_panel_top = None
+     inv_panel_mid = None
+     inv_panel_bot = None
++    inv_panel = None
++
++    inv_cursors = []
+ 
+     """
+     0 1 2
+@@ -423,12 +426,15 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
+     UI.inv_panel_top = make(0, 0, 160, 128, shift=start_pos)
+     UI.inv_panel_mid = make(0, 128, 160, 16, shift=start_pos)
+     UI.inv_panel_bot = make(0, 144, 160, 16, shift=start_pos)
++    UI.inv_panel = make(400, 0, 152, 256, shift=start_pos)
+ 
+     UI.attack_action = make(0, 252, 28, 28, shift=start_pos)
+     UI.potion_action = make(28, 252, 28, 28, shift=start_pos)
+     UI.inspect_action = make(56, 252, 28, 28, shift=start_pos)
+     UI.inventory_action = make(84, 252, 28, 28, shift=start_pos)
+ 
++    UI.inv_cursors = [make(0, 280, 16, 16), make(16, 280, 16, 16)]
++
+     """
+     0 1 2
+     3 4 5
+diff --git a/src/ui/menus.py b/src/ui/menus.py
+index 9c8d56b..6e492ee 100644
+--- a/src/ui/menus.py
++++ b/src/ui/menus.py
+@@ -647,12 +647,12 @@ class InGameUiState(Menu):
+             y = int((pos_in_panel[1] - eq_rect[1])/eq_rect[3]*grid.size[1])
+             return (grid, (x, y))
+ 
+-        inv_rect = self.inventory_panel.inv_grid_rect
+-        if Utils.rect_contains(inv_rect, pos_in_panel):
+-            grid = self.inventory_panel.state.inv_grid
+-            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.size[0])
+-            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.size[1])
+-            return (grid, (x, y))
++#        inv_rect = self.inventory_panel.inv_grid_rect
++#        if Utils.rect_contains(inv_rect, pos_in_panel):
++#            grid = self.inventory_panel.state.inv_grid
++#            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.size[0])
++#            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.size[1])
++#            return (grid, (x, y))
+ 
+         return None
+ 
+@@ -793,12 +793,12 @@ class InGameUiState(Menu):
+     def all_bundles(self):
+         for bun in Menu.all_bundles(self):
+             yield bun
+-        if self.health_bar_panel is not None:
+-            for bun in self.health_bar_panel.all_bundles():
+-                yield bun
+         if self.inventory_panel is not None:
+             for bun in self.inventory_panel.all_bundles():
+                 yield bun
++        if self.health_bar_panel is not None:
++            for bun in self.health_bar_panel.all_bundles():
++                yield bun
+         if self.top_right_info_panel is not None:
+             for bun in self.top_right_info_panel.all_bundles():
+                 yield bun
+diff --git a/src/ui/ui.py b/src/ui/ui.py
+index 390620d..ad4ae7c 100644
+--- a/src/ui/ui.py
++++ b/src/ui/ui.py
+@@ -45,17 +45,13 @@ class InventoryPanel:
+         self.kill_count = gs.save_data().kill_count
+         self.dungeon_level = gs.dungeon_level
+ 
+-        self.top_img = None
+-        self.mid_imgs = []
+-        self.bot_img = None
++        self.bg_img = None
+         self.title_text = None
+ 
+         sc = 2
+         
+-        self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width()*sc,
+-                (128 + 16*self.state.rows)*sc]
++        self.total_rect = [0, 0, spriteref.UI.inv_panel.width()*sc, spriteref.UI.inv_panel.height()*sc]
+         self.equip_grid_rect = [8*sc, 24*sc, 80*sc, 80*sc]
+-        self.inv_grid_rect = [8*sc, 112*sc, 144*sc, 16*self.state.rows*sc]
+         self.info_rect = [96*sc, 24*sc, 56*sc, 32*sc]
+         self.stats_rect = [96*sc, 64*sc, 56*sc, 40*sc]
+         
+@@ -67,7 +63,6 @@ class InventoryPanel:
+         self.dps_text = None 
+         
+         self.equip_img = None
+-        self.inv_img = None
+         
+         self._build_images(sc, gs)
+ 
+@@ -76,13 +71,7 @@ class InventoryPanel:
+                 self.dungeon_level != gs.dungeon_level)
+         
+     def _build_images(self, sc, gs):
+-        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
+-        for i in range(0, self.state.rows - 1):
+-            y = (128 + i*16)*sc
+-            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=sc))
+-        y = (128 + self.state.rows*16 - 16)*sc
+-        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
+-        
++        self.bg_img = ImageBundle(spriteref.UI.inv_panel, 0, 0, layer=self.layer, scale=sc)
+         self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(sc*3/2))
+         
+         name_str = self.player_state.name()
+@@ -108,25 +97,17 @@ class InventoryPanel:
+         s_xy[1] += 2 * self.def_text.line_height()
+         
+         hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))
+-        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=sc,
+-                color=item_module.STAT_COLORS[None])
++        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=sc, color=item_module.STAT_COLORS[None])
+         s_xy[1] += self.hp_text.line_height()
+         
+         dps_str = "DPS:{}".format(round(self.player_state.stat_value(PlayerStatType.DPS)))
+-        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=sc,
+-                color=item_module.STAT_COLORS[None])
++        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=sc, color=item_module.STAT_COLORS[None])
+         
+         e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
+         self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
+         
+-        inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
+-        self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
+-        
+     def all_bundles(self):
+-        yield self.top_img
+-        for img in self.mid_imgs:
+-            yield img
+-        yield self.bot_img
++        yield self.bg_img
+         for bun in self.title_text.all_bundles():
+             yield bun
+         for bun in self.info_text.all_bundles():
+@@ -142,8 +123,6 @@ class InventoryPanel:
+         for bun in self.dps_text.all_bundles():
+             yield bun
+         for bun in self.equip_img.all_bundles():
+-            yield bun 
+-        for bun in self.inv_img.all_bundles():
+             yield bun
+ 
+ 
+diff --git a/src/utils/util.py b/src/utils/util.py
+index ac74f25..703add0 100644
+--- a/src/utils/util.py
++++ b/src/utils/util.py
+@@ -145,6 +145,10 @@ class Utils:
+         return Utils.read_safely(json_blob, key, default, mapper=lambda x: bool(x))
+ 
+     @staticmethod
++    def read_map(json_blob, key, default):
++        return default  # hmmm, one day~
++
++    @staticmethod
+     def read_safely(json_blob, key, default, mapper=lambda x: x):
+         if key not in json_blob or json_blob[key] is None:
+             print("returning default {} for key {}".format(default, key))

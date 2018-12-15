@@ -145,6 +145,10 @@ class Utils:
         return Utils.read_safely(json_blob, key, default, mapper=lambda x: bool(x))
 
     @staticmethod
+    def read_map(json_blob, key, default):
+        return default  # hmmm, one day~
+
+    @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):
         if key not in json_blob or json_blob[key] is None:
             print("returning default {} for key {}".format(default, key))

@@ -793,11 +793,11 @@ class InGameUiState(Menu):
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
             yield bun
-        if self.health_bar_panel is not None:
-            for bun in self.health_bar_panel.all_bundles():
-                yield bun
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
+                yield bun
+        if self.health_bar_panel is not None:
+            for bun in self.health_bar_panel.all_bundles():
                 yield bun
         if self.top_right_info_panel is not None:
             for bun in self.top_right_info_panel.all_bundles():

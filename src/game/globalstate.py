@@ -20,6 +20,8 @@ class SaveData:
         self.num_potions = 0
         self.current_zone_id = None
 
+        self.inventory_state = None  # not currently used heh
+
     def get_path(self):
         return SaveData.path_for_filename(self._filename)
 
@@ -50,7 +52,7 @@ class SaveData:
             res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
             res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
             res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
-
+            res.inventory_state = Utils.read_map(json_blob, "inventory", {})
             print("INFO: loaded save data {} from disk".format(filename))
             return res
 
@@ -64,6 +66,7 @@ class SaveData:
             "kill_count": self.kill_count,
             "num_potions": self.num_potions,
             "current_zone_id": self.current_zone_id,
+            "inventory": self.inventory_state.to_json()
         }
 
     def save_to_disk(self):
