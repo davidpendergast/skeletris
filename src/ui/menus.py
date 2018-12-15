@@ -479,7 +479,6 @@ class InGameUiState(Menu):
         self.world_ui_panel = None          # for things like locked door UIs
         self.top_right_info_panel = None
 
-        self.item_on_cursor = None
         self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
 
@@ -528,7 +527,7 @@ class InGameUiState(Menu):
         obj_to_display = None
         screen_pos = input_state.mouse_pos()
 
-        if input_state.mouse_in_window() and self.item_on_cursor is None:
+        if input_state.mouse_in_window() and gs.player_state().held_item is None:
             if self.in_inventory_panel(screen_pos):
                 grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
                 if grid_n_cell is not None:
@@ -661,25 +660,22 @@ class InGameUiState(Menu):
         create_image = False
         rebuild_inventory = False
 
-        if gs.player_state().is_dead():
-            destroy_image = True
-            if self.item_on_cursor is not None:
-                center = gs.screen_size[0] // 2, gs.screen_size[1] // 2
-                world_coords = gs.screen_to_world_coords(center)
-                self._drop_item_on_cursor(world_coords, Utils.rand_vec(1), world)
+        ps = gs.player_state()
 
-        elif not input_state.mouse_in_window():
+        if not input_state.mouse_in_window():
             destroy_image = True
 
-        elif self.item_on_cursor is not None and self.item_on_cursor_image is None:
-            # mouse left window and came back
+        elif ps.held_item is not None and self.item_on_cursor_image is None:
             create_image = True
+
+        elif ps.held_item is None and self.item_on_cursor_image is not None:
+            destroy_image = True
 
         elif input_state.mouse_was_pressed():
             screen_pos = input_state.mouse_pos()
 
             if self.in_inventory_panel(screen_pos):
-                if self.item_on_cursor is not None:
+                if ps.held_item is not None:
                     # when holding an item, gotta offset the click to the top left corner
                     grid_click_pos = Utils.add(screen_pos, self.item_on_cursor_offs)
                     grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
@@ -690,16 +686,17 @@ class InGameUiState(Menu):
                 if clicked_grid_n_cell is not None:
                     grid = clicked_grid_n_cell[0]
                     cell = clicked_grid_n_cell[1]
-                    if self.item_on_cursor is not None:
-                        if grid.can_place(self.item_on_cursor, cell):
-                            grid.place(self.item_on_cursor, cell)
-                            self.item_on_cursor = None
+                    if ps.held_item is not None:
+                        if grid.can_place(ps.held_item, cell):
+                            grid.place(ps.held_item, cell)
+                            ps.held_item = None
                             destroy_image = True
                             rebuild_inventory = True
                         else:
-                            replaced_with = grid.try_to_replace(self.item_on_cursor, cell)
+                            replaced_with = grid.try_to_replace(ps.held_item, cell)
                             if replaced_with is not None:
-                                self.item_on_cursor = replaced_with
+                                ps.held_item = replaced_with
+
                                 destroy_image = True
                                 create_image = True
                                 rebuild_inventory = True
@@ -707,28 +704,28 @@ class InGameUiState(Menu):
                         clicked_item = grid.item_at_position(cell)
                         if clicked_item is not None:
                             grid.remove(clicked_item)
-                            self.item_on_cursor = clicked_item
+                            gs.player_state().held_item = clicked_item
                             create_image = True
                             rebuild_inventory = True
 
             else:  # we clicked in world
                 world_pos = gs.screen_to_world_coords(screen_pos)
-                if self.item_on_cursor is None:
+                if ps.held_item is None:
                     clicked_item = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_item())
                     if clicked_item is not None:
                         world.remove(clicked_item)
-                        self.item_on_cursor = clicked_item.get_item()
+                        ps.held_item = clicked_item.get_item()
                         create_image = True
                 else:
                     p = world.get_player()
                     if p is not None:
                         p_center = p.center()  # drop position
                         drop_dir = Utils.sub(world_pos, p_center)
-                        self._drop_item_on_cursor(p_center, drop_dir, world)
+                        gs.player_state().drop_held_item(p, world, gs, direction=drop_dir)
                         destroy_image = True
 
-        if input_state.was_pressed(gs.settings().rotate_cw_key()) and self.item_on_cursor is not None:
-            self.item_on_cursor = item_module.ItemFactory.rotate_item(self.item_on_cursor)
+        if input_state.was_pressed(gs.settings().rotate_cw_key()) and ps.held_item is not None:
+            ps.held_item = item_module.ItemFactory.rotate_item(ps.held_item)
             create_image = True
             destroy_image = True
 
@@ -737,8 +734,8 @@ class InGameUiState(Menu):
             self.item_on_cursor_image = None
 
         if create_image:
-            size = ItemImage.calc_size(self.item_on_cursor, 2)
-            self.item_on_cursor_image = ItemImage(0, 0, self.item_on_cursor, spriteref.UI_TOOLTIP_LAYER, 2)
+            size = ItemImage.calc_size(ps.held_item, 2)
+            self.item_on_cursor_image = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2)
             self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
             for bun in self.item_on_cursor_image.all_bundles():
                 render_eng.update(bun)
@@ -752,14 +749,6 @@ class InGameUiState(Menu):
                 x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
                 y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
                 render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
-
-    def _drop_item_on_cursor(self, pos, drop_dir, world):
-        if self.item_on_cursor is None:
-            return
-        vel = PickupEntity.rand_vel(direction=drop_dir)
-        item_entity = ItemEntity(self.item_on_cursor, *pos, vel=vel)
-        world.add(item_entity)
-        self.item_on_cursor = None
 
     def rebuild_inventory(self, gs, render_eng):
         if self.inventory_panel is not None:
@@ -786,7 +775,6 @@ class InGameUiState(Menu):
         Menu.cleanup(self)
         self.inventory_panel = None
         self.item_on_cursor_image = None
-        self.item_on_cursor = None  # XXX this will DESTROY the item on cursor
         self.world_ui_panel = None
         self.top_right_info_panel = None
 

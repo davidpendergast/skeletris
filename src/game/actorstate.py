@@ -330,12 +330,14 @@ class PlayerState(ActorState):
     def get_heal_text_info(self):
         return ("+{}", 3, ActorState.G_TEXT_COLOR)
 
-    def drop_held_item(self, player_entity, world, gs):
+    def drop_held_item(self, player_entity, world, gs, direction=None):
         if self.held_item is None:
             return
         else:
-            p_vel = player_entity.get_vel()
-            vel = (0, 1)
+            if direction is not None:
+                vel = PickupEntity.rand_vel(speed=None, direction=direction)
+            else:
+                vel = (0, 1)
 
             pos = player_entity.center()
             world.add(ItemEntity(self.held_item, pos[0], pos[1], vel=vel))
@@ -417,10 +419,6 @@ class PlayerState(ActorState):
                             inter[i].interact(world, gs)
                             gs.event_queue().add(events.EntityInteractEvent(inter[i]))
                             break
-
-            if self.held_item is not None and input_state.was_pressed(gs.settings().rotate_cw_key()):
-                self.held_item = ItemFactory.rotate_item(self.held_item)
-
 
             # you can keep moving during the attack windup
             left_held = input_state.is_held(gs.settings().left_key())
