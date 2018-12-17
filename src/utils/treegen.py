@@ -175,4 +175,3 @@ if __name__ == "__main__":
 
     pygame.image.save(test_surface, "test_trees.png")
 
-

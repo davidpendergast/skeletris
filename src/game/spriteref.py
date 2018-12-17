@@ -162,6 +162,8 @@ door_h = [make(736 + i*16, 16, 16, 32) for i in range(0, 6)]
 door_h_locked = [make(736 + i*16, 64, 16, 32) for i in range(0, 6)]
 door_h_sensor = [make(736 + i*16, 112, 16, 32) for i in range(0, 6)]
 
+return_door_smoke = [make(608 + i*16, 240, 16, 16) for i in range(0, 16)]
+
 boss_door_idle = [make(224 + i*16, 80, 16, 32) for i in range(0, 2)]
 boss_door_opening = [make(256 + i*16, 80, 16, 32) for i in range(0, 7)]
 normal_door_idle = [make(224 + i*16, 112, 16, 32) for i in range(0, 2)]

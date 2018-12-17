@@ -36,6 +36,7 @@ class ZoneLoader:
     CHEST_SPAWN = (255, 0, 255)
     SAVE_STATION = (0, 255, 255)
     EXIT = (255, 0, 0)
+    RETURN_EXIT = (255, 50, 50)
 
     @staticmethod
     def load_blueprint_from_file(filename, level):
@@ -74,6 +75,9 @@ class ZoneLoader:
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.exit_spawn = (x, y)
+                    elif color == ZoneLoader.RETURN_EXIT:
+                        bp.set(x, y, World.FLOOR)
+                        bp.return_exit_spawn = (x, y)
                     elif color == ZoneLoader.CHEST_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.chest_spawns.append((x, y))
@@ -163,6 +167,9 @@ class Zone:
 
     def build_world(self, gs):
         pass
+
+    def get_return_id(self):
+        return None
 
 
 class TestZone(Zone):
@@ -350,6 +357,9 @@ class DesolateCaveZone2(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
         w = bp.build_world()
         return w
+
+    def get_return_id(self):
+        return DesolateCaveZone.ZONE_ID
 
 
 class SleepyForestZone(Zone):

@@ -1244,6 +1244,34 @@ class ExitEntity(Entity):
         self._was_interacted_with = True
 
 
+class ReturnExitEntity(Entity):
+    def __init__(self, grid_x, grid_y):
+        Entity.__init__(self, grid_x * 64, grid_y * 64 + 62, 64, 2)
+        self._was_interacted_with = False
+
+    def update_images(self, anim_tick):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+
+        sprite = spriteref.return_door_smoke[anim_tick % len(spriteref.return_door_smoke)]
+
+        x = self.x()
+        y = self.y() - 62
+        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+
+    def update(self, world, gs, input_state, render_engine):
+        if self._was_interacted_with and not gs.world_updates_paused():
+            pass
+
+        self.update_images(gs.anim_tick)
+
+    def is_interactable(self):
+        return True
+
+    def interact(self, world, gs):
+        self._was_interacted_with = True
+
+
 class DecorationEntity(Entity):
 
     def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), interact_dialog=None):

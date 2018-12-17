@@ -3,7 +3,7 @@ import random
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
 from src.world.entities import Player, ExitEntity, LockedDoorEntity, SaveStationEntity, SensorDoorEntity, \
-    TreeEntity, BossExitEntity, DoorEntity, ChestEntity
+    TreeEntity, BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -184,6 +184,7 @@ class WorldBlueprint:
         self.enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawn = None
+        self.return_exit_spawn = None
         self.save_station = None
         self.locked_doors = []
         self.sensor_doors = []
@@ -260,9 +261,13 @@ class WorldBlueprint:
             w.add(ChestEntity(0, 0), gridcell=chest_pos, next_update=False)
 
         w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
+
         if self.exit_spawn is not None:
             w.add(ExitEntity(*self.exit_spawn), next_update=False)
             # w.add(BossExitEntity(*self.exit_spawn), next_update=False)
+
+        if self.return_exit_spawn is not None:
+            w.add(ReturnExitEntity(*self.return_exit_spawn), next_update=False)
 
         return w
 
