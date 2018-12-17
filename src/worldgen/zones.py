@@ -338,6 +338,20 @@ class DesolateCaveZone(Zone):
         return w
 
 
+class DesolateCaveZone2(Zone):
+
+    ZONE_ID = "desolate_cave_2"
+
+    def __init__(self):
+        Zone.__init__(self, "The Desolate Cave II", 1, filename="desolate_cave_2.png",
+                      music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
+
+    def build_world(self, gs):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        w = bp.build_world()
+        return w
+
+
 class SleepyForestZone(Zone):
 
     ZONE_ID = "sleepy_forest"

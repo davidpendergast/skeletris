@@ -9,6 +9,7 @@ from src.game.dialog import DialogManager
 import src.game.events as events
 from src.game.settings import Settings
 from src.utils.util import Utils
+from src.game.inventory import InventoryState
 
 
 class SaveData:
@@ -52,7 +53,7 @@ class SaveData:
             res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
             res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
             res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
-            res.inventory_state = Utils.read_map(json_blob, "inventory", {})
+            res.inventory_state = InventoryState.from_json(Utils.read_map(json_blob, "inventory", {}))
             print("INFO: loaded save data {} from disk".format(filename))
             return res
 
