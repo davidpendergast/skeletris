@@ -1155,9 +1155,10 @@ class SaveStationEntity(Entity):
 
 class ExitEntity(Entity):
 
-    def __init__(self, grid_x, grid_y):
+    def __init__(self, grid_x, grid_y, next_zone_id):
         Entity.__init__(self, grid_x * 64, grid_y * 64, 64, 2)
 
+        self.next_zone_id = next_zone_id
         self.count = 0
         self.open_duration = 60
         self.radius = 48
@@ -1222,18 +1223,7 @@ class ExitEntity(Entity):
                     if self._interact_countdown > 1:
                         self._interact_countdown -= 1
                     else:
-                        # TODO - make the next world
-                        gs.next_level()
-
-                        cine_queue = gs.get_cinematics_queue()
-                        cine_queue.clear()
-
-                        sample_cines = cinematics.opening_cinematic
-
-                        cine_queue.extend(sample_cines)
-
-                        from src.ui.menus import MenuManager  # this is temporary don't @ me
-                        gs.menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
+                        gs.event_queue().add(events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id))
 
         self.update_images(gs.anim_tick)
 
@@ -1245,8 +1235,9 @@ class ExitEntity(Entity):
 
 
 class ReturnExitEntity(Entity):
-    def __init__(self, grid_x, grid_y):
+    def __init__(self, grid_x, grid_y, prev_zone_id):
         Entity.__init__(self, grid_x * 64, grid_y * 64 + 62, 64, 2)
+        self.prev_zone_id = prev_zone_id
         self._was_interacted_with = False
 
     def update_images(self, anim_tick):

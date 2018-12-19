@@ -35,8 +35,10 @@ class ZoneLoader:
     MONSTER_SPAWN = (255, 255, 0)
     CHEST_SPAWN = (255, 0, 255)
     SAVE_STATION = (0, 255, 255)
+
     EXIT = (255, 0, 0)
     RETURN_EXIT = (255, 50, 50)
+    BOSS_EXIT = (255, 25, 25)
 
     @staticmethod
     def load_blueprint_from_file(filename, level):
@@ -48,6 +50,13 @@ class ZoneLoader:
             raw_img = pygame.image.load(Utils.resource_path(filepath))
             img_size = (raw_img.get_width(), raw_img.get_height())
             bp = WorldBlueprint(img_size, level)
+
+            exits = {
+                ZoneLoader.EXIT : [],
+                ZoneLoader.RETURN_EXIT : [],
+                ZoneLoader.BOSS_EXIT : []
+            }
+
             unknowns = {}
 
             for x in range(0, img_size[0]):
@@ -72,12 +81,9 @@ class ZoneLoader:
                         bp.set_locked_door(x, y)
                     elif color == ZoneLoader.SENSOR_DOOR:
                         bp.set_sensor_door(x, y)
-                    elif color == ZoneLoader.EXIT:
+                    elif color in (ZoneLoader.EXIT, ZoneLoader.RETURN_EXIT, ZoneLoader.BOSS_EXIT):
                         bp.set(x, y, World.FLOOR)
-                        bp.exit_spawn = (x, y)
-                    elif color == ZoneLoader.RETURN_EXIT:
-                        bp.set(x, y, World.FLOOR)
-                        bp.return_exit_spawn = (x, y)
+                        exits[color].append((x, y))
                     elif color == ZoneLoader.CHEST_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.chest_spawns.append((x, y))
@@ -104,7 +110,7 @@ class ZoneLoader:
                         else:
                             unknowns[color] = [pos]
 
-            return (bp, unknowns)
+            return (bp, unknowns, exits)
 
         except ValueError as e:
             print("failed to load " + str(filename))
@@ -168,7 +174,10 @@ class Zone:
     def build_world(self, gs):
         pass
 
-    def get_return_id(self):
+    def get_next_zone_id(self, door_idx):
+        return None
+
+    def get_return_zone_id(self):
         return None
 
 
@@ -250,9 +259,12 @@ class DesolateCaveZone(Zone):
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self, gs):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
 
         w = bp.build_world()
+
+        exit_pos = exits[ZoneLoader.EXIT][0]
+        w.add(entities.ExitEntity(*exit_pos, DesolateCaveZone2.ZONE_ID))
 
         glorple_spawn_pos = unknowns[DesolateCaveZone.GLORPLE_POS_1][0]
         glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
@@ -354,8 +366,12 @@ class DesolateCaveZone2(Zone):
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self, gs):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
         w = bp.build_world()
+
+        return_pos = exits[ZoneLoader.RETURN_EXIT][0]
+        w.add(entities.ReturnExitEntity(return_pos[0], return_pos[1], DesolateCaveZone.ZONE_ID))
+
         return w
 
     def get_return_id(self):
@@ -382,7 +398,7 @@ class HauntedForestZone1(Zone):
         Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=DARK_GREY)
 
     def build_world(self, gs):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
         print("unknowns={}".format(unknowns))
         w = bp.build_world()
 
@@ -399,7 +415,7 @@ class CaveHorrorZone(Zone):
         self._fight_end_door = (0, 170, 170)
 
     def build_world(self, gs):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 

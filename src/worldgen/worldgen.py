@@ -183,8 +183,9 @@ class WorldBlueprint:
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
         self.chest_spawns = []
-        self.exit_spawn = None
-        self.return_exit_spawn = None
+        self.exit_spawns = {}         # zone_id -> (x, y)
+        self.boss_exit_spawns = {}    # zone_id -> (x, y)
+        self.return_exit_spawns = {}  # zone_id -> (x, y)
         self.save_station = None
         self.locked_doors = []
         self.sensor_doors = []
@@ -262,12 +263,17 @@ class WorldBlueprint:
 
         w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
 
-        if self.exit_spawn is not None:
-            w.add(ExitEntity(*self.exit_spawn), next_update=False)
-            # w.add(BossExitEntity(*self.exit_spawn), next_update=False)
+        if len(self.exit_spawns) > 0:
+            for zone_id in self.exit_spawns:
+                w.add(ExitEntity(*self.exit_spawns[zone_id], zone_id), next_update=False)
 
-        if self.return_exit_spawn is not None:
-            w.add(ReturnExitEntity(*self.return_exit_spawn), next_update=False)
+        if len(self.boss_exit_spawns) > 0:
+            for zone_id in self.boss_exit_spawns:
+                w.add(ExitEntity(*self.boss_exit_spawns[zone_id], zone_id), next_update=False)
+
+        if len(self.return_exit_spawns) > 0:
+            for zone_id in self.return_exit_spawns:
+                w.add(ReturnExitEntity(*self.return_exit_spawns[zone_id], zone_id), next_update=False)
 
         return w
 
@@ -329,7 +335,7 @@ class WorldFactory:
         bp.enemy_spawns = WorldFactory._get_random_floors(bp, num_rooms)
         bp.chest_spawns = WorldFactory._get_random_floors(bp, num_rooms // 3)
 
-        bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)
+        # bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)
 
         return bp
 
@@ -389,7 +395,7 @@ class WorldFactory:
                     elif random.random() < 0.05:
                         bp.chest_spawns.append((x, y))
 
-        bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)
+        # bp.exit_spawn = WorldFactory._get_random_exit_pos(bp)
 
         return bp
 

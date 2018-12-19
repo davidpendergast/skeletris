@@ -5,9 +5,8 @@ from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
 from src.utils.util import Utils
-from src.world.entities import ItemEntity, PickupEntity
+import src.game.events as events
 import src.game.music as music
-import src.game.settings as settings
 
 
 class MenuManager:
@@ -276,9 +275,9 @@ class StartMenu(OptionsMenu):
 
     def option_activated(self, idx, gs):
         if idx == StartMenu.START_OPT:
-            gs.new_game()
+            gs.event_queue().add(events.NewGameEvent(instant_start=True))
         elif idx == StartMenu.EXIT_OPT:
-            gs.needs_exit = True
+            gs.event_queue().add(events.GameExitEvent())
         elif idx == StartMenu.OPTIONS_OPT:
             gs.menu_manager().set_active_menu(MenuManager.CONTROLS_START_MENU)
 
@@ -464,7 +463,7 @@ class DeathOptionMenu(OptionsMenu):
 
     def option_activated(self, idx, gs):
         if idx == DeathOptionMenu.RETRY_OPT:
-            gs.new_game()
+            gs.event_queue().add(events.NewGameEvent(instant_start=False))
         elif idx == DeathOptionMenu.EXIT_OPT:
             gs.menu_manager().set_active_menu(MenuManager.START_MENU)
 

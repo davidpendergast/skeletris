@@ -15,8 +15,16 @@ class EventQueue:
 
     def flip(self):
         self.events.clear()
+        self._type_lookup.clear()
+
         tmp = self.events
         self.events = self.next_events
+
+        for e in self.events:
+            if e.get_type() not in self._type_lookup:
+                self._type_lookup[e.get_type()] = []
+            self._type_lookup[e.get_type()].append(e)
+
         self.next_events = tmp
 
     def all_events_with_type(self, single_type):
@@ -66,6 +74,9 @@ class EventType(Enum):
 
     # these are "please do something" events
     PLAY_SOUND = "PLAY_SOUND"
+    NEW_ZONE = "NEW_ZONE"
+    GAME_EXIT = "GAME_EXIT"
+    NEW_GAME = "NEW_GAME"
 
 
 class Event:
@@ -162,3 +173,45 @@ class DialogExitEvent(Event):
 
     def get_option_idx(self):
         return self.get_data()[1]
+
+
+class NewZoneEvent(Event):
+
+    NORMAL = "NORMAL"
+    RETURNING = "RETURNING"
+    SAVE_STATION = "SAVE_STATION"
+
+    def __init__(self, next_zone, current_zone, transfer_type=NORMAL):
+        data = (next_zone, current_zone, transfer_type)
+        desc = "moved from zone {} to {} via {}".format(current_zone, next_zone, transfer_type)
+        Event.__init__(self, EventType.NEW_ZONE, data, description=desc)
+
+    def get_next_zone(self):
+        return self.get_data()[0]
+
+    def get_current_zone(self):
+        return self.get_data()[1]
+
+    def get_transfer_type(self):
+        return self.get_data()[2]
+
+
+class GameExitEvent(Event):
+
+    def __init__(self):
+        Event.__init__(self, EventType.GAME_EXIT, None, description="exit game")
+
+
+class NewGameEvent(Event):
+
+    def __init__(self, instant_start=True):
+        Event.__init__(self, EventType.NEW_GAME, instant_start, description="new game")
+
+    def get_instant_start(self):
+        return self.get_data()
+
+
+class PlayerDiedEvent(Event):
+
+    def __init__(self):
+        Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")

@@ -14,6 +14,7 @@ import src.worldgen.zones as zones
 import src.game.settings as settings
 import src.game.readme_writer as readme_writer
 import src.utils.profiling as profiling
+import src.game.events as events
 
 
 print("launching Cubelike...")
@@ -31,8 +32,8 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs):
-    return zones.build_world(zones.DesolateCaveZone2.ZONE_ID, gs)
+def build_me_a_world(gs, zone_id=zones.TestZone.ZONE_ID):
+    return zones.build_world(zone_id, gs)
 
 
 def new_gs(menu_id):
@@ -55,7 +56,10 @@ def run():
     pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = inputs.InputState()
-    gs = None
+    gs = new_gs(MenuManager.START_MENU)
+
+    if debug.IS_DEV:
+        gs.settings().set(settings.MUSIC_VOLUME, 0)
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
@@ -110,23 +114,30 @@ def run():
     world = None
         
     clock = pygame.time.Clock()
-
-
     running = True
 
     while running:
-
-        if gs is None or gs._needs_new_game:
-            print("Starting new game")
-            menu_id = MenuManager.START_MENU if gs is None else MenuManager.IN_GAME_MENU
-            # TODO - this is not gud
-            gs = new_gs(menu_id)
-            world = None
-
-            if debug.IS_DEV:
-                gs.settings().set(settings.MUSIC_VOLUME, 0)
-
         gs.update(world, input_state, render_eng)
+
+        for event in gs.event_queue().all_events():
+            if event.get_type() == events.EventType.NEW_ZONE:
+                render_eng.clear_all_sprites()
+                world = build_me_a_world(gs, zone_id=event.get_next_zone())
+            elif event.get_type() == events.EventType.GAME_EXIT:
+                print("INFO: quitting game")
+                running = False
+                continue
+            elif event.get_type() == events.EventType.NEW_GAME:
+                print("INFO: starting fresh game")
+                render_eng.clear_all_sprites()
+                if event.get_instant_start():
+                    menu_id = MenuManager.IN_GAME_MENU
+                else:
+                    menu_id = MenuManager.START_MENU
+                gs = new_gs(menu_id)
+                world = None
+            elif event.get_type() == events.EventType.PLAYER_DIED:
+                gs.menu_manager().set_active_menu(MenuManager.DEATH_MENU)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -150,17 +161,10 @@ def run():
 
         world_active = gs.menu_manager().should_draw_world()
 
-        if world_active and (world is None or gs._needs_next_level):
+        if world_active and world is None:
+            # building the initial world
             render_eng.clear_all_sprites()
             world = build_me_a_world(gs)
-            gs._needs_next_level = False
-
-        if input_state.was_pressed(pygame.K_p) and debug.DEBUG:
-            gs.next_level()
-
-        if gs.needs_exit:
-            running = False
-            continue
 
         if input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks

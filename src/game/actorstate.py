@@ -279,7 +279,7 @@ class PlayerState(ActorState):
         death_anim.set_sprite_offset((0, -24))
         death_anim.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
         death_anim.set_xflipped(not self.facing_right)
-        death_anim.set_vel(Utils.mult(player_entity.get_total_push(), 2), fric=0.90, collides=True)
+        death_anim.set_vel(Utils.mult(self.get_total_push(), 2), fric=0.90, collides=True)
 
         world.add(death_anim)
 
@@ -350,7 +350,7 @@ class PlayerState(ActorState):
 
             if self._is_dead:
                 if self.death_seq_tick >= self.death_seq_duration:
-                    gs.player_died()
+                    gs.event_queue().add(events.PlayerDiedEvent())
                 else:
                     self.death_seq_tick += 1
 
