@@ -49,7 +49,7 @@ class World:
     def cellsize(self):
         return CELLSIZE
         
-    def add(self, entity, gridcell=None, next_update=True):
+    def add(self, entity, gridcell=None):
         """
             gridcell: (grid_x, grid_y) or None
         """
@@ -62,11 +62,7 @@ class World:
             entity.set_x(x)
             entity.set_y(y)
 
-        if next_update:
-            self._ents_to_add.append(entity)
-        else:
-            self.entities.append(entity)
-            entity._alive = True
+        self._ents_to_add.append(entity)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)
@@ -115,6 +111,14 @@ class World:
                 if e.get_uid() == uid:
                     return e
         return None
+
+    def all_entities(self, onscreen=False):
+        if onscreen:
+            for e in self._onscreen_entities:
+                yield e
+        else:
+            for e in self.entities:
+                yield e
 
     def set_wall_type(self, wall_id, xy=None):
         if xy is None:
@@ -308,11 +312,14 @@ class World:
 
         self._onscreen_bundles = new_onscreen
 
-    def update_all(self, gs, input_state, render_engine):
+    def flush_new_entity_additions(self):
         for e in self._ents_to_add:
             self.entities.append(e)
             e._alive = True
         self._ents_to_add.clear()
+
+    def update_all(self, gs, input_state, render_engine):
+        self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
             self.entities.remove(e)  # n^2 but whatever

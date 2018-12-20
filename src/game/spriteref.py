@@ -532,7 +532,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
 
         for i in range(0, 256):
             bools = [int(x) for x in reversed(list('{0:0b}'.format(i)))]
-            bools= bools + [0]*(8 - len(bools))
+            bools = bools + [0]*(8 - len(bools))
 
             tl = _get_wall_corner_loc("TL", bools, pieces_location)
             tr = _get_wall_corner_loc("TR", bools, pieces_location)
@@ -554,6 +554,11 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
                 if draw_x > left_size[0] - 16:
                     draw_x = 0
                     draw_y += 16
+
+            if wall_array == walls:
+                print("wall {} = [{}, {}, 16, 16]".format(i, draw_x, draw_y))
+
+        draw_y += 16
 
     draw_x = 0
     draw_y += 16

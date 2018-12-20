@@ -136,7 +136,7 @@ class TrillaTemplate(EnemyTemplate):
             e_state.set_color_x_ticks_ago = 0
             e_state.push(Utils.rand_vec(3), 15)
             e_state.set_special_attack(entity.state.special_attack)
-            world.add(Enemy(pos[0], pos[1], e_state), next_update=True)
+            world.add(Enemy(pos[0], pos[1], e_state))
 
     def can_drop_special_attack(self):
         return False
@@ -178,7 +178,7 @@ class SmallMuncherTemplate(EnemyTemplate):
         new_muncher = Enemy(0, 0, e_state)
         pos = entity.center()
         new_muncher.set_center(pos[0], pos[1])
-        world.add(new_muncher, next_update=True)
+        world.add(new_muncher)
 
     def can_drop_special_attack(self):
         return False

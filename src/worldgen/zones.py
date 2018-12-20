@@ -446,7 +446,7 @@ class DoorTestZone(Zone):
     ZONE_ID = "door_test"
 
     def __init__(self):
-        Zone.__init__(self, "Door Test", 15, filename="door_test_1.png")
+        Zone.__init__(self, "Main Zone", 15, filename="door_test_1.png")
 
     def build_world(self, gs):
         bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
@@ -458,12 +458,13 @@ class DoorTestZone(Zone):
         w.add(entities.BossExitEntity(*right_exit_pos, DoorTestZoneR.ZONE_ID))
         return w
 
+
 class DoorTestZoneL(Zone):
 
     ZONE_ID = "door_test_l"
 
     def __init__(self):
-        Zone.__init__(self, "Door Test L", 17, filename="door_test_L.png")
+        Zone.__init__(self, "Test Zone Left", 17, filename="door_test_L.png")
 
     def build_world(self, gs):
         bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
@@ -479,7 +480,7 @@ class DoorTestZoneR(Zone):
     ZONE_ID = "door_test_r"
 
     def __init__(self):
-        Zone.__init__(self, "Door Test R", 17, filename="door_test_R.png")
+        Zone.__init__(self, "Test Zone Right", 17, filename="door_test_R.png")
 
     def build_world(self, gs):
         bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())

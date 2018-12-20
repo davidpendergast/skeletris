@@ -3,6 +3,7 @@ from enum import Enum
 from src.world.worldstate import World
 from src.world.entities import Player
 
+
 class BossID(Enum):
 
     CAVE_HORROR = "CAVE_HORROR"
@@ -42,7 +43,7 @@ class CaveHorrorController(BossFightController):
                     w.set_geo(x, y, World.WALL)
                 else:
                     w.set_geo(x, y, World.FLOOR)
-        w.add(Player(0, 0), gridcell=(2, 2), next_update=False)
+        w.add(Player(0, 0), gridcell=(2, 2))
 
         return w
 

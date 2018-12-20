@@ -32,8 +32,20 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs, zone_id=zones.DoorTestZone.ZONE_ID):
-    return zones.build_world(zone_id, gs)
+def build_me_a_world(gs, zone_id=zones.DoorTestZone.ZONE_ID, spawn_at_door_with_zone_id=None):
+    world = zones.build_world(zone_id, gs)
+    world.flush_new_entity_additions()
+
+    if spawn_at_door_with_zone_id is not None:
+        for e in world.all_entities(onscreen=False):
+            if e.is_exit() and e.get_zone() == spawn_at_door_with_zone_id:
+                e.set_open(True)
+                grid_xy = world.to_grid_coords(*e.center())
+                p = world.get_player()
+                size = world.cellsize()
+                p.set_center((grid_xy[0] + 0.5) * size, (grid_xy[1] + 0.5) * size)
+
+    return world
 
 
 def new_gs(menu_id):
@@ -121,8 +133,15 @@ def run():
 
         for event in gs.event_queue().all_events():
             if event.get_type() == events.EventType.NEW_ZONE:
+                print("INFO: new zone {}".format(event.get_next_zone()))
                 render_eng.clear_all_sprites()
-                world = build_me_a_world(gs, zone_id=event.get_next_zone())
+                if event.get_transfer_type() == events.NewZoneEvent.RETURNING:
+                    spawn_at = event.get_current_zone()
+                else:
+                    spawn_at = None
+
+                world = build_me_a_world(gs, zone_id=event.get_next_zone(), spawn_at_door_with_zone_id=spawn_at)
+
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
                 running = False

@@ -243,38 +243,39 @@ class WorldBlueprint:
 
                 if self.geo[x][y] == World.DOOR:
                     if (x, y) in self.locked_doors:
-                        w.add(LockedDoorEntity(x, y), next_update=False)
+                        w.add(LockedDoorEntity(x, y))
                     elif (x, y) in self.sensor_doors:
-                        w.add(SensorDoorEntity(x, y), next_update=False)
+                        w.add(SensorDoorEntity(x, y))
                     else:
-                        w.add(DoorEntity(x, y), next_update=False)
+                        w.add(DoorEntity(x, y))
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)
             for e in enemies:
-                w.add(e, gridcell=spawn_pos, next_update=False)
+                w.add(e, gridcell=spawn_pos)
 
         if self.save_station is not None:
             save_entity = SaveStationEntity(*self.save_station)
-            w.add(save_entity, next_update=False)
+            w.add(save_entity)
 
         for chest_pos in self.chest_spawns:
-            w.add(ChestEntity(0, 0), gridcell=chest_pos, next_update=False)
+            w.add(ChestEntity(0, 0), gridcell=chest_pos)
 
-        w.add(Player(0, 0), gridcell=self.player_spawn, next_update=False)
+        w.add(Player(0, 0), gridcell=self.player_spawn)
 
         if len(self.exit_spawns) > 0:
             for zone_id in self.exit_spawns:
-                w.add(ExitEntity(*self.exit_spawns[zone_id], zone_id), next_update=False)
+                w.add(ExitEntity(*self.exit_spawns[zone_id], zone_id))
 
         if len(self.boss_exit_spawns) > 0:
             for zone_id in self.boss_exit_spawns:
-                w.add(ExitEntity(*self.boss_exit_spawns[zone_id], zone_id), next_update=False)
+                w.add(ExitEntity(*self.boss_exit_spawns[zone_id], zone_id))
 
         if len(self.return_exit_spawns) > 0:
             for zone_id in self.return_exit_spawns:
-                w.add(ReturnExitEntity(*self.return_exit_spawns[zone_id], zone_id), next_update=False)
+                w.add(ReturnExitEntity(*self.return_exit_spawns[zone_id], zone_id))
 
+        w.flush_new_entity_additions()
         return w
 
 

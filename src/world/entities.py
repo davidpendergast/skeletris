@@ -181,6 +181,9 @@ class Entity(Updateable):
     def is_npc(self):
         return False
 
+    def is_exit(self):
+        return False
+
     def is_interactable(self):
         return False
 
@@ -1193,6 +1196,9 @@ class ExitEntity(Entity):
             sprite = open_spr[idx]
         return sprite
 
+    def get_zone(self):
+        return self.next_zone_id
+
     def idle_sprites(self):
         return spriteref.normal_door_idle
 
@@ -1217,8 +1223,17 @@ class ExitEntity(Entity):
     def get_progress(self):
         return Utils.bound(self.count / self.open_duration, 0.0, 0.999)
 
+    def is_exit(self):
+        return True
+
     def is_open(self):
         return self.count >= self.open_duration
+
+    def set_open(self, open):
+        if open:
+            self.count = self.open_duration
+        else:
+            self.count = 0
 
     def update(self, world, gs, input_state, render_engine):
 
@@ -1233,9 +1248,12 @@ class ExitEntity(Entity):
                         self.count -= 2
                     self.count = Utils.bound(self.count, 0, self.open_duration)
             elif self._was_interacted_with:
-                    gs.event_queue().add(events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id))
+                    gs.event_queue().add(self.make_new_zone_event(gs))
 
         self.update_images(gs.anim_tick)
+
+    def make_new_zone_event(self, gs):
+        return events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id)
 
     def is_interactable(self):
         return self.is_open()
@@ -1253,6 +1271,10 @@ class ReturnExitEntity(ExitEntity):
         ExitEntity.__init__(self, grid_x, grid_y, next_zone_id)
         self.set_y(self.y() + 62)
         self.open_duration = 15
+
+    def make_new_zone_event(self, gs):
+        return events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id,
+                                   transfer_type=events.NewZoneEvent.RETURNING)
 
     def get_sprite(self, anim_tick):
         sprites = spriteref.return_door_smoke
