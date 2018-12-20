@@ -8,7 +8,6 @@ import src.game.spriteref as spriteref
 from src.world.worldstate import World
 from src.utils.util import Utils
 from src.game.loot import LootFactory
-import src.game.cinematics as cinematics
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
 from src.game.updatable import Updateable
@@ -188,11 +187,14 @@ class Entity(Updateable):
     def interact(self, world, gs):
         pass
 
-    def is_pushable(self):
-        return isinstance(self, Pushable)
+    def interact_text(self):
+        return None
 
     def interact_radius(self):
         return 64
+
+    def is_pushable(self):
+        return isinstance(self, Pushable)
 
     def can_damage(self, other):
         return ((self.is_player() and other.is_enemy()) or
@@ -896,6 +898,9 @@ class ItemEntity(PickupEntity):
     def is_interactable(self):
         return True
 
+    def interact_text(self):
+        return "pick up"
+
     def interact(self, world, gs):
         if gs.player_state().held_item is not None:
             print("ERROR: cannot pick up item. already holding one.")
@@ -904,6 +909,7 @@ class ItemEntity(PickupEntity):
             gs.player_state().held_item = self.item
             print("INFO: picked up item " + str(self.item))
             world.remove(self)
+
 
 class PotionEntity(PickupEntity):
     def __init__(self, cx, cy, vel=None):
@@ -1040,6 +1046,9 @@ class LockedDoorEntity(DoorEntity):
             dialogs = [PlayerDialog(text) for text in self._interact_text_list]
             gs.dialog_manager().set_dialog(Dialog.link_em_up(dialogs), gs)
 
+    def interact_text(self):
+        return "inspect"
+
     def do_unlock(self):
         self._is_locked = False
         self.delay_count = self.delay_duration
@@ -1136,6 +1145,9 @@ class SaveStationEntity(Entity):
     def is_interactable(self):
         return True
 
+    def interact_text(self):
+        return "save station"
+
     def interact(self, world, gs):
         question = NpcDialog("save game?\n\n" +
                              "{yes} {no}", spriteref.save_station_faces)
@@ -1164,9 +1176,22 @@ class ExitEntity(Entity):
         self.radius = 48
 
         self._was_interacted_with = False
-        self._interact_countdown = 45
 
-        self.hover_text = None
+        try:
+            # TODO - zone info should be more accessible...
+            import src.worldgen.zones as zones
+            self.hover_text = zones.get_zone_name(next_zone_id)
+        except ValueError:
+            self.hover_text = "Unknown"
+
+    def get_sprite(self, anim_tick):
+        if self.count == 0:
+            sprite = self.idle_sprites()[(anim_tick // 2) % 2]
+        else:
+            open_spr = self.opening_sprites()
+            idx = int(self.get_progress() * len(open_spr))
+            sprite = open_spr[idx]
+        return sprite
 
     def idle_sprites(self):
         return spriteref.normal_door_idle
@@ -1174,19 +1199,19 @@ class ExitEntity(Entity):
     def opening_sprites(self):
         return spriteref.normal_door_opening
 
+    def sprite_offset(self, sprite, scale):
+        return (0, -sprite.height() * scale)
+
     def update_images(self, anim_tick):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
-        if self.count == 0:
-            sprite = self.idle_sprites()[(anim_tick // 2) % 2]
-        else:
-            open_spr = self.opening_sprites()
-            idx = int(self.get_progress() * len(open_spr))
-            sprite = open_spr[idx]
+        sprite = self.get_sprite(anim_tick)
 
-        x = self.x()
-        y = self.y() - sprite.height() * 4
+        offs = self.sprite_offset(sprite, 4)
+
+        x = self.x() + offs[0]
+        y = self.y() + offs[1]
         self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
 
     def get_progress(self):
@@ -1196,6 +1221,7 @@ class ExitEntity(Entity):
         return self.count >= self.open_duration
 
     def update(self, world, gs, input_state, render_engine):
+
         if not gs.world_updates_paused():
             if self.count < self.open_duration:
                 player = world.get_player()
@@ -1206,24 +1232,8 @@ class ExitEntity(Entity):
                     else:
                         self.count -= 2
                     self.count = Utils.bound(self.count, 0, self.open_duration)
-
-                if self.is_open() and self.hover_text is None:
-                    self.hover_text = HoverTextEntity("press ENTER", target_entity=self, offset=(0, -145))
-                    world.add(self.hover_text)
-            else:
-                if self._was_interacted_with:
-                    player = world.get_player()
-
-                    if self.hover_text is not None:
-                        world.remove(self.hover_text)
-                        self.hover_text = None
-
-                    if player is not None:
-                        pass  # TODO - setup dummy player + walking animation
-                    if self._interact_countdown > 1:
-                        self._interact_countdown -= 1
-                    else:
-                        gs.event_queue().add(events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id))
+            elif self._was_interacted_with:
+                    gs.event_queue().add(events.NewZoneEvent(self.next_zone_id, gs.save_data().current_zone_id))
 
         self.update_images(gs.anim_tick)
 
@@ -1233,34 +1243,32 @@ class ExitEntity(Entity):
     def interact(self, world, gs):
         self._was_interacted_with = True
 
+    def interact_text(self):
+        return self.hover_text
 
-class ReturnExitEntity(Entity):
-    def __init__(self, grid_x, grid_y, prev_zone_id):
-        Entity.__init__(self, grid_x * 64, grid_y * 64 + 62, 64, 2)
-        self.prev_zone_id = prev_zone_id
-        self._was_interacted_with = False
 
-    def update_images(self, anim_tick):
-        if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+class ReturnExitEntity(ExitEntity):
 
-        sprite = spriteref.return_door_smoke[anim_tick % len(spriteref.return_door_smoke)]
+    def __init__(self, grid_x, grid_y, next_zone_id):
+        ExitEntity.__init__(self, grid_x, grid_y, next_zone_id)
+        self.set_y(self.y() + 62)
+        self.open_duration = 15
 
-        x = self.x()
-        y = self.y() - 62
-        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+    def get_sprite(self, anim_tick):
+        sprites = spriteref.return_door_smoke
+        return sprites[anim_tick % len(sprites)]
 
-    def update(self, world, gs, input_state, render_engine):
-        if self._was_interacted_with and not gs.world_updates_paused():
-            pass
+    def sprite_offset(self, sprite, scale):
+        return (0, -62)
 
-        self.update_images(gs.anim_tick)
 
-    def is_interactable(self):
-        return True
+class BossExitEntity(ExitEntity):
 
-    def interact(self, world, gs):
-        self._was_interacted_with = True
+    def idle_sprites(self):
+        return spriteref.boss_door_idle
+
+    def opening_sprites(self):
+        return spriteref.boss_door_opening
 
 
 class DecorationEntity(Entity):
@@ -1316,14 +1324,8 @@ class DecorationEntity(Entity):
         if self._interact_dialog is not None:
             gs.dialog_manager().set_dialog(self._interact_dialog, gs)
 
-
-class BossExitEntity(ExitEntity):
-
-    def idle_sprites(self):
-        return spriteref.boss_door_idle
-
-    def opening_sprites(self):
-        return spriteref.boss_door_opening
+    def interact_text(self):
+        return "inspect"
 
 
 class TreeEntity(Entity):
@@ -1393,6 +1395,9 @@ class NpcEntity(Entity):
 
     def is_interactable(self):
         return True
+
+    def interact_text(self):
+        return "talk"
 
     def interact(self, world, gs):
         gs.event_queue().add(events.NpcInteractEvent(self.get_id()))
@@ -1527,7 +1532,8 @@ class HoverTextEntity(Entity):
     def update(self, world, gs, input_state, render_engine):
         if self._dirty:
             if self._text_img is not None:
-                render_engine.remove(self._text_img)
+                for bun in self._text_img.all_bundles():
+                    render_engine.remove(bun)
                 self._text_img = None
 
         sc = 2
@@ -1649,5 +1655,3 @@ class HoverTextEntity(Entity):
             for bun in self._text_img.all_bundles():
                 yield bun
 
-
-    

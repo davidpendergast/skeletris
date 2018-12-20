@@ -6,7 +6,7 @@ from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref
 from src.game.stats import PlayerStatType, StatType
 from src.utils.util import Utils
-from src.world.entities import AnimationEntity, FloatingTextEntity, ItemEntity, PickupEntity, PotionEntity, Pushable
+from src.world.entities import AnimationEntity, Player, ReturnExitEntity, FloatingTextEntity, ItemEntity, ExitEntity, PickupEntity, HoverTextEntity, PotionEntity, Pushable
 import src.game.events as events
 from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
@@ -227,6 +227,9 @@ class PlayerState(ActorState):
         self.held_item = None
         self._held_item_image_entity_uid = None
 
+        self.current_hover_text = None
+        self.current_hover_text_entity_uid = None
+
     def hp(self):
         if debug.DEBUG:
             # no dying in debug mode
@@ -344,8 +347,38 @@ class PlayerState(ActorState):
             print("INFO: dropped item " + str(self.held_item))
             self.held_item = None
 
-    def update(self, player_entity, world, gs, input_state):
+    def _update_hover_text(self, target_entity, text, world, gs):
+        if self.current_hover_text_entity_uid is not None:
+            hover_entity = world.get_entity(self.current_hover_text_entity_uid)
+            if hover_entity is None:
+                self.current_hover_text_entity_uid = None
+        else:
+            hover_entity = None
 
+        if text is None and hover_entity is not None:
+            if hover_entity is not None:
+                world.remove(hover_entity)
+                self.current_hover_text_entity_uid = None
+
+        elif text is not None:
+            offs = (0, -64)
+
+            # TODO - holy edge case batman
+            if isinstance(target_entity, Player):
+                offs = (0, -96)
+            elif isinstance(target_entity, ExitEntity):
+                offs = (0, -150)
+
+            if hover_entity is None:
+                hover_entity = HoverTextEntity(text, target_entity, offset=offs)
+                self.current_hover_text_entity_uid = hover_entity.get_uid()
+                world.add(hover_entity)
+            else:
+                # TODO - if this thing is offscreen, it won't update properly
+                hover_entity.set_text(text)
+                hover_entity.set_target_entity(target_entity, offset=offs)
+
+    def update(self, player_entity, world, gs, input_state):
         if not gs.world_updates_paused():
 
             if self._is_dead:
@@ -404,21 +437,23 @@ class PlayerState(ActorState):
 
             self.attack_state.update(player_entity, world, gs)
 
-            if self._can_interact() and input_state.was_pressed(gs.settings().interact_key()):
+            closest_interactable = None
+            p_center = player_entity.center()
+            inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
+            inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
+            for i in range(0, len(inter)):
+                #  trying to find the closest interactable in range
+                dist = Utils.dist(inter[i].center(), p_center)
+                if dist <= inter[i].interact_radius():
+                    closest_interactable = inter[i]
+                    break
 
+            if self._can_interact() and input_state.was_pressed(gs.settings().interact_key()):
                 if self.held_item is not None:
                     self.drop_held_item(player_entity, world, gs)
-                else:
-                    p_center = player_entity.center()
-                    inter = [x for x in world.entities_in_circle(p_center, 128) if x.is_interactable()]
-                    inter.sort(key=lambda x: Utils.dist(x.center(), p_center))
-                    for i in range(0, len(inter)):
-                        #  trying to find the closest interactable in range
-                        dist = Utils.dist(inter[i].center(), p_center)
-                        if dist <= inter[i].interact_radius():
-                            inter[i].interact(world, gs)
-                            gs.event_queue().add(events.EntityInteractEvent(inter[i]))
-                            break
+                elif closest_interactable is not None:
+                    closest_interactable.interact(world, gs)
+                    gs.event_queue().add(events.EntityInteractEvent(closest_interactable))
 
             # you can keep moving during the attack windup
             left_held = input_state.is_held(gs.settings().left_key())
@@ -452,7 +487,18 @@ class PlayerState(ActorState):
             if move_x != 0:
                 self.facing_right = move_x > 0
 
-        self._update_held_item(player_entity, world, gs)
+            self._update_held_item(player_entity, world, gs)
+
+            if self.held_item is None and self._can_interact() and closest_interactable is not None:
+                # TODO - holy edge case batman
+                if isinstance(closest_interactable, ReturnExitEntity):
+                    self._update_hover_text(player_entity, closest_interactable.interact_text(), world, gs)
+                else:
+                    self._update_hover_text(closest_interactable, closest_interactable.interact_text(), world, gs)
+            else:
+                self._update_hover_text(None, None, world, gs)
+        else:
+            self._update_hover_text(None, None, world, gs)
 
         color = self.recoil_color()
         player_entity.update_images(self.get_sprite(gs), self.facing_right, color=color)

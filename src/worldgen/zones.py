@@ -118,10 +118,10 @@ class ZoneLoader:
 
 
 def build_world(zone_id, gs):
-    zone = _ALL_ZONES[zone_id]
-    if zone is None:
+    if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
+    zone = _ALL_ZONES[zone_id]
     gs.prepare_for_new_zone(zone_id)
     music.play_song(zone.get_music_id())
 
@@ -134,8 +134,15 @@ def build_world(zone_id, gs):
     if p is not None:
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
+        gs.set_world_camera_center(*p.center())
 
     return w
+
+
+def get_zone_name(zone_id):
+    if zone_id not in _ALL_ZONES:
+        raise ValueError("unknown zone id: {}".format(zone_id))
+    return _ALL_ZONES[zone_id].get_name()
 
 
 def make(zone):
@@ -431,6 +438,55 @@ class CaveHorrorZone(Zone):
 
         fight_end_loc = unknowns[self._fight_end_door][0]
 
+        return w
+
+
+class DoorTestZone(Zone):
+
+    ZONE_ID = "door_test"
+
+    def __init__(self):
+        Zone.__init__(self, "Door Test", 15, filename="door_test_1.png")
+
+    def build_world(self, gs):
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        w = bp.build_world()
+        left_exit_pos = exits[ZoneLoader.EXIT][0]
+        right_exit_pos = exits[ZoneLoader.BOSS_EXIT][0]
+
+        w.add(entities.ExitEntity(*left_exit_pos, DoorTestZoneL.ZONE_ID))
+        w.add(entities.BossExitEntity(*right_exit_pos, DoorTestZoneR.ZONE_ID))
+        return w
+
+class DoorTestZoneL(Zone):
+
+    ZONE_ID = "door_test_l"
+
+    def __init__(self):
+        Zone.__init__(self, "Door Test L", 17, filename="door_test_L.png")
+
+    def build_world(self, gs):
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        w = bp.build_world()
+        return_exit_pos = exits[ZoneLoader.RETURN_EXIT][0]
+
+        w.add(entities.ReturnExitEntity(*return_exit_pos, DoorTestZone.ZONE_ID))
+        return w
+
+
+class DoorTestZoneR(Zone):
+
+    ZONE_ID = "door_test_r"
+
+    def __init__(self):
+        Zone.__init__(self, "Door Test R", 17, filename="door_test_R.png")
+
+    def build_world(self, gs):
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        w = bp.build_world()
+        return_exit_pos = exits[ZoneLoader.RETURN_EXIT][0]
+
+        w.add(entities.ReturnExitEntity(*return_exit_pos, DoorTestZone.ZONE_ID))
         return w
 
 

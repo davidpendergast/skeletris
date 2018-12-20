@@ -32,7 +32,7 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs, zone_id=zones.TestZone.ZONE_ID):
+def build_me_a_world(gs, zone_id=zones.DoorTestZone.ZONE_ID):
     return zones.build_world(zone_id, gs)
 
 
