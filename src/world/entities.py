@@ -1295,7 +1295,8 @@ class BossExitEntity(ExitEntity):
 
 class DecorationEntity(Entity):
 
-    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), interact_dialog=None):
+    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), hover_text="inspect",
+                 interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
@@ -1303,6 +1304,7 @@ class DecorationEntity(Entity):
         Entity.__init__(self, x_center, y_bottom, 1, 0)
 
         self._interact_dialog = interact_dialog
+        self._hover_text = hover_text
         self._draw_offset = draw_offset
         self._sprites = Utils.listify(sprite)
         self._scale = scale
@@ -1325,7 +1327,7 @@ class DecorationEntity(Entity):
             yield self._img
 
     @staticmethod
-    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None):
+    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None, hover_text="inspect"):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
@@ -1337,7 +1339,19 @@ class DecorationEntity(Entity):
         x_center = (grid_x + 0.5) * CELLSIZE
         y_bottom = (grid_y) * CELLSIZE
         return DecorationEntity(sprites, x_center, y_bottom, scale=scale, draw_offset=offset,
-                                interact_dialog=interact_dialog)
+                                interact_dialog=interact_dialog, hover_text=hover_text)
+
+    @staticmethod
+    def sign_decoration(grid_x, grid_y, dialog_text, hover_text):
+        sprite = spriteref.standalone_sign_decoration
+        CELLSIZE = 64  # this better never change~
+        scale = 2
+        x_center = (grid_x + 0.5) * CELLSIZE
+        y_bottom = (grid_y + 0.5) * CELLSIZE
+        offset = (0, -(sprite.height() - 1) * scale)
+
+        return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset,
+                                interact_dialog=PlayerDialog(dialog_text), hover_text=hover_text)
 
     def is_interactable(self):
         return self._interact_dialog is not None
@@ -1347,7 +1361,7 @@ class DecorationEntity(Entity):
             gs.dialog_manager().set_dialog(self._interact_dialog, gs)
 
     def interact_text(self):
-        return "inspect"
+        return self._hover_text
 
 
 class TreeEntity(Entity):

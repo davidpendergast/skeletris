@@ -66,22 +66,4 @@ class NpcState:
             self.interacted_with(npc_id, world, gs)
 
     def interacted_with(self, npc_id, world, gs):
-        chain = [
-            NpcDialog("Have you ever tried bone stew before?", get_sprites(NpcID.MARY_SKELLY)),
-            NpcDialog("i know a great recipe.. if you can spare a couple bones..", get_sprites(NpcID.MARY_SKELLY)),
-            NpcDialog("Don't mind her - she has plenty of bones already!", get_sprites(NpcID.MAYOR)),
-            NpcDialog("I need those! for.. stew purposes.. ", get_sprites(NpcID.MARY_SKELLY)),
-            PlayerDialog("..."),
-            PlayerDialog("Are there any other survivors?"),
-            NpcDialog("Glorple survived!", get_sprites(NpcID.GLORPLE)),
-            NpcDialog("I think my potatoes are ok.. but i can't say the same about my tomatoes.", get_sprites(NpcID.BEANSKULL)),
-            NpcDialog("they were trampled during the attack.", get_sprites(NpcID.BEANSKULL)),
-            PlayerDialog("I meant people."),
-            NpcDialog("In that case.. I don't think so.", get_sprites(NpcID.BEANSKULL)),
-            PlayerDialog("we need to keep moving."),
-        ]
-
-        d = Dialog.link_em_up(chain)
-        gs.dialog_manager().set_dialog(d, gs)
-        print("setting dialog to {}".format(d.get_text()))
-
+        pass

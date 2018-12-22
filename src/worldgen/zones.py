@@ -251,15 +251,22 @@ class DesolateCaveZone(Zone):
 
     ZONE_ID = "desolate_cave"
 
-    GLORPLE_POS_1 = (255, 150, 255)
     MUSHROOM_COLOR = (255, 175, 175)
     MUSHROOM_COLOR_SP = (255, 175, 177)  # these can have a switch behind them
     RAKE_COLOR = (255, 220, 175)
     DIALOG_TRIGGER_1_COLOR = (255, 95, 95)
-    SIGNS = {(255, 133, 0): ["it's a schedule. it says:\n\n" +
-                             "planted:    5.164  5.162  8.164\n" +
-                             "harvests:       3      9      2"]}
-    GLORPLE_WALKTO_POS = (225, 33, 225)
+
+    WALL_SIGNS = {
+            (255, 133, 0): ("read", "it's a schedule. it says:\n\nplanted:    5.164  5.162  8.164\n""harvests:       3      9      2"),
+            (255, 186, 150): ("[i] to read", "use [i] to pick up items, interact with things, and dismiss text."),
+            (255, 184, 150): ("[i] to read", "doors and chests will open on their own if you stand next to them for a little while."),
+            (255, 182, 150): ("[i] to read", ["use [r] to open inventory.", "items in the top 5x5 grid are currently equipped. the bottom grid is for storage."]),
+            (255, 180, 150): ("[i] to read", ["stand on the chest to open it. then, use the mouse to equip some items. right-click rotates the active item.", "you can't fit everything, so use your equipment grid squares wisely."]),
+            (255, 178, 150): ("[i] to read", "use [j] to attack. you can't be hit while in the air."),
+            (255, 176, 150): ("[i] to read", "use [k] to heal. healing potions can be collected from chests and slain enemies."),
+            (255, 174, 150): ("[i] to read", "the controls are also on the hotbar at the bottom of the screen."),
+            (255, 172, 150): ("[i] to read", "good luck! deaths are permanent.")
+    }
 
     def __init__(self):
         Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png",
@@ -272,10 +279,6 @@ class DesolateCaveZone(Zone):
 
         exit_pos = exits[ZoneLoader.EXIT][0]
         w.add(entities.ExitEntity(*exit_pos, DesolateCaveZone2.ZONE_ID))
-
-        glorple_spawn_pos = unknowns[DesolateCaveZone.GLORPLE_POS_1][0]
-        glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
-        w.add(glorple, gridcell=glorple_spawn_pos)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -303,7 +306,8 @@ class DesolateCaveZone(Zone):
                 gs.add_trigger(listener)
                 mushroom_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_switches,
                                                                             pos[0], pos[1],
-                                                                            interact_dialog=unlock_dialog)
+                                                                            interact_dialog=unlock_dialog,
+                                                                            hover_text="activate")
             else:
                 if i == (hidden_switch_idx + 1) % len(sp_mushrooms):
                     text = "there's nothing interesting here. it's just a large cluster of mushrooms."
@@ -320,46 +324,19 @@ class DesolateCaveZone(Zone):
             w.add(rake_entity)
 
         for key in unknowns:
-            if key in DesolateCaveZone.SIGNS:
+            if key in DesolateCaveZone.WALL_SIGNS:
                 pos = unknowns[key][0]
-                d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in DesolateCaveZone.SIGNS[key]])
+                hover_text = DesolateCaveZone.WALL_SIGNS[key][0]
+                dialog_text = Utils.listify(DesolateCaveZone.WALL_SIGNS[key][1])
+                d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
+
                 sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                                 interact_dialog=d)
+                                                                 interact_dialog=d, hover_text=hover_text)
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
         wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
         w.add(wasd_message_box)
-
-        glorple_walk_pos = unknowns.get(DesolateCaveZone.GLORPLE_WALKTO_POS)[0]
-
-        dial = [dialog.PlayerDialog("this must be the lost city.\n\n\npress [ENTER]"),
-                dialog.PlayerDialog("it looks like it hasn't been touched in ages."),
-                dialog.NpcDialog("does that mean the treasure is really here?!", spriteref.glorple_faces),
-                dialog.PlayerDialog("after all that digging, it better be. let's look around."),
-                dialog.Cutscene([dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_walk_pos)]),
-                dialog.NpcDialog("it's locked. we need to find a key.", spriteref.glorple_faces),
-                dialog.Cutscene([dialog.NpcWalkCutSceneAction(npc.NpcID.GLORPLE, glorple_spawn_pos)]),
-                dialog.PlayerDialog("this place gives me the creeps.")]
-
-        intro_dial = dialog.Dialog.link_em_up(dial)
-
-        grid_xy = (Utils.min_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 0),
-                   Utils.min_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 1))
-        grid_x2y2 = (Utils.max_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 0),
-                   Utils.max_component(unknowns[DesolateCaveZone.DIALOG_TRIGGER_1_COLOR], 1))
-        grid_size = (grid_x2y2[0] - grid_xy[0] + 1, grid_x2y2[1] - grid_xy[1] + 1)
-
-        dialog_box = entities.DialogTriggerBox(intro_dial, grid_xy, grid_size=grid_size, just_once=True)
-
-        w.add(dialog_box)
-
-        def update_lambda(_world, _gs, _input_state, _render_engine):
-            pass
-
-        z_updater = Updateable()
-        z_updater.update = update_lambda
-        gs.add_zone_updater(z_updater)
 
         return w
 
