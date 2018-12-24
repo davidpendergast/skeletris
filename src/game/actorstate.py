@@ -663,6 +663,12 @@ class EnemyState(ActorState):
         if self.template.increment_kill_count_on_death():
             gs.save_data().kill_count += 1
 
+    def _get_sprite(self, gs):
+        return self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
+
+    def _get_sprite_offset(self):
+        return (0, 0)
+
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
 
@@ -747,12 +753,12 @@ class EnemyState(ActorState):
                     self.facing_left_last_frame = None
 
         color = self.recoil_color()
-        sprite = self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
+        sprite = self._get_sprite(gs)
         health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
         hp_color = self.get_hp_color()
 
         entity.update_images(sprite, self.facing_left, health_ratio, color=color, hp_color=hp_color,
-                             shadow_sprite=self.template.get_shadow_sprite())
+                             offset=self._get_sprite_offset(), shadow_sprite=self.template.get_shadow_sprite())
 
     def _should_attack(self, entity, world):
         p = world.get_player()

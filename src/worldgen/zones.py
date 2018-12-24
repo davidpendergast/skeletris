@@ -5,12 +5,13 @@ from src.world.worldstate import World
 from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, BuilderUtils
 from src.utils.util import Utils
 import src.world.entities as entities
+import src.game.enemies as enemies
 import src.game.spriteref as spriteref
 import src.game.npc as npc
 import src.game.events as events
-from src.game.updatable import Updateable
 import src.game.dialog as dialog
 import src.game.music as music
+import src.game.cinematics as cinematics
 
 _ALL_ZONES = {}
 
@@ -21,6 +22,7 @@ DARK_GREY = (92, 92, 92)
 class ZoneLoader:
     EMPTY = (92, 92, 92)
     WALL = (0, 0, 0)
+    WALL_CRACKED = (30, 30, 30)
 
     FLOOR = (255, 255, 255)
     FLOOR_CRACKED = (225, 225, 225)
@@ -68,6 +70,9 @@ class ZoneLoader:
                         continue
                     elif color == ZoneLoader.WALL:
                         bp.set(x, y, World.WALL)
+                    elif color == ZoneLoader.WALL_CRACKED:
+                        bp.set(x, y, World.WALL)
+                        bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
                     elif color == ZoneLoader.FLOOR:
                         bp.set(x, y, World.FLOOR)
                     elif color in ZoneLoader.FLOOR_ID_LOOKUP:
@@ -180,12 +185,6 @@ class Zone:
 
     def build_world(self, gs):
         pass
-
-    def get_next_zone_id(self, door_idx):
-        return None
-
-    def get_return_zone_id(self):
-        return None
 
 
 class TestZone(Zone):
@@ -356,6 +355,9 @@ class DesolateCaveZone2(Zone):
         return_pos = exits[ZoneLoader.RETURN_EXIT][0]
         w.add(entities.ReturnExitEntity(return_pos[0], return_pos[1], DesolateCaveZone.ZONE_ID))
 
+        exit_pos = exits[ZoneLoader.EXIT][0]
+        w.add(entities.BossExitEntity(exit_pos[0], exit_pos[1], FrogLairZone.ZONE_ID))
+
         return w
 
     def get_return_id(self):
@@ -387,6 +389,36 @@ class HauntedForestZone1(Zone):
         w = bp.build_world()
 
         return w
+
+
+class FrogLairZone(Zone):
+
+    ZONE_ID = "frog_lair"
+
+    FROG_SPAWN = (255, 203, 203)
+
+    def __init__(self):
+        Zone.__init__(self, "The Dark Pool", 15, filename="frog_lair.png", bg_color=BLACK)
+
+    def build_world(self, gs):
+        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        w = bp.build_world()
+        w.set_wall_type(spriteref.WALL_NORMAL_ID)
+        w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
+
+        exit_pos = exits[ZoneLoader.EXIT][0]
+        w.add(entities.ExitEntity(exit_pos[0], exit_pos[1], DesolateCaveZone.ZONE_ID))
+
+        frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
+        frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
+        w.add(frog_entity, gridcell=frog_spawn)
+
+        gs.play_cinematic(cinematics.frog_intro)
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.AMPHIBIAN
 
 
 class CaveHorrorZone(Zone):

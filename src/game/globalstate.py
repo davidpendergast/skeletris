@@ -211,6 +211,10 @@ class GlobalState:
 
     def get_cinematics_queue(self):
         return self._cinematics_queue
+
+    def play_cinematic(self, scenes):
+        self.get_cinematics_queue().extend(scenes)
+        self.menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
         
     def player_state(self):
         return self._player_state

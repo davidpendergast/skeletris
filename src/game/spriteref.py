@@ -35,6 +35,8 @@ class Cinematics:
     intro_thing_slide = None
     intro_ghost_slide = None
     intro_fighting_slide = None
+    frog_eye = None
+    frog_body = None
 
     @staticmethod
     def convert(orig_coords, offset):
@@ -102,7 +104,13 @@ class Trees:
 class Bosses:
 
     cave_horror_idle = []
-    frog_idle = []
+
+    frog_idle_1 = []
+    frog_idle_2 = []
+    frog_idle_mouth = []
+    frog_idle_down = []
+    frog_airborn_rising = []
+    frog_airborn_falling = []
 
 
 def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
@@ -237,6 +245,7 @@ def get_item_entity_sprite(cubes):
 small_shadow = make(80, 32, 16, 8)
 medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
+enormous_shadow = make(128, 32, 48, 16)
 chest_shadow = make(96, 40, 32, 8)
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
@@ -414,6 +423,8 @@ def build_cine_sheet(start_pos, raw_cine_img, sheet):
     cs.intro_skel_slide = cs.convert([(2, 1), (3, 1)], start_pos)
     cs.intro_ghost_slide = cs.convert([(0, 2), (1, 2)], start_pos)
     cs.intro_thing_slide = cs.convert([(4, 1), (5, 1)], start_pos)
+    cs.frog_eye = cs.convert([(2, 2), (3, 2)], start_pos)
+    cs.frog_body = cs.convert([(4, 2), (5, 2)], start_pos)
 
 
 def build_ui_sheet(start_pos, raw_ui_img, sheet):
@@ -471,10 +482,14 @@ def build_tree_sheet(start_pos, raw_tree_img, sheet):
 
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
     sheet.blit(raw_boss_img, start_pos)
-    Bosses.cave_horror_idle = [make(0, 80, 240, 240, shift=start_pos),
-                               make(240, 80, 240, 240, shift=start_pos)]
-    Bosses.frog_idle = [make(0, 0, 48, 48, shift=start_pos),
-                        make(48, 0, 48, 48, shift=start_pos)]
+    Bosses.cave_horror_idle = [make(i * 240, 80, 240, 240, shift=start_pos) for i in range(0, 2)]
+
+    Bosses.frog_idle_1 = [make(0 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_idle_mouth = [make(192 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_idle_down = [make(288 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_airborn_rising = [make(384 + 48*i, 0, 48, 80, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_airborn_falling = [make(448, 0, 48, 48, shift=start_pos)]
 
 
 def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img):
@@ -556,9 +571,6 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
                 if draw_x > left_size[0] - 16:
                     draw_x = 0
                     draw_y += 16
-
-            if wall_array == walls:
-                print("wall {} = [{}, {}, 16, 16]".format(i, draw_x, draw_y))
 
         draw_y += 16
 

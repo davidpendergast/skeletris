@@ -1,7 +1,9 @@
 import random
+
 import src.game.spriteref as spriteref
 from src.world.entities import Enemy
 from src.game.actorstate import EnemyState, PathfindingType
+import src.game.bosses as bosses
 from src.game.droprates import EnemyRates
 from src.game.stats import StatType
 import src.game.stats as stats
@@ -47,13 +49,12 @@ for stat in ENEMY_STATS:
 
 class EnemyTemplate:
 
-    def __init__(self, name, sprites, shadow_sprite):
+    def __init__(self, name, shadow_sprite):
         self._name = name
-        self._sprites = sprites
         self._shadow_sprite = shadow_sprite
 
     def get_sprites(self):
-        return self._sprites
+        return spriteref.player_idle_arms_up_all
 
     def get_shadow_sprite(self):
         return self._shadow_sprite
@@ -101,7 +102,10 @@ class EnemyTemplate:
 class FlappumTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Flappum", spriteref.enemy_flappum_all, spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Flappum", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_flappum_all
 
     def get_lunges(self):
         return True
@@ -110,7 +114,10 @@ class FlappumTemplate(EnemyTemplate):
 class TrillaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Trilla", spriteref.enemy_trilla_all, spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Trilla", spriteref.large_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_trilla_all
 
     def get_base_stats(self):
         base_stats = EnemyTemplate.get_base_stats(self)
@@ -145,13 +152,24 @@ class TrillaTemplate(EnemyTemplate):
         return []
 
 
+class TrilliteTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Trillite", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_small_trilla_all
+
+
 class SmallMuncherTemplate(EnemyTemplate):
 
     def __init__(self, alt=False):
         self._is_alt = alt
         name = "Dark Muncher" if alt else "Muncher"
-        sprite = spriteref.enemy_muncher_small_alt_all if alt else spriteref.enemy_muncher_small_all
-        EnemyTemplate.__init__(self, name, sprite, spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, name, spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
 
     def get_pathfinding(self):
         return PathfindingType.BASIC_CHASE
@@ -198,8 +216,10 @@ class MuncherTemplate(EnemyTemplate):
     def __init__(self, alt=False):
         self._is_alt = alt
         name = "Dark Muncher" if alt else "Muncher"
-        sprite = spriteref.enemy_muncher_alt_all if alt else spriteref.enemy_muncher_all
-        EnemyTemplate.__init__(self, name, sprite, spriteref.large_shadow)
+        EnemyTemplate.__init__(self, name, spriteref.large_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
 
     def get_lunges(self):
         return True
@@ -208,7 +228,10 @@ class MuncherTemplate(EnemyTemplate):
 class CycloiTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cycloi", spriteref.enemy_cyclops_all, spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Cycloi", spriteref.large_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_cyclops_all
 
     def get_lunges(self):
         return True
@@ -223,19 +246,64 @@ class CycloiTemplate(EnemyTemplate):
         return base_stats
 
 
+class DicelTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Dicel", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_dicel_all
+
+
+class FallenTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "The Fallen", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_the_fallen_all
+
+
+class FrogBoss(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Cave Beast", spriteref.enormous_shadow)
+        print("my_sprites={}".format(self.get_sprites()))
+
+    def get_sprites(self):
+        return  spriteref.Bosses.frog_idle_1
+
+    def get_base_stats(self):
+        base_stats = EnemyTemplate.get_base_stats(self)
+        base_stats[StatType.DEF] += 25
+        base_stats[StatType.VIT] += 50
+        base_stats[StatType.ATT] += 35
+        base_stats[StatType.MOVEMENT_SPEED] += 45
+        base_stats[StatType.ATTACK_RADIUS] += 30
+
+        return base_stats
+
+    def get_possible_special_attacks(self):
+        return []
+
+
 TEMPLATE_TRILLA = TrillaTemplate()
-TEMPLATE_TRILLITE = EnemyTemplate("Trillite", spriteref.enemy_small_trilla_all, spriteref.medium_shadow)
+TEMPLATE_TRILLITE = TrilliteTemplate()
 TEMPLATE_FLAPPUM = FlappumTemplate()
 TEMPLATE_MUNCHER = MuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_ALT = MuncherTemplate(alt=True)
 TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
 TEMPLATE_CYCLOI = CycloiTemplate()
+TEMPLATE_DICEL = DicelTemplate()
+TEMPLATE_THE_FALLEN = FallenTemplate()
+
+TEMPLATE_FROG_BOSS = FrogBoss()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER_SMALL_ALT,
-                        EnemyTemplate("Dicel", spriteref.enemy_dicel_all, spriteref.medium_shadow),
-                        EnemyTemplate("The Fallen", spriteref.enemy_the_fallen_all, spriteref.medium_shadow),
+                        TEMPLATE_DICEL,
+                        TEMPLATE_THE_FALLEN,
                         TEMPLATE_CYCLOI,
                         TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA]
@@ -254,13 +322,22 @@ def get_rand_template_for_level(level, rand_val):
 class EnemyFactory:
 
     @staticmethod
-    def gen_enemy(level):
-        template = get_rand_template_for_level(level, random.random())
+    def get_state(template, level, stats):
+        if template is TEMPLATE_FROG_BOSS:
+            return bosses.FrogBossState(template, level, stats)
+        else:
+            return EnemyState(template, level, stats)
+
+    @staticmethod
+    def gen_enemy(level, force_template=None):
+        if force_template is not None:
+            template = force_template
+        else:
+            template = get_rand_template_for_level(level, random.random())
 
         enemy_stats = template.get_base_stats()
 
-        n_extra = random.randint(NUM_EXTRA_STATS_RANGE[0][level],
-                                       NUM_EXTRA_STATS_RANGE[1][level])
+        n_extra = random.randint(NUM_EXTRA_STATS_RANGE[0][level], NUM_EXTRA_STATS_RANGE[1][level])
 
         for _ in range(0, n_extra):
             stat_type = ENEMY_STATS[int(random.random() * len(ENEMY_STATS))]
@@ -273,7 +350,7 @@ class EnemyFactory:
             else:
                 enemy_stats[stat_type] = stat_value
 
-        state = EnemyState(template, level, enemy_stats)
+        state = EnemyFactory.get_state(template, level, enemy_stats)
 
         if random.random() < EnemyRates.CHANCE_TO_HAVE_ATTACK:
             sp_atts = template.get_possible_special_attacks()

@@ -14,6 +14,7 @@ _already_inited = False
 
 opening_cinematic = []
 cave_horror_intro = []
+frog_intro = []
 
 
 def init_cinematics():
@@ -24,8 +25,7 @@ def init_cinematics():
 
     print("initializing cinematics...")
     opening_cinematic.extend([
-        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony",
-                  music_id=music.Songs.AN_ADVENTURE_UNFOLDS),
+        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony", music_id=music.Songs.AN_ADVENTURE_UNFOLDS),
         Cinematic(spriteref.Cinematics.intro_skel_slide, "skeletons built towns, farmed crops, and raised families"),
         Cinematic(spriteref.Cinematics.intro_thing_slide, "things lived in tribes, migrating with the seasons to find food"),
         Cinematic(spriteref.Cinematics.intro_ghost_slide, "ghosts mostly just chatted"),
@@ -44,5 +44,14 @@ def init_cinematics():
         Cinematic(spriteref.Cinematics.blank, "your eyes begin to adjust to the darkness"),
         Cinematic(spriteref.Cinematics.cave_horrors, ""),
         Cinematic(spriteref.Cinematics.cave_horrors, "you've entered the cave horror's lair. prepare to fight")
+    ])
+
+    frog_intro.extend([
+        Cinematic(spriteref.Cinematics.blank, "the ground is wet. swamplike."),
+        Cinematic(spriteref.Cinematics.blank, "you can hear breathing. slow and heavy."),
+        Cinematic(spriteref.Cinematics.frog_eye, "an eye glares at you from across the room. you wonder how long it's been watching."),
+        Cinematic(spriteref.Cinematics.frog_eye, "the beast crawls into the light."),
+        Cinematic(spriteref.Cinematics.frog_body, "it's hideous."),
+        Cinematic(spriteref.Cinematics.frog_body, "prepare to fight.")
     ])
 

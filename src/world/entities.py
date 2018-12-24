@@ -663,15 +663,17 @@ class Enemy(Entity):
     def get_shadow_sprite(self):
         return self._shadow_sprite
     
-    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), hp_color=(1, 0, 0), shadow_sprite=None):
+    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), hp_color=(1, 0, 0),
+                      shadow_sprite=None, offset=(0, 0)):
+
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         if shadow_sprite is not None:
             self._shadow_sprite = shadow_sprite
 
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + offset[0]
+        y = self.y() - (sprite.height() * self._img.scale() - self.h()) + offset[1]
         depth = self.get_depth()
         xflip = not facing_left
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,

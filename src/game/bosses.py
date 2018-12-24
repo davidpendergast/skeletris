@@ -2,6 +2,7 @@ from enum import Enum
 
 from src.world.worldstate import World
 from src.world.entities import Player
+from src.game.actorstate import EnemyState
 
 
 class BossID(Enum):
@@ -53,4 +54,19 @@ def get_boss_controller(boss_id):
         return CaveHorrorController()
     else:
         return None
+
+
+class FrogBossState(EnemyState):
+
+    def __init__(self, template, level, stats):
+        EnemyState.__init__(self, template, level, stats)
+
+    def duplicate(self):
+        return FrogBossState(self.template, self.level(), dict(self.stats))
+
+    def _get_sprite(self, gs):
+        return EnemyState._get_sprite(self, gs)
+
+    def _get_sprite_offset(self):
+        return (0, 8*2)
 

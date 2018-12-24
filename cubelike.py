@@ -1,6 +1,8 @@
 import pygame
 
 import src.game.spriteref as spriteref
+
+
 from src.utils.util import Utils
 from src.game.globalstate import GlobalState, SaveData
 import src.game.inputs as inputs
@@ -32,7 +34,7 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs, zone_id=zones.DesolateCaveZone.ZONE_ID, spawn_at_door_with_zone_id=None):
+def build_me_a_world(gs, zone_id=zones.DesolateCaveZone2.ZONE_ID, spawn_at_door_with_zone_id=None):
     world = zones.build_world(zone_id, gs)
     world.flush_new_entity_additions()
 
@@ -70,7 +72,7 @@ def run():
     input_state = inputs.InputState()
     gs = new_gs(MenuManager.START_MENU)
 
-    if debug.IS_DEV:
+    if debug.DEBUG:
         gs.settings().set(settings.MUSIC_VOLUME, 0)
     
     render_eng = RenderEngine()
