@@ -29,7 +29,7 @@ ENEMY_STATS = [StatType.ATT,
                StatType.MOVEMENT_SPEED,
                StatType.DODGE,
                StatType.ACCURACY,
-               StatType.LIFE_REGEN,
+               # StatType.LIFE_REGEN,  # probably too OP
                StatType.MAX_HEALTH
 ]
 
@@ -97,6 +97,9 @@ class EnemyTemplate:
 
     def can_attack(self):
         return True
+
+    def get_hurtbox(self):
+        return 5
 
 
 class FlappumTemplate(EnemyTemplate):
@@ -271,20 +274,23 @@ class FrogBoss(EnemyTemplate):
         print("my_sprites={}".format(self.get_sprites()))
 
     def get_sprites(self):
-        return  spriteref.Bosses.frog_idle_1
+        return spriteref.Bosses.frog_idle_1
 
     def get_base_stats(self):
         base_stats = EnemyTemplate.get_base_stats(self)
-        base_stats[StatType.DEF] += 25
-        base_stats[StatType.VIT] += 50
-        base_stats[StatType.ATT] += 35
-        base_stats[StatType.MOVEMENT_SPEED] += 45
-        base_stats[StatType.ATTACK_RADIUS] += 30
+        base_stats[StatType.DEF] += 15
+        base_stats[StatType.VIT] += 35
+        base_stats[StatType.ATT] += 5
+        base_stats[StatType.MOVEMENT_SPEED] += 65
+        base_stats[StatType.ATTACK_RADIUS] += 15
 
         return base_stats
 
     def get_possible_special_attacks(self):
         return []
+
+    def get_hurtbox(self):
+        return 15
 
 
 TEMPLATE_TRILLA = TrillaTemplate()
@@ -358,7 +364,10 @@ class EnemyFactory:
                 idx = int(random.random() * len(sp_atts))
                 state.set_special_attack(sp_atts[idx])
 
-        return Enemy(0, 0, state)
+        res = Enemy(0, 0, state)
+        res.set_hurtbox(template.get_hurtbox())
+
+        return res
 
     @staticmethod
     def gen_enemies(level, n=None):

@@ -1,4 +1,4 @@
 import os
 
 IS_DEV = os.path.exists("this_is_dev.txt")
-DEBUG = IS_DEV and False
+DEBUG = IS_DEV and True

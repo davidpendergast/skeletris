@@ -201,13 +201,16 @@ class Attack:
         att_range = self.base_radius
         att_range *= (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
 
-        hit_entities = world.entities_in_circle(entity.center(), att_range)
+        e_center = entity.center()
+        hit_entities = world.entities_in_circle(e_center, att_range + 150, cond=lambda t: entity.can_damage(t))
 
         res = []
 
-        for e in hit_entities:
-            if entity.can_damage(e):
-                res.append(e)
+        for target in hit_entities:
+            if target.is_enemy() and Utils.dist(e_center, target.center()) <= att_range + target.hurtbox():
+                res.append(target)
+            elif Utils.dist(e_center, target.center()) <= att_range:
+                res.append(target)
 
         return res
 
@@ -229,6 +232,24 @@ class GroundPoundAttack(Attack):
     def activate(self, gs, entity, world, stat_lookup):
         res = Attack.activate(self, gs, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world, color=(0.25, 0.25, 0.25))
+
+        return res
+
+
+class FrogAttack(Attack):
+    def __init__(self):
+        Attack.__init__(self, "Crushing Leap")
+        self.base_duration = 1
+        self.base_delay = 1
+        self.base_radius = 75
+        self.base_damage = 2.00
+        self.dmg_color = (1, 0, 0)
+        self.knockback = 0.65
+        self.is_droppable = False
+
+    def activate(self, gs, entity, world, stat_lookup):
+        res = Attack.activate(self, gs, entity, world, stat_lookup)
+        self.place_attack_circle(entity.center(), stat_lookup, world, color=(0, 0, 0))
 
         return res
 
@@ -404,6 +425,9 @@ MINION_LAUNCH_ATTACK = SpawnMinionAttack()
 TOUCH_ATTACK = TouchAttack()
 POISON_ATTACK = PoisonAttack()
 TELEPORT_ATTACK = TeleportAttack()
+
+
+FROG_ATTACK = FrogAttack()  # special frog boss attack
 
 ALL_SPECIAL_ATTACKS = [MINION_LAUNCH_ATTACK, POISON_ATTACK, TELEPORT_ATTACK]
 

@@ -663,11 +663,14 @@ class EnemyState(ActorState):
         if self.template.increment_kill_count_on_death():
             gs.save_data().kill_count += 1
 
-    def _get_sprite(self, gs):
+    def _get_sprite(self, entity, world, gs):
         return self.sprites[((gs.anim_tick + self._anim_offset) // 2) % len(self.sprites)]
 
     def _get_sprite_offset(self):
         return (0, 0)
+
+    def get_pathfinding(self):
+        return self.template.get_pathfinding()
 
     def update(self, entity, world, gs, input_state):
         self.handle_floating_text(entity, world)
@@ -710,9 +713,11 @@ class EnemyState(ActorState):
                 elif world.get_hidden_at(*entity.center()) or not self.is_aggro:
                     move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
                 else:
-                    path_type = self.template.get_pathfinding()
+                    path_type = self.get_pathfinding()
                     if path_type == PathfindingType.PASSIVE:
                         move_dir = IdleAI.get_move_dir(entity, self.movement_ai_state, world)
+                    elif path_type == PathfindingType.STOPPED:
+                        move_dir = (0, 0)
                     elif path_type == PathfindingType.BASIC_CUT_OFF:
                         move_dir = BasicCutOffAI.get_move_dir(entity, self.movement_ai_state, world)
                     elif path_type == PathfindingType.BASIC_CHASE:
@@ -753,7 +758,7 @@ class EnemyState(ActorState):
                     self.facing_left_last_frame = None
 
         color = self.recoil_color()
-        sprite = self._get_sprite(gs)
+        sprite = self._get_sprite(entity, world, gs)
         health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
         hp_color = self.get_hp_color()
 
@@ -801,7 +806,8 @@ class PathfindingType(Enum):
     PASSIVE = 0,
     BASIC_CHASE = 1,
     SMART_CHASE = 2,
-    BASIC_CUT_OFF = 3
+    BASIC_CUT_OFF = 3,
+    STOPPED = 4
 
 
 class MovementAI():

@@ -488,7 +488,7 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
     Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_mouth = [make(192 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_down = [make(288 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
-    Bosses.frog_airborn_rising = [make(384 + 48*i, 0, 48, 80, shift=start_pos) for i in range(0, 2)]
+    Bosses.frog_airborn_rising = [make(384 + 32*i, 0, 32, 80, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_airborn_falling = [make(448, 0, 48, 48, shift=start_pos)]
 
 

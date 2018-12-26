@@ -659,9 +659,16 @@ class Enemy(Entity):
         self._img = None
         self._healthbar_img = None
         self._shadow_sprite = spriteref.large_shadow
+        self._hurtbox_radius = 0
         
     def get_shadow_sprite(self):
         return self._shadow_sprite
+
+    def set_hurtbox(self, radius):
+        self._hurtbox_radius = radius
+
+    def hurtbox(self):
+        return self._hurtbox_radius
     
     def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), hp_color=(1, 0, 0),
                       shadow_sprite=None, offset=(0, 0)):

@@ -34,7 +34,7 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs, zone_id=zones.DesolateCaveZone2.ZONE_ID, spawn_at_door_with_zone_id=None):
+def build_me_a_world(gs, zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone_id=None):
     world = zones.build_world(zone_id, gs)
     world.flush_new_entity_additions()
 

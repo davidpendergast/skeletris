@@ -175,6 +175,10 @@ class GlobalState:
         int duration: ticks for which the shake will remain active
         int freq: "speed" of the shake. 1 is really fast, higher is slower
         """
+
+        if duration % freq != 0:
+            duration += freq - (duration % freq)
+
         decay = lambda t: math.exp(-falloff*(t / duration))
         num_keypoints = int(duration / freq)
         x_pts = [round(2 * (0.5 - random.random()) * strength * decay(t * freq)) for t in range(0, num_keypoints)]
