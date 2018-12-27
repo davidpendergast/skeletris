@@ -41,10 +41,10 @@ def init_zones():
 
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
-    test_zone_sanity()
+    _test_zone_sanity()
 
 
-def test_zone_sanity():
+def _test_zone_sanity():
     if first_zone() not in _ALL_ZONES:
         raise ValueError("no first zone")
 
