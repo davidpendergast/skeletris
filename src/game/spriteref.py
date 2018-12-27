@@ -180,7 +180,6 @@ normal_door_opening = [make(256 + i*16, 112, 16, 32) for i in range(0, 7)]
 large_decs = []
 wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 24, and_add_to_list=large_decs) for i in range(0, 3)]
 
-
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
 wall_decoration_plant_1 = make(8, 376, 8, 24, and_add_to_list=smol_decs)
@@ -260,7 +259,7 @@ alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):
     alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
 
-_chars_2 = "0123456789[](){}"
+_chars_2 = "0123456789[](){}←→↑↓"
 for i in range(0, len(_chars_2)):
     c = _chars_2[i]
     alphabet[c] = make(5*i, 120, 5, 5)
