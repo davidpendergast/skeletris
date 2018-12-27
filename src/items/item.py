@@ -5,7 +5,10 @@ from src.game.stats import StatType, ItemStatRanges
 from src.utils.util import Utils
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
-SPECIAL_STATS = [StatType.HOLE_BONUS]
+
+# TODO - regen is too OP, decide whether to balance or totally remove
+SPECIAL_STATS = [StatType.HOLE_BONUS, StatType.LIFE_REGEN]
+
 NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
 
 ITEM_CORE_NAME = {

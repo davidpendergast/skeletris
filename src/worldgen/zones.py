@@ -13,10 +13,69 @@ import src.game.dialog as dialog
 import src.game.music as music
 import src.game.cinematics as cinematics
 
+_FIRST_ZONE = None
+_ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
 BLACK = (0, 0, 0)
 DARK_GREY = (92, 92, 92)
+
+
+def first_zone():
+    return _FIRST_ZONE
+
+
+def init_zones():
+    _ALL_ZONES.clear()
+    for zone_cls in Zone.__subclasses__():
+        zone_instance = zone_cls()
+        zone_instance.zone_id = zone_cls.ZONE_ID
+        make(zone_instance)
+
+    global _FIRST_ZONE
+    _FIRST_ZONE = DesolateCaveZone.ZONE_ID
+
+    _ZONE_TRANSITIONS.clear()
+    _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
+    _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [FrogLairZone.ZONE_ID]
+
+    _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
+
+    test_zone_sanity()
+
+
+def test_zone_sanity():
+    if first_zone() not in _ALL_ZONES:
+        raise ValueError("no first zone")
+
+    return_ids = {}  # zone -> return_id
+
+    for z1 in _ZONE_TRANSITIONS:
+        if z1 not in _ALL_ZONES:
+            raise ValueError("unrecognized id: {}".format(z1))
+
+        for z2 in _ZONE_TRANSITIONS[z1]:
+            if z2 not in _ALL_ZONES:
+                raise ValueError("unrecognized id: {}".format(z2))
+            if z2 in return_ids:
+                raise ValueError("zone {} has multiple return zones: {}, {}".format(z2, z1, return_ids[z2]))
+            else:
+                return_ids[z2] = z1
+
+
+def get_return_zone(zone_id):
+    for z1 in _ZONE_TRANSITIONS:
+        for z2 in _ZONE_TRANSITIONS[z1]:
+            if z2 == zone_id:
+                return z1
+    return None
+
+
+def get_exits(zone_id):
+    if zone_id not in _ZONE_TRANSITIONS:
+        return []
+    else:
+        return _ZONE_TRANSITIONS[zone_id]
 
 
 class ZoneLoader:
@@ -43,7 +102,7 @@ class ZoneLoader:
     BOSS_EXIT = (255, 25, 25)
 
     @staticmethod
-    def load_blueprint_from_file(filename, level):
+    def load_blueprint_from_file(zone_id, filename, level):
         """
         returns: (BluePrint bp, dict: color -> list of (int x, int y))
         """
@@ -53,11 +112,8 @@ class ZoneLoader:
             img_size = (raw_img.get_width(), raw_img.get_height())
             bp = WorldBlueprint(img_size, level)
 
-            exits = {
-                ZoneLoader.EXIT : [],
-                ZoneLoader.RETURN_EXIT : [],
-                ZoneLoader.BOSS_EXIT : []
-            }
+            return_id = get_return_zone(zone_id)
+            exit_ids = get_exits(zone_id)
 
             unknowns = {}
 
@@ -86,9 +142,25 @@ class ZoneLoader:
                         bp.set_locked_door(x, y)
                     elif color == ZoneLoader.SENSOR_DOOR:
                         bp.set_sensor_door(x, y)
-                    elif color in (ZoneLoader.EXIT, ZoneLoader.RETURN_EXIT, ZoneLoader.BOSS_EXIT):
+                    elif color == ZoneLoader.RETURN_EXIT:
                         bp.set(x, y, World.FLOOR)
-                        exits[color].append((x, y))
+                        if return_id is not None:
+                            bp.return_exit_spawns[return_id] = (x, y)
+                            return_id = None
+                        else:
+                            print("WARN: no return zone for {} at ({}, {})".format(zone_id, x, y))
+                    elif color in (ZoneLoader.EXIT, ZoneLoader.BOSS_EXIT):
+                        bp.set(x, y, World.FLOOR)
+                        if len(exit_ids) > 0:
+                            exit_id = exit_ids[0]
+                            exit_ids = exit_ids[1:]
+
+                            if color == ZoneLoader.EXIT:
+                                bp.exit_spawns[exit_id] = (x, y)
+                            else:
+                                bp.boss_exit_spawns[exit_id] = (x, y)
+                        else:
+                            print("WARN: no exit zone for {} at ({}, {})".format(zone_id, x, y))
                     elif color == ZoneLoader.CHEST_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.chest_spawns.append((x, y))
@@ -115,14 +187,19 @@ class ZoneLoader:
                         else:
                             unknowns[color] = [pos]
 
-            return (bp, unknowns, exits)
+            for exit_id in exit_ids:
+                print("WARN: {} didn't create exit to zone {}".format(zone_id, exit_id))
+            if return_id is not None:
+                print("WARN: {} didn't create return exit to zone {}".format(zone_id, return_id))
+
+            return bp, unknowns
 
         except ValueError as e:
             print("failed to load " + str(filename))
             raise e
 
 
-def build_world(zone_id, gs):
+def build_world(zone_id, gs, spawn_at_door_with_zone_id=None):
     if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
@@ -131,12 +208,22 @@ def build_world(zone_id, gs):
     music.play_song(zone.get_music_id())
 
     w = zone.build_world(gs)
+    w.flush_new_entity_additions()
     w.set_bg_color(zone.get_bg_color())
 
     w.hide_all_floors()
 
     p = w.get_player()
     if p is not None:
+        if spawn_at_door_with_zone_id is not None:
+            for e in w.all_entities(onscreen=False):
+                if e.is_exit() and e.get_zone() == spawn_at_door_with_zone_id:
+                    e.set_open(True)
+                    grid_xy = w.to_grid_coords(*e.center())
+                    p = w.get_player()
+                    size = w.cellsize()
+                    p.set_center((grid_xy[0] + 0.5) * size, (grid_xy[1] + 0.5) * size)
+
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
         gs.set_world_camera_center(*p.center())
@@ -272,12 +359,8 @@ class DesolateCaveZone(Zone):
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
-
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
-
-        exit_pos = exits[ZoneLoader.EXIT][0]
-        w.add(entities.ExitEntity(*exit_pos, DesolateCaveZone2.ZONE_ID))
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -349,14 +432,8 @@ class DesolateCaveZone2(Zone):
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
-
-        return_pos = exits[ZoneLoader.RETURN_EXIT][0]
-        w.add(entities.ReturnExitEntity(return_pos[0], return_pos[1], DesolateCaveZone.ZONE_ID))
-
-        exit_pos = exits[ZoneLoader.EXIT][0]
-        w.add(entities.BossExitEntity(exit_pos[0], exit_pos[1], FrogLairZone.ZONE_ID))
 
         return w
 
@@ -384,7 +461,7 @@ class HauntedForestZone1(Zone):
         Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=DARK_GREY)
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         print("unknowns={}".format(unknowns))
         w = bp.build_world()
 
@@ -401,17 +478,24 @@ class FrogLairZone(Zone):
         Zone.__init__(self, "The Dark Pool", 15, filename="frog_lair.png", bg_color=BLACK)
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
         w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
 
-        exit_pos = exits[ZoneLoader.EXIT][0]
-        w.add(entities.ExitEntity(exit_pos[0], exit_pos[1], DesolateCaveZone.ZONE_ID))
-
         frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
         frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
         w.add(frog_entity, gridcell=frog_spawn)
+
+        def kill_action(_event, _world, _gs):
+            print("INFO: unlocking all doors")
+            for e in _world.all_entities(onscreen=False):
+                if e.is_door() and e.is_locked():
+                    e.do_unlock()
+
+        gs.add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
+                                            lambda evt: evt.get_uid() == frog_entity.get_uid(),
+                                            single_use=True))
 
         gs.play_cinematic(cinematics.frog_intro)
 
@@ -431,7 +515,7 @@ class CaveHorrorZone(Zone):
         self._fight_end_door = (0, 170, 170)
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
@@ -458,13 +542,9 @@ class DoorTestZone(Zone):
         Zone.__init__(self, "Main Zone", 15, filename="door_test_1.png")
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
-        left_exit_pos = exits[ZoneLoader.EXIT][0]
-        right_exit_pos = exits[ZoneLoader.BOSS_EXIT][0]
 
-        w.add(entities.ExitEntity(*left_exit_pos, DoorTestZoneL.ZONE_ID))
-        w.add(entities.BossExitEntity(*right_exit_pos, DoorTestZoneR.ZONE_ID))
         return w
 
 
@@ -476,11 +556,9 @@ class DoorTestZoneL(Zone):
         Zone.__init__(self, "Test Zone Left", 17, filename="door_test_L.png")
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
-        return_exit_pos = exits[ZoneLoader.RETURN_EXIT][0]
 
-        w.add(entities.ReturnExitEntity(*return_exit_pos, DoorTestZone.ZONE_ID))
         return w
 
 
@@ -492,18 +570,9 @@ class DoorTestZoneR(Zone):
         Zone.__init__(self, "Test Zone Right", 17, filename="door_test_R.png")
 
     def build_world(self, gs):
-        bp, unknowns, exits = ZoneLoader.load_blueprint_from_file(self.get_file(), self.get_level())
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
-        return_exit_pos = exits[ZoneLoader.RETURN_EXIT][0]
 
-        w.add(entities.ReturnExitEntity(*return_exit_pos, DoorTestZone.ZONE_ID))
         return w
 
-
-def init_zones():
-    _ALL_ZONES.clear()
-    for zone_cls in Zone.__subclasses__():
-        zone_instance = zone_cls()
-        zone_instance.zone_id = zone_cls.ZONE_ID
-        make(zone_instance)
 

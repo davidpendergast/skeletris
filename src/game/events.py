@@ -215,3 +215,19 @@ class PlayerDiedEvent(Event):
 
     def __init__(self):
         Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")
+
+
+class EnemyDiedEvent(Event):
+
+    def __init__(self, enemy_uid, template, location):
+        data = (enemy_uid, template, location)
+        Event.__init__(self, EventType.ENEMY_KILLED, data, description="enemy killed")
+
+    def get_uid(self):
+        return self.get_data()[0]
+
+    def get_template(self):
+        return self.get_data()[1]
+
+    def get_position(self):
+        return self.get_data()[2]

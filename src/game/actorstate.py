@@ -641,9 +641,10 @@ class EnemyState(ActorState):
             att = None
 
         loot = self.template.get_loot(self.level(), potential_attack=att)
+        position = entity.center()
 
         for item in loot:
-            item_ent = ItemEntity(item, *entity.center())
+            item_ent = ItemEntity(item, *position)
             world.add(item_ent)
 
         for _ in range(0, LootFactory.gen_num_potions_to_drop(self.level())):
@@ -659,6 +660,8 @@ class EnemyState(ActorState):
                                        spriteref.ENTITY_LAYER, scale=4)
             splosion.set_color((0, 0, 0))
             world.add(splosion)
+
+        gs.event_queue().add(events.EnemyDiedEvent(entity.get_uid(), self.template, position))
 
         if self.template.increment_kill_count_on_death():
             gs.save_data().kill_count += 1

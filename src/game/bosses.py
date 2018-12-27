@@ -107,7 +107,7 @@ class FrogBossState(EnemyState):
         return sprites[(gs.anim_tick // speed) % len(sprites)]
 
     def _get_sprite_offset(self):
-        return (0, 8*2 - self._z)
+        return (0, 10*2 - self._z)
 
     def get_pathfinding(self):
         if self._current_mode in (FrogBossState.MODE_RESTING, FrogBossState.MODE_PRE_LEAP, FrogBossState.MODE_LEAPING):

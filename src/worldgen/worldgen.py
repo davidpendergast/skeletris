@@ -269,7 +269,7 @@ class WorldBlueprint:
 
         if len(self.boss_exit_spawns) > 0:
             for zone_id in self.boss_exit_spawns:
-                w.add(ExitEntity(*self.boss_exit_spawns[zone_id], zone_id))
+                w.add(BossExitEntity(*self.boss_exit_spawns[zone_id], zone_id))
 
         if len(self.return_exit_spawns) > 0:
             for zone_id in self.return_exit_spawns:

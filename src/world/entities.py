@@ -184,6 +184,9 @@ class Entity(Updateable):
     def is_exit(self):
         return False
 
+    def is_door(self):
+        return False
+
     def is_interactable(self):
         return False
 
@@ -1032,6 +1035,12 @@ class DoorEntity(Entity):
             grid_xy = world.to_grid_coords(*self.center())
             world.set_geo(*grid_xy, World.FLOOR)
 
+    def is_door(self):
+        return True
+
+    def is_locked(self):
+        return False
+
 
 class LockedDoorEntity(DoorEntity):
 
@@ -1062,6 +1071,7 @@ class LockedDoorEntity(DoorEntity):
         return "inspect"
 
     def do_unlock(self):
+        print("INFO: unlocking door {}".format(self.get_uid()))
         self._is_locked = False
         self.delay_count = self.delay_duration
 
