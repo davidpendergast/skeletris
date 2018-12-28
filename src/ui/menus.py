@@ -19,25 +19,27 @@ class MenuManager:
     PAUSE_MENU = 4
     CONTROLS_PAUSE_MENU = 5
     CONTROLS_START_MENU = 6
+    KEYBINDING_MENU = 7
 
-    def __init__(self, menu_id):
-        self._active_menu = self._get_menu(menu_id)
-        self._next_active_menu_id = menu_id
+    def __init__(self, menu):
+        self._active_menu = StartMenu()
+        self._next_active_menu = menu
 
     def update(self, world, gs, input_state, render_eng):
-        if self._next_active_menu_id is not None:
+        if self._next_active_menu is not None:
             for bun in self._active_menu.all_bundles():
                 render_eng.remove(bun)
 
             self._active_menu.cleanup()
 
-            self._active_menu = self._get_menu(self._next_active_menu_id)
+            self._active_menu = self._next_active_menu
 
             new_song = self._active_menu.get_song()
             if new_song is not None:
                 music.play_song(new_song)
 
-            self._next_active_menu_id = None
+            self._next_active_menu = None
+
             if not self.should_draw_world():
                 render_eng.set_clear_color(*self._active_menu.get_clear_color())
                 for layer in spriteref.WORLD_LAYERS:
@@ -46,26 +48,12 @@ class MenuManager:
                 for layer in spriteref.WORLD_LAYERS:
                     render_eng.show_layer(layer)
 
-        self.get_active_menu().update(world, gs, input_state, render_eng)
-
-    def _get_menu(self, menu_id):
-        if menu_id == MenuManager.DEATH_MENU:
-            return DeathMenu()
-        elif menu_id == MenuManager.DEATH_OPTION_MENU:
-            return DeathOptionMenu()
-        elif menu_id == MenuManager.IN_GAME_MENU:
-            return InGameUiState()
-        elif menu_id == MenuManager.START_MENU:
-            return StartMenu()
-        elif menu_id == MenuManager.CINEMATIC_MENU:
-            return CinematicMenu()
-        elif menu_id == MenuManager.PAUSE_MENU:
-            return PauseMenu()
-        elif menu_id == MenuManager.CONTROLS_PAUSE_MENU:
-            return ControlsMenu.that_goes_back_to_pause()
-        elif menu_id == MenuManager.CONTROLS_START_MENU:
-            return ControlsMenu.that_goes_back_to_start()
-        raise ValueError("Unknown menu id: " + str(menu_id))
+        else:
+            if world is None and self.should_draw_world():
+                current_id = self.get_active_menu().get_type()
+                raise ValueError("world is None for menu that needs a world: {}".format(current_id))
+            else:
+                self.get_active_menu().update(world, gs, input_state, render_eng)
 
     def should_draw_world(self):
         return self._active_menu.keep_drawing_world_underneath()
@@ -79,10 +67,14 @@ class MenuManager:
         else:
             return None
 
-    def set_active_menu(self, menu_id):
-        if menu_id is None:
+    def set_active_menu(self, menu_or_id):
+        """
+        :param menu_or_id: either a Menu or a (number) menu id.
+        """
+        if menu_or_id is None:
             raise ValueError("Can't set null menu")
-        self._next_active_menu_id = menu_id
+
+        self._next_active_menu = menu_or_id
 
     def get_world_menu_if_active(self):
         active = self.get_active_menu()
@@ -279,7 +271,7 @@ class StartMenu(OptionsMenu):
         elif idx == StartMenu.EXIT_OPT:
             gs.event_queue().add(events.GameExitEvent())
         elif idx == StartMenu.OPTIONS_OPT:
-            gs.menu_manager().set_active_menu(MenuManager.CONTROLS_START_MENU)
+            gs.menu_manager().set_active_menu(ControlsMenu.that_goes_back_to_start(gs))
 
 
 class PauseMenu(OptionsMenu):
@@ -293,49 +285,82 @@ class PauseMenu(OptionsMenu):
 
     def option_activated(self, idx, gs):
         if idx == PauseMenu.EXIT_IDX:
-            gs.menu_manager().set_active_menu(MenuManager.START_MENU)
+            gs.menu_manager().set_active_menu(StartMenu())
         elif idx == PauseMenu.HELP_IDX:
-            gs.menu_manager().set_active_menu(MenuManager.CONTROLS_PAUSE_MENU)
+            gs.menu_manager().set_active_menu(ControlsMenu.that_goes_back_to_pause(gs))
         elif idx == PauseMenu.CONTINUE_IDX:
-            gs.menu_manager().set_active_menu(MenuManager.IN_GAME_MENU)
+            gs.menu_manager().set_active_menu(InGameUiState())
 
     def esc_pressed(self, gs):
-        gs.menu_manager().set_active_menu(MenuManager.IN_GAME_MENU)
+        gs.menu_manager().set_active_menu(InGameUiState())
 
 
 class ControlsMenu(OptionsMenu):
 
-    BACK_IDX = 0
+    MOVE_UP_OPT = "move up"
+    MOVE_LEFT_OPT = "move left"
+    MOVE_DOWN_OPT = "move down"
+    MOVE_RIGHT_OPT = "move right"
+    INTERACT_OPT = "interact"
+    ATTACK_OPT = "attack"
+    POTION_OPT = "use potion"
+    INVENTORY_OPT = "inventory"
+
+    LEFT_OPTS = [MOVE_UP_OPT, MOVE_LEFT_OPT, MOVE_DOWN_OPT, MOVE_RIGHT_OPT]
+    RIGHT_OPTS = [INTERACT_OPT, ATTACK_OPT, POTION_OPT, INVENTORY_OPT]
+
+    BACK_OPT = "back"
+
+    ALL_OPTS = LEFT_OPTS + RIGHT_OPTS + [BACK_OPT]
 
     @staticmethod
-    def that_goes_back_to_start():
-        res = ControlsMenu(MenuManager.CONTROLS_START_MENU)
-        res.prev = MenuManager.START_MENU
+    def that_goes_back_to_start(gs):
+        res = ControlsMenu(MenuManager.CONTROLS_START_MENU, gs)
+        res.prev_id = MenuManager.START_MENU
         return res
 
     @staticmethod
-    def that_goes_back_to_pause():
-        res = ControlsMenu(MenuManager.CONTROLS_PAUSE_MENU)
-        res.prev = MenuManager.PAUSE_MENU
+    def that_goes_back_to_pause(gs):
+        res = ControlsMenu(MenuManager.CONTROLS_PAUSE_MENU, gs)
+        res.prev_id = MenuManager.PAUSE_MENU
         return res
 
-    def __init__(self, menu_id):
-        self.prev = MenuManager.START_MENU
-        OptionsMenu.__init__(self, menu_id, "controls", ["back"])
+    @staticmethod
+    def _get_opts(self, gs):
+        return [("move up", gs)]
+
+    def __init__(self, menu_id, gs):
+        self.prev_id = MenuManager.START_MENU
+        OptionsMenu.__init__(self, menu_id, "controls", ControlsMenu.ALL_OPTS)
+
+    def _layout_rects(self, gs):
+        OptionsMenu._layout_rects(self, gs)
 
     def option_activated(self, idx, gs):
-        if idx == ControlsMenu.BACK_IDX:
-            gs.menu_manager().set_active_menu(self.prev)
+        if idx == ControlsMenu.ALL_OPTS.index(ControlsMenu.BACK_OPT):
+            if self.prev_id == MenuManager.START_MENU:
+                gs.menu_manager().set_active_menu(StartMenu())
+            else:
+                gs.menu_manager().set_active_menu(InGameUiState())
 
     def esc_pressed(self, gs):
-        gs.menu_manager().set_active_menu(self.prev)
+        if self.prev_id == MenuManager.START_MENU:
+            gs.menu_manager().set_active_menu(StartMenu())
+        else:
+            gs.menu_manager().set_active_menu(InGameUiState())
+
+
+class KeybindingInputMenu(OptionsMenu):
+
+    def __init__(self, setting, setting_name):
+        OptionsMenu.__init__(self, MenuManager.KEYBINDING_MENU, "edit " + setting_name, [])
+        self._setting = setting
 
 
 class CinematicMenu(Menu):
 
     def __init__(self):
         Menu.__init__(self, MenuManager.CINEMATIC_MENU)
-        self._next_menu = MenuManager.IN_GAME_MENU
         self.active_scene = None
 
         self.letter_reveal_speed = 3
@@ -351,7 +376,7 @@ class CinematicMenu(Menu):
         if self.active_scene is None:
             cine_queue = gs.get_cinematics_queue()
             if len(cine_queue) == 0:
-                gs.menu_manager().set_active_menu(self._next_menu)
+                gs.menu_manager().set_active_menu(InGameUiState())
                 return
             else:
                 self.active_scene = cine_queue.pop(0)
@@ -392,9 +417,6 @@ class CinematicMenu(Menu):
 
     def get_clear_color(self):
         return (0.0, 0.0, 0.0)
-
-    def set_next_menu(self, next_menu_id):
-        self._next_menu = next_menu_id
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
@@ -441,7 +463,7 @@ class DeathMenu(OptionsMenu):
 
         self._flavor_tick += 1
         if self._flavor_tick >= self._total_duration:
-            gs.menu_manager().set_active_menu(MenuManager.DEATH_OPTION_MENU)
+            gs.menu_manager().set_active_menu(DeathOptionMenu())
 
     def get_song(self):
         return None
@@ -465,7 +487,7 @@ class DeathOptionMenu(OptionsMenu):
         if idx == DeathOptionMenu.RETRY_OPT:
             gs.event_queue().add(events.NewGameEvent(instant_start=False))
         elif idx == DeathOptionMenu.EXIT_OPT:
-            gs.menu_manager().set_active_menu(MenuManager.START_MENU)
+            gs.menu_manager().set_active_menu(StartMenu())
 
 
 class InGameUiState(Menu):
@@ -768,7 +790,7 @@ class InGameUiState(Menu):
         self._update_world_ui_panel(world, gs, input_state, render_eng)
 
         if input_state.was_pressed(gs.settings().exit_key()):
-            gs.menu_manager().set_active_menu(MenuManager.PAUSE_MENU)
+            gs.menu_manager().set_active_menu(PauseMenu())
 
     def cleanup(self):
         Menu.cleanup(self)

@@ -3,7 +3,7 @@ import math
 import random
 import os
 
-from src.ui.menus import MenuManager
+import src.ui.menus as menus
 from src.game.npc import NpcState
 from src.game.dialog import DialogManager
 import src.game.events as events
@@ -88,7 +88,7 @@ class SaveData:
 
 class GlobalState:
 
-    def __init__(self, save_data, menu_id=MenuManager.START_MENU):
+    def __init__(self, save_data, menu=None):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
@@ -104,7 +104,7 @@ class GlobalState:
         self._world_camera_center = [0, 0]
         self._player_state = None
 
-        self._menu_manager = MenuManager(menu_id)
+        self._menu_manager = menus.MenuManager(menu)
 
         self._npc_state = NpcState()
         self._dialog_manager = DialogManager()
@@ -157,7 +157,7 @@ class GlobalState:
         return self._menu_manager
 
     def world_updates_paused(self):
-        return (self.menu_manager().get_active_menu_id() is not MenuManager.IN_GAME_MENU
+        return (self.menu_manager().get_active_menu_id() is not menus.MenuManager.IN_GAME_MENU
                 or self.dialog_manager().is_active())
 
     def dialog_manager(self):
@@ -218,7 +218,7 @@ class GlobalState:
 
     def play_cinematic(self, scenes):
         self.get_cinematics_queue().extend(scenes)
-        self.menu_manager().set_active_menu(MenuManager.CINEMATIC_MENU)
+        self.menu_manager().set_active_menu(menus.CinematicMenu())
         
     def player_state(self):
         return self._player_state

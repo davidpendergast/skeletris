@@ -6,7 +6,7 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 from src.game.globalstate import GlobalState, SaveData
 import src.game.inputs as inputs
-from src.ui.menus import MenuManager
+import src.ui.menus as menus
 from src.game.inventory import InventoryState
 from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
@@ -38,13 +38,14 @@ def build_me_a_world(gs, zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_
     return zones.build_world(zone_id, gs, spawn_at_door_with_zone_id=spawn_at_door_with_zone_id)
 
 
-def new_gs(menu_id):
+def new_gs(menu):
     data_file = "save_data.json"
     if SaveData.exists_on_disk(data_file):
         save_data = SaveData.load_from_disk(data_file)
     else:
         save_data = SaveData.create_new_save_file(data_file)
-    gs = GlobalState(save_data, menu_id=menu_id)
+
+    gs = GlobalState(save_data, menu=menu)
     gs.set_player_state(PlayerState("ghast", InventoryState()))
     return gs
 
@@ -58,7 +59,7 @@ def run():
     pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = inputs.InputState()
-    gs = new_gs(MenuManager.START_MENU)
+    gs = new_gs(menus.StartMenu())
 
     if debug.DEBUG:
         gs.settings().set(settings.MUSIC_VOLUME, 0)
@@ -139,14 +140,16 @@ def run():
             elif event.get_type() == events.EventType.NEW_GAME:
                 print("INFO: starting fresh game")
                 render_eng.clear_all_sprites()
+
                 if event.get_instant_start():
-                    menu_id = MenuManager.IN_GAME_MENU
+                    menu = menus.InGameUiState()
                 else:
-                    menu_id = MenuManager.START_MENU
-                gs = new_gs(menu_id)
+                    menu = menus.StartMenu()
+
+                gs = new_gs(menu)
                 world = None
             elif event.get_type() == events.EventType.PLAYER_DIED:
-                gs.menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+                gs.menu_manager().set_active_menu(menus.DeathMenu())
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -196,8 +199,8 @@ def run():
 
         if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
             manager = gs.menu_manager()
-            if manager.get_active_menu().get_type() == MenuManager.IN_GAME_MENU:
-                gs.menu_manager().set_active_menu(MenuManager.DEATH_MENU)
+            if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
+                gs.menu_manager().set_active_menu(menus.DeathMenu())
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F7):
             gs.save_data().save_to_disk()
