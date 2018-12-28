@@ -98,6 +98,8 @@ class GlobalState:
         self.dungeon_level = 0  # this needs to be zone-level
 
         self._settings = Settings()
+        self._settings_filename = "settings.json"
+        self._settings.load_from_file(self._path_to_settings())
 
         self._save_data = save_data
 
@@ -124,6 +126,12 @@ class GlobalState:
 
     def settings(self):
         return self._settings
+
+    def save_settings_to_disk(self):
+        self._settings.save_to_file(self._path_to_settings())
+
+    def _path_to_settings(self):
+        return os.path.join("save_data", self._settings_filename)
 
     def save_data(self):
         return self._save_data

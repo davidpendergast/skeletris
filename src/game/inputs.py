@@ -14,10 +14,7 @@ class InputState:
             del self._held_keys[key]
 
     def to_key_code(self, mouse_button):
-        if mouse_button not in (1, 2, 3):
-            raise ValueError("invalid mouse button: {}".format(mouse_button))
-        else:
-            return "MOUSE_BUTTON_" + str(mouse_button)
+        return "MOUSE_BUTTON_" + str(mouse_button)
 
     def set_mouse_down(self, down, button=1):
         keycode = self.to_key_code(button)
@@ -70,6 +67,9 @@ class InputState:
     
     def all_held_keys(self):
         return self._held_keys.keys()
+
+    def all_pressed_keys(self):
+        return [x for x in self.all_held_keys() if self.was_pressed(x)]
         
     def update(self, global_state):
         self._mouse_pos_last_update = self.mouse_pos

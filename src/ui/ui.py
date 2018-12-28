@@ -477,17 +477,16 @@ class HealthBarPanel:
         cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
         if idx == 0:
             return (spriteref.UI.attack_action, cooldowns[idx],
-                    pygame.key.name(gs.settings().attack_key()[0]), None)
+                    Utils.stringify_key(gs.settings().attack_key()[0]), None)
         elif idx == 1:
             return (spriteref.UI.potion_action, cooldowns[idx],
-                    pygame.key.name(gs.settings().potion_key()[0]),
-                    str(gs.save_data().num_potions))
+                    Utils.stringify_key(gs.settings().potion_key()[0]), str(gs.save_data().num_potions))
         elif idx == 2:
             return (spriteref.UI.inspect_action, cooldowns[idx],
-                    pygame.key.name(gs.settings().interact_key()[0]), None)
+                    Utils.stringify_key(gs.settings().interact_key()[0]), None)
         elif idx == 4:
             return (spriteref.UI.inventory_action, cooldowns[idx],
-                    pygame.key.name(gs.settings().inventory_key()[0]), None)
+                    Utils.stringify_key(gs.settings().inventory_key()[0]), None)
         else:
             return None
 

@@ -5,6 +5,8 @@ import json
 import sys
 import numbers
 
+import pygame
+
 
 class Utils:
 
@@ -65,6 +67,13 @@ class Utils:
         return [length*math.cos(angle), length*math.sin(angle)]
 
     @staticmethod
+    def rect_expand(rect, left_expand, right_expand, up_expand, down_expand):
+        return [rect[0] - left_expand,
+                rect[1] - up_expand,
+                rect[2] + (left_expand + right_expand),
+                rect[3] + (up_expand + down_expand)]
+
+    @staticmethod
     def rect_contains(rect, v):
         return rect[0] <= v[0] < rect[0] + rect[2] and rect[1] <= v[1] < rect[1] + rect[3]
 
@@ -105,6 +114,22 @@ class Utils:
             if i < len(v):
                 res = max(v[i], res) if res is not None else v[i]
         return res
+
+    @staticmethod
+    def stringify_key(keycode):
+        if keycode == pygame.K_LEFT:
+            return "←"
+        elif keycode == pygame.K_UP:
+            return "↑"
+        elif keycode == pygame.K_RIGHT:
+            return "→"
+        elif keycode == pygame.K_DOWN:
+            return "↓"
+        elif isinstance(keycode, str) and keycode.startswith("MOUSE_BUTTON_"):
+            num = keycode.replace("MOUSE_BUTTON_", "")
+            return "M{}".format(num)
+        else:
+            return pygame.key.name(keycode)
 
     @staticmethod
     def resource_path(relative_path):

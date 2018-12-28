@@ -7,3 +7,4 @@ gl_examples/
 *.mp4
 dist/
 build/
+save_data/*

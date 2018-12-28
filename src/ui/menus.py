@@ -1,5 +1,7 @@
 import random
 
+import pygame
+
 from src.game import spriteref as spriteref
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
@@ -7,6 +9,7 @@ from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage,
 from src.utils.util import Utils
 import src.game.events as events
 import src.game.music as music
+import src.game.settings as settings
 
 
 class MenuManager:
@@ -17,8 +20,7 @@ class MenuManager:
     START_MENU = 2
     CINEMATIC_MENU = 3
     PAUSE_MENU = 4
-    CONTROLS_PAUSE_MENU = 5
-    CONTROLS_START_MENU = 6
+    CONTROLS_MENU = 5
     KEYBINDING_MENU = 7
 
     def __init__(self, menu):
@@ -141,11 +143,10 @@ class OptionsMenu(Menu):
         self.spacing = 16
         self.title_spacing = self.spacing * 4
 
-        self._num_options = len(options)
         self._title_img = None
-        self._title_rect = (0, 0, 0, 0)
-        self._option_rects = [(0, 0, 0, 0)] * self._num_options
-        self._option_imgs = [None] * self._num_options
+        self._title_rect = None    # tuple(x, y, w, h)
+        self._option_rects = None  # list of tuple(x, y, w, h)
+        self._option_imgs = None   # list of ImgBundle
         self._selection = 0
 
     def get_song(self):
@@ -154,23 +155,39 @@ class OptionsMenu(Menu):
     def get_title_color(self):
         return (1, 1, 1)
 
-    def get_option_color(self, selected):
-        if selected:
+    def get_option_color(self, idx, gs):
+        if idx == self._selection:
             return (1, 0, 0)
         else:
             return (1, 1, 1)
 
-    def _build_imgs(self):
+    def get_option_text(self, idx, gs):
+        return self.options_text[idx]
+
+    def get_num_options(self, gs):
+        return len(self.options_text)
+
+    def build_title_img(self, gs):
         if self.title_text is not None:
             if self._title_img is None:
                 self._title_img = TextImage(0, 0, self.title_text, layer=spriteref.UI_0_LAYER,
                                             color=self.get_title_color(), scale=self.title_size)
-        for i in range(0, self._num_options):
+
+    def build_option_imgs(self, gs):
+        if self._option_imgs is None:
+            self._option_imgs = [None] * self.get_num_options(gs)
+
+        for i in range(0, self.get_num_options(gs)):
             if self._option_imgs[i] is None:
-                self._option_imgs[i] = TextImage(0, 0, self.options_text[i], layer=spriteref.UI_0_LAYER,
-                                                 color=self.get_option_color(self._selection == i), scale=3)
+                self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i, gs), layer=spriteref.UI_0_LAYER,
+                                                 color=self.get_option_color(i, gs), scale=3)
 
     def _layout_rects(self, gs):
+        if self._title_rect is None:
+            self._title_rect = (0, 0, 0, 0)
+        if self._option_rects is None:
+            self._option_rects = [(0, 0, 0, 0)] * self.get_num_options(gs)
+
         total_height = 0
         if self._title_img is not None:
             total_height += self._title_img.size()[1] + self.title_spacing
@@ -185,51 +202,73 @@ class OptionsMenu(Menu):
             self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
             y_pos += self._title_img.size()[1] + self.title_spacing
 
-        for i in range(0, self._num_options):
+        for i in range(0, self.get_num_options(gs)):
             if self._option_imgs[i] is not None:
                 opt_x = gs.screen_size[0] // 2 - self._option_imgs[i].size()[0] // 2
                 self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
                 y_pos += self._option_imgs[i].size()[1] + self.spacing
 
-    def _update_imgs(self):
+    def _update_imgs(self, gs):
         if self._title_img is not None:
             x = self._title_rect[0]
             y = self._title_rect[1]
             self._title_img = self._title_img.update(new_x=x, new_y=y, new_color=self.get_title_color())
 
-        for i in range(0, self._num_options):
-            color = self.get_option_color(self._selection == i)
+        for i in range(0, self.get_num_options(gs)):
+            color = self.get_option_color(i, gs)
             x = self._option_rects[i][0]
             y = self._option_rects[i][1]
             self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
-    def update(self, world, gs, input_state, render_eng):
-        self._build_imgs()
-        self._layout_rects(gs)
-        self._update_imgs()
-
+    def handle_inputs(self, world, gs, input_state, render_eng):
         if input_state.was_pressed(gs.settings().exit_key()):
             self.esc_pressed(gs)
         else:
             if input_state.was_pressed(gs.settings().up_key()):
-                self._selection = (self._selection - 1) % self._num_options
+                self._selection = (self._selection - 1) % self.get_num_options(gs)
             if input_state.was_pressed(gs.settings().down_key()):
-                self._selection = (self._selection + 1) % self._num_options
+                self._selection = (self._selection + 1) % self.get_num_options(gs)
             if input_state.was_pressed(gs.settings().enter_key()):
                 self.option_activated(self._selection, gs)
+
+            if self._option_rects is None:
+                return
 
             if input_state.mouse_in_window():
                 pos = input_state.mouse_pos()
                 if input_state.mouse_moved():
-                    for i in range(0, self._num_options):
-                        if Utils.rect_contains(self._option_rects[i], pos):
+                    for i in range(0, self.get_num_options(gs)):
+                        if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
                             self._selection = i
 
                 if input_state.mouse_was_pressed():
-                    for i in range(0, self._num_options):
-                        if Utils.rect_contains(self._option_rects[i], pos):
-                            self.option_activated(i, gs)
-                            break
+                    clicked_option = None
+
+                    selected_rect = self._option_rects[self._selection]
+                    if selected_rect is not None:
+                        # give click priority to the thing that's selected
+                        bigger_rect = Utils.rect_expand(selected_rect, 15, 15, 15, 15)
+                        if Utils.rect_contains(bigger_rect, pos):
+                            self.option_activated(self._selection, gs)
+                            clicked_option = self._selection
+
+                    if clicked_option is None:
+                        # if the mouse hasn't moved yet on this menu, gotta catch those clicks too
+                        for i in range(0, self.get_num_options(gs)):
+                            if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
+                                clicked_option = i
+                                break
+
+                    if clicked_option is not None:
+                        self.option_activated(clicked_option, gs)
+
+    def update(self, world, gs, input_state, render_eng):
+        self.build_title_img(gs)
+        self.build_option_imgs(gs)
+        self._layout_rects(gs)
+        self._update_imgs(gs)
+
+        self.handle_inputs(world, gs, input_state, render_eng)
 
         for bun in self.all_bundles():
             render_eng.update(bun)
@@ -247,10 +286,11 @@ class OptionsMenu(Menu):
         if self._title_img is not None:
             for bun in self._title_img.all_bundles():
                 yield bun
-        for opt in self._option_imgs:
-            if opt is not None:
-                for bun in opt.all_bundles():
-                    yield bun
+        if self._option_imgs is not None:
+            for opt in self._option_imgs:
+                if opt is not None:
+                    for bun in opt.all_bundles():
+                        yield bun
 
 
 class StartMenu(OptionsMenu):
@@ -271,7 +311,7 @@ class StartMenu(OptionsMenu):
         elif idx == StartMenu.EXIT_OPT:
             gs.event_queue().add(events.GameExitEvent())
         elif idx == StartMenu.OPTIONS_OPT:
-            gs.menu_manager().set_active_menu(ControlsMenu.that_goes_back_to_start(gs))
+            gs.menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
 
 
 class PauseMenu(OptionsMenu):
@@ -287,7 +327,7 @@ class PauseMenu(OptionsMenu):
         if idx == PauseMenu.EXIT_IDX:
             gs.menu_manager().set_active_menu(StartMenu())
         elif idx == PauseMenu.HELP_IDX:
-            gs.menu_manager().set_active_menu(ControlsMenu.that_goes_back_to_pause(gs))
+            gs.menu_manager().set_active_menu(ControlsMenu(MenuManager.IN_GAME_MENU))
         elif idx == PauseMenu.CONTINUE_IDX:
             gs.menu_manager().set_active_menu(InGameUiState())
 
@@ -297,64 +337,96 @@ class PauseMenu(OptionsMenu):
 
 class ControlsMenu(OptionsMenu):
 
-    MOVE_UP_OPT = "move up"
-    MOVE_LEFT_OPT = "move left"
-    MOVE_DOWN_OPT = "move down"
-    MOVE_RIGHT_OPT = "move right"
-    INTERACT_OPT = "interact"
-    ATTACK_OPT = "attack"
-    POTION_OPT = "use potion"
-    INVENTORY_OPT = "inventory"
+    OPTS = [
+        ("move up", settings.KEY_UP),
+        ("move left", settings.KEY_LEFT),
+        ("move down", settings.KEY_DOWN),
+        ("move right", settings.KEY_RIGHT),
+        ("interact", settings.KEY_INTERACT),
+        ("attack", settings.KEY_ATTACK),
+        ("use potion", settings.KEY_POTION),
+        ("inventory", settings.KEY_INVENTORY),
+        ("rotate item", settings.KEY_ROTATE_CW)
+    ]
+    BACK_OPT_IDX = len(OPTS)
 
-    LEFT_OPTS = [MOVE_UP_OPT, MOVE_LEFT_OPT, MOVE_DOWN_OPT, MOVE_RIGHT_OPT]
-    RIGHT_OPTS = [INTERACT_OPT, ATTACK_OPT, POTION_OPT, INVENTORY_OPT]
-
-    BACK_OPT = "back"
-
-    ALL_OPTS = LEFT_OPTS + RIGHT_OPTS + [BACK_OPT]
-
-    @staticmethod
-    def that_goes_back_to_start(gs):
-        res = ControlsMenu(MenuManager.CONTROLS_START_MENU, gs)
-        res.prev_id = MenuManager.START_MENU
-        return res
-
-    @staticmethod
-    def that_goes_back_to_pause(gs):
-        res = ControlsMenu(MenuManager.CONTROLS_PAUSE_MENU, gs)
-        res.prev_id = MenuManager.PAUSE_MENU
-        return res
-
-    @staticmethod
-    def _get_opts(self, gs):
-        return [("move up", gs)]
-
-    def __init__(self, menu_id, gs):
-        self.prev_id = MenuManager.START_MENU
-        OptionsMenu.__init__(self, menu_id, "controls", ControlsMenu.ALL_OPTS)
+    def __init__(self, prev_id):
+        OptionsMenu.__init__(self, MenuManager.CONTROLS_MENU, "controls", ["~unused~"])
+        self.prev_id = prev_id
 
     def _layout_rects(self, gs):
         OptionsMenu._layout_rects(self, gs)
 
+    def get_option_text(self, idx, gs):
+        if idx == ControlsMenu.BACK_OPT_IDX:
+            return "back"
+        else:
+            opt = ControlsMenu.OPTS[idx]
+
+            cur_value = gs.settings().get(opt[1])
+            if isinstance(cur_value, list):
+                cur_value = cur_value[0]
+
+            return opt[0] + " [{}]".format(Utils.stringify_key(cur_value))
+
+    def get_num_options(self, gs):
+        return len(ControlsMenu.OPTS) + 1  # extra one is the "back" option
+
     def option_activated(self, idx, gs):
-        if idx == ControlsMenu.ALL_OPTS.index(ControlsMenu.BACK_OPT):
+        if idx == ControlsMenu.BACK_OPT_IDX:
             if self.prev_id == MenuManager.START_MENU:
                 gs.menu_manager().set_active_menu(StartMenu())
             else:
-                gs.menu_manager().set_active_menu(InGameUiState())
+                gs.menu_manager().set_active_menu(PauseMenu())
+        else:
+            opt = ControlsMenu.OPTS[idx]
+            gs.menu_manager().set_active_menu(KeybindingEditMenu(opt[1], opt[0], lambda: ControlsMenu(self.prev_id)))
 
     def esc_pressed(self, gs):
         if self.prev_id == MenuManager.START_MENU:
             gs.menu_manager().set_active_menu(StartMenu())
         else:
-            gs.menu_manager().set_active_menu(InGameUiState())
+            gs.menu_manager().set_active_menu(PauseMenu())
 
 
-class KeybindingInputMenu(OptionsMenu):
+class KeybindingEditMenu(OptionsMenu):
 
-    def __init__(self, setting, setting_name):
-        OptionsMenu.__init__(self, MenuManager.KEYBINDING_MENU, "edit " + setting_name, [])
+    def __init__(self, setting, setting_name, return_menu_builder):
+        """
+        return_menu_builder: lambda () -> Menu
+        """
+        OptionsMenu.__init__(self, MenuManager.KEYBINDING_MENU, "edit " + setting_name,
+                             ["press new key"])
+
         self._setting = setting
+        self._return_menu_builder = return_menu_builder
+
+    def option_activated(self, idx, gs):
+        pass
+
+    def get_option_color(self, idx, gs):
+        return (1, 1, 1)
+
+    def esc_pressed(self, gs):
+        gs.menu_manager().set_active_menu(self._return_menu_builder())
+
+    def handle_inputs(self, world, gs, input_state, render_eng):
+        if input_state.was_pressed(gs.settings().exit_key()):
+            self.esc_pressed(gs)
+        else:
+            pressed = input_state.all_pressed_keys()
+            pressed = [x for x in pressed if self._is_valid_binding(x)]
+            if len(pressed) > 0:
+                key = random.choice(pressed)  # TODO - better way to handle this?
+                gs.settings().set(self._setting, [key])
+                gs.save_settings_to_disk()
+                gs.menu_manager().set_active_menu(self._return_menu_builder())
+
+    def _is_valid_binding(self, key):
+        if key in (pygame.K_RETURN, pygame.K_ESCAPE, "MOUSE_BUTTON_1"):
+            return False
+
+        return True
 
 
 class CinematicMenu(Menu):
@@ -449,7 +521,7 @@ class DeathMenu(OptionsMenu):
         # fade in
         return Utils.linear_interp(self.get_clear_color(), (1, 1, 1), self.get_flavor_progress())
 
-    def get_option_color(self, selected):
+    def get_option_color(self, idx, gs):
         return self.get_clear_color()
 
     def __init__(self):

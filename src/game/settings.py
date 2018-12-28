@@ -15,7 +15,7 @@ class Setting:
     def clean(self, new_value):
         return new_value
 
-    def on_set(self, old_value, new_value, gs):
+    def on_set(self, old_value, new_value):
         pass
 
 
@@ -26,17 +26,20 @@ class KeySetting(Setting):
         ALL_KEY_SETTINGS.append(self)
 
 
-KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP])
-KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT])
-KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT])
-KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN])
-KEY_ATTACK = Setting("attack", "ATTACK", [pygame.K_j, pygame.K_SPACE])
+# these are all configurable
+KEY_UP = Setting("move up", "UP", [pygame.K_w])
+KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a])
+KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d])
+KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s])
+KEY_ATTACK = Setting("attack", "ATTACK", [pygame.K_j])
 KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r])
-KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e, "MOUSE_BUTTON_3"])
-KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i, pygame.K_RETURN])
+KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
+KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i])
+KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
+
+# these are locked
 KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN])
 KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE])
-KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
 
 MASTER_VOLUME = Setting("master volume", "MASTER_VOLUME", 100)
 MASTER_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
@@ -68,10 +71,25 @@ class Settings:
             print("ERROR: failed to set {} to {}".format(setting.key, val))
 
     def load_from_file(self, filename):
-        pass
+        try:
+            loaded_values = Utils.load_json_from_path(filename)
+            for key in loaded_values:
+                val = loaded_values[key]
+                if key in ALL_SETTINGS:
+                    self.set(ALL_SETTINGS[key], val)
+                else:
+                    print("INFO: skipping unknown setting: {}".format(key))
+            print("INFO: successfully loaded settings from {}".format(filename))
+
+        except Exception:
+            print("ERROR: failed to load settings from {}".format(filename))
 
     def save_to_file(self, filename):
-        pass
+        try:
+            Utils.save_json_to_path(self.values, filename)
+            print("INFO: successfully saved settings to {}".format(filename))
+        except Exception:
+            print("ERROR: failed to save settings to {}".format(filename))
 
     def up_key(self):
         return self.get(KEY_UP)
@@ -92,7 +110,8 @@ class Settings:
         return self.get(KEY_INVENTORY)
 
     def interact_key(self):
-        return self.get(KEY_INTERACT)
+        # kinda a hack, but I want enter to also be usable as the interact key.
+        return self.get(KEY_INTERACT) + self.enter_key()
 
     def potion_key(self):
         return self.get(KEY_POTION)
