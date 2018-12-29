@@ -5,8 +5,6 @@
 
 3. enemies using Teleport can warp into hidden rooms
 
-4. death screen "retry" and "exit" options both go to start screen
-
 5. stand next to an interactable so text box appears. then pause and unpause game. the text box will stay there forever.
 
 6. in the menus, if you reassign the movement keys, it also reassigns the menu navigation keys, which is kind of awkward. There should be dedicated menu nav keys.

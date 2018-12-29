@@ -561,9 +561,9 @@ class DeathOptionMenu(OptionsMenu):
 
     def option_activated(self, idx):
         if idx == DeathOptionMenu.RETRY_OPT:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
+            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
         elif idx == DeathOptionMenu.EXIT_OPT:
-            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
 
 
 class InGameUiState(Menu):
