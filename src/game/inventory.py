@@ -85,13 +85,6 @@ class InventoryState:
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
-    def get_equipped_attacks(self):
-        res = []
-        for item in self.equip_grid.all_items():
-            if item.is_attack_item():
-                res.append(item.get_attack())
-        return res
-
     def to_json(self):
         return {}
 

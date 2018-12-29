@@ -74,8 +74,8 @@ class EnemyTemplate:
     def get_lunges(self):
         return False
 
-    def get_loot(self, level, potential_attack=None):
-        return LootFactory.gen_loot(level, potential_attack=potential_attack)
+    def get_loot(self, level):
+        return LootFactory.gen_loot(level)
 
     def get_base_stats(self):
         return dict(TRUE_BASE_STATS)
@@ -85,9 +85,6 @@ class EnemyTemplate:
 
     def get_possible_special_attacks(self):
         return attacks.ALL_SPECIAL_ATTACKS
-
-    def can_drop_special_attack(self):
-        return True
 
     def show_death_explosion(self):
         return True
@@ -148,10 +145,7 @@ class TrillaTemplate(EnemyTemplate):
             e_state.set_special_attack(entity.state.special_attack)
             world.add(Enemy(pos[0], pos[1], e_state))
 
-    def can_drop_special_attack(self):
-        return False
-
-    def get_loot(self, level, potential_attack=None):
+    def get_loot(self, level):
         return []
 
 
@@ -201,10 +195,7 @@ class SmallMuncherTemplate(EnemyTemplate):
         new_muncher.set_center(pos[0], pos[1])
         world.add(new_muncher)
 
-    def can_drop_special_attack(self):
-        return False
-
-    def get_loot(self, level, potential_attack=None):
+    def get_loot(self, level):
         return []
 
     def show_death_explosion(self):

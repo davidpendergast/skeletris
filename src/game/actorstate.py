@@ -421,18 +421,6 @@ class PlayerState(ActorState):
                 self.drop_held_item(player_entity, world)
                 self.attack_state.start_attack(self)
 
-            eq_attacks = self.inventory().get_equipped_attacks()
-            inv_attack = self._default_attack if len(eq_attacks) == 0 else eq_attacks[-1]
-            if self.attack_state.get_next_or_current_attack() is not inv_attack:
-                self.attack_state.set_attack(inv_attack)
-                if len(eq_attacks) > 0:
-                    self.set_color_x_ticks_ago = 0
-                    self.dmg_color = inv_attack.dmg_color
-
-                    pos = player_entity.center()
-                    circle = AttackCircleArt(pos[0], pos[1], 32, 60, inv_attack.dmg_color, (0, 0, 0))
-                    world.add(circle)
-
             self.attack_state.update(player_entity, world)
 
             closest_interactable = None
@@ -633,12 +621,7 @@ class EnemyState(ActorState):
             return 0
 
     def _handle_death(self, entity, world):
-        if self.can_drop_attack():
-            att = self.special_attack
-        else:
-            att = None
-
-        loot = self.template.get_loot(self.level(), potential_attack=att)
+        loot = self.template.get_loot(self.level())
         position = entity.center()
 
         for item in loot:
@@ -796,11 +779,6 @@ class EnemyState(ActorState):
             self.attack_state.set_attack(self.template.get_attack())
         else:
             self.attack_state.set_attack(attack)
-
-    def can_drop_attack(self):
-        return (self.special_attack is not None
-                and self.special_attack.is_droppable
-                and self.template.can_drop_special_attack())
 
 
 class PathfindingType(Enum):

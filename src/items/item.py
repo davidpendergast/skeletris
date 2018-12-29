@@ -83,9 +83,27 @@ class ItemStat:
             return STAT_DESCRIPTIONS[self.stat_type].format(self.value)
         else:
             return "{}: {}".format(self.stat_type, self.value)
+
+    def __eq__(self, other):
+        try:
+            return self.stat_type == other.stat_type and self.value == other.value
+        except ValueError:
+            return False
             
     def color(self):
         return STAT_COLORS[self.stat_type]
+
+    def to_json(self):
+        return [self.stat_type, self.value]
+
+    @staticmethod
+    def from_json(blob):
+        """
+        blob: list of [str, int]
+        """
+        stat_type = StatType(blob[0])
+        value = int(blob[1])
+        return ItemStat(stat_type, value)
 
 
 class Item:
@@ -102,12 +120,8 @@ class Item:
         self.level = level
         self.stats = stats
         self.cubes = ItemFactory.clean_cubes(cubes)
-        self.cubes = tuple(cubes)
         self.color = color
         self.cube_art = {} if cube_art is None else cube_art
-
-    def is_attack_item(self):
-        return False
 
     def get_title_color(self):
         return (1, 1, 1)
@@ -146,22 +160,67 @@ class Item:
         res += "\n[" + "_"*len(self.name) + "]"
         return res
 
+    def to_json(self):
+        blob = {
+            "name": self.name,
+            "level": self.level,
+            "cubes": self.cubes,
+            "color": self.color,
+            "cube_art": [],
+            "stats": []
+        }
 
-class AttackItem(Item):
+        for xy in self.cube_art:
+            blob["cube_art"].append((xy[0], xy[1], self.cube_art[xy]))
 
-    def __init__(self, name, attack, level, stats, cubes, color, cube_art=None):
-        Item.__init__(self, name, level, stats, cubes, color, cube_art=cube_art)
-        self.attack = attack
+        for stat in self.stats:
+            as_json = stat.to_json()
+            blob["stats"].append(as_json)
 
-    def get_attack(self):
-        return self.attack
+        return blob
 
-    def is_attack_item(self):
-        return True
+    @staticmethod
+    def from_json(blob):
+        name = str(blob["name"])
+        level = int(blob["level"])
 
-    def get_title_color(self):
-        att_color = self.get_attack().dmg_color
-        return Utils.linear_interp(att_color, (1, 1, 1), 0.75)
+        cubes = []
+        for cube_blob in blob["cubes"]:
+            c_x = int(cube_blob[0])
+            c_y = int(cube_blob[1])
+            cubes.append((c_x, c_y))
+
+        color_r = float(blob["color"][0])
+        color_g = float(blob["color"][1])
+        color_b = float(blob["color"][2])
+        color = (color_r, color_g, color_b)
+
+        cube_art = {}
+        for cube_art_blob in blob["cube_art"]:
+            x = int(cube_art_blob[0])
+            y = int(cube_art_blob[1])
+            art_id = int(cube_art_blob[2])
+            cube_art[(x, y)] = art_id
+
+        stats = []
+        for stat_blob in blob["stats"]:
+            stat = ItemStat.from_json(stat_blob)
+            stats.append(stat)
+
+        return Item(name, level, stats, cubes, color, cube_art=cube_art)
+
+    def __eq__(self, other):
+        try:
+            return (
+                self.name == other.name and
+                self.level == other.level and
+                self.stats == other.stats and
+                self.color == other.color and
+                self.cubes == other.cubes and
+                self.cube_art == other.cube_art
+            )
+        except ValueError:
+            return False
         
         
 class ItemFactory:
@@ -191,12 +250,8 @@ class ItemFactory:
             new_cubes.append((5 - cube[1], cube[0]))
         new_cubes = ItemFactory.clean_cubes(new_cubes)
 
-        if not item.is_attack_item():
-            return Item(item.name, item.level, item.stats,
-                        new_cubes, item.color, cube_art=item.cube_art)
-        else:
-            return AttackItem(item.name, item.get_attack(), item.level,
-                              item.stats, new_cubes, item.color, cube_art=item.cube_art)
+        return Item(item.name, item.level, item.stats,
+                    new_cubes, item.color, cube_art=item.cube_art)
 
     @staticmethod
     def do_seed(seed):
@@ -287,10 +342,10 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item(level, attack=None):
+    def gen_item(level):
         primary_stat = ItemFactory.gen_core_stat(level)
-        n_secondary_stats = int(4 * random.random()) if attack is None else 0
-        n_cubes = 5 + int(2 * random.random()) if attack is None else 4
+        n_secondary_stats = int(4 * random.random())
+        n_cubes = 5 + int(2 * random.random())
 
         secondary_stats = ItemFactory.gen_non_core_stats(level, n_secondary_stats, exclude=[primary_stat.stat_type])
 
@@ -298,34 +353,27 @@ class ItemFactory:
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
 
         cubes = ItemFactory.gen_cubes(n_cubes)
-        special_stats = ItemFactory.get_special_stats(cubes) if attack is None else []
+        special_stats = ItemFactory.get_special_stats(cubes)
 
-        if attack is None:
-            name = ItemFactory.get_name(
-                    list(map(lambda x: x.stat_type, core_stats)),
-                    list(map(lambda x: x.stat_type, non_core_stats)),
-                    list(map(lambda x: x.stat_type, special_stats)))
-        else:
-            name = attack.name
+        name = ItemFactory.get_name(
+                list(map(lambda x: x.stat_type, core_stats)),
+                list(map(lambda x: x.stat_type, non_core_stats)),
+                list(map(lambda x: x.stat_type, special_stats)))
         
         stats = core_stats + non_core_stats + special_stats
 
-        if attack is not None:
-            diff = Utils.sub((1, 1, 1), attack.dmg_color)
-            diff = Utils.mult(diff, 0.25)
-            color = Utils.sub((1, 1, 1), diff)
-        else:
-            color = tuple([0.5 + random.random() * 0.25] * 3)
-            if len(core_stats) > 0:
-                rand1 = 0.5 + random.random() * 0.5
-                rand2 = 0.5 + random.random() * 0.5
-                max_core = max(core_stats, key=lambda x: x.value)
-                if max_core.stat_type is StatType.ATT:
-                    color = (1, rand1, rand2)
-                elif max_core.stat_type is StatType.VIT:
-                    color = (rand1, 1, rand2)
-                elif max_core.stat_type is StatType.DEF:
-                    color = (rand1, rand2, 1)
+
+        color = tuple([0.5 + random.random() * 0.25] * 3)
+        if len(core_stats) > 0:
+            rand1 = 0.5 + random.random() * 0.5
+            rand2 = 0.5 + random.random() * 0.5
+            max_core = max(core_stats, key=lambda x: x.value)
+            if max_core.stat_type is StatType.ATT:
+                color = (1, rand1, rand2)
+            elif max_core.stat_type is StatType.VIT:
+                color = (rand1, 1, rand2)
+            elif max_core.stat_type is StatType.DEF:
+                color = (rand1, rand2, 1)
 
         cube_art = {}
         cubes_copy = [c for c in cubes]
@@ -335,10 +383,7 @@ class ItemFactory:
             if i < len(cubes_copy):
                 cube_art[cubes_copy[i]] = 1 + int(5*random.random())
 
-        if attack is None:
-            return Item(name, level, stats, cubes, color, cube_art)
-        else:
-            return AttackItem(name, attack, level, stats, cubes, color, cube_art)
+        return Item(name, level, stats, cubes, color, cube_art)
 
     NEIGHBORS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -381,4 +426,25 @@ class ItemFactory:
             return res
         except TypeError:
             return ItemFactory._get_all_possible_cube_configs_helper(n-1, size, [(0, 0)], set())
+
+
+class ItemTest:
+
+    @staticmethod
+    def test_item_serialization():
+        n = 1000
+        for i in range(0, n):
+            item = ItemFactory.gen_item(int(random.random() * 64))
+            as_json = item.to_json()
+            back_to_item = Item.from_json(as_json)
+
+            if item != back_to_item:
+                print("ERROR: test failure!!!")
+                print("original:\n{}".format(item))
+                print("post-json:\n{}".format(back_to_item))
+                return
+
+
+if __name__ == "__main__":
+    ItemTest.test_item_serialization()
 
