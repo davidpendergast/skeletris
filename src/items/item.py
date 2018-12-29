@@ -1,4 +1,5 @@
 import random
+import uuid
 import collections
 
 from src.game.stats import StatType, ItemStatRanges
@@ -89,6 +90,9 @@ class ItemStat:
             return self.stat_type == other.stat_type and self.value == other.value
         except ValueError:
             return False
+
+    def __hash__(self):
+        return hash((self.stat_type, self.value))
             
     def color(self):
         return STAT_COLORS[self.stat_type]
@@ -107,7 +111,7 @@ class ItemStat:
 
 
 class Item:
-    def __init__(self, name, level, stats, cubes, color, cube_art=None):
+    def __init__(self, name, level, stats, cubes, color, cube_art=None, uuid_str=None):
         """
             name: str
             level: int: 0 to 255
@@ -115,13 +119,15 @@ class Item:
             cubes: list of (int: x, int: y)
             color: tuple (float, float, float)
             cube_art: dict of (x, y) -> int: art_id
+            uuid_str: str
         """
         self.name = name
         self.level = level
-        self.stats = stats
-        self.cubes = ItemFactory.clean_cubes(cubes)
+        self.stats = tuple(stats)
+        self.cubes = tuple(ItemFactory.clean_cubes(cubes))
         self.color = color
         self.cube_art = {} if cube_art is None else cube_art
+        self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
 
     def get_title_color(self):
         return (1, 1, 1)
@@ -146,6 +152,7 @@ class Item:
         
     def __str__(self):
         res = "[{}]".format(self.name)
+        res += "\n  " + self.uuid
         res += "\n  " + self.level_string()
         for stat in self.stats:
             res += "\n  " + str(stat)
@@ -167,7 +174,8 @@ class Item:
             "cubes": self.cubes,
             "color": self.color,
             "cube_art": [],
-            "stats": []
+            "stats": [],
+            "uuid": self.uuid
         }
 
         for xy in self.cube_art:
@@ -207,9 +215,11 @@ class Item:
             stat = ItemStat.from_json(stat_blob)
             stats.append(stat)
 
-        return Item(name, level, stats, cubes, color, cube_art=cube_art)
+        uuid_str = str(blob["uuid"])
 
-    def __eq__(self, other):
+        return Item(name, level, stats, cubes, color, cube_art=cube_art, uuid_str=uuid_str)
+
+    def test_equals(self, other):
         try:
             return (
                 self.name == other.name and
@@ -217,11 +227,20 @@ class Item:
                 self.stats == other.stats and
                 self.color == other.color and
                 self.cubes == other.cubes and
-                self.cube_art == other.cube_art
+                self.cube_art == other.cube_art and
+                self.uuid == other.uuid
             )
         except ValueError:
             return False
-        
+
+    def __eq__(self, other):
+        try:
+            return self.uuid == other.uuid
+        except ValueError:
+            return False
+
+    def __hash__(self):
+        return hash(self.uuid)
         
 class ItemFactory:
 
@@ -251,7 +270,7 @@ class ItemFactory:
         new_cubes = ItemFactory.clean_cubes(new_cubes)
 
         return Item(item.name, item.level, item.stats,
-                    new_cubes, item.color, cube_art=item.cube_art)
+                    new_cubes, item.color, cube_art=item.cube_art, uuid_str=item.uuid)
 
     @staticmethod
     def do_seed(seed):
@@ -383,7 +402,7 @@ class ItemFactory:
             if i < len(cubes_copy):
                 cube_art[cubes_copy[i]] = 1 + int(5*random.random())
 
-        return Item(name, level, stats, cubes, color, cube_art)
+        return Item(name, level, stats, cubes, color, cube_art=cube_art)
 
     NEIGHBORS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -433,18 +452,41 @@ class ItemTest:
     @staticmethod
     def test_item_serialization():
         n = 1000
-        for i in range(0, n):
+        for _ in range(0, n):
             item = ItemFactory.gen_item(int(random.random() * 64))
             as_json = item.to_json()
             back_to_item = Item.from_json(as_json)
 
-            if item != back_to_item:
-                print("ERROR: test failure!!!")
+            if not item.test_equals(back_to_item):
+                print("ERROR: test failure on test_equals")
                 print("original:\n{}".format(item))
                 print("post-json:\n{}".format(back_to_item))
+                return
+
+            if item != back_to_item:
+                print("ERROR: test failure on __eq__")
+                print("original:\n{}".format(item))
+                print("post-json:\n{}".format(back_to_item))
+                return
+
+    @staticmethod
+    def test_item_rotation():
+        n = 1000
+        for _ in range(0, n):
+            item = ItemFactory.gen_item(int(random.random() * 64))
+            rot1 = ItemFactory.rotate_item(item)
+            rot2 = ItemFactory.rotate_item(rot1)
+            rot3 = ItemFactory.rotate_item(rot2)
+            rot4 = ItemFactory.rotate_item(rot3)
+
+            if not item.test_equals(rot4):
+                print("ERROR: test failure on test_item_rotation")
+                print("original:\n{}".format(item))
+                print("rotated:\n{}".format(rot4))
                 return
 
 
 if __name__ == "__main__":
     ItemTest.test_item_serialization()
+    ItemTest.test_item_rotation()
 
