@@ -42,8 +42,8 @@ class InventoryPanel:
         self.player_state = gs.get_instance().player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
-        self.kill_count = gs.get_instance().save_data().kill_count
-        self.dungeon_level = gs.get_instance().dungeon_level
+        self.kill_count = gs.get_instance().player_state().kill_count
+        self.zone_level = gs.get_instance().get_zone_level()
 
         self.top_img = None
         self.mid_imgs = []
@@ -72,8 +72,8 @@ class InventoryPanel:
         self._build_images(sc)
 
     def gs_info_is_outdated(self):
-        return (self.kill_count != gs.get_instance().save_data().kill_count or
-                self.dungeon_level != gs.get_instance().dungeon_level)
+        return (self.kill_count != gs.get_instance().player_state().kill_count or
+                self.zone_level != gs.get_instance().get_zone_level())
         
     def _build_images(self, sc):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
@@ -86,8 +86,7 @@ class InventoryPanel:
         self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(sc*3/2))
         
         name_str = self.player_state.name()
-        lvl_str = self.player_state.level()
-        info_txt = "{}\n\nLVL: {}\nROOM:{}\nKILL:{}".format(name_str, lvl_str, self.dungeon_level, self.kill_count)
+        info_txt = "{}\n\nROOM:{}\nKILL:{}".format(name_str, self.zone_level, self.kill_count)
         i_xy = [self.info_rect[0], self.info_rect[1]]
         self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=sc)
         
@@ -480,7 +479,7 @@ class HealthBarPanel:
                     Utils.stringify_key(gs.get_instance().settings().attack_key()[0]), None)
         elif idx == 1:
             return (spriteref.UI.potion_action, cooldowns[idx],
-                    Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().save_data().num_potions))
+                    Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().player_state().num_potions))
         elif idx == 2:
             return (spriteref.UI.inspect_action, cooldowns[idx],
                     Utils.stringify_key(gs.get_instance().settings().interact_key()[0]), None)

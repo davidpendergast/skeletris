@@ -196,6 +196,8 @@ class ActorState(Pushable):
 class PlayerState(ActorState):
     def __init__(self, name, inventory):
         self._inventory = inventory
+        self.kill_count = 0
+        self.num_potions = 5
 
         ActorState.__init__(self, name, 0, {
             StatType.ATT: 10,
@@ -259,7 +261,7 @@ class PlayerState(ActorState):
         print("INFO: picked up {}".format(pickup_entity))
 
         if pickup_entity.is_potion():
-            gs.get_instance().save_data().num_potions += 1
+            self.num_potions += 1
 
     def damage_and_healing_last_tick(self):
         return self._damage_last_tick, self._healing_last_tick
@@ -294,10 +296,10 @@ class PlayerState(ActorState):
         if self._potion_tick_count < self._potion_cooldown:
             self._potion_tick_count += 1
 
-        if try_to_use and gs.get_instance().save_data().num_potions > 0 and self._can_use_potion():
+        if try_to_use and self.num_potions > 0 and self._can_use_potion():
             pot_heal = 10 + self.stat_value(StatType.POTION_HEALING)
             self.do_heal(pot_heal)
-            gs.get_instance().save_data().num_potions -= 1
+            self.num_potions -= 1
 
             pot_cd = round(max(1, 180 * (1 - 0.01 * self.stat_value(StatType.POTION_COOLDOWN))))
             self._potion_cooldown = pot_cd
@@ -645,7 +647,7 @@ class EnemyState(ActorState):
         gs.get_instance().event_queue().add(events.EnemyDiedEvent(entity.get_uid(), self.template, position))
 
         if self.template.increment_kill_count_on_death():
-            gs.get_instance().save_data().kill_count += 1
+            gs.get_instance().player_state().kill_count += 1
 
     def _get_sprite(self, entity, world):
         return self.sprites[((gs.get_instance().anim_tick + self._anim_offset) // 2) % len(self.sprites)]

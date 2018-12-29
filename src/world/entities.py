@@ -778,7 +778,7 @@ class ChestEntity(Entity):
                 self.current_cooldown = self.ticks_to_open
                 
             if self.is_open():
-                self._do_open(world, gs.get_instance().dungeon_level)
+                self._do_open(world, gs.get_instance().get_zone_level())
              
         self.update_images(gs.get_instance().anim_tick)
 
@@ -1273,7 +1273,8 @@ class ExitEntity(Entity):
         self.update_images(gs.get_instance().anim_tick)
 
     def make_new_zone_event(self):
-        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().save_data().current_zone_id)
+        # TODO - maybe better if exits already know their zones
+        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self):
         return self.is_open()
@@ -1293,7 +1294,7 @@ class ReturnExitEntity(ExitEntity):
         self.open_duration = 15
 
     def make_new_zone_event(self):
-        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().save_data().current_zone_id,
+        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id(),
                                    transfer_type=events.NewZoneEvent.RETURNING)
 
     def get_sprite(self, anim_tick):

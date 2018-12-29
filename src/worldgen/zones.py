@@ -205,7 +205,7 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None):
         raise ValueError("unknown zone id: {}".format(zone_id))
 
     zone = _ALL_ZONES[zone_id]
-    gs.get_instance().prepare_for_new_zone(zone_id)
+    gs.get_instance().prepare_for_new_zone(zone)
     music.play_song(zone.get_music_id())
 
     w = zone.build_world()

@@ -23,78 +23,37 @@ def set_instance(new_instance):
     _GLOBAL_STATE_INSTANCE = new_instance
 
 
-class SaveData:
+class SaveDataBlob:
 
-    def __init__(self, filename):
-        self._filename = filename
+    def __init__(self, zone_id, kill_count, num_potions, equipment_positions, inventory_positions):
+        """
+        zone_id: str
+        kill_count: int
+        num_potions: int
+        equipment_positions: map (int x, int y) -> Item
+        inventory_positions: map (int x, int y) -> Item
+        """
+        self.zone_id = zone_id
+        self.kill_count = kill_count
+        self.num_potions = num_potions
 
-        self.kill_count = 0
-        self.num_potions = 5
-        self.current_zone_id = None
+        self.equipment_positions = equipment_positions
+        self.inventory_positions = inventory_positions
 
-        self.inventory_state = None  # not currently used heh
-
-    def get_path(self):
-        return SaveData.path_for_filename(self._filename)
-
-    @staticmethod
-    def path_for_filename(filename):
-        return os.path.join("save_data", filename)
-
-    @staticmethod
-    def exists_on_disk(filename):
-        return os.path.exists(SaveData.path_for_filename(filename))
-
-    @staticmethod
-    def create_new_save_file(filename):
-        data = SaveData(filename)
-        data.save_to_disk()
-        print("INFO: created new save file {}".format(filename))
-        return data
+    def save_to_disk(self, filename):
+        pass
 
     @staticmethod
     def load_from_disk(filename):
-        # TODO - figure out whether we're saving stuff
-        res = SaveData(filename)
-        dest_file = res.get_path()
-
-        try:
-            json_blob = Utils.load_json_from_path(dest_file)
-
-            print("json_blob={}".format(json_blob))
-            res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
-            res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
-            res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
-            # res.inventory_state = InventoryState.from_json(Utils.read_map(json_blob, "inventory", {}))
-            print("INFO: loaded save data {} from disk".format(filename))
-            return res
-
-        except ValueError:
-            print("ERROR: failed to load " + dest_file)
-            return None
+        pass
 
     def to_json(self):
         return {
             "version": 0,
             "kill_count": self.kill_count,
             "num_potions": self.num_potions,
-            "current_zone_id": self.current_zone_id,
-            "inventory": self.inventory_state.to_json()
+            "zone_id": self.zone_id,
         }
-
-    def save_to_disk(self):
-        # TODO - figure out whether we're saving or not...
-        #json_blob = self.to_json()
-        #dest_file = self.get_path()
-        #try:
-        #    Utils.save_json_to_path(json_blob, dest_file)
-        #    print("INFO: saved save data {} to disk".format(self._filename))
-        #    return True
-        #except ValueError:
-        #    print("ERROR: failed to save to " + dest_file)
-        #    traceback.print_exc()
-        #    return False
-        pass
 
     def __repr__(self):
         return str(self.to_json())
@@ -102,20 +61,18 @@ class SaveData:
 
 class GlobalState:
 
-    def __init__(self, save_data, menu_manager, dialog_manager, npc_state):
+    def __init__(self, menu_manager, dialog_manager, npc_state):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
         self.tick_counter = 0
         self.anim_tick = 0
 
-        self.dungeon_level = 0  # this needs to be zone-level
+        self.current_zone = None
 
         self._settings = Settings()
         self._settings_filename = "settings.json"
         self._settings.load_from_file(self._path_to_settings())
-
-        self._save_data = save_data
 
         self._world_camera_center = [0, 0]
         self._player_state = None
@@ -146,9 +103,6 @@ class GlobalState:
     def _path_to_settings(self):
         return os.path.join("save_data", self._settings_filename)
 
-    def save_data(self):
-        return self._save_data
-
     def event_queue(self):
         return self._event_queue
 
@@ -164,11 +118,11 @@ class GlobalState:
     def add_zone_updater(self, updater):
         self._zone_updaters.append(updater)
 
-    def prepare_for_new_zone(self, zone_id):
+    def prepare_for_new_zone(self, zone):
         self._zone_updaters.clear()
         self.clear_triggers(events.EventListenerScope.ZONE)
 
-        self.save_data().current_zone_id = zone_id
+        self.current_zone = zone
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:
@@ -185,6 +139,18 @@ class GlobalState:
 
     def npc_state(self):
         return self._npc_state
+
+    def get_zone_level(self):
+        if self.current_zone is None:
+            return 0
+        else:
+            return self.current_zone.get_level()
+
+    def get_zone_id(self):
+        if self.current_zone is None:
+            return None  # TODO - is this dangerous?
+        else:
+            return self.current_zone.ZONE_ID
         
     def set_player_state(self, state):
         self._player_state = state
@@ -293,4 +259,27 @@ class GlobalState:
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
             self.anim_tick += 1
+
+
+def create_new(menu, from_pw=None):
+    import src.ui.menus as menus
+    menu_manager = menus.MenuManager(menu)
+
+    import src.game.dialog as dialog
+    dialog_manager = dialog.DialogManager()
+
+    import src.game.npc as npc
+    npc_state = npc.NpcState()
+
+    new_instance = GlobalState(menu_manager, dialog_manager, npc_state)
+
+    import src.game.actorstate as actorstate
+    import src.game.inventory as inventory
+    inventory_state = inventory.InventoryState()
+
+    new_instance.set_player_state(actorstate.PlayerState("ghast", inventory_state))
+
+    # TODO - load from password
+
+    set_instance(new_instance)
 

@@ -40,24 +40,6 @@ def build_me_a_world(zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone
     return zones.build_world(zone_id, spawn_at_door_with_zone_id=spawn_at_door_with_zone_id)
 
 
-def create_new_gs(menu):
-    data_file = "save_data.json"
-    # TODO - figure out saving, we aren't doing it at all now
-    #if gs.SaveData.exists_on_disk(data_file):
-    #    save_data = gs.SaveData.load_from_disk(data_file)
-    #else:
-    save_data = gs.SaveData.create_new_save_file(data_file)
-
-    menu_manager = menus.MenuManager(menu)
-    dialog_manager = dialog.DialogManager()
-    npc_state = npc.NpcState()
-
-    new_instance = gs.GlobalState(save_data, menu_manager, dialog_manager, npc_state)
-    new_instance.set_player_state(PlayerState("ghast", InventoryState()))
-
-    gs.set_instance(new_instance)
-
-
 def run():
     pygame.init()
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
@@ -67,7 +49,7 @@ def run():
     pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = inputs.InputState()
-    create_new_gs(menus.StartMenu())
+    gs.create_new(menus.StartMenu())
 
     if debug.DEBUG:
         gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
@@ -154,7 +136,7 @@ def run():
                 else:
                     menu = menus.StartMenu()
 
-                create_new_gs(menu)
+                gs.create_new(menu)
                 world = None
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
@@ -213,9 +195,6 @@ def run():
             manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
-
-        if debug.DEBUG and input_state.was_pressed(pygame.K_F7):
-            gs.get_instance().save_data().save_to_disk()
 
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())
