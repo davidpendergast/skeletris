@@ -1,16 +1,16 @@
 import math
 
-import pygame
-
 import src.game.stats
 from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.items.item as item_module
 from src.utils.util import Utils
 from src.game.stats import PlayerStatType, StatType
+import src.game.globalstate as gs
 
 
 class ItemGridImage:
+
     def __init__(self, x, y, grid, layer, scale):
         self.x = x
         self.y = y
@@ -38,12 +38,12 @@ class ItemGridImage:
 
 class InventoryPanel:
 
-    def __init__(self, gs):
-        self.player_state = gs.player_state()
+    def __init__(self):
+        self.player_state = gs.get_instance().player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
-        self.kill_count = gs.save_data().kill_count
-        self.dungeon_level = gs.dungeon_level
+        self.kill_count = gs.get_instance().save_data().kill_count
+        self.dungeon_level = gs.get_instance().dungeon_level
 
         self.top_img = None
         self.mid_imgs = []
@@ -69,13 +69,13 @@ class InventoryPanel:
         self.equip_img = None
         self.inv_img = None
         
-        self._build_images(sc, gs)
+        self._build_images(sc)
 
-    def gs_info_is_outdated(self, gs):
-        return (self.kill_count != gs.save_data().kill_count or
-                self.dungeon_level != gs.dungeon_level)
+    def gs_info_is_outdated(self):
+        return (self.kill_count != gs.get_instance().save_data().kill_count or
+                self.dungeon_level != gs.get_instance().dungeon_level)
         
-    def _build_images(self, sc, gs):
+    def _build_images(self, sc):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
@@ -164,14 +164,14 @@ class DialogPanel:
     def get_dialog(self):
         return self._dialog
 
-    def update_images(self, gs, text, sprite, left_side):
+    def update_images(self, text, sprite, left_side):
         """
             returns: True if needs a full render engine update, else False
         """
         needs_update = False
 
-        x = gs.screen_size[0] // 2 - DialogPanel.SIZE[0] // 2
-        y = gs.screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]
+        x = gs.get_instance().screen_size[0] // 2 - DialogPanel.SIZE[0] // 2
+        y = gs.get_instance().screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]
         lay = spriteref.UI_0_LAYER
 
         if len(self._border_imgs) == 0:
@@ -248,7 +248,7 @@ class DialogPanel:
 
         return needs_update
 
-    def update(self, gs, render_eng):
+    def update(self, render_eng):
         do_text_rebuild = False
 
         new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
@@ -265,7 +265,7 @@ class DialogPanel:
             do_text_rebuild = True
             self._option_selected = option_idx
 
-        new_sprite = self._dialog.get_visible_sprite(gs)
+        new_sprite = self._dialog.get_visible_sprite()
         if new_sprite is None and self._speaker_img is not None:
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
@@ -275,7 +275,7 @@ class DialogPanel:
                 render_eng.remove(bun)
             self._text_img = None
 
-        full_update = self.update_images(gs, self._text_displaying, new_sprite,
+        full_update = self.update_images(self._text_displaying, new_sprite,
                                          self._dialog.get_sprite_side())
 
         if full_update:
@@ -312,13 +312,13 @@ class PopupPanel:
     def size(self):
         return (self.rect[2], self.rect[3])
 
-    def update(self, world, gs, input_state, render_eng):
+    def update(self, world, input_state, render_eng):
         pass
 
-    def should_destroy(self, world, gs, input_state, render_eng):
+    def should_destroy(self, world, input_state, render_eng):
         return False
 
-    def prepare_to_destroy(self, world, gs, input_state, render_eng):
+    def prepare_to_destroy(self, world, input_state, render_eng):
         pass
 
     def all_bundles(self):
@@ -342,19 +342,19 @@ class HealthBarPanel:
         self._float_dur = 30
         self._float_height = 30
 
-    def update_images(self, gs, cur_hp, max_hp, new_damage, new_healing, action_states, render_eng):
+    def update_images(self, cur_hp, max_hp, new_damage, new_healing, action_states, render_eng):
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2)
         if self._bar_img is None:
             self._bar_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
 
-        x = gs.screen_size[0] // 2 - self._top_img.width() // 2
-        y = gs.screen_size[1] - self._top_img.height()
+        x = gs.get_instance().screen_size[0] // 2 - self._top_img.width() // 2
+        y = gs.get_instance().screen_size[1] - self._top_img.height()
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
         bar_w = spriteref.UI.health_bar_full.width() * 2
-        bar_x = gs.screen_size[0] // 2 - bar_w // 2
+        bar_x = gs.get_instance().screen_size[0] // 2 - bar_w // 2
 
         if new_damage > 0:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
@@ -363,7 +363,7 @@ class HealthBarPanel:
             dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
             self._floating_bars.append([dmg_img, 0])
 
-        bar_color = gs.player_state().get_hp_color()
+        bar_color = gs.get_instance().player_state().get_hp_color()
 
         for i in range(0, len(self._floating_bars)):
             img, cur_dur = self._floating_bars[i]
@@ -377,7 +377,7 @@ class HealthBarPanel:
         self._top_img = self._top_img.update(new_x=x, new_y=y)
         bar_sprite = spriteref.UI.get_health_bar(hp_pcnt_full)
 
-        glow_factor = (1 - hp_pcnt_full) * 0.2 * math.cos(((gs.anim_tick % 6) / 6) * 2 * (3.1415))
+        glow_factor = (1 - hp_pcnt_full) * 0.2 * math.cos(((gs.get_instance().anim_tick % 6) / 6) * 2 * (3.1415))
         color = (bar_color[0], bar_color[1] + glow_factor, bar_color[2] + glow_factor)
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
@@ -400,7 +400,7 @@ class HealthBarPanel:
                 cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start[i], new_y=y_start)
 
                 """Bonus Images"""
-                self.handle_bonus_images(i, x_start[i], y_start, gs, render_eng)
+                self.handle_bonus_images(i, x_start[i], y_start, render_eng)
 
                 """Cooldown Image"""
                 if state[1] >= 1:
@@ -443,9 +443,9 @@ class HealthBarPanel:
 
             self._action_imgs[i] = tuple(cur_img)
 
-    def handle_bonus_images(self, i, x_start, y_start, gs, render_eng):
+    def handle_bonus_images(self, i, x_start, y_start, render_eng):
         if i == 4:
-            inv = gs.player_state().inventory()
+            inv = gs.get_instance().player_state().inventory()
             items = inv.all_equipped_items()
             needs_rebuilt = False
             new_item_map = {}
@@ -471,27 +471,27 @@ class HealthBarPanel:
                         new_model=spriteref.get_item_entity_sprite(item.cubes),
                         new_color=(1, 1, 1))
 
-    def get_action_item_state(self, idx, gs):
+    def get_action_item_state(self, idx):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
-        p_state = gs.player_state()
+        p_state = gs.get_instance().player_state()
         cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
         if idx == 0:
             return (spriteref.UI.attack_action, cooldowns[idx],
-                    Utils.stringify_key(gs.settings().attack_key()[0]), None)
+                    Utils.stringify_key(gs.get_instance().settings().attack_key()[0]), None)
         elif idx == 1:
             return (spriteref.UI.potion_action, cooldowns[idx],
-                    Utils.stringify_key(gs.settings().potion_key()[0]), str(gs.save_data().num_potions))
+                    Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().save_data().num_potions))
         elif idx == 2:
             return (spriteref.UI.inspect_action, cooldowns[idx],
-                    Utils.stringify_key(gs.settings().interact_key()[0]), None)
+                    Utils.stringify_key(gs.get_instance().settings().interact_key()[0]), None)
         elif idx == 4:
             return (spriteref.UI.inventory_action, cooldowns[idx],
-                    Utils.stringify_key(gs.settings().inventory_key()[0]), None)
+                    Utils.stringify_key(gs.get_instance().settings().inventory_key()[0]), None)
         else:
             return None
 
-    def update(self, world, gs, input_state, render_eng):
-        p_state = gs.player_state()
+    def update(self, world, input_state, render_eng):
+        p_state = gs.get_instance().player_state()
         new_dmg, new_healing = p_state.damage_and_healing_last_tick()
 
         if len(self._floating_bars) > 0:
@@ -503,8 +503,8 @@ class HealthBarPanel:
                     new_bars.append([fb[0], fb[1] + 1])
             self._floating_bars = new_bars
 
-        action_states = [self.get_action_item_state(i, gs) for i in range(0, 6)]
-        self.update_images(gs, p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states, render_eng)
+        action_states = [self.get_action_item_state(i) for i in range(0, 6)]
+        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states, render_eng)
 
         for bun in self.all_bundles():
             render_eng.update(bun)
@@ -724,13 +724,13 @@ class CinematicPanel:
         self.text_img = None
         self.border = 32
 
-    def update(self, gs, render_engine, new_sprite, new_text):
+    def update(self, render_engine, new_sprite, new_text):
         scale = CinematicPanel.IMAGE_SCALE
         if self.current_image_img is None:
             self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale)
 
         image_w = new_sprite.width() * scale
-        new_x = gs.screen_size[0] // 2 - image_w // 2
+        new_x = gs.get_instance().screen_size[0] // 2 - image_w // 2
         new_y = 0 + self.border
         self.current_image_img = self.current_image_img.update(new_model=new_sprite, new_x=new_x, new_y=new_y)
 
@@ -742,10 +742,10 @@ class CinematicPanel:
 
         if self.text_img is None and new_text != "":
             text_scale = CinematicPanel.TEXT_SCALE
-            text_w = gs.screen_size[0] - self.border*2
+            text_w = gs.get_instance().screen_size[0] - self.border*2
             text_x = self.border
-            text_h = gs.screen_size[1] // 5 - self.border
-            text_y = gs.screen_size[1] - text_h - self.border
+            text_h = gs.get_instance().screen_size[1] // 5 - self.border
+            text_y = gs.get_instance().screen_size[1] - text_h - self.border
             wrapped_text = TextImage.wrap_words_to_fit(new_text, text_scale, text_w)
             self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=4)
             self.current_text = new_text

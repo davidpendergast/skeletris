@@ -1,6 +1,7 @@
 import random
 
 import src.world.entities as entities
+import src.game.globalstate as gs
 from src.utils.util import Utils
 from src.game.stats import StatType
 
@@ -56,8 +57,8 @@ class AttackState:
     def get_attack_range(self, stat_lookup):
         return self.current_attack.get_base_range() * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
 
-    def update(self, entity, world, gs):
-        stat_lookup = entity.get_actorstate(gs)
+    def update(self, entity, world):
+        stat_lookup = entity.get_actorstate()
 
         num_hit = 0
         dmg_dealt = 0
@@ -65,24 +66,23 @@ class AttackState:
         if len(self._delayed_attacks_this_tick) > 0:
             for del_att in self._delayed_attacks_this_tick:
                 pos, t_entity, attack = del_att
-                t_state = t_entity.get_actorstate(gs)
+                t_state = t_entity.get_actorstate()
 
-                successful, dmg = self._resolve_attack(attack, stat_lookup, pos,
-                                                       t_state, t_entity)
+                successful, dmg = self._resolve_attack(attack, stat_lookup, pos, t_state, t_entity)
                 if successful:
                     num_hit += 1
                     dmg_dealt += dmg
-                    attack.on_hit(gs, t_entity, dmg_dealt, entity, world)
+                    attack.on_hit(t_entity, dmg_dealt, entity, world)
 
             self._delayed_attacks_this_tick.clear()
 
         if self.is_active():
             if self.attack_tick == self.attack_dur:
-                targets = self.current_attack.activate(gs, entity, world, stat_lookup)
+                targets = self.current_attack.activate(entity, world, stat_lookup)
 
                 for target in targets:
                     t_ent = target
-                    t_state = t_ent.get_actorstate(gs)
+                    t_state = t_ent.get_actorstate()
 
                     successful, dmg = self._resolve_attack(self.current_attack, stat_lookup,
                                                            entity.center(), t_state, t_ent)
@@ -91,7 +91,7 @@ class AttackState:
                         num_hit += 1
                         dmg_dealt += dmg
 
-                        self.current_attack.on_hit(gs, t_ent, dmg_dealt, entity, world)
+                        self.current_attack.on_hit(t_ent, dmg_dealt, entity, world)
 
             elif self.attack_tick >= self.attack_dur + self.delay_dur:
                 self._finish_attack()
@@ -194,7 +194,7 @@ class Attack:
     def get_base_range(self):
         return self.base_radius
 
-    def activate(self, gs, entity, world, stat_lookup):
+    def activate(self, entity, world, stat_lookup):
         """
             returns: list of Entities hit by attack.
         """
@@ -214,7 +214,7 @@ class Attack:
 
         return res
 
-    def on_hit(self, gs, t_entity, dmg, s_entity, world):
+    def on_hit(self, t_entity, dmg, s_entity, world):
         pass
 
 
@@ -229,8 +229,8 @@ class GroundPoundAttack(Attack):
         self.knockback = 0.25
         self.is_droppable = False
 
-    def activate(self, gs, entity, world, stat_lookup):
-        res = Attack.activate(self, gs, entity, world, stat_lookup)
+    def activate(self, entity, world, stat_lookup):
+        res = Attack.activate(self, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world, color=(0.25, 0.25, 0.25))
 
         return res
@@ -247,8 +247,8 @@ class FrogAttack(Attack):
         self.knockback = 0.65
         self.is_droppable = False
 
-    def activate(self, gs, entity, world, stat_lookup):
-        res = Attack.activate(self, gs, entity, world, stat_lookup)
+    def activate(self, entity, world, stat_lookup):
+        res = Attack.activate(self, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world, color=(0, 0, 0))
 
         return res
@@ -278,8 +278,8 @@ class SpawnMinionAttack(Attack):
         self.dmg_color = (1, 0, 1)
         self.is_droppable = True
 
-    def activate(self, gs, entity, world, stat_lookup):
-        res = Attack.activate(self, gs, entity, world, stat_lookup)
+    def activate(self, entity, world, stat_lookup):
+        res = Attack.activate(self, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world)
 
         if len(res) > 0:
@@ -288,7 +288,7 @@ class SpawnMinionAttack(Attack):
             random.shuffle(entities_in_range)
 
             n = 0
-            src_state = entity.get_actorstate(gs)
+            src_state = entity.get_actorstate()
             for e in entities_in_range:
                 if n >= self.num_shots:
                     break
@@ -316,7 +316,7 @@ class StatusEffect:
     def get_type(self):
         return self._type
 
-    def update(self, entity, world, gs):
+    def update(self, entity, world):
         pass
 
 
@@ -333,15 +333,15 @@ class PoisonStatus(StatusEffect):
 
         self.ticks_active = 0
 
-    def update(self, entity, world, gs):
+    def update(self, entity, world):
         self.ticks_active += 1
 
         if self.ticks_active > (self.n_pulses + 1) * self.pulse_delay - 1:
-            e_state = entity.get_actorstate(gs)
+            e_state = entity.get_actorstate()
             e_state.remove_status(self)
 
-        elif gs.tick_counter % self.pulse_delay == 0:
-            e_state = entity.get_actorstate(gs)
+        elif gs.get_instance().tick_counter % self.pulse_delay == 0:
+            e_state = entity.get_actorstate()
             e_state.deal_damage(self.dmg_per_pulse, ignore_invuln=True, color=self.color)
 
             if self.src_state is not None:
@@ -365,14 +365,14 @@ class PoisonAttack(Attack):
         self.num_pulses = 7
         self.base_pulse_delay = 60
 
-    def activate(self, gs, entity, world, stat_lookup):
-        res = Attack.activate(self, gs, entity, world, stat_lookup)
+    def activate(self, entity, world, stat_lookup):
+        res = Attack.activate(self, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world)
 
         return res
 
-    def on_hit(self, gs, t_entity, dmg, s_entity, world):
-        s_state = s_entity.get_actorstate(gs)
+    def on_hit(self, t_entity, dmg, s_entity, world):
+        s_state = s_entity.get_actorstate()
         att_spd = 1 + 0.01 * s_state.stat_value(StatType.ATTACK_SPEED)
         pulse_delay = max(1, round(self.base_pulse_delay / att_spd))
         dmg = max(1, dmg)
@@ -380,9 +380,9 @@ class PoisonAttack(Attack):
         per_pulse = round(dmg / n_pulses)
 
         poison_effect = PoisonStatus(per_pulse, n_pulses, pulse_delay,
-                                     color=self.dmg_color, src_state=s_entity.get_actorstate(gs))
+                                     color=self.dmg_color, src_state=s_entity.get_actorstate())
 
-        t_entity.get_actorstate(gs).add_status(poison_effect)
+        t_entity.get_actorstate().add_status(poison_effect)
 
 
 class TeleportAttack(Attack):
@@ -400,8 +400,8 @@ class TeleportAttack(Attack):
     def get_base_range(self):
         return self.base_radius * 3
 
-    def activate(self, gs, entity, world, stat_lookup):
-        res = Attack.activate(self, gs, entity, world, stat_lookup)
+    def activate(self, entity, world, stat_lookup):
+        res = Attack.activate(self, entity, world, stat_lookup)
 
         if len(res) == 0 and entity.get_vel() != (0, 0):
             length = self.get_base_range() * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
@@ -411,12 +411,12 @@ class TeleportAttack(Attack):
             # definitely don't want player or entities porting through closed doors
             if world.get_hidden_at(*move_xy) is not True:
                 entity.move(*move_xy, world, and_search=True)
-                res = Attack.activate(self, gs, entity, world, stat_lookup)
+                res = Attack.activate(self, entity, world, stat_lookup)
 
         self.place_attack_circle(entity.center(), stat_lookup, world)
         return res
 
-    def on_hit(self, gs, t_entity, dmg, s_entity, world):
+    def on_hit(self, t_entity, dmg, s_entity, world):
         pass
 
 

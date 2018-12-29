@@ -6,6 +6,7 @@ from src.world.entities import Player
 from src.game.actorstate import EnemyState, PathfindingType
 import src.game.spriteref as spriteref
 import src.attacks.attacks as attacks
+import src.game.globalstate as gs
 
 from src.utils.util import Utils
 
@@ -32,7 +33,7 @@ class BossFightController:
     def get_ending_cinematic(self):
         return []
 
-    def update(self, world, gs, input_state, render_engine):
+    def update(self, world, input_state, render_engine):
         pass
 
 
@@ -83,7 +84,7 @@ class FrogBossState(EnemyState):
     def duplicate(self):
         return FrogBossState(self.template, self.level(), dict(self.stats))
 
-    def _get_sprite(self, entity, world, gs):
+    def _get_sprite(self, entity, world):
         speed = 2
         if self._current_mode == FrogBossState.MODE_LEAPING:
             if self._z > 0:
@@ -104,7 +105,7 @@ class FrogBossState(EnemyState):
         else:
             sprites = spriteref.Bosses.frog_idle_2
 
-        return sprites[(gs.anim_tick // speed) % len(sprites)]
+        return sprites[(gs.get_instance().anim_tick // speed) % len(sprites)]
 
     def _get_sprite_offset(self):
         return (0, 10*2 - self._z)
@@ -128,10 +129,10 @@ class FrogBossState(EnemyState):
         else:
             return EnemyState._should_attack(self, entity, world)
 
-    def update(self, entity, world, gs, input_state):
+    def update(self, entity, world, input_state):
 
         player = world.get_player()
-        if not gs.world_updates_paused() and player is not None:
+        if not gs.get_instance().world_updates_paused() and player is not None:
             self._current_mode_ticks += 1
 
             if self._current_mode == FrogBossState.MODE_PRE_LEAP:
@@ -152,7 +153,7 @@ class FrogBossState(EnemyState):
                 if self._current_mode_ticks >= self._leap_duration:
                     self.attack_state.set_attack(attacks.FROG_ATTACK)
                     self.attack_state.start_attack(self)
-                    gs.add_screenshake(15, 41, freq=4)
+                    gs.get_instance().add_screenshake(15, 41, freq=4)
 
                     if random.random() < 0.66:
                         self._current_mode = FrogBossState.MODE_PRE_LEAP
@@ -180,5 +181,5 @@ class FrogBossState(EnemyState):
                     self._current_mode = random.choice(next_choices)
                     self._current_mode_ticks = 0
 
-        EnemyState.update(self, entity, world, gs, input_state)
+        EnemyState.update(self, entity, world, input_state)
 

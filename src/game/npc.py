@@ -3,6 +3,7 @@ from enum import Enum
 import src.game.spriteref as sr
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
+import src.game.globalstate as gs
 
 
 class NpcID(Enum):
@@ -41,10 +42,10 @@ class NpcState:
     Tracks the state of all active NPCs in the world
     """
 
-    def update(self, npc_entity, world, gs, input_state, render_engine):
+    def update(self, npc_entity, world, input_state, render_engine):
         npc_id = npc_entity.get_id()
         sprites = TEMPLATES[npc_id].world_sprites
-        cur_sprite = sprites[(gs.anim_tick // 2) % len(sprites)]
+        cur_sprite = sprites[(gs.get_instance().anim_tick // 2) % len(sprites)]
 
         facing_left = True
         if npc_entity.get_vel()[0] < 0:
@@ -60,10 +61,10 @@ class NpcState:
 
         npc_entity.update_images(cur_sprite, facing_left, shadow_sprite=shadow_spr)
 
-        interacted_with_me = gs.event_queue().has_event(types=events.EventType.NPC_INTERACT,
+        interacted_with_me = gs.get_instance().event_queue().has_event(types=events.EventType.NPC_INTERACT,
                                                         predicate=lambda e: e.get_npc_id() == npc_id)
         if interacted_with_me:
-            self.interacted_with(npc_id, world, gs)
+            self.interacted_with(npc_id, world)
 
-    def interacted_with(self, npc_id, world, gs):
+    def interacted_with(self, npc_id, world):
         pass

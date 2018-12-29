@@ -4,7 +4,7 @@ import src.game.spriteref as spriteref
 
 
 from src.utils.util import Utils
-from src.game.globalstate import GlobalState, SaveData
+import src.game.globalstate as gs
 import src.game.inputs as inputs
 import src.ui.menus as menus
 from src.game.inventory import InventoryState
@@ -12,8 +12,10 @@ from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
 import src.game.cinematics as cinematics
+import src.game.dialog as dialog
 import src.worldgen.zones as zones
 import src.game.settings as settings
+import src.game.npc as npc
 import src.game.readme_writer as readme_writer
 import src.utils.profiling as profiling
 import src.game.events as events
@@ -34,20 +36,25 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(gs, zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone_id=None):
-    return zones.build_world(zone_id, gs, spawn_at_door_with_zone_id=spawn_at_door_with_zone_id)
+def build_me_a_world(zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone_id=None):
+    return zones.build_world(zone_id, spawn_at_door_with_zone_id=spawn_at_door_with_zone_id)
 
 
-def new_gs(menu):
+def create_new_gs(menu):
     data_file = "save_data.json"
-    if SaveData.exists_on_disk(data_file):
-        save_data = SaveData.load_from_disk(data_file)
+    if gs.SaveData.exists_on_disk(data_file):
+        save_data = gs.SaveData.load_from_disk(data_file)
     else:
-        save_data = SaveData.create_new_save_file(data_file)
+        save_data = gs.SaveData.create_new_save_file(data_file)
 
-    gs = GlobalState(save_data, menu=menu)
-    gs.set_player_state(PlayerState("ghast", InventoryState()))
-    return gs
+    menu_manager = menus.MenuManager(menu)
+    dialog_manager = dialog.DialogManager()
+    npc_state = npc.NpcState()
+
+    new_instance = gs.GlobalState(save_data, menu_manager, dialog_manager, npc_state)
+    new_instance.set_player_state(PlayerState("ghast", InventoryState()))
+
+    gs.set_instance(new_instance)
 
 
 def run():
@@ -59,10 +66,10 @@ def run():
     pygame.display.set_mode(SCREEN_SIZE, mods)
     
     input_state = inputs.InputState()
-    gs = new_gs(menus.StartMenu())
+    create_new_gs(menus.StartMenu())
 
     if debug.DEBUG:
-        gs.settings().set(settings.MUSIC_VOLUME, 0)
+        gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
@@ -120,9 +127,9 @@ def run():
     running = True
 
     while running:
-        gs.update(world, input_state, render_eng)
+        gs.get_instance().update(world, input_state, render_eng)
 
-        for event in gs.event_queue().all_events():
+        for event in gs.get_instance().event_queue().all_events():
             if event.get_type() == events.EventType.NEW_ZONE:
                 print("INFO: new zone {}".format(event.get_next_zone()))
                 render_eng.clear_all_sprites()
@@ -131,7 +138,7 @@ def run():
                 else:
                     spawn_at = None
 
-                world = zones.build_world(event.get_next_zone(), gs, spawn_at_door_with_zone_id=spawn_at)
+                world = zones.build_world(event.get_next_zone(), spawn_at_door_with_zone_id=spawn_at)
 
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
@@ -146,10 +153,10 @@ def run():
                 else:
                     menu = menus.StartMenu()
 
-                gs = new_gs(menu)
+                create_new_gs(menu)
                 world = None
             elif event.get_type() == events.EventType.PLAYER_DIED:
-                gs.menu_manager().set_active_menu(menus.DeathMenu())
+                gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -171,60 +178,60 @@ def run():
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
 
-        input_state.update(gs)
+        input_state.update(gs.get_instance().tick_counter)
 
-        world_active = gs.menu_manager().should_draw_world()
+        world_active = gs.get_instance().menu_manager().should_draw_world()
 
         if world_active and world is None:
             # building the initial world
             render_eng.clear_all_sprites()
-            world = zones.build_world(zones.first_zone(), gs)
+            world = zones.build_world(zones.first_zone())
 
         if input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
             profiling.get_instance().toggle()
 
         if input_state.was_pressed(pygame.K_F4):
-            size = gs.screen_size
-            if gs.is_fullscreen:
+            size = gs.get_instance().screen_size
+            if gs.get_instance().is_fullscreen:
                 pygame.display.set_mode(size, pygame.OPENGL)
             else:
                 pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
-            gs.is_fullscreen = not gs.is_fullscreen
+            gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
 
         if input_state.was_pressed(pygame.K_o):
-            cur_value = gs.settings().get(settings.MUSIC_VOLUME)
+            cur_value = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
             if cur_value > 0:
-                gs.settings().set(settings.MUSIC_VOLUME, 0)
+                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
             else:
-                gs.settings().set(settings.MUSIC_VOLUME, 100)
+                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
 
         if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
-            manager = gs.menu_manager()
+            manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
-                gs.menu_manager().set_active_menu(menus.DeathMenu())
+                gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F7):
-            gs.save_data().save_to_disk()
+            gs.get_instance().save_data().save_to_disk()
 
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())
             player = world.get_player()
-            gs.player_state().update(player, world, gs, input_state)
+            gs.get_instance().player_state().update(player, world, input_state)
 
-            world.update_all(gs, input_state, render_eng)
+            world.update_all(input_state, render_eng)
 
-            gs.dialog_manager().update(world, gs, input_state)
+            gs.get_instance().dialog_manager().update(world, input_state)
 
-            shake = gs.get_screenshake()
-            camera = gs.get_world_camera()
+            shake = gs.get_instance().get_screenshake()
+            camera = gs.get_instance().get_world_camera()
             for layer_id in spriteref.WORLD_LAYERS:
                 render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 
         elif world is not None:
             world.cleanup_active_bundles(render_eng)
 
-        gs.menu_manager().update(world, gs, input_state, render_eng)
+        gs.get_instance().menu_manager().update(world, input_state, render_eng)
 
         render_eng.render_layers()
 
@@ -236,7 +243,7 @@ def run():
         else:
             clock.tick(60)
 
-        if gs.tick_counter % 60 == 0:
+        if gs.get_instance().tick_counter % 60 == 0:
             if clock.get_fps() < 59:
                 print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
 

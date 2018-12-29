@@ -107,7 +107,7 @@ class EventListener:
 
     def __init__(self, action, event_type, predicate, scope=EventListenerScope.ZONE, single_use=False):
         """
-        Event, World, GlobalState -> () action: runnable action to perform when event occurs
+        Event, World -> () action: runnable action to perform when event occurs
         EventType event_type: type of event to listen for
         Event -> bool predicate: predicate for events to accept
         EventListenerScope scope: scope of listener
@@ -118,6 +118,9 @@ class EventListener:
         self.action = action
         self.scope = scope
         self.single_use = single_use
+
+    def do_action(self, event, world):
+        self.action(event, world)
 
 
 class DoorOpenEvent(Event):

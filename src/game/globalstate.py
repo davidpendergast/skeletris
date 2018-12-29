@@ -3,13 +3,24 @@ import math
 import random
 import os
 
-import src.ui.menus as menus
-from src.game.npc import NpcState
-from src.game.dialog import DialogManager
 import src.game.events as events
 from src.game.settings import Settings
 from src.utils.util import Utils
-from src.game.inventory import InventoryState
+
+_GLOBAL_STATE_INSTANCE = None
+
+
+def get_instance():
+    """This is how callers should obtain a global state."""
+    if _GLOBAL_STATE_INSTANCE is None:
+        raise ValueError("global state is None!!")
+    else:
+        return _GLOBAL_STATE_INSTANCE
+
+
+def set_instance(new_instance):
+    global _GLOBAL_STATE_INSTANCE
+    _GLOBAL_STATE_INSTANCE = new_instance
 
 
 class SaveData:
@@ -53,7 +64,7 @@ class SaveData:
             res.kill_count = Utils.read_int(json_blob, "kill_count", 0)
             res.num_potions = Utils.read_int(json_blob, "num_potions", 0)
             res.current_zone_id = Utils.read_string(json_blob, "current_zone_id", None)
-            res.inventory_state = InventoryState.from_json(Utils.read_map(json_blob, "inventory", {}))
+            # res.inventory_state = InventoryState.from_json(Utils.read_map(json_blob, "inventory", {}))
             print("INFO: loaded save data {} from disk".format(filename))
             return res
 
@@ -88,7 +99,7 @@ class SaveData:
 
 class GlobalState:
 
-    def __init__(self, save_data, menu=None):
+    def __init__(self, save_data, menu_manager, dialog_manager, npc_state):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
@@ -106,10 +117,9 @@ class GlobalState:
         self._world_camera_center = [0, 0]
         self._player_state = None
 
-        self._menu_manager = menus.MenuManager(menu)
-
-        self._npc_state = NpcState()
-        self._dialog_manager = DialogManager()
+        self._menu_manager = menu_manager
+        self._dialog_manager = dialog_manager
+        self._npc_state = npc_state
 
         self._cinematics_queue = []
 
@@ -165,8 +175,7 @@ class GlobalState:
         return self._menu_manager
 
     def world_updates_paused(self):
-        return (self.menu_manager().get_active_menu_id() is not menus.MenuManager.IN_GAME_MENU
-                or self.dialog_manager().is_active())
+        return self.menu_manager().pause_world_updates() or self.dialog_manager().is_active()
 
     def dialog_manager(self):
         return self._dialog_manager
@@ -223,10 +232,6 @@ class GlobalState:
 
     def get_cinematics_queue(self):
         return self._cinematics_queue
-
-    def play_cinematic(self, scenes):
-        self.get_cinematics_queue().extend(scenes)
-        self.menu_manager().set_active_menu(menus.CinematicMenu())
         
     def player_state(self):
         return self._player_state
@@ -259,7 +264,7 @@ class GlobalState:
                     for trigger in self._event_triggers[e.get_type()]:
                         if trigger.predicate(e):
                             try:
-                                trigger.action(e, world, self)
+                                trigger.do_action(e, world)
                             except ValueError:
                                 traceback.print_exc()
 

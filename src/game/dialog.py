@@ -4,6 +4,8 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.events as events
 
+import src.game.globalstate as gs
+
 
 class Dialog:
 
@@ -49,8 +51,8 @@ class Dialog:
         res = re.findall("\{[^\{]*\}", self.text)
         return list(res)
 
-    def set_next(self, next, opt_idx=0):
-        self.nexts[opt_idx] = next
+    def set_next(self, next_dialog, opt_idx=0):
+        self.nexts[opt_idx] = next_dialog
 
     def get_uid(self):
         return self.uid
@@ -77,9 +79,9 @@ class Dialog:
     def is_done_scrolling(self):
         return self.scroll_pos >= len(self.get_text())
 
-    def get_visible_sprite(self, gs):
+    def get_visible_sprite(self):
         if self.sprites is not None and len(self.sprites) > 0:
-            return self.sprites[(gs.anim_tick // 2) % len(self.sprites)]
+            return self.sprites[(gs.get_instance().anim_tick // 2) % len(self.sprites)]
         else:
             return None
 
@@ -132,34 +134,34 @@ class DialogManager:
     def get_dialog(self):
         return self._active_dialog
 
-    def set_dialog(self, dialog, gs):
+    def set_dialog(self, dialog):
         print("setting dialog to" + str(dialog))
         if self._active_dialog is not None:
             opt_idx = self._active_dialog.get_selected_opt_idx()
             uid = self._active_dialog.get_uid()
-            gs.event_queue().add(events.DialogExitEvent(uid, opt_idx))
+            gs.get_instance().event_queue().add(events.DialogExitEvent(uid, opt_idx))
 
         if dialog is not None:
             dialog.reset()
 
         self._active_dialog = dialog
 
-    def update(self, world, gs, input_state):
+    def update(self, world, input_state):
         if self.is_active():
             dialog = self._active_dialog
             if dialog.is_cutscene():
                 cutscene = dialog
                 if cutscene.is_finished():
-                    self.set_dialog(cutscene.get_next(), gs)
+                    self.set_dialog(cutscene.get_next())
                 else:
-                    cutscene.update(world, gs, input_state)
+                    cutscene.update(world, input_state)
             else:
-                if dialog.scroll_pos > 0 and input_state.was_pressed(gs.settings().interact_key()):
+                if dialog.scroll_pos > 0 and input_state.was_pressed(gs.get_instance().settings().interact_key()):
                     if dialog.is_done_scrolling():
-                        self.set_dialog(dialog.get_next(), gs)
+                        self.set_dialog(dialog.get_next())
                     else:
                         dialog.scroll_pos = len(dialog.get_text())
-                elif not dialog.is_done_scrolling() and gs.tick_counter % self._scroll_freq == 0:
+                elif not dialog.is_done_scrolling() and gs.get_instance().tick_counter % self._scroll_freq == 0:
                     dialog.scroll_pos += 1
 
                     # when we uncover the first option, skip to end
@@ -169,13 +171,13 @@ class DialogManager:
                     num_options = len(dialog.get_options())
                     if dialog.is_done_scrolling() and num_options > 1:
                         cur_option = dialog.get_selected_opt_idx()
-                        if input_state.was_pressed(gs.settings().left_key()):
+                        if input_state.was_pressed(gs.get_instance().settings().left_key()):
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(gs.settings().right_key()):
+                        if input_state.was_pressed(gs.get_instance().settings().right_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
-                        if input_state.was_pressed(gs.settings().up_key()):
+                        if input_state.was_pressed(gs.get_instance().settings().up_key()):
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(gs.settings().down_key()):
+                        if input_state.was_pressed(gs.get_instance().settings().down_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
 
 
@@ -187,16 +189,16 @@ class Cutscene(Dialog):
         self._action_idx = 0
         self.scroll_pos = len(self.text)
 
-    def update(self, world, gs, input_state):
+    def update(self, world, input_state):
         if self.is_finished():
             return
         else:
             current_action = self.action_list[self._action_idx]
-            if current_action.is_finished() or input_state.was_pressed(gs.settings().interact_key()):
-                current_action.finalize(world, gs, input_state)
+            if current_action.is_finished() or input_state.was_pressed(gs.get_instance().settings().interact_key()):
+                current_action.finalize(world, input_state)
                 self._action_idx += 1
             else:
-                current_action.update(world, gs, input_state)
+                current_action.update(world, input_state)
 
     def is_finished(self):
         return self._action_idx >= len(self.action_list)
@@ -213,10 +215,10 @@ class CutSceneAction:
     def is_finished(self):
         return True
 
-    def update(self, world, gs, input_state):
+    def update(self, world, input_state):
         pass
 
-    def finalize(self, world, gs, input_state):
+    def finalize(self, world, input_state):
         pass
 
 
@@ -230,7 +232,7 @@ class PauseCutSceneAction(CutSceneAction):
     def is_finished(self):
         return self.tick_count >= self.duration
 
-    def update(self, world, gs, input_state):
+    def update(self, world, input_state):
         self.tick_count += 1
 
 
@@ -246,7 +248,7 @@ class NpcWalkCutSceneAction(CutSceneAction):
     def is_finished(self):
         return self.finished
 
-    def finalize(self, world, gs, input_state):
+    def finalize(self, world, input_state):
         npc_entity = world.get_npc(self.npc_id)
         target_pos = ((self.target_cell[0] + 0.5) * world.cellsize(),
                       (self.target_cell[1] + 0.5) * world.cellsize())
@@ -254,7 +256,7 @@ class NpcWalkCutSceneAction(CutSceneAction):
         if npc_entity is not None:
             npc_entity.set_center(*target_pos)
 
-    def update(self, world, gs, input_state):
+    def update(self, world, input_state):
         npc_entity = world.get_npc(self.npc_id)
 
         if npc_entity is None:

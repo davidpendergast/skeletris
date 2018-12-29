@@ -71,6 +71,6 @@ class InputState:
     def all_pressed_keys(self):
         return [x for x in self.all_held_keys() if self.was_pressed(x)]
         
-    def update(self, global_state):
+    def update(self, current_time):
         self._mouse_pos_last_update = self.mouse_pos
-        self._current_time = global_state.tick_counter
+        self._current_time = current_time

@@ -3,7 +3,7 @@ import math
 import src.renderengine.img as img
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
-
+import src.game.globalstate as gs
 
 CELLSIZE = 64
 
@@ -290,9 +290,9 @@ class World:
                     
         return res
 
-    def _update_onscreen_geo_bundles(self, gs, render_engine):
-        px, py = gs.get_world_camera()
-        pw, ph = gs.get_world_camera_size()
+    def _update_onscreen_geo_bundles(self, render_engine):
+        px, py = gs.get_instance().get_world_camera()
+        pw, ph = gs.get_instance().get_world_camera_size()
         grid_rect = [px // CELLSIZE, py // CELLSIZE,
                      pw // CELLSIZE + 3, ph // CELLSIZE + 3]
 
@@ -318,7 +318,7 @@ class World:
             e._alive = True
         self._ents_to_add.clear()
 
-    def update_all(self, gs, input_state, render_engine):
+    def update_all(self, input_state, render_engine):
         self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
@@ -326,10 +326,10 @@ class World:
             e._alive = False
             if e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
-            e.cleanup(gs, render_engine)
+            e.cleanup(render_engine)
         self._ents_to_remove.clear()
 
-        cam_center = gs.get_world_camera(center=True)
+        cam_center = gs.get_instance().get_world_camera(center=True)
 
         for e in self.entities:
             e_center = e.center()
@@ -338,7 +338,7 @@ class World:
 
             if on_camera:
                 # still want them to wander around if they're hidden
-                e.update(self, gs, input_state, render_engine)
+                e.update(self, input_state, render_engine)
 
             if on_camera and not is_hidden:
                 self._onscreen_entities.add(e)
@@ -346,24 +346,24 @@ class World:
                     render_engine.update(bun)
 
             elif e in self._onscreen_entities:
-                e.cleanup(gs, render_engine)
+                e.cleanup(render_engine)
                 self._onscreen_entities.remove(e)
 
         p = self.get_player()
         if p is not None:
-            cam_center = gs.get_world_camera(center=True)
+            cam_center = gs.get_instance().get_world_camera(center=True)
             dist = Utils.dist(cam_center, p.center())
             min_speed = 10
             max_speed = 20
             if dist > 200 or dist <= min_speed:
-                gs.set_world_camera_center(*p.center())
+                gs.get_instance().set_world_camera_center(*p.center())
             else:
                 speed = min_speed + (max_speed - min_speed) * math.sqrt(dist / 200)
                 move_xy = Utils.set_length(Utils.sub(p.center(), cam_center), speed)
                 new_pos = Utils.add(cam_center, move_xy)
-                gs.set_world_camera_center(*Utils.round(new_pos))
+                gs.get_instance().set_world_camera_center(*Utils.round(new_pos))
 
-        self._update_onscreen_geo_bundles(gs, render_engine)
+        self._update_onscreen_geo_bundles(render_engine)
 
     def cleanup_active_bundles(self, render_eng):
         for e in self._onscreen_entities:

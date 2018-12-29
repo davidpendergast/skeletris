@@ -12,6 +12,7 @@ import src.game.events as events
 import src.game.dialog as dialog
 import src.game.music as music
 import src.game.cinematics as cinematics
+import src.game.globalstate as gs
 
 _FIRST_ZONE = None
 _ZONE_TRANSITIONS = {}
@@ -199,15 +200,15 @@ class ZoneLoader:
             raise e
 
 
-def build_world(zone_id, gs, spawn_at_door_with_zone_id=None):
+def build_world(zone_id, spawn_at_door_with_zone_id=None):
     if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
     zone = _ALL_ZONES[zone_id]
-    gs.prepare_for_new_zone(zone_id)
+    gs.get_instance().prepare_for_new_zone(zone_id)
     music.play_song(zone.get_music_id())
 
-    w = zone.build_world(gs)
+    w = zone.build_world()
     w.flush_new_entity_additions()
     w.set_bg_color(zone.get_bg_color())
 
@@ -226,7 +227,7 @@ def build_world(zone_id, gs, spawn_at_door_with_zone_id=None):
 
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
-        gs.set_world_camera_center(*p.center())
+        gs.get_instance().set_world_camera_center(*p.center())
 
     return w
 
@@ -270,7 +271,7 @@ class Zone:
     def get_music_id(self):
         return self.music_id
 
-    def build_world(self, gs):
+    def build_world(self):
         pass
 
 
@@ -281,7 +282,7 @@ class TestZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Test Zone", 5)
 
-    def build_world(self, gs):
+    def build_world(self):
         w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
 
         decs = [
@@ -358,7 +359,7 @@ class DesolateCaveZone(Zone):
         Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png",
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
@@ -381,11 +382,11 @@ class DesolateCaveZone(Zone):
                 doors = w.entities_in_circle(switch_pos, 800, onscreen=False,
                                              cond=lambda ent: isinstance(ent, entities.LockedDoorEntity))
                 nearest_door = doors[0]
-                action = lambda _e, _w, _gs, : nearest_door.do_unlock()
+                action = lambda _e, _w: nearest_door.do_unlock()
                 listener = events.EventListener(action, events.EventType.DIALOG_EXIT,
                                                 lambda event: event.get_uid() == unlock_dialog.get_uid(),
                                                 single_use=True)
-                gs.add_trigger(listener)
+                gs.get_instance().add_trigger(listener)
                 mushroom_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_switches,
                                                                             pos[0], pos[1],
                                                                             interact_dialog=unlock_dialog,
@@ -431,7 +432,7 @@ class DesolateCaveZone2(Zone):
         Zone.__init__(self, "The Desolate Cave II", 1, filename="desolate_cave_2.png",
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
@@ -448,7 +449,7 @@ class SleepyForestZone(Zone):
     def __init__(self):
         Zone.__init__(self, "The Sleepy Forest", 1)
 
-    def build_world(self, gs):
+    def build_world(self):
         w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
         return w
 
@@ -460,7 +461,7 @@ class HauntedForestZone1(Zone):
     def __init__(self):
         Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=DARK_GREY)
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         print("unknowns={}".format(unknowns))
         w = bp.build_world()
@@ -477,7 +478,7 @@ class FrogLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 15, filename="frog_lair.png", bg_color=BLACK)
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
@@ -487,17 +488,17 @@ class FrogLairZone(Zone):
         frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
         w.add(frog_entity, gridcell=frog_spawn)
 
-        def kill_action(_event, _world, _gs):
+        def kill_action(_event, _world):
             print("INFO: unlocking all doors")
             for e in _world.all_entities(onscreen=False):
                 if e.is_door() and e.is_locked():
                     e.do_unlock()
 
-        gs.add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
+        gs.get_instance().add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
                                             lambda evt: evt.get_uid() == frog_entity.get_uid(),
                                             single_use=True))
 
-        gs.play_cinematic(cinematics.frog_intro)
+        gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
 
         return w
 
@@ -514,7 +515,7 @@ class CaveHorrorZone(Zone):
         self._tree_color = (255, 170, 170)
         self._fight_end_door = (0, 170, 170)
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
@@ -541,7 +542,7 @@ class DoorTestZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Main Zone", 15, filename="door_test_1.png")
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
@@ -555,7 +556,7 @@ class DoorTestZoneL(Zone):
     def __init__(self):
         Zone.__init__(self, "Test Zone Left", 17, filename="door_test_L.png")
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
@@ -569,7 +570,7 @@ class DoorTestZoneR(Zone):
     def __init__(self):
         Zone.__init__(self, "Test Zone Right", 17, filename="door_test_R.png")
 
-    def build_world(self, gs):
+    def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
