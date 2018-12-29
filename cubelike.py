@@ -42,10 +42,11 @@ def build_me_a_world(zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone
 
 def create_new_gs(menu):
     data_file = "save_data.json"
-    if gs.SaveData.exists_on_disk(data_file):
-        save_data = gs.SaveData.load_from_disk(data_file)
-    else:
-        save_data = gs.SaveData.create_new_save_file(data_file)
+    # TODO - figure out saving, we aren't doing it at all now
+    #if gs.SaveData.exists_on_disk(data_file):
+    #    save_data = gs.SaveData.load_from_disk(data_file)
+    #else:
+    save_data = gs.SaveData.create_new_save_file(data_file)
 
     menu_manager = menus.MenuManager(menu)
     dialog_manager = dialog.DialogManager()

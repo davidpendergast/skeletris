@@ -29,7 +29,7 @@ class SaveData:
         self._filename = filename
 
         self.kill_count = 0
-        self.num_potions = 0
+        self.num_potions = 5
         self.current_zone_id = None
 
         self.inventory_state = None  # not currently used heh
@@ -54,6 +54,7 @@ class SaveData:
 
     @staticmethod
     def load_from_disk(filename):
+        # TODO - figure out whether we're saving stuff
         res = SaveData(filename)
         dest_file = res.get_path()
 
@@ -82,16 +83,18 @@ class SaveData:
         }
 
     def save_to_disk(self):
-        json_blob = self.to_json()
-        dest_file = self.get_path()
-        try:
-            Utils.save_json_to_path(json_blob, dest_file)
-            print("INFO: saved save data {} to disk".format(self._filename))
-            return True
-        except ValueError:
-            print("ERROR: failed to save to " + dest_file)
-            traceback.print_exc()
-            return False
+        # TODO - figure out whether we're saving or not...
+        #json_blob = self.to_json()
+        #dest_file = self.get_path()
+        #try:
+        #    Utils.save_json_to_path(json_blob, dest_file)
+        #    print("INFO: saved save data {} to disk".format(self._filename))
+        #    return True
+        #except ValueError:
+        #    print("ERROR: failed to save to " + dest_file)
+        #    traceback.print_exc()
+        #    return False
+        pass
 
     def __repr__(self):
         return str(self.to_json())
