@@ -22,6 +22,7 @@ class MenuManager:
     CINEMATIC_MENU = 3
     PAUSE_MENU = 4
     CONTROLS_MENU = 5
+    PASSWORD_MENU = 6
     KEYBINDING_MENU = 7
 
     def __init__(self, menu):
@@ -122,6 +123,9 @@ class Menu:
     def keep_drawing_world_underneath(self):
         return False
 
+    def absorbs_key_inputs(self):
+        return False
+
     def get_active_tooltip(self):
         return self._active_tooltip
 
@@ -152,6 +156,9 @@ class OptionsMenu(Menu):
         self._option_rects = None  # list of tuple(x, y, w, h)
         self._option_imgs = None   # list of ImgBundle
         self._selection = 0
+
+    def get_clear_color(self):
+        return (0, 0, 0)
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
@@ -228,10 +235,20 @@ class OptionsMenu(Menu):
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
             self.esc_pressed()
         else:
-            if input_state.was_pressed(gs.get_instance().settings().up_key()):
+            up_pressed = input_state.was_pressed(gs.get_instance().settings().menu_up_key())
+            if not self.absorbs_key_inputs():
+                up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
+
+            if up_pressed:
                 self._selection = (self._selection - 1) % self.get_num_options()
-            if input_state.was_pressed(gs.get_instance().settings().down_key()):
+
+            down_pressed = input_state.was_pressed(gs.get_instance().settings().menu_down_key())
+            if not self.absorbs_key_inputs():
+                down_pressed = down_pressed or input_state.was_pressed(gs.get_instance().settings().down_key())
+
+            if down_pressed:
                 self._selection = (self._selection + 1) % self.get_num_options()
+
             if input_state.was_pressed(gs.get_instance().settings().enter_key()):
                 self.option_activated(self._selection)
 
@@ -300,11 +317,13 @@ class OptionsMenu(Menu):
 class StartMenu(OptionsMenu):
 
     START_OPT = 0
-    OPTIONS_OPT = 1
-    EXIT_OPT = 2
+    PASSWORD_OPT = 1
+    OPTIONS_OPT = 2
+    EXIT_OPT = 3
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.START_MENU, "cubelike", ["start", "controls", "exit"], title_size=10)
+        OptionsMenu.__init__(self, MenuManager.START_MENU, "cubelike",
+                             ["start", "load game", "controls", "exit"], title_size=10)
 
     def get_song(self):
         return music.Songs.MENU_THEME
@@ -314,6 +333,8 @@ class StartMenu(OptionsMenu):
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
         elif idx == StartMenu.EXIT_OPT:
             gs.get_instance().event_queue().add(events.GameExitEvent())
+        elif idx == StartMenu.PASSWORD_OPT:
+            gs.get_instance().menu_manager().set_active_menu(PasswordEntryMenu())
         elif idx == StartMenu.OPTIONS_OPT:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
 
@@ -337,6 +358,164 @@ class PauseMenu(OptionsMenu):
 
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+
+
+class PasswordEntryMenu(OptionsMenu):
+
+    ENTER_IDX = 0
+    BACK_IDX = 1
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.PASSWORD_MENU, "Enter password", ["enter", "back"])
+
+        self._max_size = 6
+        self._pw_text = ""
+
+        self._pw_text_img = None
+        self._pw_text_rect = None
+
+        self.red_countdown = 0
+        self.green_countdown = 0
+        self.max_color_countdown = 45
+
+    def absorbs_key_inputs(self):
+        return True
+
+    def get_option_color(self, idx):
+        if self.green_countdown > 0:
+            return (1, 1, 1)
+        else:
+            return OptionsMenu.get_option_color(self, idx)
+
+    def option_activated(self, idx):
+        if idx == PasswordEntryMenu.ENTER_IDX:
+            if self._pw_text == "testpw":
+                self.green_countdown = round(self.max_color_countdown * 1.5)
+            else:
+                self.red_countdown = self.max_color_countdown
+        elif idx == PasswordEntryMenu.BACK_IDX:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+
+    def esc_pressed(self):
+        gs.get_instance().menu_manager().set_active_menu(StartMenu())
+
+    def build_pw_img(self, render_eng):
+        display_text = self._pw_text
+
+        if len(display_text) < self._max_size:
+            if (gs.get_instance().anim_tick // 3) % 2 == 0:
+                display_text += "_"
+            else:
+                display_text += " "
+
+        if len(display_text) < self._max_size:
+            missing_spaces = "_" * (self._max_size - len(display_text))
+            display_text += missing_spaces
+
+        if self._pw_text_img is not None and self._pw_text_img.text != display_text:
+            for bun in self._pw_text_img.all_bundles():
+                render_eng.remove(bun)
+            self._pw_text_img = None
+
+        if self._pw_text_img is None:
+            self._pw_text_img = TextImage(0, 0, display_text, spriteref.UI_0_LAYER, scale=self.title_size)
+
+    def _update_pw_img(self):
+        if self._pw_text_img is not None and self._pw_text_rect is not None:
+            x = self._pw_text_rect[0]
+            y = self._pw_text_rect[1]
+
+            if self.green_countdown > 0:
+                greenness = Utils.bound(self.green_countdown / self.max_color_countdown, 0.0, 1.0)
+                color = (1 - greenness, 1, 1 - greenness)
+            else:
+                redness = Utils.bound(self.red_countdown / self.max_color_countdown, 0.0, 1.0)
+                color = (1, 1 - redness, 1 - redness)
+
+            self._pw_text_img = self._pw_text_img.update(new_x=x, new_y=y, new_color=color)
+
+    def _layout_rects(self):
+        # XXX mostly cannibalized from OptionMenu._layout_rects
+        if self._title_rect is None:
+            self._title_rect = (0, 0, 0, 0)
+        if self._option_rects is None:
+            self._option_rects = [(0, 0, 0, 0)] * self.get_num_options()
+        if self._pw_text_rect is None:
+            self._pw_text_rect = (0, 0, 0, 0)
+
+        total_height = 0
+        if self._title_img is not None:
+            total_height += self._title_img.size()[1] + self.title_spacing
+        if self._pw_text_img is not None:
+            total_height += self._pw_text_img.line_height() + self.title_spacing
+        for opt in self._option_imgs:
+            if opt is not None:
+                total_height += opt.size()[1] + self.spacing
+        total_height -= self.spacing
+
+        y_pos = gs.get_instance().screen_size[1] // 2 - total_height // 2
+        if self._title_img is not None:
+            title_x = gs.get_instance().screen_size[0] // 2 - self._title_img.size()[0] // 2
+            self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
+            y_pos += self._title_img.size()[1] + self.title_spacing
+
+        if self._pw_text_img is not None:
+            pw_width = TextImage.calc_width("x" * self._max_size, self._pw_text_img.scale)
+            pw_height = self._pw_text_img.line_height()
+            pw_x = gs.get_instance().screen_size[0] // 2 - pw_width // 2
+            self._pw_text_rect = (pw_x, y_pos, pw_width, pw_height)
+            y_pos += pw_height + self.title_spacing
+
+        for i in range(0, self.get_num_options()):
+            if self._option_imgs[i] is not None:
+                opt_x = gs.get_instance().screen_size[0] // 2 - self._option_imgs[i].size()[0] // 2
+                self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
+                y_pos += self._option_imgs[i].size()[1] + self.spacing
+
+    def all_bundles(self):
+        for bun in OptionsMenu.all_bundles(self):
+            yield bun
+        if self._pw_text_img is not None:
+            for bun in self._pw_text_img.all_bundles():
+                yield bun
+
+    def handle_inputs(self, world, input_state, render_eng):
+        if self.green_countdown > 0:
+            # pw is solved, we're just watching the animation now
+            pass
+
+        if input_state.was_pressed(pygame.K_BACKSPACE):
+            if len(self._pw_text) > 0:
+                self._pw_text = self._pw_text[:(len(self._pw_text)-1)]
+        for key in input_state.all_pressed_keys():
+            as_ascii = Utils.stringify_key(key)
+            if len(self._pw_text) < self._max_size and as_ascii in "abcdefghijklmnopqrstuvwxyz0123456789":
+                self._pw_text += as_ascii
+
+        OptionsMenu.handle_inputs(self, world, input_state, render_eng)
+
+    def update(self, world, input_state, render_eng):
+        # XXX mostly cannibalized from OptionMenu.update
+        self.build_title_img()
+        self.build_option_imgs()
+        self.build_pw_img(render_eng)
+
+        self._layout_rects()
+        self._update_imgs()
+        self._update_pw_img()
+
+        if self.red_countdown > 0:
+            self.red_countdown -= 1
+
+        if self.green_countdown == 1:
+            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
+        elif self.green_countdown > 0:
+            self.green_countdown -= 1
+
+        self.handle_inputs(world, input_state, render_eng)
+
+        for bun in self.all_bundles():
+            render_eng.update(bun)
 
 
 class ControlsMenu(OptionsMenu):

@@ -201,11 +201,13 @@ def run():
             gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
 
         if input_state.was_pressed(pygame.K_o):
-            cur_value = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
-            if cur_value > 0:
-                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
-            else:
-                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
+            manager = gs.get_instance().menu_manager()
+            if not manager.get_active_menu().absorbs_key_inputs():
+                cur_value = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
+                if cur_value > 0:
+                    gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
+                else:
+                    gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
 
         if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
             manager = gs.get_instance().menu_manager()

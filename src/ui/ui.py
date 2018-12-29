@@ -568,7 +568,7 @@ class TextImage:
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
     @staticmethod
-    def _calc_width(text, scale):
+    def calc_width(text, scale):
         max_line_w = 0
         cur_line_w = 0
         char_w = (spriteref.alphabet["a"].width() + TextImage.X_KERNING) * scale
@@ -590,7 +590,7 @@ class TextImage:
         ypos = TextImage.Y_KERNING
 
         if self.center_w is not None:
-            true_width = TextImage._calc_width(self.text, self.scale)
+            true_width = TextImage.calc_width(self.text, self.scale)
             x_shift = self.x + self.center_w // 2 - true_width // 2
         else:
             x_shift = TextImage.X_KERNING
@@ -670,7 +670,7 @@ class TextImage:
             if len(cur_line) == 0:
                 cur_line.append(words[0])
                 words = words[1:]
-            if len(words) == 0 or TextImage._calc_width(" ".join(cur_line + [words[0]]), scale) > width:
+            if len(words) == 0 or TextImage.calc_width(" ".join(cur_line + [words[0]]), scale) > width:
                 lines.append(" ".join(cur_line))
                 cur_line.clear()
             elif len(words) > 0:

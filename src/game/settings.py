@@ -37,7 +37,10 @@ KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
 KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i])
 KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
 
+
 # these are locked
+KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP])
+KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN])
 KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN])
 KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE])
 
@@ -102,6 +105,12 @@ class Settings:
 
     def down_key(self):
         return self.get(KEY_DOWN)
+
+    def menu_up_key(self):
+        return self.get(KEY_MENU_UP)
+
+    def menu_down_key(self):
+        return self.get(KEY_MENU_DOWN)
 
     def attack_key(self):
         return self.get(KEY_ATTACK)
