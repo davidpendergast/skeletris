@@ -6,6 +6,7 @@ import os
 import src.game.events as events
 from src.game.settings import Settings
 from src.utils.util import Utils
+import src.utils.passwordgen as passwordgen
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -40,20 +41,62 @@ class SaveDataBlob:
         self.equipment_positions = equipment_positions
         self.inventory_positions = inventory_positions
 
-    def save_to_disk(self, filename):
-        pass
+    @staticmethod
+    def filepath_for_password(password):
+        return os.path.join("save_data", "saved_games", password + ".json")
 
     @staticmethod
-    def load_from_disk(filename):
-        pass
+    def get_current_passwords_from_disk():
+        res = []
+        try:
+            for file in os.listdir(os.path.join("save_data", "saved_games")):
+                if file.endswith(".json"):
+                    pw = file[:(len(file)-5)]
+                    res.append(pw)
+        except:
+            print("ERROR: failure while trying to fetch already-used passwords")
+            traceback.print_exc()
+        return res
+
+    def save_to_disk(self, password):
+        path = SaveDataBlob.filepath_for_password(password)
+        try:
+            as_json = self.to_json()
+            Utils.save_json_to_path(as_json, path)
+            return True
+        except:
+            print("ERROR: failed to save {}".format(path))
+            traceback.print_exc()
+        return False
+
+    @staticmethod
+    def load_from_disk(password):
+        path = SaveDataBlob.filepath_for_password(password)
+        try:
+            blob = Utils.load_json_from_path(path)
+            return SaveDataBlob.from_json(blob)
+        except:
+            print("ERROR: failed to load {}".format(path))
+            traceback.print_exc()
+
+        return None
 
     def to_json(self):
         return {
-            "version": 0,
             "kill_count": self.kill_count,
             "num_potions": self.num_potions,
             "zone_id": self.zone_id,
+            "equipment": [],
+            "inventory": []
         }
+
+    @staticmethod
+    def from_json(blob):
+        kill_count = int(blob["kill_count"])
+        num_potions = int(blob["num_potions"])
+        zone_id = str(blob["zone_id"])
+
+        return SaveDataBlob(zone_id, kill_count, num_potions, {}, {})
 
     def __repr__(self):
         return str(self.to_json())
@@ -61,14 +104,17 @@ class SaveDataBlob:
 
 class GlobalState:
 
-    def __init__(self, menu_manager, dialog_manager, npc_state):
+    def __init__(self, initial_zone_id, menu_manager, dialog_manager, npc_state):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
         self.tick_counter = 0
         self.anim_tick = 0
 
+        self.initial_zone_id = initial_zone_id
         self.current_zone = None
+
+        self.most_recent_password = None
 
         self._settings = Settings()
         self._settings_filename = "settings.json"
@@ -136,6 +182,29 @@ class GlobalState:
 
     def dialog_manager(self):
         return self._dialog_manager
+
+    def save_game_to_disk(self, password=None):
+        """
+        return: True if save was successful, False otherwise
+        """
+        if self.current_zone is None:
+            print("ERROR: cannot save game if current_zone is None")
+            return False
+
+        if password is None:
+            already_used = SaveDataBlob.get_current_passwords_from_disk()
+            password = passwordgen.gen_unique_password(already_used)
+
+        save_blob = SaveDataBlob(self.current_zone.ZONE_ID,
+                                 self.player_state().kill_count,
+                                 self.player_state().num_potions,
+                                 {},  # TODO - these puppies
+                                 {})
+
+        res = save_blob.save_to_disk(password)
+        if res:
+            self.most_recent_password = password
+        return res
 
     def npc_state(self):
         return self._npc_state
@@ -271,15 +340,26 @@ def create_new(menu, from_pw=None):
     import src.game.npc as npc
     npc_state = npc.NpcState()
 
-    new_instance = GlobalState(menu_manager, dialog_manager, npc_state)
+    import src.worldgen.zones as zones
+    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, npc_state)
 
-    import src.game.actorstate as actorstate
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()
 
-    new_instance.set_player_state(actorstate.PlayerState("ghast", inventory_state))
+    import src.game.actorstate as actorstate
+    player_state = actorstate.PlayerState("ghast", inventory_state)
 
-    # TODO - load from password
+    new_instance.set_player_state(player_state)
+
+    if from_pw is not None:
+        save_data = SaveDataBlob.load_from_disk(from_pw)
+        if save_data is not None:
+            new_instance.most_recent_password = from_pw
+            player_state.num_potions = save_data.num_potions
+            player_state.kill_count = save_data.kill_count
+
+            if save_data.zone_id in zones._ALL_ZONES:
+                new_instance.initial_zone_id = save_data.zone_id
 
     set_instance(new_instance)
 

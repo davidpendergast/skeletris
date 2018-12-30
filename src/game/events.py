@@ -207,11 +207,15 @@ class GameExitEvent(Event):
 
 class NewGameEvent(Event):
 
-    def __init__(self, instant_start=True):
-        Event.__init__(self, EventType.NEW_GAME, instant_start, description="new game")
+    def __init__(self, instant_start=True, from_pw=None):
+        my_data = (instant_start, from_pw)
+        Event.__init__(self, EventType.NEW_GAME, my_data, description="new game")
 
     def get_instant_start(self):
-        return self.get_data()
+        return self.get_password() is not None or self.get_data()[0]
+
+    def get_password(self):
+        return self.get_data()[1]
 
 
 class PlayerDiedEvent(Event):

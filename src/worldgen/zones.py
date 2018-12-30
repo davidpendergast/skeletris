@@ -14,7 +14,7 @@ import src.game.music as music
 import src.game.cinematics as cinematics
 import src.game.globalstate as gs
 
-_FIRST_ZONE = None
+_FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
@@ -22,8 +22,11 @@ BLACK = (0, 0, 0)
 DARK_GREY = (92, 92, 92)
 
 
+def first_zone_id():
+    return _FIRST_ZONE_ID
+
 def first_zone():
-    return _FIRST_ZONE
+    return _ALL_ZONES[_FIRST_ZONE_ID]
 
 
 def init_zones():
@@ -33,8 +36,8 @@ def init_zones():
         zone_instance.zone_id = zone_cls.ZONE_ID
         make(zone_instance)
 
-    global _FIRST_ZONE
-    _FIRST_ZONE = DesolateCaveZone.ZONE_ID
+    global _FIRST_ZONE_ID
+    _FIRST_ZONE_ID = DesolateCaveZone.ZONE_ID
 
     _ZONE_TRANSITIONS.clear()
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
@@ -46,7 +49,7 @@ def init_zones():
 
 
 def _test_zone_sanity():
-    if first_zone() not in _ALL_ZONES:
+    if first_zone() is None or first_zone().ZONE_ID not in _ALL_ZONES:
         raise ValueError("no first zone")
 
     return_ids = {}  # zone -> return_id
@@ -200,7 +203,7 @@ class ZoneLoader:
             raise e
 
 
-def build_world(zone_id, spawn_at_door_with_zone_id=None):
+def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=False):
     if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
@@ -216,14 +219,24 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None):
 
     p = w.get_player()
     if p is not None:
-        if spawn_at_door_with_zone_id is not None:
+        spawn_at_entity = None
+        if spawn_at_save_station:
+            print("searching for save station")
+            for e in w.all_entities(onscreen=False):
+                if e.is_save_station():
+                    print("found save station to spawn at")
+                    spawn_at_entity = e
+
+        elif spawn_at_door_with_zone_id is not None:
             for e in w.all_entities(onscreen=False):
                 if e.is_exit() and e.get_zone() == spawn_at_door_with_zone_id:
                     e.set_open(True)
-                    grid_xy = w.to_grid_coords(*e.center())
-                    p = w.get_player()
-                    size = w.cellsize()
-                    p.set_center((grid_xy[0] + 0.5) * size, (grid_xy[1] + 0.5) * size)
+                    spawn_at_entity = e
+
+        if spawn_at_entity is not None:
+            grid_xy = w.to_grid_coords(*spawn_at_entity.center())
+            size = w.cellsize()
+            p.set_center((grid_xy[0] + 0.5) * size, (grid_xy[1] + 0.5) * size)
 
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)

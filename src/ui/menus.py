@@ -371,6 +371,8 @@ class PasswordEntryMenu(OptionsMenu):
         self._max_size = 6
         self._pw_text = ""
 
+        self._all_valid_passwords = gs.SaveDataBlob.get_current_passwords_from_disk()
+
         self._pw_text_img = None
         self._pw_text_rect = None
 
@@ -389,7 +391,7 @@ class PasswordEntryMenu(OptionsMenu):
 
     def option_activated(self, idx):
         if idx == PasswordEntryMenu.ENTER_IDX:
-            if self._pw_text == "testpw":
+            if self._pw_text in self._all_valid_passwords:
                 self.green_countdown = round(self.max_color_countdown * 1.5)
             else:
                 self.red_countdown = self.max_color_countdown
@@ -508,7 +510,7 @@ class PasswordEntryMenu(OptionsMenu):
             self.red_countdown -= 1
 
         if self.green_countdown == 1:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
+            gs.get_instance().event_queue().add(events.NewGameEvent(from_pw=self._pw_text))
         elif self.green_countdown > 0:
             self.green_countdown -= 1
 

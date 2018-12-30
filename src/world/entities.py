@@ -179,6 +179,9 @@ class Entity(Updateable):
     def is_potion(self):
         return False
 
+    def is_save_station(self):
+        return False
+
     def is_npc(self):
         return False
 
@@ -1165,6 +1168,9 @@ class SaveStationEntity(Entity):
     def update(self, world, input_state, render_engine):
         self.update_images(gs.get_instance().anim_tick)
 
+    def is_save_station(self):
+        return True
+
     def is_interactable(self):
         return True
 
@@ -1177,9 +1183,11 @@ class SaveStationEntity(Entity):
 
         def _do_save(event, w):
             if event.get_option_idx() == 0:
-                result = gs.get_instance().save_data().save_to_disk()
+                result = gs.get_instance().save_game_to_disk()
                 if result:
-                    gs.get_instance().dialog_manager().set_dialog(NpcDialog("game saved.", spriteref.save_station_faces))
+                    pw = gs.get_instance().most_recent_password
+                    dialog = NpcDialog("game saved with password: {}".format(pw), spriteref.save_station_faces)
+                    gs.get_instance().dialog_manager().set_dialog(dialog)
                 else:
                     gs.get_instance().dialog_manager().set_dialog(Dialog("failed to save.", spriteref.save_station_faces))
         e_listener = question.build_listener(_do_save, single_use=True)
@@ -1273,7 +1281,7 @@ class ExitEntity(Entity):
         self.update_images(gs.get_instance().anim_tick)
 
     def make_new_zone_event(self):
-        # TODO - maybe better if exits already know their zones
+        # TODO - maybe better if exits already know their current zones
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self):

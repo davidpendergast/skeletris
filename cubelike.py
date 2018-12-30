@@ -36,10 +36,6 @@ pygame.mixer.init()
 SCREEN_SIZE = (800, 600)
 
 
-def build_me_a_world(zone_id=zones.FrogLairZone.ZONE_ID, spawn_at_door_with_zone_id=None):
-    return zones.build_world(zone_id, spawn_at_door_with_zone_id=spawn_at_door_with_zone_id)
-
-
 def run():
     pygame.init()
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
@@ -136,7 +132,7 @@ def run():
                 else:
                     menu = menus.StartMenu()
 
-                gs.create_new(menu)
+                gs.create_new(menu, from_pw=event.get_password())
                 world = None
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
@@ -166,9 +162,12 @@ def run():
         world_active = gs.get_instance().menu_manager().should_draw_world()
 
         if world_active and world is None:
-            # building the initial world
+            # building the initial world for the game
             render_eng.clear_all_sprites()
-            world = zones.build_world(zones.first_zone())
+            initial_zone_id = gs.get_instance().initial_zone_id
+            loading_save = initial_zone_id != zones.first_zone_id()
+            print("loading save = {}".format(loading_save))
+            world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
 
         if input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
