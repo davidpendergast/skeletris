@@ -1190,6 +1190,10 @@ class SaveStationEntity(Entity):
                     gs.get_instance().dialog_manager().set_dialog(dialog)
                 else:
                     gs.get_instance().dialog_manager().set_dialog(Dialog("failed to save.", spriteref.save_station_faces))
+
+            gs.get_instance().player_state().do_full_heal()
+            gs.get_instance().player_state().remove_all_statuses()
+
         e_listener = question.build_listener(_do_save, single_use=True)
 
         gs.get_instance().add_trigger(e_listener)

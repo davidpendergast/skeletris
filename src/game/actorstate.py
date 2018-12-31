@@ -79,6 +79,10 @@ class ActorState(Pushable):
                 return True
         return False
 
+    def remove_all_statuses(self):
+        for s in self._status_effects:
+            self.remove_status(s)
+
     def max_hp(self):
         return self.stat_value(PlayerStatType.HP)
 
@@ -152,6 +156,11 @@ class ActorState(Pushable):
                 # faster implies lighter, implies easier to knock back, lol
                 knockback = Utils.mult(knockback, 1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
                 self.push(knockback, self.damage_recoil)
+
+    def do_full_heal(self):
+        heal_val = self.max_hp() - self.hp()
+        if heal_val > 0:
+            self.do_heal(heal_val)
 
     def do_heal(self, amount):
         if amount > 0:

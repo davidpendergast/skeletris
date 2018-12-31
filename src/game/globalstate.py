@@ -82,12 +82,22 @@ class SaveDataBlob:
         return None
 
     def to_json(self):
+        equipment = []
+        for xy in self.equipment_positions:
+            item_as_json = self.equipment_positions[xy].to_json()
+            equipment.append((xy[0], xy[1], item_as_json))
+
+        inventory = []
+        for xy in self.inventory_positions:
+            item_as_json = self.inventory_positions[xy].to_json()
+            inventory.append((xy[0], xy[1], item_as_json))
+
         return {
             "kill_count": self.kill_count,
             "num_potions": self.num_potions,
             "zone_id": self.zone_id,
-            "equipment": [],
-            "inventory": []
+            "equipment": equipment,
+            "inventory": inventory
         }
 
     @staticmethod
@@ -96,7 +106,30 @@ class SaveDataBlob:
         num_potions = int(blob["num_potions"])
         zone_id = str(blob["zone_id"])
 
-        return SaveDataBlob(zone_id, kill_count, num_potions, {}, {})
+        from src.items.item import Item
+        equipment_positions = {}
+        for x_y_item in blob["equipment"]:
+            try:
+                x = int(x_y_item[0])
+                y = int(x_y_item[1])
+                item = Item.from_json(x_y_item[2])
+                equipment_positions[(x, y)] = item
+            except:
+                print("ERROR: couldn't deserialize item: {}".format(x_y_item))
+                traceback.print_exc()
+
+        inventory_positions = {}
+        for x_y_item in blob["inventory"]:
+            try:
+                x = int(x_y_item[0])
+                y = int(x_y_item[1])
+                item = Item.from_json(x_y_item[2])
+                inventory_positions[(x, y)] = item
+            except:
+                print("ERROR: couldn't deserialize item: {}".format(x_y_item))
+                traceback.print_exc()
+
+        return SaveDataBlob(zone_id, kill_count, num_potions, equipment_positions, inventory_positions)
 
     def __repr__(self):
         return str(self.to_json())
@@ -195,11 +228,14 @@ class GlobalState:
             already_used = SaveDataBlob.get_current_passwords_from_disk()
             password = passwordgen.gen_unique_password(already_used)
 
+        equip_items = self.player_state().inventory().equip_grid.to_map()
+        inv_items = self.player_state().inventory().inv_grid.to_map()
+
         save_blob = SaveDataBlob(self.current_zone.ZONE_ID,
                                  self.player_state().kill_count,
                                  self.player_state().num_potions,
-                                 {},  # TODO - these puppies
-                                 {})
+                                 equip_items,
+                                 inv_items)
 
         res = save_blob.save_to_disk(password)
         if res:
@@ -357,6 +393,22 @@ def create_new(menu, from_pw=None):
             new_instance.most_recent_password = from_pw
             player_state.num_potions = save_data.num_potions
             player_state.kill_count = save_data.kill_count
+
+            for xy in save_data.equipment_positions:
+                item = save_data.equipment_positions[xy]
+                if player_state.inventory().equip_grid.can_place(item, xy):
+                    player_state.inventory().equip_grid.place(item, xy)
+                else:
+                    print("ERROR: cannot place equipment item at position ({}, {}):\n{}".format(xy[0], xy[1], item))
+
+            for xy in save_data.inventory_positions:
+                item = save_data.inventory_positions[xy]
+                if player_state.inventory().inv_grid.can_place(item, xy):
+                    player_state.inventory().inv_grid.place(item, xy)
+                else:
+                    print("ERROR: cannot place inventory item at position ({}, {}):\n{}".format(xy[0], xy[1], item))
+
+            player_state.set_hp(player_state.max_hp())
 
             if save_data.zone_id in zones._ALL_ZONES:
                 new_instance.initial_zone_id = save_data.zone_id

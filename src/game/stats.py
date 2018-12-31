@@ -3,14 +3,14 @@ import math
 from enum import Enum
 
 
-class PlayerStatType(Enum):
+class PlayerStatType(str, Enum):
     HP = "HP",
     DPS = "DPS",
     MOVESPEED = "MOVE_SPEED",
     ATTACK_RADIUS = "ATTACK_RADIUS",
 
 
-class StatType(Enum):
+class StatType(str, Enum):
     ATT = "ATT",
     DEF = "DEF",
     VIT = "VIT",

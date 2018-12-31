@@ -21,6 +21,14 @@ class ItemGrid:
         if self.can_place(item, pos):
             self.items[pos] = item
             self.place_order.append(item)
+
+    def to_map(self):
+        """
+        returns: (int, int) -> Item
+        """
+        res = {}
+        res.update(self.items)
+        return res
             
     def try_to_replace(self, item, pos):
         if (item.w() + pos[0] > self.size[0] or 
