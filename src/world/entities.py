@@ -1183,9 +1183,8 @@ class SaveStationEntity(Entity):
 
         def _do_save(event, w):
             if event.get_option_idx() == 0:
-                result = gs.get_instance().save_game_to_disk()
+                result, pw = gs.get_instance().save_game_to_disk()
                 if result:
-                    pw = gs.get_instance().most_recent_password
                     dialog = NpcDialog("game saved with password: {}".format(pw), spriteref.save_station_faces)
                     gs.get_instance().dialog_manager().set_dialog(dialog)
                 else:

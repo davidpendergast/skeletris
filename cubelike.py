@@ -1,21 +1,17 @@
+import traceback
+
 import pygame
 
 import src.game.spriteref as spriteref
-
-
 from src.utils.util import Utils
 import src.game.globalstate as gs
 import src.game.inputs as inputs
 import src.ui.menus as menus
-from src.game.inventory import InventoryState
-from src.game.actorstate import PlayerState
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
 import src.game.cinematics as cinematics
-import src.game.dialog as dialog
 import src.worldgen.zones as zones
 import src.game.settings as settings
-import src.game.npc as npc
 import src.game.readme_writer as readme_writer
 import src.utils.profiling as profiling
 import src.game.events as events
@@ -166,7 +162,6 @@ def run():
             render_eng.clear_all_sprites()
             initial_zone_id = gs.get_instance().initial_zone_id
             loading_save = initial_zone_id != zones.first_zone_id()
-            print("loading save = {}".format(loading_save))
             world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
 
         if input_state.was_pressed(pygame.K_F1):
@@ -227,6 +222,13 @@ def run():
         if gs.get_instance().tick_counter % 60 == 0:
             if clock.get_fps() < 59:
                 print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
+
+    try:
+        print("INFO: saving settings before exit")
+        gs.get_instance().save_settings_to_disk()
+    except:
+        print("ERROR: failed to save settings")
+        traceback.print_exc()
 
     pygame.quit()
 

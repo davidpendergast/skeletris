@@ -57,6 +57,18 @@ def gen_very_mean_password():
     return res
 
 
+def is_valid(password):
+    if password is None:
+        return False
+    if len(password) != 6:
+        return False
+    for c in password:
+        if c not in "abcdefghijklmnopqrstuvwxyz0123456789":
+            return False
+
+    return True
+
+
 if __name__ == "__main__":
     nice = [gen_nice_password() for _ in range(0, 100)]
     mean = [gen_mean_password() for _ in range(0, 100)]

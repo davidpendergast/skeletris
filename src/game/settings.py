@@ -1,5 +1,6 @@
 import pygame
 from src.utils.util import Utils
+import src.utils.passwordgen as passwordgen
 
 ALL_SETTINGS = {}
 ALL_KEY_SETTINGS = []
@@ -51,6 +52,9 @@ MASTER_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
 MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100)
 MUSIC_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
 MUSIC_VOLUME.on_set = lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100)
+
+LAST_PASSWORD = Setting("last password", "LAST_PASSWORD", None)
+LAST_PASSWORD.clean = lambda val: val if passwordgen.is_valid(val) else None
 
 
 class Settings:

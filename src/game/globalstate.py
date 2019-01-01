@@ -4,7 +4,7 @@ import random
 import os
 
 import src.game.events as events
-from src.game.settings import Settings
+import src.game.settings as settings
 from src.utils.util import Utils
 import src.utils.passwordgen as passwordgen
 
@@ -147,9 +147,7 @@ class GlobalState:
         self.initial_zone_id = initial_zone_id
         self.current_zone = None
 
-        self.most_recent_password = None
-
-        self._settings = Settings()
+        self._settings = settings.Settings()
         self._settings_filename = "settings.json"
         self._settings.load_from_file(self._path_to_settings())
 
@@ -218,11 +216,13 @@ class GlobalState:
 
     def save_game_to_disk(self, password=None):
         """
-        return: True if save was successful, False otherwise
+        return: (bool, str)
+            bool: True if save is successful, False otherwise
+            str: password used for successful save.
         """
         if self.current_zone is None:
             print("ERROR: cannot save game if current_zone is None")
-            return False
+            return (False, None)
 
         if password is None:
             already_used = SaveDataBlob.get_current_passwords_from_disk()
@@ -239,8 +239,10 @@ class GlobalState:
 
         res = save_blob.save_to_disk(password)
         if res:
-            self.most_recent_password = password
-        return res
+            self.settings().set(settings.LAST_PASSWORD, password)
+            self.save_settings_to_disk()
+
+        return (res, password)
 
     def npc_state(self):
         return self._npc_state
@@ -387,10 +389,12 @@ def create_new(menu, from_pw=None):
 
     new_instance.set_player_state(player_state)
 
+    loaded_from_pw = False
+
     if from_pw is not None:
         save_data = SaveDataBlob.load_from_disk(from_pw)
         if save_data is not None:
-            new_instance.most_recent_password = from_pw
+            loaded_from_pw = True
             player_state.num_potions = save_data.num_potions
             player_state.kill_count = save_data.kill_count
 
@@ -412,6 +416,12 @@ def create_new(menu, from_pw=None):
 
             if save_data.zone_id in zones._ALL_ZONES:
                 new_instance.initial_zone_id = save_data.zone_id
+
+    if loaded_from_pw:
+        new_instance.settings().set(settings.LAST_PASSWORD, from_pw)
+    elif menu.get_type() != menus.MenuManager.START_MENU:
+        # if we're just going to the start menu we don't want to wipe the pref.
+        new_instance.settings().set(settings.LAST_PASSWORD, None)
 
     set_instance(new_instance)
 

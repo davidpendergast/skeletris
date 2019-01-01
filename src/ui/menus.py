@@ -11,6 +11,7 @@ import src.game.events as events
 import src.game.music as music
 import src.game.settings as settings
 import src.game.globalstate as gs
+import src.utils.passwordgen as passwordgen
 
 
 class MenuManager:
@@ -74,14 +75,11 @@ class MenuManager:
         else:
             return None
 
-    def set_active_menu(self, menu_or_id):
-        """
-        :param menu_or_id: either a Menu or a (number) menu id.
-        """
-        if menu_or_id is None:
+    def set_active_menu(self, menu):
+        if menu is None:
             raise ValueError("Can't set null menu")
 
-        self._next_active_menu = menu_or_id
+        self._next_active_menu = menu
 
     def get_world_menu_if_active(self):
         active = self.get_active_menu()
@@ -334,7 +332,8 @@ class StartMenu(OptionsMenu):
         elif idx == StartMenu.EXIT_OPT:
             gs.get_instance().event_queue().add(events.GameExitEvent())
         elif idx == StartMenu.PASSWORD_OPT:
-            gs.get_instance().menu_manager().set_active_menu(PasswordEntryMenu())
+            last_pw = gs.get_instance().settings().get(settings.LAST_PASSWORD)
+            gs.get_instance().menu_manager().set_active_menu(PasswordEntryMenu(prefill=last_pw))
         elif idx == StartMenu.OPTIONS_OPT:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
 
@@ -365,11 +364,13 @@ class PasswordEntryMenu(OptionsMenu):
     ENTER_IDX = 0
     BACK_IDX = 1
 
-    def __init__(self):
+    def __init__(self, prefill=None):
         OptionsMenu.__init__(self, MenuManager.PASSWORD_MENU, "Enter password", ["enter", "back"])
 
         self._max_size = 6
         self._pw_text = ""
+        if passwordgen.is_valid(prefill):
+            self._pw_text = prefill
 
         self._all_valid_passwords = gs.SaveDataBlob.get_current_passwords_from_disk()
 
@@ -379,6 +380,9 @@ class PasswordEntryMenu(OptionsMenu):
         self.red_countdown = 0
         self.green_countdown = 0
         self.max_color_countdown = 45
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
 
     def absorbs_key_inputs(self):
         return True
@@ -731,20 +735,21 @@ class DeathMenu(OptionsMenu):
 
 class DeathOptionMenu(OptionsMenu):
 
-    RETRY_OPT = 0
+    CONTINUE = 0
     EXIT_OPT = 1
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["retry", "quit"])
+        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["continue", "quit"])
 
     def get_song(self):
         return None
 
     def option_activated(self, idx):
-        if idx == DeathOptionMenu.RETRY_OPT:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
-        elif idx == DeathOptionMenu.EXIT_OPT:
+        if idx == DeathOptionMenu.EXIT_OPT:
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
+        elif idx == DeathOptionMenu.CONTINUE:
+            last_pw = gs.get_instance().settings().get(settings.LAST_PASSWORD)
+            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True, from_pw=last_pw))
 
 
 class InGameUiState(Menu):

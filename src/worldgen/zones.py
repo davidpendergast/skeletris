@@ -221,10 +221,8 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=
     if p is not None:
         spawn_at_entity = None
         if spawn_at_save_station:
-            print("searching for save station")
             for e in w.all_entities(onscreen=False):
                 if e.is_save_station():
-                    print("found save station to spawn at")
                     spawn_at_entity = e
 
         elif spawn_at_door_with_zone_id is not None:
