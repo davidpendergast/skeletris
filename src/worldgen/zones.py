@@ -359,11 +359,11 @@ class DesolateCaveZone(Zone):
             (255, 186, 150): ("[i] to read", "use [i] to pick up items, interact with things, and dismiss text."),
             (255, 184, 150): ("[i] to read", "doors and chests will open on their own if you stand next to them for a little while."),
             (255, 182, 150): ("[i] to read", ["use [r] to open inventory.", "items in the top 5x5 grid are currently equipped. the bottom grid is for storage."]),
-            (255, 180, 150): ("[i] to read", ["stand on the chest to open it. then, use the mouse to equip some items. right-click rotates the active item.", "you can't fit everything, so use your equipment grid squares wisely."]),
+            (255, 180, 150): ("[i] to read", ["use the mouse to equip some items. right-click rotates the active item.", "you can't fit everything, so use your equipment grid squares wisely."]),
             (255, 178, 150): ("[i] to read", "use [j] to attack. you can't be hit while in the air."),
             (255, 176, 150): ("[i] to read", "use [k] to heal. healing potions can be collected from chests and slain enemies."),
             (255, 174, 150): ("[i] to read", "the controls are also on the hotbar at the bottom of the screen."),
-            (255, 172, 150): ("[i] to read", "good luck! deaths are permanent.")
+            (255, 172, 150): ("[i] to read", "good luck!")
     }
 
     def __init__(self):

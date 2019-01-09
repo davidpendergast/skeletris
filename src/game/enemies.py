@@ -349,7 +349,7 @@ class EnemyFactory:
 
         state = EnemyFactory.get_state(template, level, enemy_stats)
 
-        if random.random() < EnemyRates.CHANCE_TO_HAVE_ATTACK:
+        if random.random() < EnemyRates.chance_to_have_attack(level):
             sp_atts = template.get_possible_special_attacks()
             if len(sp_atts) > 0:
                 idx = int(random.random() * len(sp_atts))
@@ -363,7 +363,9 @@ class EnemyFactory:
     @staticmethod
     def gen_enemies(level, n=None):
         if n is None:
-            n = int(1 + random.random()*4)
+            min_n = EnemyRates.min_pack_size(level)
+            max_n = EnemyRates.max_pack_size(level)
+            n = int(max(1, min_n + (max_n - min_n)*random.random()))
 
         first = EnemyFactory.gen_enemy(level)
         res = [first]

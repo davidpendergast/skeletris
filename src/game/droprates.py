@@ -1,3 +1,5 @@
+from src.utils.util import Utils
+
 
 class EnemyDroprate:
 
@@ -23,6 +25,18 @@ class ItemRates:
 
 class EnemyRates:
 
-    CHANCE_TO_HAVE_ATTACK = 0.25
+    @staticmethod
+    def chance_to_have_attack(level):
+        if level < 5:
+            return 0
+        else:
+            return 0.75 * Utils.bound(level / 65, 0.0, 1.0)
 
+    @staticmethod
+    def max_pack_size(level):
+        return 5 + 10 * Utils.bound(level / 20, 0.0, 1.0)
+
+    @staticmethod
+    def min_pack_size(level):
+        return 0 + 5 * Utils.bound(level / 20, 0.0, 1.0)
 
