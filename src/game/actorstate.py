@@ -564,11 +564,12 @@ class PlayerState(ActorState):
 
 class EnemyState(ActorState):
 
-    def __init__(self, template, level, stats):
+    def __init__(self, template, level, stats, is_rare):
         """
             stats: map StatType -> value
         """
         self.template = template
+        self.is_rare = is_rare
         self.sprites = template.get_sprites()
         self.stats = stats
         ActorState.__init__(self, template.get_name(), level, stats)
@@ -608,7 +609,7 @@ class EnemyState(ActorState):
         return res
 
     def duplicate(self):
-        res = EnemyState(self.template, self.level(), dict(self.stats))
+        res = EnemyState(self.template, self.level(), dict(self.stats), self.is_rare)
         res.set_special_attack(self.special_attack)
         return res
 
@@ -633,15 +634,20 @@ class EnemyState(ActorState):
             return 0
 
     def _handle_death(self, entity, world):
-        loot = self.template.get_loot(self.level())
+        if self.template.drops_loot():
+            loot = LootFactory.gen_loot(self.level(), self.is_rare)
+        else:
+            loot = []
+
         position = entity.center()
 
         for item in loot:
             item_ent = ItemEntity(item, *position)
             world.add(item_ent)
 
-        for _ in range(0, LootFactory.gen_num_potions_to_drop(self.level())):
-            world.add(PotionEntity(*entity.center()))
+        if self.template.drops_loot():
+            for _ in range(0, LootFactory.gen_num_potions_to_drop(self.level(), self.is_rare)):
+                world.add(PotionEntity(*entity.center()))
 
         self.template.special_death_action(self.level(), entity, world)
 

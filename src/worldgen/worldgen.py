@@ -182,6 +182,7 @@ class WorldBlueprint:
             self.geo_alt_art.append([None] * size[1])
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
+        self.rare_enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawns = {}         # zone_id -> (x, y)
         self.boss_exit_spawns = {}    # zone_id -> (x, y)
@@ -251,6 +252,11 @@ class WorldBlueprint:
 
         for spawn_pos in self.enemy_spawns:
             enemies = EnemyFactory.gen_enemies(self.level)
+            for e in enemies:
+                w.add(e, gridcell=spawn_pos)
+
+        for spawn_pos in self.rare_enemy_spawns:
+            enemies = EnemyFactory.gen_enemies(self.level, force_rare=True)
             for e in enemies:
                 w.add(e, gridcell=spawn_pos)
 

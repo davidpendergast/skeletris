@@ -70,7 +70,7 @@ class FrogBossState(EnemyState):
     MODE_LEAPING = 4
 
     def __init__(self, template, level, stats):
-        EnemyState.__init__(self, template, level, stats)
+        EnemyState.__init__(self, template, level, stats, False)
         self._current_mode = FrogBossState.MODE_RESTING
         self._current_mode_ticks = 0
 

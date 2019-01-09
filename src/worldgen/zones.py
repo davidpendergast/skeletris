@@ -37,11 +37,12 @@ def init_zones():
         make(zone_instance)
 
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = DesolateCaveZone.ZONE_ID
+    _FIRST_ZONE_ID = DesolateCaveZone3.ZONE_ID
 
     _ZONE_TRANSITIONS.clear()
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
-    _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [FrogLairZone.ZONE_ID]
+    _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [DesolateCaveZone3.ZONE_ID]
+    _ZONE_TRANSITIONS[DesolateCaveZone3.ZONE_ID] = [FrogLairZone.ZONE_ID]
 
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
@@ -98,12 +99,13 @@ class ZoneLoader:
     SENSOR_DOOR = (100, 100, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
+    RARE_MONSTER_SPAWN = (200, 200, 0)
     CHEST_SPAWN = (255, 0, 255)
     SAVE_STATION = (0, 255, 255)
 
     EXIT = (255, 0, 0)
+    BOSS_EXIT = (255, 25, 25)  # TODO - do this by flagging "boss zones"
     RETURN_EXIT = (255, 50, 50)
-    BOSS_EXIT = (255, 25, 25)
 
     @staticmethod
     def load_blueprint_from_file(zone_id, filename, level):
@@ -171,6 +173,9 @@ class ZoneLoader:
                     elif color == ZoneLoader.MONSTER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.enemy_spawns.append((x, y))
+                    elif color == ZoneLoader.RARE_MONSTER_SPAWN:
+                        bp.set(x, y, World.FLOOR)
+                        bp.rare_enemy_spawns.append((x, y))
                     elif color == ZoneLoader.PLAYER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.player_spawn = (x, y)
@@ -440,7 +445,7 @@ class DesolateCaveZone2(Zone):
     ZONE_ID = "desolate_cave_2"
 
     def __init__(self):
-        Zone.__init__(self, "The Desolate Cave II", 1, filename="desolate_cave_2.png",
+        Zone.__init__(self, "The Desolate Cave II", 2, filename="desolate_cave_2.png",
                       music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
 
     def build_world(self):
@@ -449,8 +454,18 @@ class DesolateCaveZone2(Zone):
 
         return w
 
-    def get_return_id(self):
-        return DesolateCaveZone.ZONE_ID
+
+class DesolateCaveZone3(Zone):
+    ZONE_ID = "desolate_cave_3"
+
+    def __init__(self):
+        Zone.__init__(self, "The Desolate Cave III", 4, filename="desolate_cave_3.png")
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        return w
 
 
 class SleepyForestZone(Zone):
@@ -487,7 +502,7 @@ class FrogLairZone(Zone):
     FROG_SPAWN = (255, 203, 203)
 
     def __init__(self):
-        Zone.__init__(self, "The Dark Pool", 15, filename="frog_lair.png", bg_color=BLACK)
+        Zone.__init__(self, "The Dark Pool", 5, filename="frog_lair.png", bg_color=BLACK)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())

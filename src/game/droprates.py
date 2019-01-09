@@ -3,20 +3,46 @@ from src.utils.util import Utils
 
 class EnemyDroprate:
 
-    ITEM_CHANCES = 2
-    RATE_PER_ITEM = 0.05
+    @staticmethod
+    def item_chances(level, is_rare):
+        return 2 + int(level / 10)
 
-    ATT_ITEM_CHANCES = 1
-    RATE_PER_ATT_ITEM = 0.15
+    @staticmethod
+    def rate_per_item(level, is_rare):
+        if is_rare:
+            return 0.25
+        else:
+            return 0.05
 
-    POTION_CHANCES = 2
-    RATE_PER_POTION = 0.1
+    @staticmethod
+    def guaranteed_items(level, is_rare):
+        return 0
+
+    @staticmethod
+    def potion_chances(level, is_rare):
+        return 3
+
+    @staticmethod
+    def rate_per_potion(level, is_rare):
+        if is_rare:
+            return 0.3
+        else:
+            return 0.1
 
 
 class ChestDroprate:
 
-    ITEM_CHANCES = 3
-    RATE_PER_ITEM = 0.333
+    @staticmethod
+    def item_chances(level):
+        return 3
+
+    @staticmethod
+    def rate_per_item(level):
+        return 0.333
+
+    @staticmethod
+    def guaranteed_items(level):
+        return 1
 
 
 class ItemRates:
@@ -26,11 +52,11 @@ class ItemRates:
 class EnemyRates:
 
     @staticmethod
-    def chance_to_have_attack(level):
+    def chance_to_be_rare(level):
         if level < 5:
             return 0
         else:
-            return 0.75 * Utils.bound(level / 65, 0.0, 1.0)
+            return 0.333 * Utils.bound(level / 65, 0.0, 1.0)
 
     @staticmethod
     def max_pack_size(level):
