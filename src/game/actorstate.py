@@ -358,16 +358,17 @@ class PlayerState(ActorState):
 
     def _update_hover_text(self, target_entity, text, world):
         if self.current_hover_text_entity_uid is not None:
-            hover_entity = world.get_entity(self.current_hover_text_entity_uid)
+            hover_entity = world.get_entity(self.current_hover_text_entity_uid, onscreen=True)
             if hover_entity is None:
-                self.current_hover_text_entity_uid = None
+                hover_entity = world.get_entity(self.current_hover_text_entity_uid, onscreen=False)
+                if hover_entity is None:
+                    self.current_hover_text_entity_uid = None
         else:
             hover_entity = None
 
         if text is None and hover_entity is not None:
-            if hover_entity is not None:
-                world.remove(hover_entity)
-                self.current_hover_text_entity_uid = None
+            world.remove(hover_entity)
+            self.current_hover_text_entity_uid = None
 
         elif text is not None:
             offs = (0, -64)

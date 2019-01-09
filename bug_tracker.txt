@@ -5,8 +5,6 @@
 
 3. enemies using Teleport can warp into hidden rooms
 
-5. stand next to an interactable so text box appears. then pause and unpause game. the text box will stay there forever.
-
 6. save station dialog flickers away for a frame after pressing <yes>
 
 
