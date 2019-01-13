@@ -37,7 +37,7 @@ def init_zones():
         make(zone_instance)
 
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = DesolateCaveZone3.ZONE_ID
+    _FIRST_ZONE_ID = DesolateCaveZone.ZONE_ID
 
     _ZONE_TRANSITIONS.clear()
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
@@ -104,7 +104,6 @@ class ZoneLoader:
     SAVE_STATION = (0, 255, 255)
 
     EXIT = (255, 0, 0)
-    BOSS_EXIT = (255, 25, 25)  # TODO - do this by flagging "boss zones"
     RETURN_EXIT = (255, 50, 50)
 
     @staticmethod
@@ -155,16 +154,15 @@ class ZoneLoader:
                             return_id = None
                         else:
                             print("WARN: no return zone for {} at ({}, {})".format(zone_id, x, y))
-                    elif color in (ZoneLoader.EXIT, ZoneLoader.BOSS_EXIT):
+                    elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         if len(exit_ids) > 0:
                             exit_id = exit_ids[0]
                             exit_ids = exit_ids[1:]
-
-                            if color == ZoneLoader.EXIT:
-                                bp.exit_spawns[exit_id] = (x, y)
-                            else:
+                            if exit_id in _ALL_ZONES and _ALL_ZONES[exit_id].is_boss_zone():
                                 bp.boss_exit_spawns[exit_id] = (x, y)
+                            else:
+                                bp.exit_spawns[exit_id] = (x, y)
                         else:
                             print("WARN: no exit zone for {} at ({}, {})".format(zone_id, x, y))
                     elif color == ZoneLoader.CHEST_SPAWN:
@@ -289,6 +287,9 @@ class Zone:
 
     def build_world(self):
         pass
+
+    def is_boss_zone(self):
+        return False
 
 
 class TestZone(Zone):
@@ -531,6 +532,9 @@ class FrogLairZone(Zone):
     def get_music_id(self):
         return music.Songs.AMPHIBIAN
 
+    def is_boss_zone(self):
+        return True
+
 
 class CaveHorrorZone(Zone):
 
@@ -559,6 +563,9 @@ class CaveHorrorZone(Zone):
         fight_end_loc = unknowns[self._fight_end_door][0]
 
         return w
+
+    def is_boss_zone(self):
+        return True
 
 
 class DoorTestZone(Zone):
