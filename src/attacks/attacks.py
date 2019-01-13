@@ -268,13 +268,12 @@ class TouchAttack(Attack):
 class SpawnMinionAttack(Attack):
     def __init__(self):
         Attack.__init__(self, "Minion Launcher")
-        self.base_duration = 35
+        self.base_duration = 55
         self.base_delay = 12
         self.base_radius = 64
         self.base_damage = 0.6
         self.knockback = 0.25
         self.projectile_range = 300
-        self.num_shots = 2
         self.dmg_color = (1, 0, 1)
         self.is_droppable = True
 
@@ -282,23 +281,16 @@ class SpawnMinionAttack(Attack):
         res = Attack.activate(self, entity, world, stat_lookup)
         self.place_attack_circle(entity.center(), stat_lookup, world)
 
-        if len(res) > 0:
-            pos = entity.center()
-            entities_in_range = world.entities_in_circle(pos, self.projectile_range)
-            random.shuffle(entities_in_range)
+        pos = entity.center()
+        cond = lambda e: entity.can_damage(e) and not world.get_hidden_at(*e.center()) and e not in res
+        targets_in_range = world.entities_in_circle(pos, self.projectile_range, cond=cond)
 
-            n = 0
+        if len(targets_in_range) > 0:
             src_state = entity.get_actorstate()
-            for e in entities_in_range:
-                if n >= self.num_shots:
-                    break
-                if world.get_hidden_at(*e.center()) or not entity.can_damage(e):
-                    continue
+            target_e = targets_in_range[0]
 
-                if e.is_player() or e not in res:
-                    proj = entities.MinionProjectile(pos[0], pos[1], entity, e, 150, (1, 0, 1), src_state, self)
-                    world.add(proj)
-                    n += 1
+            proj = entities.MinionProjectile(pos[0], pos[1], entity, target_e, 150, (1, 0, 1), src_state, self)
+            world.add(proj)
 
         return res
 

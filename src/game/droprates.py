@@ -53,6 +53,7 @@ class EnemyRates:
 
     @staticmethod
     def chance_to_be_rare(level):
+        return 1
         if level < 5:
             return 0
         else:
