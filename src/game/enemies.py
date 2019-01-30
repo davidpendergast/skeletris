@@ -318,6 +318,12 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA]
 
+EASY_CAVE_ENEMIES = [TEMPLATE_FLAPPUM]
+HARDER_CAVE_ENEMIES = EASY_CAVE_ENEMIES + [TEMPLATE_MUNCHER_SMALL]
+
+FOREST_ENEMIES = [TEMPLATE_FLAPPUM, TEMPLATE_MUNCHER_SMALL_ALT, TEMPLATE_CYCLOI]
+HARDER_FOREST_ENEMIES = FOREST_ENEMIES + [TEMPLATE_THE_FALLEN]
+
 
 def get_rand_template_for_level(level, rand_val):
     choices = []
@@ -376,13 +382,13 @@ class EnemyFactory:
         return res
 
     @staticmethod
-    def gen_enemies(level, n=None, force_rare=False):
+    def gen_enemies(level, n=None, force_template=None, force_rare=False):
         if n is None:
             min_n = EnemyRates.min_pack_size(level)
             max_n = EnemyRates.max_pack_size(level)
             n = int(max(1, min_n + (max_n - min_n)*random.random()))
 
-        first = EnemyFactory.gen_enemy(level, force_rare=force_rare)
+        first = EnemyFactory.gen_enemy(level, force_template=force_template, force_rare=force_rare)
         res = [first]
         for _ in range(1, n):
             res.append(Enemy(0, 0, first.state.duplicate()))

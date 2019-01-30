@@ -7,7 +7,6 @@ from src.utils.util import Utils
 import src.world.entities as entities
 import src.game.enemies as enemies
 import src.game.spriteref as spriteref
-import src.game.npc as npc
 import src.game.events as events
 import src.game.dialog as dialog
 import src.game.music as music
@@ -23,6 +22,7 @@ DARK_GREY = (92, 92, 92)
 
 
 def first_zone_id():
+    return DesolateCaveZone2.ZONE_ID
     return _FIRST_ZONE_ID
 
 
@@ -85,6 +85,10 @@ def get_exits(zone_id):
         return _ZONE_TRANSITIONS[zone_id]
 
 
+def get_enemy_types(zone_id):
+    return _ALL_ZONES[zone_id].get_enemies()
+
+
 class ZoneLoader:
     EMPTY = (92, 92, 92)
     WALL = (0, 0, 0)
@@ -117,7 +121,7 @@ class ZoneLoader:
             filepath = "assets/zones/" + filename
             raw_img = pygame.image.load(Utils.resource_path(filepath))
             img_size = (raw_img.get_width(), raw_img.get_height())
-            bp = WorldBlueprint(img_size, level)
+            bp = WorldBlueprint(img_size, level, enemy_types=get_enemy_types(zone_id))
 
             return_id = get_return_zone(zone_id)
             exit_ids = get_exits(zone_id)
@@ -292,6 +296,10 @@ class Zone:
     def is_boss_zone(self):
         return False
 
+    def get_enemies(self):
+        """List of templates of enemies that can (randomly) spawn here."""
+        return []
+
 
 class TestZone(Zone):
 
@@ -443,6 +451,9 @@ class DesolateCaveZone(Zone):
     def get_music_id(self):
         return music.Songs.AN_ADVENTURE_UNFOLDS
 
+    def get_enemies(self):
+        return enemies.EASY_CAVE_ENEMIES
+
 
 class DesolateCaveZone2(Zone):
 
@@ -460,6 +471,9 @@ class DesolateCaveZone2(Zone):
     def get_music_id(self):
         return music.Songs.AN_ADVENTURE_UNFOLDS
 
+    def get_enemies(self):
+        return enemies.EASY_CAVE_ENEMIES
+
 
 class DesolateCaveZone3(Zone):
     ZONE_ID = "desolate_cave_3"
@@ -476,17 +490,8 @@ class DesolateCaveZone3(Zone):
     def get_music_id(self):
         return music.Songs.AN_ADVENTURE_UNFOLDS
 
-
-class SleepyForestZone(Zone):
-
-    ZONE_ID = "sleepy_forest"
-
-    def __init__(self):
-        Zone.__init__(self, "The Sleepy Forest", 1)
-
-    def build_world(self):
-        w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
-        return w
+    def get_enemies(self):
+        return enemies.HARDER_CAVE_ENEMIES
 
 
 class HauntedForestZone1(Zone):
@@ -502,6 +507,9 @@ class HauntedForestZone1(Zone):
         w = bp.build_world()
 
         return w
+
+    def get_enemies(self):
+        return enemies.FOREST_ENEMIES
 
 
 class FrogLairZone(Zone):

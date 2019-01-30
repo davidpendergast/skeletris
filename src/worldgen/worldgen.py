@@ -172,7 +172,7 @@ class BuilderUtils:
 
 class WorldBlueprint:
 
-    def __init__(self, size, level):
+    def __init__(self, size, level, enemy_types=[]):
         self.size = size
         self.level = level
         self.geo = []
@@ -182,6 +182,7 @@ class WorldBlueprint:
             self.geo_alt_art.append([None] * size[1])
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
+        self.enemy_types = enemy_types
         self.rare_enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawns = {}         # zone_id -> (x, y)
@@ -251,14 +252,22 @@ class WorldBlueprint:
                         w.add(DoorEntity(x, y))
 
         for spawn_pos in self.enemy_spawns:
-            enemies = EnemyFactory.gen_enemies(self.level)
-            for e in enemies:
-                w.add(e, gridcell=spawn_pos)
+            if len(self.enemy_types) > 0:
+                template = random.choice(self.enemy_types)
+                enemies = EnemyFactory.gen_enemies(self.level, force_template=template)
+                for e in enemies:
+                    w.add(e, gridcell=spawn_pos)
+            else:
+                print("WARN: Zone has no defined enemy types. Skipping enemy spawn at {}".format(spawn_pos))
 
         for spawn_pos in self.rare_enemy_spawns:
-            enemies = EnemyFactory.gen_enemies(self.level, force_rare=True)
-            for e in enemies:
-                w.add(e, gridcell=spawn_pos)
+            if len(self.enemy_types) > 0:
+                template = random.choice(self.enemy_types)
+                enemies = EnemyFactory.gen_enemies(self.level, force_rare=True, force_template=template)
+                for e in enemies:
+                    w.add(e, gridcell=spawn_pos)
+            else:
+                print("WARN: Zone has no defined enemy types. Skipping rare enemy spawn at {}".format(spawn_pos))
 
         if self.save_station is not None:
             save_entity = SaveStationEntity(*self.save_station)
