@@ -182,7 +182,8 @@ class Attack:
         self.base_damage = 1.0
         self.knockback = 1
         self.dmg_color = (1, 0, 0)
-        self.is_droppable = False
+        self.is_droppable = False  # TODO - delete this
+        self.is_jumpy = True
 
     def place_attack_circle(self, pos, stat_lookup, world, color=None):
         radius = self.base_radius * (1 + 0.01 * stat_lookup.stat_value(StatType.ATTACK_RADIUS))
@@ -237,6 +238,7 @@ class GroundPoundAttack(Attack):
 
 
 class FrogAttack(Attack):
+    """This attack is only used by the Frog Boss"""
     def __init__(self):
         Attack.__init__(self, "Crushing Leap")
         self.base_duration = 1
@@ -246,6 +248,7 @@ class FrogAttack(Attack):
         self.dmg_color = (1, 0, 0)
         self.knockback = 0.65
         self.is_droppable = False
+        self.is_jumpy = False
 
     def activate(self, entity, world, stat_lookup):
         res = Attack.activate(self, entity, world, stat_lookup)
@@ -263,12 +266,13 @@ class TouchAttack(Attack):
         self.base_damage = 1.0
         self.knockback = 2
         self.is_droppable = False
+        self.is_jumpy = False
 
 
 class SpawnMinionAttack(Attack):
     def __init__(self):
         Attack.__init__(self, "Minion Launcher")
-        self.base_duration = 55
+        self.base_duration = 35
         self.base_delay = 12
         self.base_radius = 64
         self.base_damage = 0.6

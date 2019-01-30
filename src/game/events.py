@@ -124,11 +124,14 @@ class EventListener:
 
 
 class DoorOpenEvent(Event):
-    def __init__(self, grid_x, grid_y):
-        Event.__init__(self, EventType.DOOR_OPENED, (grid_x, grid_y), "door opened at ({}, {})".format(grid_x, grid_y))
+    def __init__(self, door_uid, grid_x, grid_y):
+        Event.__init__(self, EventType.DOOR_OPENED, (door_uid, grid_x, grid_y), "door opened at ({}, {})".format(grid_x, grid_y))
 
     def get_position(self):
-        return self.get_data()
+        return (self.get_data()[1], self.get_data()[2])
+
+    def get_uid(self):
+        return self.get_data()[0]
 
 
 class NpcInteractEvent(Event):

@@ -1018,7 +1018,7 @@ class DoorEntity(Entity):
                 world.update_geo_bundle(*grid_xy, and_neighbors=True)
                 world.door_opened(*grid_xy)
                 world.remove(self)
-                gs.get_instance().event_queue().add(events.DoorOpenEvent(*grid_xy))
+                gs.get_instance().event_queue().add(events.DoorOpenEvent(self.get_uid(), *grid_xy))
             elif self.opening_count > 0:
                 self.opening_count += 1
             else:
@@ -1028,16 +1028,16 @@ class DoorEntity(Entity):
         self.update_images()
 
     def _update_internal(self, world, input_state, render_engine):
-        p = world.get_player()
-        p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
-        self.player_in_range(p_in_range)
-
         if self.delay_count >= self.delay_duration:
             # door will open now
             self.delay_count = 0
             self.opening_count = 1
             grid_xy = world.to_grid_coords(*self.center())
             world.set_geo(*grid_xy, World.FLOOR)
+        else:
+            p = world.get_player()
+            p_in_range = (p is not None and Utils.dist(p.center(), self.center()) <= self.open_radius)
+            self.player_in_range(p_in_range)
 
     def is_door(self):
         return True
@@ -1045,11 +1045,15 @@ class DoorEntity(Entity):
     def is_locked(self):
         return False
 
+    def do_open(self):
+        self.delay_count = self.delay_duration
+
 
 class LockedDoorEntity(DoorEntity):
 
-    def __init__(self, grid_x, grid_y, interact_text_list=["it's locked."]):
+    def __init__(self, grid_x, grid_y, interact_text_list=["it's locked."], hover_text="inspect"):
         self._interact_text_list = interact_text_list
+        self._hover_text = hover_text
         DoorEntity.__init__(self, grid_x, grid_y)
         self._is_locked = True
 
@@ -1072,12 +1076,12 @@ class LockedDoorEntity(DoorEntity):
             gs.get_instance().dialog_manager().set_dialog(Dialog.link_em_up(dialogs))
 
     def interact_text(self):
-        return "inspect"
+        return self._hover_text
 
-    def do_unlock(self):
+    def do_open(self):
         print("INFO: unlocking door {}".format(self.get_uid()))
         self._is_locked = False
-        self.delay_count = self.delay_duration
+        DoorEntity.do_open(self)
 
     def is_locked(self):
         return self._is_locked

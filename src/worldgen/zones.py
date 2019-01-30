@@ -25,6 +25,7 @@ DARK_GREY = (92, 92, 92)
 def first_zone_id():
     return _FIRST_ZONE_ID
 
+
 def first_zone():
     return _ALL_ZONES[_FIRST_ZONE_ID]
 
@@ -43,6 +44,7 @@ def init_zones():
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
     _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [DesolateCaveZone3.ZONE_ID]
     _ZONE_TRANSITIONS[DesolateCaveZone3.ZONE_ID] = [FrogLairZone.ZONE_ID]
+    _ZONE_TRANSITIONS[FrogLairZone.ZONE_ID] = [TombTownZone.ZONE_ID]
 
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
@@ -259,11 +261,10 @@ def make(zone):
 
 class Zone:
 
-    def __init__(self, name, level, filename=None, bg_color=None, music_id=None):
+    def __init__(self, name, level, filename=None, bg_color=None):
         self.name = name
         self.zone_id = None  # gets set by init_zones()
         self.bg_color = bg_color if bg_color is not None else DARK_GREY
-        self.music_id = music_id
         self.level = level
         self.blueprint_file = filename
 
@@ -283,7 +284,7 @@ class Zone:
         return self.bg_color
 
     def get_music_id(self):
-        return self.music_id
+        return music.Songs.SILENCE
 
     def build_world(self):
         pass
@@ -373,8 +374,7 @@ class DesolateCaveZone(Zone):
     }
 
     def __init__(self):
-        Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png",
-                      music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
+        Zone.__init__(self, "The Desolate Cave", 1, filename="desolate_cave.png")
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -440,20 +440,25 @@ class DesolateCaveZone(Zone):
 
         return w
 
+    def get_music_id(self):
+        return music.Songs.AN_ADVENTURE_UNFOLDS
+
 
 class DesolateCaveZone2(Zone):
 
     ZONE_ID = "desolate_cave_2"
 
     def __init__(self):
-        Zone.__init__(self, "The Desolate Cave II", 2, filename="desolate_cave_2.png",
-                      music_id=music.Songs.AN_ADVENTURE_UNFOLDS)
+        Zone.__init__(self, "The Desolate Cave II", 2, filename="desolate_cave_2.png")
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
         return w
+
+    def get_music_id(self):
+        return music.Songs.AN_ADVENTURE_UNFOLDS
 
 
 class DesolateCaveZone3(Zone):
@@ -467,6 +472,9 @@ class DesolateCaveZone3(Zone):
         w = bp.build_world()
 
         return w
+
+    def get_music_id(self):
+        return music.Songs.AN_ADVENTURE_UNFOLDS
 
 
 class SleepyForestZone(Zone):
@@ -511,26 +519,41 @@ class FrogLairZone(Zone):
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
         w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
 
-        frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
-        frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
-        w.add(frog_entity, gridcell=frog_spawn)
+        if not gs.get_instance().story_state().frog_boss_dead:
+            frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
+            frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
+            w.add(frog_entity, gridcell=frog_spawn)
 
-        def kill_action(_event, _world):
-            print("INFO: unlocking all doors")
-            for e in _world.all_entities(onscreen=False):
-                if e.is_door() and e.is_locked():
-                    e.do_unlock()
+            def kill_action(_event, _world):
+                print("INFO: unlocking all doors")
+                for e in _world.all_entities(onscreen=False):
+                    if e.is_door() and e.is_locked():
+                        e.do_open()
+                gs.get_instance().story_state().set_frog_boss_dead(True)
+                music.play_song(self.frog_dead_song())
 
-        gs.get_instance().add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
-                                            lambda evt: evt.get_uid() == frog_entity.get_uid(),
-                                            single_use=True))
+            gs.get_instance().add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
+                                          lambda evt: evt.get_uid() == frog_entity.get_uid(),
+                                          single_use=True))
 
-        gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
+            gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
+        else:
+            print("INFO: frog is dead, unlocking all doors")
+            for e in w.all_entities(onscreen=False):
+                if e.is_door():
+                    # we're opening the unlocked door too to avoid hidden-area funkiness
+                    e.do_open()
 
         return w
 
+    def frog_dead_song(self):
+        return music.Songs.SILENCE
+
     def get_music_id(self):
-        return music.Songs.AMPHIBIAN
+        if gs.get_instance().story_state().frog_boss_dead:
+            return self.frog_dead_song()
+        else:
+            return music.Songs.AMPHIBIAN
 
     def is_boss_zone(self):
         return True
@@ -566,6 +589,65 @@ class CaveHorrorZone(Zone):
 
     def is_boss_zone(self):
         return True
+
+
+class TombTownZone(Zone):
+
+    ZONE_ID = "tomb_town"
+
+    def __init__(self):
+        Zone.__init__(self, "Tomb Town", 16, filename="town.png", bg_color=DARK_GREY)
+
+    WALL_SIGNS = {
+            (255, 172, 150): ("read", "dear ugly frog,\nyou're so ugly. please go away.\nsincerely,\nmary"),
+            (255, 173, 150): ("read", "mary skelly's bone repair shop\ntwists: 3m\ncracks: 6m\nbreaks: 10m"),
+            (255, 174, 150): ("read", "beanskull's tea shop\nmushroom tea: free"),
+            (255, 175, 150): ("read", "Tombtown's City Hall\n")
+    }
+
+    BEANSKULL = (255, 170, 255)
+    MAYOR = (255, 171, 255)
+    MARY = (255, 172, 255)
+    MUSHROOMS = (255, 175, 177)
+    PLAYER_STAND_POS = (255, 215, 255)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        for key in unknowns:
+            if key in TombTownZone.WALL_SIGNS:
+                pos = unknowns[key][0]
+                hover_text = TombTownZone.WALL_SIGNS[key][0]
+                dialog_text = Utils.listify(TombTownZone.WALL_SIGNS[key][1])
+                d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
+
+                sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
+                                                                 interact_dialog=d, hover_text=hover_text)
+                w.add(sign)
+            elif key == TombTownZone.MUSHROOMS:
+                for pos in unknowns[key]:
+                    m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+                    d = dialog.PlayerDialog("These mushrooms look healthy and well cared for.")
+                    mushroom = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_dialog=d)
+                    w.add(mushroom)
+            #elif key == TombTownZone.BEANSKULL:
+            #    e = entities.NpcEntity(npc.NpcID.BEANSKULL)
+            #    w.add(e, gridcell=unknowns[key][0])
+            #elif key == TombTownZone.MAYOR:
+            #    e = entities.NpcEntity(npc.NpcID.MAYOR)
+            #    w.add(e, gridcell=unknowns[key][0])
+            #elif key == TombTownZone.MARY:
+            #    e = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
+            #    w.add(e, gridcell=unknowns[key][0])
+
+        def door_open_action(event, world):
+            pass
+
+        gs.get_instance().add_trigger(events.EventListener(door_open_action, events.EventType.DOOR_OPENED, None,
+                                                           single_use=True))
+
+        return w
 
 
 class DoorTestZone(Zone):

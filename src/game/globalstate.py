@@ -26,17 +26,20 @@ def set_instance(new_instance):
 
 class SaveDataBlob:
 
-    def __init__(self, zone_id, kill_count, num_potions, equipment_positions, inventory_positions):
+    def __init__(self, zone_id, kill_count, num_potions, equipment_positions, inventory_positions, story_state):
         """
         zone_id: str
         kill_count: int
         num_potions: int
         equipment_positions: map (int x, int y) -> Item
         inventory_positions: map (int x, int y) -> Item
+        story_state_blob: json blob
         """
         self.zone_id = zone_id
         self.kill_count = kill_count
         self.num_potions = num_potions
+
+        self.story_state = story_state
 
         self.equipment_positions = equipment_positions
         self.inventory_positions = inventory_positions
@@ -92,12 +95,15 @@ class SaveDataBlob:
             item_as_json = self.inventory_positions[xy].to_json()
             inventory.append((xy[0], xy[1], item_as_json))
 
+        story_state_blob = self.story_state.to_json()
+
         return {
             "kill_count": self.kill_count,
             "num_potions": self.num_potions,
             "zone_id": self.zone_id,
             "equipment": equipment,
-            "inventory": inventory
+            "inventory": inventory,
+            "story_state": story_state_blob
         }
 
     @staticmethod
@@ -129,15 +135,40 @@ class SaveDataBlob:
                 print("ERROR: couldn't deserialize item: {}".format(x_y_item))
                 traceback.print_exc()
 
-        return SaveDataBlob(zone_id, kill_count, num_potions, equipment_positions, inventory_positions)
+        story_state_blob = blob["story_state"]
+        story_state = StoryState.from_json(story_state_blob)
+
+        return SaveDataBlob(zone_id, kill_count, num_potions, equipment_positions, inventory_positions, story_state)
 
     def __repr__(self):
         return str(self.to_json())
 
 
+class StoryState:
+
+    def __init__(self):
+        self.frog_boss_dead = False
+
+    def set_frog_boss_dead(self, val):
+        print("INFO: setting frog_boss_dead_to: {}".format(val))
+        self.frog_boss_dead = val
+
+    def to_json(self):
+        return {
+            "frog_boss_dead": self.frog_boss_dead
+        }
+
+    @staticmethod
+    def from_json(blob):
+        story_state = StoryState()
+        story_state.set_frog_boss_dead(Utils.read_bool(blob, "frog_boss_dead", False))
+
+        return story_state
+
+
 class GlobalState:
 
-    def __init__(self, initial_zone_id, menu_manager, dialog_manager, npc_state):
+    def __init__(self, initial_zone_id, menu_manager, dialog_manager, npc_state, story_state):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
@@ -153,6 +184,8 @@ class GlobalState:
 
         self._world_camera_center = [0, 0]
         self._player_state = None
+
+        self._story_state = story_state
 
         self._menu_manager = menu_manager
         self._dialog_manager = dialog_manager
@@ -214,6 +247,9 @@ class GlobalState:
     def dialog_manager(self):
         return self._dialog_manager
 
+    def story_state(self):
+        return self._story_state
+
     def save_game_to_disk(self, password=None):
         """
         return: (bool, str)
@@ -235,7 +271,8 @@ class GlobalState:
                                  self.player_state().kill_count,
                                  self.player_state().num_potions,
                                  equip_items,
-                                 inv_items)
+                                 inv_items,
+                                 self.story_state())
 
         res = save_blob.save_to_disk(password)
         if res:
@@ -379,7 +416,7 @@ def create_new(menu, from_pw=None):
     npc_state = npc.NpcState()
 
     import src.worldgen.zones as zones
-    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, npc_state)
+    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, npc_state, StoryState())
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()
@@ -413,6 +450,8 @@ def create_new(menu, from_pw=None):
                     print("ERROR: cannot place inventory item at position ({}, {}):\n{}".format(xy[0], xy[1], item))
 
             player_state.set_hp(player_state.max_hp())
+
+            new_instance._story_state = save_data.story_state
 
             if save_data.zone_id in zones._ALL_ZONES:
                 new_instance.initial_zone_id = save_data.zone_id

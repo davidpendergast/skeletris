@@ -165,10 +165,7 @@ class FrogBossState(EnemyState):
                     pos = Utils.linear_interp(self._leap_start, self._leap_end, prog)
                     entity.set_center(pos[0], pos[1])
 
-                    #  mmm delicious math
-                    a = -4 * self._jump_max_height
-                    b = 4 * self._jump_max_height
-                    self._z = (a * prog * prog) + (b * prog)
+                    self._z = Utils.parabola_height(self._jump_max_height, prog)
             else:
                 self.attack_state.set_attack(attacks.TOUCH_ATTACK)
 

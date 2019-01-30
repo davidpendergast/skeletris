@@ -373,7 +373,7 @@ class PlayerState(ActorState):
         elif text is not None:
             offs = (0, -64)
 
-            # TODO - holy edge case batman
+            # TODO - holy special case batman
             if isinstance(target_entity, Player):
                 offs = (0, -96)
             elif isinstance(target_entity, ExitEntity):
@@ -488,7 +488,7 @@ class PlayerState(ActorState):
             self._update_held_item(player_entity, world)
 
             if self.held_item is None and self._can_interact() and closest_interactable is not None:
-                # TODO - holy edge case batman
+                # TODO - holy special case batman
                 if isinstance(closest_interactable, ReturnExitEntity):
                     self._update_hover_text(player_entity, closest_interactable.interact_text(), world)
                 else:
@@ -573,6 +573,7 @@ class EnemyState(ActorState):
         self.sprites = template.get_sprites()
         self.stats = stats
         ActorState.__init__(self, template.get_name(), level, stats)
+        self.jump_height = 32
 
         self.facing_left = True
         self.facing_left_last_frame = None  # used to detect and prevent left-right flickering
@@ -669,7 +670,11 @@ class EnemyState(ActorState):
         return self.sprites[((gs.get_instance().anim_tick + self._anim_offset) // 2) % len(self.sprites)]
 
     def _get_sprite_offset(self):
-        return (0, 0)
+        if self.attack_state.is_attacking() and self.attack_state.current_attack.is_jumpy:
+            prog = self.attack_state.attack_progress()
+            return (0, -Utils.parabola_height(self.jump_height, prog))
+        else:
+            return (0, 0)
 
     def get_pathfinding(self):
         return self.template.get_pathfinding()

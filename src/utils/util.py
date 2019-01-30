@@ -174,6 +174,16 @@ class Utils:
         return default  # hmmm, one day~
 
     @staticmethod
+    def parabola_height(vertex_y, x):
+        """
+        finds f(x) of the parabola for which f(0) = 0, f(0.5) = vertex_y, f(1.0) = 0
+        """
+        #  mmm delicious math
+        a = -4 * vertex_y
+        b = 4 * vertex_y
+        return (a * x * x) + (b * x)
+
+    @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):
         if key not in json_blob or json_blob[key] is None:
             print("returning default {} for key {}".format(default, key))

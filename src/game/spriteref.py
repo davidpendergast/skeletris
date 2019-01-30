@@ -259,7 +259,7 @@ alphabet = collections.defaultdict(lambda: _qmark)
 for i in range(0, len(_chars)):
     alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
 
-_chars_2 = "0123456789[](){}←→↑↓"
+_chars_2 = "0123456789[](){}←↑→↓"
 for i in range(0, len(_chars_2)):
     c = _chars_2[i]
     alphabet[c] = make(5*i, 120, 5, 5)
