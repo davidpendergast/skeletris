@@ -347,13 +347,15 @@ floors_alt = [make(608 + i*16, 48, 16, 16) for i in range(0, 8)]
 floors_cracked = [make(608 + i*16, 64, 16, 16) for i in range(0, 8)]
 floors_dark_cracked = [make(608 + i*16, 80, 16, 16) for i in range(0, 8)]
 floors_hole = [make(608 + i*16, 96, 16, 16) for i in range(0, 8)]
+floors_fancy = [make(608 + i*16, 112, 16, 16) for i in range(0, 8)]
 
 FLOOR_NORMAL_ID = 0
 FLOOR_QUAD_ID = 1
 FLOOR_CRACKED_ID = 2
 FLOOR_DARK_CRACKED_ID = 3
 FLOOR_HOLE_ID = 4
-_floor_lookup = [floors, floors_alt, floors_cracked, floors_dark_cracked, floors_hole]
+FLOOR_FANCY_ID = 5
+_floor_lookup = [floors, floors_alt, floors_cracked, floors_dark_cracked, floors_hole, floors_fancy]
 
 
 def get_floor(encoding, floor_type_id=FLOOR_NORMAL_ID):

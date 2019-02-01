@@ -22,7 +22,7 @@ DARK_GREY = (92, 92, 92)
 
 
 def first_zone_id():
-    return DesolateCaveZone2.ZONE_ID
+    return TombTownZone.ZONE_ID
     return _FIRST_ZONE_ID
 
 
@@ -96,8 +96,10 @@ class ZoneLoader:
 
     FLOOR = (255, 255, 255)
     FLOOR_CRACKED = (225, 225, 225)
+    FLOOR_FANCY = (205, 205, 205)
     FLOOR_ID_LOOKUP = {FLOOR: spriteref.FLOOR_NORMAL_ID,
-                       FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID}
+                       FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID,
+                       FLOOR_FANCY: spriteref.FLOOR_FANCY_ID}
     HOLE = (100, 100, 100)
 
     DOOR = (0, 0, 255)
