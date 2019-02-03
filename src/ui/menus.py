@@ -25,6 +25,7 @@ class MenuManager:
     CONTROLS_MENU = 5
     PASSWORD_MENU = 6
     KEYBINDING_MENU = 7
+    DEBUG_OPTION_MENU = 8
 
     def __init__(self, menu):
         self._active_menu = StartMenu()
@@ -750,6 +751,78 @@ class DeathOptionMenu(OptionsMenu):
         elif idx == DeathOptionMenu.CONTINUE:
             last_pw = gs.get_instance().settings().get(settings.LAST_PASSWORD)
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True, from_pw=last_pw))
+
+
+class DebugMenu(OptionsMenu):
+
+    ZONE_JUMP = 0
+    EXIT_OPT = 1
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "debug menu", ["zone select", "back"])
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+    def option_activated(self, idx):
+        if idx == DebugMenu.ZONE_JUMP:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0))
+        elif idx == DebugMenu.EXIT_OPT:
+            gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+
+
+class DebugZoneSelectMenu(OptionsMenu):
+    ZONES_PER_PAGE = 8
+
+    def __init__(self, page):
+        import src.worldgen.zones as zones
+
+        self.page = page
+        all_zones = zones.all_zone_ids()
+        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
+        start_idx = DebugZoneSelectMenu.ZONES_PER_PAGE * page
+        first_page = (page == 0)
+
+        if start_idx >= len(all_zones):
+            # hmm..
+            self.opts = []
+            last_page = True
+        elif start_idx + DebugZoneSelectMenu.ZONES_PER_PAGE < len(all_zones):
+            self.opts = all_zones[start_idx:start_idx + DebugZoneSelectMenu.ZONES_PER_PAGE]
+            last_page = False
+        else:
+            self.opts = all_zones[start_idx:]
+            last_page = True
+
+        if not first_page:
+            self.opts.append("next page")
+            self.next_page_idx = len(self.opts) - 1
+        else:
+            self.next_page_idx = None
+
+        if not last_page:
+            self.opts.append("prev page")
+            self.prev_page_idx = len(self.opts) - 1
+        else:
+            self.prev_page_idx = None
+
+        self.opts.append("back")
+        self.back_idx = len(self.opts) - 1
+
+        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "zone select", self.opts)
+
+    def option_activated(self, idx):
+        if idx == self.back_idx:
+            gs.get_instance().menu_manager().set_active_menu(DebugMenu())
+        elif idx == self.next_page_idx:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1))
+        elif idx == self.prev_page_idx:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1))
+        elif 0 <= idx < len(self.opts):
+            selected_opt = self.opts[idx]
+            print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
+            gs.get_instance().event_queue().add(events.NewZoneEvent(selected_opt, gs.get_instance().current_zone))
+            gs.get_instance().menu_manager().set_active_menu(InGameUiState())
 
 
 class InGameUiState(Menu):

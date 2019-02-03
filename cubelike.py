@@ -164,7 +164,7 @@ def run():
             loading_save = initial_zone_id != zones.first_zone_id()
             world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
 
-        if input_state.was_pressed(pygame.K_F1):
+        if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
             profiling.get_instance().toggle()
 
@@ -176,6 +176,10 @@ def run():
                 pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
             gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
 
+        if debug.DEBUG and world_active and input_state.was_pressed(pygame.K_F6):
+            print("INFO: opened debug menu")
+            gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
+
         if input_state.was_pressed(pygame.K_o):
             manager = gs.get_instance().menu_manager()
             if not manager.get_active_menu().absorbs_key_inputs():
@@ -185,7 +189,7 @@ def run():
                 else:
                     gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
 
-        if input_state.was_pressed(pygame.K_x) and debug.DEBUG:
+        if debug.DEBUG and input_state.was_pressed(pygame.K_x):
             manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())

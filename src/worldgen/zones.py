@@ -22,12 +22,19 @@ DARK_GREY = (92, 92, 92)
 
 
 def first_zone_id():
-    return TombTownZone.ZONE_ID
     return _FIRST_ZONE_ID
 
 
 def first_zone():
     return _ALL_ZONES[_FIRST_ZONE_ID]
+
+
+def all_zone_ids():
+    return [z for z in _ALL_ZONES]
+
+
+def get_zone(zone_id):
+    return _ALL_ZONES[zone_id]
 
 
 def init_zones():
