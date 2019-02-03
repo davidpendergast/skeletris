@@ -104,9 +104,11 @@ class ZoneLoader:
     FLOOR = (255, 255, 255)
     FLOOR_CRACKED = (225, 225, 225)
     FLOOR_FANCY = (205, 205, 205)
+    FLOOR_SWAMP = (185, 185, 185)
     FLOOR_ID_LOOKUP = {FLOOR: spriteref.FLOOR_NORMAL_ID,
                        FLOOR_CRACKED: spriteref.FLOOR_CRACKED_ID,
-                       FLOOR_FANCY: spriteref.FLOOR_FANCY_ID}
+                       FLOOR_FANCY: spriteref.FLOOR_FANCY_ID,
+                       FLOOR_SWAMP: spriteref.FLOOR_SWAMP_ID}
     HOLE = (100, 100, 100)
 
     DOOR = (0, 0, 255)
@@ -512,7 +514,13 @@ class HauntedForestZone1(Zone):
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
-        print("unknowns={}".format(unknowns))
+        for x in range(0, bp.width()):
+            for y in range(0, bp.height()):
+                if bp.get(x, y) == World.FLOOR and bp.get_alt_art(x, y) is None:
+                    if random.random() < 0.125:
+                        bp.set_alt_art(x, y, spriteref.FLOOR_SWAMP_ID)
+                    elif random.random() < 0.5:
+                        bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
         w = bp.build_world()
 
         return w

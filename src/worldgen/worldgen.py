@@ -191,6 +191,14 @@ class WorldBlueprint:
         self.save_station = None
         self.locked_doors = []
         self.sensor_doors = []
+        self.global_floor_alt_art = None
+        self.global_wall_alt_art = None
+
+    def width(self):
+        return self.size[0]
+
+    def height(self):
+        return self.size[1]
 
     def get(self, x, y):
         if self.is_valid(x, y):
@@ -209,6 +217,18 @@ class WorldBlueprint:
     def set_alt_art(self, x, y, val):
         if self.is_valid(x, y):
             self.geo_alt_art[x][y] = val
+
+    def get_alt_art(self, x, y):
+        if self.is_valid(x, y):
+            return self.geo_alt_art[x][y]
+        else:
+            return None
+
+    def set_global_wall_alt_art(self, val):
+        self.global_wall_alt_art = val
+
+    def set_global_floor_alt_art(self, val):
+        self.global_floor_alt_art = val
 
     def set_locked_door(self, x, y):
         self.set(x, y, World.DOOR)
@@ -237,6 +257,12 @@ class WorldBlueprint:
                 w.set_geo(x, y, xy_geo)
 
                 alt_art = self.geo_alt_art[x][y]
+                if alt_art is None:
+                    if xy_geo == World.WALL:
+                        alt_art = self.global_wall_alt_art
+                    elif xy_geo == World.FLOOR:
+                        alt_art = self.global_floor_alt_art
+
                 if alt_art is not None:
                     if xy_geo == World.WALL:
                         w.set_wall_type(alt_art, xy=(x, y))

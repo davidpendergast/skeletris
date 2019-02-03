@@ -98,9 +98,6 @@ class EnemyTemplate:
     def get_hurtbox(self):
         return 5
 
-    def can_spawn_at_level(self, level):
-        return True
-
 
 class FlappumTemplate(EnemyTemplate):
 
@@ -111,9 +108,6 @@ class FlappumTemplate(EnemyTemplate):
         return spriteref.enemy_flappum_all
 
     def get_lunges(self):
-        return True
-
-    def can_spawn_at_level(self, level):
         return True
 
 
@@ -153,9 +147,6 @@ class TrillaTemplate(EnemyTemplate):
 
     def drops_loot(self):
         return False
-
-    def can_spawn_at_level(self, level):
-        return 
 
 
 class TrilliteTemplate(EnemyTemplate):
@@ -267,6 +258,15 @@ class FallenTemplate(EnemyTemplate):
         return spriteref.enemy_the_fallen_all
 
 
+class FungoiTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Fungoi", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_fungoi_all
+
+
 class FrogBoss(EnemyTemplate):
 
     def __init__(self):
@@ -292,10 +292,6 @@ class FrogBoss(EnemyTemplate):
     def get_hurtbox(self):
         return 15
 
-    def can_spawn_at_level(self, level):
-        # this boy does not randomly spawn
-        return False
-
 
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = TrilliteTemplate()
@@ -307,6 +303,7 @@ TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
 TEMPLATE_CYCLOI = CycloiTemplate()
 TEMPLATE_DICEL = DicelTemplate()
 TEMPLATE_THE_FALLEN = FallenTemplate()
+TEMPLATE_FUNGOI = FungoiTemplate()
 
 TEMPLATE_FROG_BOSS = FrogBoss()
 
@@ -321,7 +318,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
 EASY_CAVE_ENEMIES = [TEMPLATE_FLAPPUM]
 HARDER_CAVE_ENEMIES = EASY_CAVE_ENEMIES + [TEMPLATE_MUNCHER_SMALL]
 
-FOREST_ENEMIES = [TEMPLATE_FLAPPUM, TEMPLATE_MUNCHER_SMALL_ALT, TEMPLATE_CYCLOI]
+FOREST_ENEMIES = [TEMPLATE_FLAPPUM, TEMPLATE_MUNCHER_SMALL_ALT, TEMPLATE_FUNGOI]
 HARDER_FOREST_ENEMIES = FOREST_ENEMIES + [TEMPLATE_THE_FALLEN]
 
 
