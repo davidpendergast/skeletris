@@ -995,8 +995,6 @@ class DoorEntity(Entity):
 
     def player_in_range(self, in_range):
         if in_range:
-            if self.delay_count == 0:
-                sound_effects.play_sound(sound_effects.Effects.DOOR_OPEN)
             self.delay_count += 1
         else:
             self.delay_count = 0

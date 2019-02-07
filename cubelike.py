@@ -15,6 +15,7 @@ import src.game.settings as settings
 import src.game.readme_writer as readme_writer
 import src.utils.profiling as profiling
 import src.game.events as events
+import src.game.sound_effects as sound_effects
 
 
 print("launching Cubelike...")
@@ -27,14 +28,14 @@ if debug.IS_DEV:
                                Utils.resource_path("gifs"))
 
 print("initializing sounds...")
-pygame.mixer.pre_init(44100, -16, 1, 512)
+pygame.mixer.pre_init(44100, -16, 1, 2048)
 
 SCREEN_SIZE = (800, 600)
 
 
 def run():
-    pygame.init()
     pygame.mixer.init()
+    pygame.init()
 
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
     
@@ -44,9 +45,6 @@ def run():
     
     input_state = inputs.InputState()
     gs.create_new(menus.StartMenu())
-
-    if debug.DEBUG:
-        gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
     
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
@@ -156,6 +154,7 @@ def run():
                 input_state.set_mouse_pos(None)
 
         input_state.update(gs.get_instance().tick_counter)
+        sound_effects.update()
 
         world_active = gs.get_instance().menu_manager().should_draw_world()
 

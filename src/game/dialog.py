@@ -3,6 +3,7 @@ import re
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.events as events
+import src.game.sound_effects as sound_effects
 
 import src.game.globalstate as gs
 
@@ -127,6 +128,14 @@ class DialogManager:
     def __init__(self):
         self._active_dialog = None
         self._scroll_freq = 2  # ticks per character
+        self._long_freq = {
+            ".": 12,
+            ",": 6,
+            "!": 12,
+            "?": 12
+        }
+        self.last_scroll_time = 0
+        self.noise_freq = 6
 
     def is_active(self):
         return self._active_dialog is not None
@@ -161,8 +170,25 @@ class DialogManager:
                         self.set_dialog(dialog.get_next())
                     else:
                         dialog.scroll_pos = len(dialog.get_text())
-                elif not dialog.is_done_scrolling() and gs.get_instance().tick_counter % self._scroll_freq == 0:
-                    dialog.scroll_pos += 1
+
+                elif not dialog.is_done_scrolling():
+                    cur_delay = gs.get_instance().tick_counter - self.last_scroll_time
+
+                    # it's trendy to pause longer on punctuation
+                    d_text = dialog.get_text()
+                    pos = dialog.scroll_pos
+                    delay = self._scroll_freq
+                    if 0 <= pos-1 < len(d_text):
+                        last_char = d_text[pos-1]
+                        if last_char in self._long_freq:
+                            delay = self._long_freq[last_char]
+
+                    if cur_delay >= delay:
+                        dialog.scroll_pos += 1
+                        self.last_scroll_time = gs.get_instance().tick_counter
+
+                    if gs.get_instance().tick_counter % self.noise_freq == 0:
+                        sound_effects.play_sound(sound_effects.Effects.CLICK2)
 
                     # when we uncover the first option, skip to end
                     if not dialog.is_done_scrolling() and dialog.get_text()[dialog.scroll_pos] == '{':
