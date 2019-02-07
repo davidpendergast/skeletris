@@ -12,6 +12,7 @@ import src.game.music as music
 import src.game.settings as settings
 import src.game.globalstate as gs
 import src.utils.passwordgen as passwordgen
+import src.game.sound_effects as sound_effects
 
 
 class MenuManager:
@@ -230,23 +231,31 @@ class OptionsMenu(Menu):
             y = self._option_rects[i][1]
             self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
+    def set_selected(self, idx):
+        if idx != self._selection:
+            sound_effects.play_sound(sound_effects.Effects.CLICK)
+            self._selection = idx
+
     def handle_inputs(self, world, input_state, render_eng):
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
             self.esc_pressed()
         else:
+            new_selection = self._selection
             up_pressed = input_state.was_pressed(gs.get_instance().settings().menu_up_key())
             if not self.absorbs_key_inputs():
                 up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
 
             if up_pressed:
-                self._selection = (self._selection - 1) % self.get_num_options()
+                new_selection = (self._selection - 1) % self.get_num_options()
 
             down_pressed = input_state.was_pressed(gs.get_instance().settings().menu_down_key())
             if not self.absorbs_key_inputs():
                 down_pressed = down_pressed or input_state.was_pressed(gs.get_instance().settings().down_key())
 
             if down_pressed:
-                self._selection = (self._selection + 1) % self.get_num_options()
+                new_selection = (self._selection + 1) % self.get_num_options()
+
+            self.set_selected(new_selection)
 
             if input_state.was_pressed(gs.get_instance().settings().enter_key()):
                 self.option_activated(self._selection)
@@ -259,7 +268,7 @@ class OptionsMenu(Menu):
                 if input_state.mouse_moved():
                     for i in range(0, self.get_num_options()):
                         if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
-                            self._selection = i
+                            self.set_selected(i)
 
                 if input_state.mouse_was_pressed():
                     clicked_option = None
@@ -294,7 +303,7 @@ class OptionsMenu(Menu):
             render_eng.update(bun)
 
     def option_activated(self, idx):
-        pass
+        sound_effects.play_sound(sound_effects.Effects.CLICK2)
 
     def esc_pressed(self):
         pass
@@ -328,6 +337,7 @@ class StartMenu(OptionsMenu):
         return music.Songs.MENU_THEME
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == StartMenu.START_OPT:
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
         elif idx == StartMenu.EXIT_OPT:
@@ -349,6 +359,7 @@ class PauseMenu(OptionsMenu):
         OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["back", "controls", "quit"])
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == PauseMenu.EXIT_IDX:
             gs.get_instance().menu_manager().set_active_menu(StartMenu())
         elif idx == PauseMenu.HELP_IDX:
@@ -397,10 +408,13 @@ class PasswordEntryMenu(OptionsMenu):
     def option_activated(self, idx):
         if idx == PasswordEntryMenu.ENTER_IDX:
             if self._pw_text in self._all_valid_passwords:
+                sound_effects.play_sound(sound_effects.Effects.LOAD)
                 self.green_countdown = round(self.max_color_countdown * 1.5)
             else:
+                sound_effects.play_sound(sound_effects.Effects.NEGATIVE_2)
                 self.red_countdown = self.max_color_countdown
         elif idx == PasswordEntryMenu.BACK_IDX:
+            OptionsMenu.option_activated(self, idx)
             gs.get_instance().menu_manager().set_active_menu(StartMenu())
 
     def esc_pressed(self):
@@ -493,10 +507,12 @@ class PasswordEntryMenu(OptionsMenu):
 
         if input_state.was_pressed(pygame.K_BACKSPACE):
             if len(self._pw_text) > 0:
+                sound_effects.play_sound(sound_effects.Effects.CLICK)
                 self._pw_text = self._pw_text[:(len(self._pw_text)-1)]
         for key in input_state.all_pressed_keys():
             as_ascii = Utils.stringify_key(key)
             if len(self._pw_text) < self._max_size and as_ascii in "abcdefghijklmnopqrstuvwxyz0123456789":
+                sound_effects.play_sound(sound_effects.Effects.CLICK)
                 self._pw_text += as_ascii
 
         OptionsMenu.handle_inputs(self, world, input_state, render_eng)
@@ -563,6 +579,7 @@ class ControlsMenu(OptionsMenu):
         return len(ControlsMenu.OPTS) + 1  # extra one is the "back" option
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == ControlsMenu.BACK_OPT_IDX:
             if self.prev_id == MenuManager.START_MENU:
                 gs.get_instance().menu_manager().set_active_menu(StartMenu())
@@ -602,6 +619,7 @@ class KeybindingEditMenu(OptionsMenu):
 
     def handle_inputs(self, world, input_state, render_eng):
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
+            sound_effects.play_sound(sound_effects.Effects.NEGATIVE_2)
             self.esc_pressed()
         else:
             pressed = input_state.all_pressed_keys()
@@ -611,6 +629,8 @@ class KeybindingEditMenu(OptionsMenu):
                 gs.get_instance().settings().set(self._setting, [key])
                 gs.get_instance().save_settings_to_disk()
                 gs.get_instance().menu_manager().set_active_menu(self._return_menu_builder())
+
+                sound_effects.play_sound(sound_effects.Effects.CLICK2)
 
     def _is_valid_binding(self, key):
         if key in (pygame.K_RETURN, pygame.K_ESCAPE, "MOUSE_BUTTON_1"):
@@ -746,6 +766,7 @@ class DeathOptionMenu(OptionsMenu):
         return None
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == DeathOptionMenu.EXIT_OPT:
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
         elif idx == DeathOptionMenu.CONTINUE:
@@ -765,6 +786,7 @@ class DebugMenu(OptionsMenu):
         return music.Songs.CONTINUE_CURRENT
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == DebugMenu.ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0))
         elif idx == DebugMenu.EXIT_OPT:
@@ -812,6 +834,7 @@ class DebugZoneSelectMenu(OptionsMenu):
         OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "zone select", self.opts)
 
     def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
         if idx == self.back_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugMenu())
         elif idx == self.next_page_idx:

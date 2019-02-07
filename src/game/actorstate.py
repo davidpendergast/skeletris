@@ -12,6 +12,7 @@ from src.game.loot import LootFactory
 from src.world.entities import AttackCircleArt
 import src.game.debug as debug
 import src.game.globalstate as gs
+import src.game.sound_effects as sound_effects
 
 
 def show_floating_text(text, color, scale, entity, world):
@@ -640,6 +641,7 @@ class EnemyState(ActorState):
         else:
             loot = []
 
+        sound_effects.play_sound(sound_effects.Effects.ENEMY_DEATH)
         position = entity.center()
 
         for item in loot:

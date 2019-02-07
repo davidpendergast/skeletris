@@ -8,3 +8,4 @@ gl_examples/
 dist/
 build/
 save_data/*
+assets/sounds/library/*

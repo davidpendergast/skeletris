@@ -12,6 +12,7 @@ from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
+import src.game.sound_effects as sound_effects
 
 ENTITY_UID_COUNTER = 0
 
@@ -994,6 +995,8 @@ class DoorEntity(Entity):
 
     def player_in_range(self, in_range):
         if in_range:
+            if self.delay_count == 0:
+                sound_effects.play_sound(sound_effects.Effects.DOOR_OPEN)
             self.delay_count += 1
         else:
             self.delay_count = 0

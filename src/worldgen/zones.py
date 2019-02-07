@@ -460,7 +460,7 @@ class DesolateCaveZone(Zone):
         return w
 
     def get_music_id(self):
-        return music.Songs.AN_ADVENTURE_UNFOLDS
+        return music.Songs.SILENCE
 
     def get_enemies(self):
         return enemies.EASY_CAVE_ENEMIES
@@ -480,7 +480,7 @@ class DesolateCaveZone2(Zone):
         return w
 
     def get_music_id(self):
-        return music.Songs.AN_ADVENTURE_UNFOLDS
+        return music.Songs.SILENCE
 
     def get_enemies(self):
         return enemies.EASY_CAVE_ENEMIES
@@ -499,7 +499,7 @@ class DesolateCaveZone3(Zone):
         return w
 
     def get_music_id(self):
-        return music.Songs.AN_ADVENTURE_UNFOLDS
+        return music.Songs.SILENCE
 
     def get_enemies(self):
         return enemies.HARDER_CAVE_ENEMIES
@@ -673,6 +673,9 @@ class TombTownZone(Zone):
                                                            single_use=True))
 
         return w
+
+    def get_music_id(self):
+        return music.Songs.AN_ADVENTURE_UNFOLDS
 
 
 class DoorTestZone(Zone):

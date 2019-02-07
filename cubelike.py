@@ -27,13 +27,15 @@ if debug.IS_DEV:
                                Utils.resource_path("gifs"))
 
 print("initializing sounds...")
-pygame.mixer.init()
+pygame.mixer.pre_init(44100, -16, 1, 512)
 
 SCREEN_SIZE = (800, 600)
 
 
 def run():
     pygame.init()
+    pygame.mixer.init()
+
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
     
     pygame.display.set_caption("Cubelike")
