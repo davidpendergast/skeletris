@@ -24,12 +24,18 @@ _VOLUME_MULTIPLIER = {
     Effects.CLICK: 0.75
 }
 
+_MASTER_VOLUME = 1.0
 
 _LOADED_EFFECTS = {}  # effect_id -> Effect object
 
 _RECENTLY_PLAYED = {}  # effect_id -> ticks since last play
 
 RECENCY_LIMIT = 4  # if an effect was already played X ticks ago, don't play it again
+
+
+def set_volume(volume):
+    global _MASTER_VOLUME
+    _MASTER_VOLUME = Utils.bound(volume, 0.0, 1.0)
 
 
 def update():
@@ -44,6 +50,9 @@ def update():
 
 
 def play_sound(effect_id):
+    if _MASTER_VOLUME == 0:
+        return
+
     if effect_id in _RECENTLY_PLAYED:
         return
 
@@ -59,7 +68,7 @@ def play_sound(effect_id):
             path = Utils.resource_path(os.path.join("assets", "sounds", effect_filename))
             effect = pygame.mixer.Sound(path)
             if effect_id in _VOLUME_MULTIPLIER:
-                effect.set_volume(_VOLUME_MULTIPLIER[effect_id])
+                effect.set_volume(_MASTER_VOLUME * _VOLUME_MULTIPLIER[effect_id])
         except:
             print("ERROR: failed to load sound effect {}".format(effect_filename))
             traceback.print_exc()

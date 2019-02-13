@@ -128,6 +128,7 @@ def run():
                 else:
                     menu = menus.StartMenu()
 
+                gs.get_instance().save_settings_to_disk()
                 gs.create_new(menu, from_pw=event.get_password())
                 world = None
             elif event.get_type() == events.EventType.PLAYER_DIED:

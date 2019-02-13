@@ -1,6 +1,7 @@
 import pygame
 from src.utils.util import Utils
 import src.utils.passwordgen as passwordgen
+import src.game.sound_effects as sound_effects
 
 ALL_SETTINGS = {}
 ALL_KEY_SETTINGS = []
@@ -45,9 +46,9 @@ KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN])
 KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN])
 KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE])
 
-MASTER_VOLUME = Setting("master volume", "MASTER_VOLUME", 100)
-MASTER_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
-# MASTER_VOLUME.on_set = lambda o, n: pygame.mixer.set_volume(n / 100)
+EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100)
+EFFECTS_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
+EFFECTS_VOLUME.on_set = lambda old_val, new_val: sound_effects.set_volume(new_val / 100)
 
 MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100)
 MUSIC_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)

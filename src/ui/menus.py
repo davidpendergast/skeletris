@@ -27,6 +27,7 @@ class MenuManager:
     PASSWORD_MENU = 6
     KEYBINDING_MENU = 7
     DEBUG_OPTION_MENU = 8
+    SETTINGS_MENU = 9
 
     def __init__(self, menu):
         self._active_menu = StartMenu()
@@ -327,11 +328,12 @@ class StartMenu(OptionsMenu):
     START_OPT = 0
     PASSWORD_OPT = 1
     OPTIONS_OPT = 2
-    EXIT_OPT = 3
+    SOUND_OPT = 3
+    EXIT_OPT = 4
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.START_MENU, "cubelike",
-                             ["start", "load game", "controls", "exit"], title_size=10)
+                             ["start", "load game", "controls", "sound", "exit"], title_size=10)
 
     def get_song(self):
         return music.Songs.MENU_THEME
@@ -347,16 +349,19 @@ class StartMenu(OptionsMenu):
             gs.get_instance().menu_manager().set_active_menu(PasswordEntryMenu(prefill=last_pw))
         elif idx == StartMenu.OPTIONS_OPT:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
+        elif idx == StartMenu.SOUND_OPT:
+            gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.START_MENU))
 
 
 class PauseMenu(OptionsMenu):
 
     CONTINUE_IDX = 0
     HELP_IDX = 1
-    EXIT_IDX = 2
+    SOUND_IDX = 2
+    EXIT_IDX = 3
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["back", "controls", "quit"])
+        OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["back", "controls", "sound", "quit"])
 
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
@@ -366,6 +371,8 @@ class PauseMenu(OptionsMenu):
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.IN_GAME_MENU))
         elif idx == PauseMenu.CONTINUE_IDX:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+        elif idx == PauseMenu.SOUND_IDX:
+            gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.PAUSE_MENU))
 
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(InGameUiState())
@@ -539,6 +546,63 @@ class PasswordEntryMenu(OptionsMenu):
 
         for bun in self.all_bundles():
             render_eng.update(bun)
+
+
+class SoundSettingsMenu(OptionsMenu):
+    MUSIC_VOLUME_IDX = 0
+    EFFECTS_VOLUME_IDX = 1
+    BACK_IDX = 2
+
+    def __init__(self, prev_id):
+        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound settings", ["~music~", "~effects~", "back"])
+        self.prev_id = prev_id
+        self.music_enabled = gs.get_instance().settings().get(settings.MUSIC_VOLUME) > 0
+        self.effects_enabled = gs.get_instance().settings().get(settings.EFFECTS_VOLUME) > 0
+
+    def get_option_text(self, idx):
+        if idx == SoundSettingsMenu.MUSIC_VOLUME_IDX:
+            if self.music_enabled:
+                return "music: ON"
+            else:
+                return "music: OFF"
+        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_IDX:
+            if self.effects_enabled:
+                return "effects: ON"
+            else:
+                return "effects: OFF"
+        else:
+            return OptionsMenu.get_option_text(self, idx)
+
+    def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
+        rebuild = False
+        if idx == SoundSettingsMenu.MUSIC_VOLUME_IDX:
+            new_val = 0 if self.music_enabled else 100
+            gs.get_instance().settings().set(settings.MUSIC_VOLUME, new_val)
+            gs.get_instance().save_settings_to_disk()
+            rebuild = True
+        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_IDX:
+            new_val = 0 if self.effects_enabled else 100
+            gs.get_instance().settings().set(settings.EFFECTS_VOLUME, new_val)
+            gs.get_instance().save_settings_to_disk()
+            rebuild = True
+        elif idx == SoundSettingsMenu.BACK_IDX:
+            if self.prev_id == MenuManager.START_MENU:
+                gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            else:
+                gs.get_instance().menu_manager().set_active_menu(PauseMenu())
+
+        if rebuild:
+            # rebuilding so the option text will change
+            rebuilt = SoundSettingsMenu(self.prev_id)
+            rebuilt.set_selected(idx)
+            gs.get_instance().menu_manager().set_active_menu(rebuilt)
+
+    def esc_pressed(self):
+        if self.prev_id == MenuManager.START_MENU:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+        else:
+            gs.get_instance().menu_manager().set_active_menu(PauseMenu())
 
 
 class ControlsMenu(OptionsMenu):
