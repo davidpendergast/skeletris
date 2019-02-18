@@ -12,6 +12,7 @@ import src.game.dialog as dialog
 import src.game.music as music
 import src.game.cinematics as cinematics
 import src.game.globalstate as gs
+from src.game.storystate import StoryStateKey
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -544,7 +545,7 @@ class FrogLairZone(Zone):
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
         w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
 
-        if not gs.get_instance().story_state().frog_boss_dead:
+        if not gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
             frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
             frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
             w.add(frog_entity, gridcell=frog_spawn)
@@ -554,7 +555,7 @@ class FrogLairZone(Zone):
                 for e in _world.all_entities(onscreen=False):
                     if e.is_door() and e.is_locked():
                         e.do_open()
-                gs.get_instance().story_state().set_frog_boss_dead(True)
+                gs.get_instance().story_state().set(StoryStateKey.FROG_BOSS_DEAD, True)
                 music.play_song(self.frog_dead_song())
 
             gs.get_instance().add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
@@ -575,7 +576,7 @@ class FrogLairZone(Zone):
         return music.Songs.SILENCE
 
     def get_music_id(self):
-        if gs.get_instance().story_state().frog_boss_dead:
+        if gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
             return self.frog_dead_song()
         else:
             return music.Songs.AMPHIBIAN

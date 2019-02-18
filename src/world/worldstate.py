@@ -172,7 +172,6 @@ class World:
         return self.get_geo(pixel_x // self.cellsize(), pixel_y // self.cellsize())
 
     def door_opened(self, grid_x, grid_y):
-        print("door opened at {}".format((grid_x, grid_y)))
         for n in World.NEIGHBORS:
             self.set_hidden(grid_x + n[0], grid_y + n[1], False, and_fill_adj_floors=True)
 

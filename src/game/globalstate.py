@@ -5,6 +5,7 @@ import os
 
 import src.game.events as events
 import src.game.settings as settings
+from src.game.storystate import StoryStateKey, StoryState
 from src.utils.util import Utils
 import src.utils.passwordgen as passwordgen
 
@@ -142,28 +143,6 @@ class SaveDataBlob:
 
     def __repr__(self):
         return str(self.to_json())
-
-
-class StoryState:
-
-    def __init__(self):
-        self.frog_boss_dead = False
-
-    def set_frog_boss_dead(self, val):
-        print("INFO: setting frog_boss_dead_to: {}".format(val))
-        self.frog_boss_dead = val
-
-    def to_json(self):
-        return {
-            "frog_boss_dead": self.frog_boss_dead
-        }
-
-    @staticmethod
-    def from_json(blob):
-        story_state = StoryState()
-        story_state.set_frog_boss_dead(Utils.read_bool(blob, "frog_boss_dead", False))
-
-        return story_state
 
 
 class GlobalState:
