@@ -58,8 +58,8 @@ class MenuManager:
 
         else:
             if world is None and self.should_draw_world():
-                current_id = self.get_active_menu().get_type()
-                raise ValueError("world is None for menu that needs a world: {}".format(current_id))
+                # expected sometimes~
+                pass
             else:
                 self.get_active_menu().update(world, input_state, render_eng)
 
@@ -763,6 +763,9 @@ class CinematicMenu(Menu):
 
     def get_clear_color(self):
         return (0.0, 0.0, 0.0)
+
+    def keep_drawing_world_underneath(self):
+        return False
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):

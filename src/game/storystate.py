@@ -63,7 +63,7 @@ class StoryState:
             if not isinstance(value, str):
                 raise ValueError("story state key {} must be type str, instead received: {}".format(key, value))
         else:
-            raise ValueError("unrecognized storystate key: {}".format(key))
+            raise ValueError("unrecognized story state key: {}".format(key))
 
     def set(self, key, value):
         StoryState.validate(key, value)

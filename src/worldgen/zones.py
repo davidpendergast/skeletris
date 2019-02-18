@@ -400,6 +400,10 @@ class DesolateCaveZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
+        if not gs.get_instance().story_state().get(StoryStateKey.OPENING_CUTSCENE_SHOWN):
+            gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
+            gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
+
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
             text = "it's a large cluster of mushrooms. they're overgrown and rotten."

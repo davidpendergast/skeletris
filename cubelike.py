@@ -115,6 +115,10 @@ def run():
 
                 world = zones.build_world(event.get_next_zone(), spawn_at_door_with_zone_id=spawn_at)
 
+                # kind of a hack to prevent the world from flashing for a frame before the cinematic starts
+                if len(gs.get_instance().get_cinematics_queue()) > 0:
+                    gs.get_instance().menu_manager().update(world, input_state, render_eng)
+
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
                 running = False
@@ -165,6 +169,10 @@ def run():
             initial_zone_id = gs.get_instance().initial_zone_id
             loading_save = initial_zone_id != zones.first_zone_id()
             world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
+
+            if len(gs.get_instance().get_cinematics_queue()) > 0:
+                gs.get_instance().menu_manager().update(world, input_state, render_eng)
+                world_active = False
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
