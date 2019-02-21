@@ -234,6 +234,9 @@ class PlayerState(ActorState):
         self.death_seq_duration = 120
         self.death_seq_tick = 0
 
+        self._is_actionable = True
+        self._is_visible = True
+
         self.held_item = None
         self._held_item_image_entity_uid = None
 
@@ -300,7 +303,7 @@ class PlayerState(ActorState):
         return self._potion_tick_count >= self._potion_cooldown and self.hp() < self.max_hp()
 
     def _can_interact(self):
-        return not self.attack_state.is_active()
+        return self._is_actionable and not self.attack_state.is_active()
 
     def _handle_potions(self, try_to_use):
         if self._potion_tick_count < self._potion_cooldown:
@@ -389,6 +392,12 @@ class PlayerState(ActorState):
                 hover_entity.set_text(text)
                 hover_entity.set_target_entity(target_entity, offset=offs)
 
+    def set_actionable(self, val):
+        self._is_actionable = val
+
+    def set_visible(self, val):
+        self._is_visible = val
+
     def update(self, player_entity, world, input_state):
         if not gs.get_instance().world_updates_paused():
 
@@ -416,7 +425,8 @@ class PlayerState(ActorState):
                 self._damage_last_tick = 0
                 return
 
-            self._handle_potions(input_state.was_pressed(gs.get_instance().settings().potion_key()))
+            if self._is_actionable:
+                self._handle_potions(input_state.was_pressed(gs.get_instance().settings().potion_key()))
 
             if gs.get_instance().tick_counter % 60 == 0:
                 regen = self.stat_value(StatType.LIFE_REGEN)
@@ -430,9 +440,10 @@ class PlayerState(ActorState):
             if self.set_color_x_ticks_ago < self.damage_recoil:
                 self.set_color_x_ticks_ago += 1
 
-            if input_state.is_held(gs.get_instance().settings().attack_key()) and self.attack_state.can_attack():
-                self.drop_held_item(player_entity, world)
-                self.attack_state.start_attack(self)
+            if self._is_actionable:
+                if input_state.is_held(gs.get_instance().settings().attack_key()) and self.attack_state.can_attack():
+                    self.drop_held_item(player_entity, world)
+                    self.attack_state.start_attack(self)
 
             self.attack_state.update(player_entity, world)
 
@@ -455,10 +466,10 @@ class PlayerState(ActorState):
                     gs.get_instance().event_queue().add(events.EntityInteractEvent(closest_interactable))
 
             # you can keep moving during the attack windup
-            left_held = input_state.is_held(gs.get_instance().settings().left_key())
-            right_held = input_state.is_held(gs.get_instance().settings().right_key())
-            down_held = input_state.is_held(gs.get_instance().settings().down_key())
-            up_held = input_state.is_held(gs.get_instance().settings().up_key())
+            left_held = self._is_actionable and input_state.is_held(gs.get_instance().settings().left_key())
+            right_held = self._is_actionable and input_state.is_held(gs.get_instance().settings().right_key())
+            down_held = self._is_actionable and input_state.is_held(gs.get_instance().settings().down_key())
+            up_held = self._is_actionable and input_state.is_held(gs.get_instance().settings().up_key())
 
             move_x = int(right_held) - int(left_held)
             move_y = int(down_held) - int(up_held)
@@ -502,6 +513,8 @@ class PlayerState(ActorState):
         color = self.recoil_color()
         player_entity.update_images(self.get_sprite(), self.facing_right, color=color)
         player_entity.set_shadow_sprite(self.get_shadow_sprite())
+
+        player_entity.set_visible(self._is_visible)
 
     def _get_held_item_offset(self, spr):
         h = spr.height() * 2

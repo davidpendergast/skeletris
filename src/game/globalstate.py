@@ -205,7 +205,15 @@ class GlobalState:
         self._event_triggers[trigger.event_type].append(trigger)
 
     def add_zone_updater(self, updater):
+        print("INFO: adding zone updater {}".format(updater))
         self._zone_updaters.append(updater)
+
+    def remove_zone_updater(self, updater):
+        if updater in self._zone_updaters:
+            print("INFO: removed zone updater: {}".format(updater))
+            self._zone_updaters.remove(updater)
+        else:
+            print("WARN: trying to remove a zone updater that doesn't exist: {}".format(updater))
 
     def prepare_for_new_zone(self, zone):
         self._zone_updaters.clear()
@@ -367,7 +375,7 @@ class GlobalState:
                     self._event_triggers[t.event_type].remove(t)
 
             for zone_update in self._zone_updaters:
-                zone_update.update(world, self, input_state, render_engine)
+                zone_update.update(world, input_state, render_engine)
 
         if len(self._current_screenshakes) > 0:
             any_empty = False

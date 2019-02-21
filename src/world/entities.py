@@ -34,6 +34,7 @@ class Entity(Updateable):
         self._shadow = None  # shadow image: ImageBundle
         self._last_vel = (0, 0)
         self._alive = False  # World sets this upon adding/removing the entity
+        self._visible = True
         
     def x(self):
         return self.rect[0]
@@ -49,6 +50,12 @@ class Entity(Updateable):
 
     def get_vel(self):
         return self._last_vel
+
+    def set_visible(self, val):
+        self._visible = val
+
+    def is_visible(self):
+        return self._visible
         
     def center(self):
         return self.rect.center

@@ -351,7 +351,10 @@ floors_dark_cracked = [make(608 + i*16, 80, 16, 16) for i in range(0, 8)]
 floors_hole = [make(608 + i*16, 96, 16, 16) for i in range(0, 8)]
 floors_fancy = [make(608 + i*16, 112, 16, 16) for i in range(0, 8)]
 floors_swamp = [make(608 + i*16, 128, 16, 16) for i in range(0, 8)]
+floors_pit = [make(608 + i*16, 144, 16, 16) for i in range(0, 8)]
 
+floor_busting_open = [make(128 + i*16, 368, 16, 16) for i in range(0, 5)]
+floor_busting_open_player_frames = [make(128 + i*16, 320, 16, 48) for i in range(0, 4)]
 
 FLOOR_NORMAL_ID = 0
 FLOOR_QUAD_ID = 1
@@ -360,7 +363,9 @@ FLOOR_DARK_CRACKED_ID = 3
 FLOOR_HOLE_ID = 4
 FLOOR_FANCY_ID = 5
 FLOOR_SWAMP_ID = 6
-_floor_lookup = [floors, floors_alt, floors_cracked, floors_dark_cracked, floors_hole, floors_fancy, floors_swamp]
+FLOOR_PIT_ID = 7
+_floor_lookup = [floors, floors_alt, floors_cracked, floors_dark_cracked,
+                 floors_hole, floors_fancy, floors_swamp, floors_pit]
 
 
 def get_floor(encoding, floor_type_id=FLOOR_NORMAL_ID):

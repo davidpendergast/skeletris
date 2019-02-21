@@ -333,7 +333,7 @@ class World:
         for e in self.entities:
             e_center = e.center()
             on_camera = Utils.dist(e.center(), cam_center) <= 800
-            is_hidden = self.get_hidden(*self.to_grid_coords(*e_center))
+            is_hidden = not e.is_visible() or self.get_hidden(*self.to_grid_coords(*e_center))
 
             if on_camera:
                 # still want them to wander around if they're hidden

@@ -13,6 +13,7 @@ import src.game.music as music
 import src.game.cinematics as cinematics
 import src.game.globalstate as gs
 from src.game.storystate import StoryStateKey
+from src.game.updatable import Updater
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -398,11 +399,63 @@ class DesolateCaveZone(Zone):
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        spawn = bp.player_spawn
+        # bp.set_alt_art(spawn[0], spawn[1]-1, spriteref.FLOOR_PIT_ID)
+
         w = bp.build_world()
 
+        gs.get_instance().player_state().set_actionable(False)
+        gs.get_instance().player_state().set_visible(False)
+
+        class _AnimUpdater(Updater):
+
+            def __str__(self):
+                return "player_jumping_out_of_hole_updater"
+
+            def __init__(self, spawn_pos):
+                self.active_ticks = -1
+                self.spawn_pos = spawn_pos
+
+            def update(self, world, input_state, render_engine):
+                if not gs.get_instance().world_updates_paused():
+                    self.active_ticks += 1
+                    initial_delay = 45
+                    open_ticks_per_frame = 25
+                    num_open_frames = len(spriteref.floor_busting_open)
+                    jumping_duration = 30
+
+                    anim_pos = (self.spawn_pos[0], self.spawn_pos[1] - 1)
+
+                    if self.active_ticks == initial_delay:
+                        floor_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open,
+                                                              open_ticks_per_frame * num_open_frames,
+                                                              spriteref.SHADOW_LAYER, scale=4)
+                        floor_anim.set_sprite_offset((-16, -16))
+                        world.add(floor_anim, gridcell=anim_pos)
+                        world.set_floor_type(spriteref.FLOOR_PIT_ID, xy=anim_pos)
+                        world.update_geo_bundle(anim_pos[0], anim_pos[1])
+
+                    jump_start_time = initial_delay + open_ticks_per_frame * num_open_frames
+                    if self.active_ticks == jump_start_time:
+                        player_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open_player_frames,
+                                                               jumping_duration, spriteref.ENTITY_LAYER, w=32, h=48)
+                        player_anim.set_sprite_offset((0, -48))
+                        w.add(player_anim, gridcell=spawn)
+
+                    if self.active_ticks >= jump_start_time + jumping_duration:
+                        # make player visible / active
+                        gs.get_instance().player_state().set_actionable(True)
+                        gs.get_instance().player_state().set_visible(True)
+                        gs.get_instance().dialog_manager()  # TODO
+                        gs.get_instance().remove_zone_updater(self)
+
+        gs.get_instance().add_zone_updater(_AnimUpdater(spawn))
+
         if not gs.get_instance().story_state().get(StoryStateKey.OPENING_CUTSCENE_SHOWN):
-            gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
-            gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
+            pass
+            #gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
+            #gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -459,7 +512,7 @@ class DesolateCaveZone(Zone):
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
-        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
+        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=400, just_once=False)
         w.add(wasd_message_box)
 
         return w
