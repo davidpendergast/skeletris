@@ -220,7 +220,8 @@ class Cutscene(Dialog):
             return
         else:
             current_action = self.action_list[self._action_idx]
-            if current_action.is_finished() or input_state.was_pressed(gs.get_instance().settings().interact_key()):
+            force_finish = current_action.is_skippable() and input_state.was_pressed(gs.get_instance().settings().interact_key())
+            if current_action.is_finished() or force_finish:
                 current_action.finalize(world, input_state)
                 self._action_idx += 1
             else:
@@ -246,6 +247,9 @@ class CutSceneAction:
 
     def update(self, world, input_state):
         pass
+
+    def is_skippable(self):
+        return True
 
     def finalize(self, world, input_state):
         pass
@@ -309,6 +313,7 @@ class NpcWalkCutSceneAction(CutSceneAction):
 class CustomCutsceneAction(CutSceneAction):
 
     def __init__(self, name):
+        CutSceneAction.__init__(self)
         self.name = name
 
     def is_finished(self):

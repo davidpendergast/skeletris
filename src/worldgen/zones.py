@@ -399,10 +399,7 @@ class DesolateCaveZone(Zone):
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
-
         spawn = bp.player_spawn
-        # bp.set_alt_art(spawn[0], spawn[1]-1, spriteref.FLOOR_PIT_ID)
-
         w = bp.build_world()
 
         class _JumpOuttaHoleAction(dialog.CustomCutsceneAction):
@@ -417,6 +414,9 @@ class DesolateCaveZone(Zone):
                 self.num_open_frames = len(spriteref.floor_busting_open)
                 self.jumping_duration = 30
                 self.jump_start_time = self.initial_delay + self.open_ticks_per_frame * self.num_open_frames
+
+            def is_skippable(self):
+                return False
 
             def update(self, world, input_state):
                 self.active_ticks += 1
