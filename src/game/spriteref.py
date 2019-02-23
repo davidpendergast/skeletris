@@ -355,6 +355,7 @@ floors_pit = [make(608 + i*16, 144, 16, 16) for i in range(0, 8)]
 
 floor_busting_open = [make(128 + i*16, 368, 16, 16) for i in range(0, 5)]
 floor_busting_open_player_frames = [make(128 + i*16, 320, 16, 48) for i in range(0, 4)]
+floor_burst_shards = [make(128 + i*16, 384, 16, 16) for i in range(0, 4)]
 
 FLOOR_NORMAL_ID = 0
 FLOOR_QUAD_ID = 1

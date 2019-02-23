@@ -144,7 +144,7 @@ class DialogManager:
         return self._active_dialog
 
     def set_dialog(self, dialog):
-        print("setting dialog to" + str(dialog))
+        print("INFO: setting dialog to" + str(dialog))
         if self._active_dialog is not None:
             opt_idx = self._active_dialog.get_selected_opt_idx()
             uid = self._active_dialog.get_uid()
@@ -232,6 +232,9 @@ class Cutscene(Dialog):
     def is_cutscene(self):
         return True
 
+    def reset(self):
+        self._action_idx = 0
+
 
 class CutSceneAction:
 
@@ -302,5 +305,22 @@ class NpcWalkCutSceneAction(CutSceneAction):
             step = Utils.set_length(Utils.sub(target_pos, center), self.move_speed)
             npc_entity.move(*step)
 
+
+class CustomCutsceneAction(CutSceneAction):
+
+    def __init__(self, name):
+        self.name = name
+
+    def is_finished(self):
+        return True
+
+    def update(self, world, input_state):
+        pass
+
+    def finalize(self, world, input_state):
+        pass
+
+    def __str__(self):
+        return "CustomCutsceneAction[{}]".format(self.name)
 
 

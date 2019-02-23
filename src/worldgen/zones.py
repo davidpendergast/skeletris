@@ -405,57 +405,63 @@ class DesolateCaveZone(Zone):
 
         w = bp.build_world()
 
-        gs.get_instance().player_state().set_actionable(False)
-        gs.get_instance().player_state().set_visible(False)
-
-        class _AnimUpdater(Updater):
-
-            def __str__(self):
-                return "player_jumping_out_of_hole_updater"
+        class _JumpOuttaHoleAction(dialog.CustomCutsceneAction):
 
             def __init__(self, spawn_pos):
+                dialog.CustomCutsceneAction.__init__(self, "player_jumping_out_of_hole_cutscene")
                 self.active_ticks = -1
                 self.spawn_pos = spawn_pos
 
-            def update(self, world, input_state, render_engine):
-                if not gs.get_instance().world_updates_paused():
-                    self.active_ticks += 1
-                    initial_delay = 45
-                    open_ticks_per_frame = 25
-                    num_open_frames = len(spriteref.floor_busting_open)
-                    jumping_duration = 30
+                self.initial_delay = 45
+                self.open_ticks_per_frame = 45
+                self.num_open_frames = len(spriteref.floor_busting_open)
+                self.jumping_duration = 30
+                self.jump_start_time = self.initial_delay + self.open_ticks_per_frame * self.num_open_frames
 
-                    anim_pos = (self.spawn_pos[0], self.spawn_pos[1] - 1)
+            def update(self, world, input_state):
+                self.active_ticks += 1
 
-                    if self.active_ticks == initial_delay:
-                        floor_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open,
-                                                              open_ticks_per_frame * num_open_frames,
-                                                              spriteref.SHADOW_LAYER, scale=4)
-                        floor_anim.set_sprite_offset((-16, -16))
-                        world.add(floor_anim, gridcell=anim_pos)
-                        world.set_floor_type(spriteref.FLOOR_PIT_ID, xy=anim_pos)
-                        world.update_geo_bundle(anim_pos[0], anim_pos[1])
+                anim_pos = (self.spawn_pos[0], self.spawn_pos[1] - 1)
 
-                    jump_start_time = initial_delay + open_ticks_per_frame * num_open_frames
-                    if self.active_ticks == jump_start_time:
-                        player_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open_player_frames,
-                                                               jumping_duration, spriteref.ENTITY_LAYER, w=32, h=48)
-                        player_anim.set_sprite_offset((0, -48))
-                        w.add(player_anim, gridcell=spawn)
+                crack_ticks = [self.initial_delay + j*self.open_ticks_per_frame for j in range(0, self.num_open_frames)]
 
-                    if self.active_ticks >= jump_start_time + jumping_duration:
-                        # make player visible / active
-                        gs.get_instance().player_state().set_actionable(True)
-                        gs.get_instance().player_state().set_visible(True)
-                        gs.get_instance().dialog_manager()  # TODO
-                        gs.get_instance().remove_zone_updater(self)
+                if self.active_ticks == crack_ticks[0]:
+                    floor_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open,
+                                                          self.open_ticks_per_frame * self.num_open_frames,
+                                                          spriteref.SHADOW_LAYER, scale=4)
+                    floor_anim.set_sprite_offset((-16, -16))
+                    world.add(floor_anim, gridcell=anim_pos)
+                    world.set_floor_type(spriteref.FLOOR_PIT_ID, xy=anim_pos)
+                    world.update_geo_bundle(anim_pos[0], anim_pos[1])
 
-        gs.get_instance().add_zone_updater(_AnimUpdater(spawn))
+                if self.active_ticks in crack_ticks:
+                    shards_anim = entities.AnimationEntity(0, 0, spriteref.floor_burst_shards,
+                                                           15, spriteref.ENTITY_LAYER, scale=4)
+                    shards_anim.set_sprite_offset((-16, -48))
+                    world.add(shards_anim, gridcell=anim_pos)
+
+                if self.active_ticks == self.jump_start_time:
+                    player_anim = entities.AnimationEntity(0, 0, spriteref.floor_busting_open_player_frames,
+                                                           self.jumping_duration, spriteref.ENTITY_LAYER, w=32, h=48)
+                    player_anim.set_sprite_offset((0, -48))
+                    w.add(player_anim, gridcell=spawn)
+
+            def is_finished(self):
+                return self.active_ticks >= self.jump_start_time + self.jumping_duration
+
+            def finalize(self, world, input_state):
+                gs.get_instance().player_state().set_visible(True)
 
         if not gs.get_instance().story_state().get(StoryStateKey.OPENING_CUTSCENE_SHOWN):
-            pass
-            #gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
-            #gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
+            gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
+            gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
+
+            gs.get_instance().player_state().set_visible(False)
+            opening_dialog = dialog.Dialog.link_em_up([
+                dialog.Cutscene([dialog.PauseCutSceneAction(60), _JumpOuttaHoleAction(spawn), dialog.PauseCutSceneAction(50)]),
+                dialog.PlayerDialog("this must be the city. it looks like it hasn't been touched in ages.")
+            ])
+            gs.get_instance().dialog_manager().set_dialog(opening_dialog)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -512,7 +518,7 @@ class DesolateCaveZone(Zone):
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
-        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=400, just_once=False)
+        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
         w.add(wasd_message_box)
 
         return w
