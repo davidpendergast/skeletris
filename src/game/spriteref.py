@@ -221,9 +221,13 @@ beanskull_all = [make(336, 144 + i*32, 16, 32) for i in range(0, 2)]
 beanskull_faces = [make(336, 208 + i*32, 32, 32) for i in range(0, 2)]
 
 glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
+skullboy_faces = [make(268, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 6)]
 spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
+
+doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
+doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
 potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)

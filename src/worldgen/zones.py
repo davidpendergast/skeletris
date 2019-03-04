@@ -482,7 +482,7 @@ class DesolateCaveZone(Zone):
                 doors = w.entities_in_circle(switch_pos, 800, onscreen=False,
                                              cond=lambda ent: isinstance(ent, entities.LockedDoorEntity))
                 nearest_door = doors[0]
-                action = lambda _e, _w: nearest_door.do_unlock()
+                action = lambda _e, _w: nearest_door.do_open()
                 listener = events.EventListener(action, events.EventType.DIALOG_EXIT,
                                                 lambda event: event.get_uid() == unlock_dialog.get_uid(),
                                                 single_use=True)
