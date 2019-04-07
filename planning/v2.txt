@@ -1,0 +1,161 @@
+
+
+                      ~The gang goes turn-based~
+
+Goal: Morph the Cubelike project into something that I can actually finish.
+
+How to do it: Total re-design from the ground up!
+
+
+Core Changes:
+    - Turn based movement, attacks, and actions, traditional roguelike style
+    - Bring back permadeath
+    - Lose the "story" (but keep dialog, tidbits of a story)
+    - All levels procedurally generated (except boss fights)
+        - Distinguish zones with.... (color)?
+    - Add money (reason to kill things)
+    - Add weapons to the game. Equippable in the item grid.
+    - Add other equippable items (like what?)
+        - only two active items allowed at a time
+        - switching out an active item spends a turn.
+    
+Core Non-changes:
+    - Keep item system and stats system
+    - Keep all art / assets
+    - Keep all enemies and characters, but repurpose
+
+Weapons:
+    - Weapons are a new type of item, that grant access to different attacks.
+    - Weapons have different types, coorresponding to different attack shapes.
+    - Weapons have base damage values, and additional stats sometimes.
+    - Weapons also have different grid shapes. 
+        - Better weapons = larger, requiring a tradeoff
+    - Weapons have varying cooldown times (in terms of turns)
+      
+    X = player    
+    * = single target
+    o = multi target    
+    
+    [unarmed]
+        range:
+          *
+          X
+    
+    [dagger]
+        1x2 in grid
+        attack every 1 turn(s)
+        attacks with daggers don't end turn
+        range:
+          *
+          X
+        
+    [sword]
+        1x3 in grid
+        attack every 1 turn(s)
+        range:
+         *** 
+          X
+       
+    [club]
+        1x3 in grid
+        attack every 2 turn(s)
+        range:
+         ooo
+          X
+     
+    [spear]
+        1x4 in grid
+        attack every 2 turn(s)
+        range:
+          o
+          o
+          X
+     
+     [bow]
+         2x3 in grid
+         attack every 3 turn(s)
+         range: (with line of sight)
+               *
+              ***
+             ** **
+            **   ** 
+           **  X  **
+            **   **
+             ** **
+              ***
+               *
+    
+        
+UI:
+    [WASD] to move and navigate menus
+    [ENTER / MOUSE_CLICK] make selection
+    [ESC] back / undo
+    [1] use primary weapon/ability 
+    [2] use secondary weapon/ability
+    [3] use active consumable
+    [Space] pass turn
+    [Mouse]
+      
+Attacking:
+    - Attacking is based on your active weapon(s). 
+    - With an enemy in range, press the hotkey for the weapon to use.
+    - 
+    
+    
+Dungeon Generation:
+    - 17x17 tiles, fit together in a 16x16 grid
+    - tile interiors are generated on the fly
+    - 8 possible "door" connections
+    
+          
+    * - - 0 0 - - - - - - - 1 1 - - *
+    |                               |
+    |                               |
+    7                               2
+    7                               2
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    |                               |
+    6                               3
+    6                               3
+    |                               |
+    |                               |
+    * - - 5 5 - - - - - - - 4 4 - - *
+    
+     - tiles are essentially a partition of a subset of [0, 1, ..., 7]
+     - call this the "subset parition"
+     
+     * - 0 - *       * - - - - *
+     |       |       |         | 
+     7       |       |         2
+     * - - - *       |         |
+                     * - - - - *
+                      
+     * - - - - - - - - - - - - *
+     6                         3
+     |                         |
+     * - - - - - - - - - - - - *
+     
+     - would coorespond to the blueprint [(0, 7), (6, 3), (2)], for example.
+     - this way, we can generate dungeons by:
+     
+     1. generate a set of orthogonally-connected tile positions.
+        - mark a start / end tile.
+     
+     2. finding a valid subset partition for each tile
+        a. must provide a pathway to every tile 
+        b. partition must be possible to generate for each tile
+        
+     3. generate each tile based on the parition, populate with objects/enemies.
+        - 
+
+
+
+
