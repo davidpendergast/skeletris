@@ -1,7 +1,7 @@
 import re
 import random
 
-FLOOR = "x"
+FLOOR = "X"
 WALL = "#"
 DOOR = "0"
 
@@ -31,13 +31,13 @@ class Tileish:
 
 class Tile(Tileish):
 
-    def __init__(self, size):
+    def __init__(self, size, door_offs=3, door_len=2):
         self.grid = []
         for i in range(0, size):
             self.grid.append([EMPTY for _ in range(0, size)])
 
-        self._door_offs = 3
-        self._door_length = 2
+        self._door_offs = door_offs
+        self._door_length = door_len
 
     def in_tile(self, x, y):
         return 0 <= x < self.w() and 0 <= y < self.h()
@@ -75,17 +75,17 @@ class Tile(Tileish):
         if door_num == 0:
             return [(self._door_offs + i, 0) for i in range(0, self._door_length)]
         elif door_num == 1:
-            return [(self.w() - 2 - self._door_offs + i, 0) for i in range(0, self._door_length)]
+            return [(self.w() - self._door_length - self._door_offs + i, 0) for i in range(0, self._door_length)]
         elif door_num == 2:
             return [(self.w() - 1, self._door_offs + i) for i in range(0, self._door_length)]
         elif door_num == 3:
-            return [(self.w() - 1, self.h() - 2 - self._door_offs + i) for i in range(0, self._door_length)]
+            return [(self.w() - 1, self.h() - self._door_length - self._door_offs + i) for i in range(0, self._door_length)]
         elif door_num == 4:
-            return [(self.w() - 2 - self._door_offs + i, self.h() - 1) for i in range(0, self._door_length)]
+            return [(self.w() - self._door_length - self._door_offs + i, self.h() - 1) for i in range(0, self._door_length)]
         elif door_num == 5:
             return [(self._door_offs + i, self.h() - 1) for i in range(0, self._door_length)]
         elif door_num == 6:
-            return [(0, self.h() - 2 - self._door_offs + i) for i in range(0, self._door_length)]
+            return [(0, self.h() - self._door_length - self._door_offs + i) for i in range(0, self._door_length)]
         elif door_num == 7:
             return [(0, self._door_offs + i) for i in range(0, self._door_length)]
 
@@ -179,12 +179,16 @@ class PartitionGrid:
         else:
             return p.has_door(door_num)
 
-    def needed_doors(self, x, y):
+    def needs_door(self, x, y, door_num, prevent_boundary_doors=True):
+        """returns: True or False if neighboring tile forces a door connection/disconnection, else None."""
+        return self.needed_doors(x, y, prevent_boundary_doors=prevent_boundary_doors)[door_num]
+
+    def needed_doors(self, x, y, prevent_boundary_doors=False):
         res = []
         for dir in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
             if not (0 <= x + dir[0] < self.w() and 0 <= y + dir[1] < self.h()):
-                res.append(False)
-                res.append(False)
+                res.append(False if prevent_boundary_doors else None)
+                res.append(False if prevent_boundary_doors else None)
             else:
                 n = self.get(x + dir[0], y + dir[1])
                 if n is None:
@@ -228,19 +232,39 @@ class TileGrid(Tileish):
             return None
 
     def tile_at(self, x, y):
-        return self.get_tile(int(x / self.tile_size[0]), int(y / self.tile_size[1]))
+        if x < 0 or y < 0:
+            return None
+        else:
+            return self.get_tile(int(x / self.tile_size[0]), int(y / self.tile_size[1]))
 
     def get(self, x, y):
         t = self.tile_at(x, y)
         if t is None:
             return EMPTY
         else:
-            rel_x = x % self.tile_size[0]
-            rel_y = y % self.tile_size[1]
+            rel_x, rel_y = self.rel_coords(x, y)
             return t.get(rel_x, rel_y)
+
+    def rel_coords(self, x, y):
+        rel_x = x % self.tile_size[0]
+        rel_y = y % self.tile_size[1]
+        return (rel_x, rel_y)
 
     def set_tile(self, grid_x, grid_y, tile):
         self.tiles[grid_x][grid_y] = tile
+
+    def set(self, x, y, val):
+        t = self.tile_at(x, y)
+        if t is None:
+            if val is not EMPTY:
+                raise ValueError("tile is None at ({}, {})".format(x, y))
+            else:
+                return
+        else:
+            rel_x, rel_y = self.rel_coords(x, y)
+            t.set(rel_x, rel_y, val)
+
+
 
 
 class GridBuilder:
@@ -270,18 +294,14 @@ class GridBuilder:
         return path
 
     @staticmethod
-    def random_connected_partition_path(coord_path):
-        pass
-
-    @staticmethod
     def random_partition_grid(w, h, start=None, end=None):
+        """returns: (path, partition_grid)"""
         start = start if start is not None else (random.randint(0, w - 1), random.randint(0, h - 1))
         end = end if end is not None else (random.randint(0, w - 1), random.randint(0, h - 1))
 
-        path = GridBuilder.random_path_between(start, end, w, h)
-        print("path={}".format(path))
-
         p_grid = PartitionGrid(w, h)
+        path = GridBuilder.random_path_between(start, end, w, h)
+
         entry_door = None
         for path_idx in range(0, len(path)):
             cur_path = path[path_idx]
@@ -301,14 +321,11 @@ class GridBuilder:
                 next_path = path[path_idx + 1]
                 direction = (next_path[0] - cur_path[0], next_path[1] - cur_path[1])
                 exit_door = random.choice(Tile.doors_on_side(direction))
-                # print("\ncur_path={}, entry_door={}, exit_door={}, door_req={}".format(cur_path, entry_door, exit_door, door_req))
                 force_enabled.append(exit_door)
                 if entry_door is not None:
                     force_connected = [entry_door, exit_door]
 
                 entry_door = Tile.connecting_door(exit_door)  # setting for next loop
-            # else:
-                # print("\ncur_path={}, entry_door={}, door_req={}".format(cur_path, entry_door, door_req))
 
             p = Partition.random_partition(force_valid=True,
                                            force_doors=force_enabled,
@@ -317,7 +334,24 @@ class GridBuilder:
 
             p_grid.set(cur_path[0], cur_path[1], p)
 
-        return p_grid
+        empty_coords = [xy for xy in RectUtils.coords_in_rect([0, 0, w, h]) if p_grid.get(xy[0], xy[1]) is None]
+        random.shuffle(empty_coords)
+
+        for (x, y) in empty_coords:
+            door_req = p_grid.needed_doors(x, y)
+            force_enabled = []
+            force_disabled = []
+            for i in range(0, 8):
+                if door_req[i] is True:
+                    force_enabled.append(i)
+                elif door_req[i] is False:
+                    force_disabled.append(i)
+            p = Partition.random_partition(force_valid=True,
+                                           force_doors=force_enabled,
+                                           force_not_doors=force_disabled)
+            p_grid.set(x, y, p)
+
+        return path, p_grid
 
 
 class RectUtils:
@@ -329,6 +363,15 @@ class RectUtils:
                 yield (x, y)
 
     @staticmethod
+    def coords_around_rect(rect):
+        for x in range(rect[0]-1, rect[0] + rect[2] + 1):
+            yield (x, rect[1]-1)
+            yield (x, rect[1] + rect[3])
+        for y in range(rect[1], rect[1] + rect[3]):
+            yield (rect[0] - 1, y)
+            yield (rect[0] + rect[2], y)
+
+    @staticmethod
     def rect_containing(xy_coords):
         min_xy = [xy_coords[0][0], xy_coords[0][1]]
         max_xy = [xy_coords[0][0], xy_coords[0][1]]
@@ -338,6 +381,14 @@ class RectUtils:
             max_xy[0] = max(max_xy[0], x)
             max_xy[1] = max(max_xy[1], y)
         return [min_xy[0], min_xy[1], max_xy[0] - min_xy[0] + 1, max_xy[1] - min_xy[1] + 1]
+
+    @staticmethod
+    def rects_intersect(r1, r2, buffer_zone=0):
+        if r1[0] + r1[2] <= r2[0] - buffer_zone or r2[0] + r2[2] <= r1[0] - buffer_zone:
+            return False
+        elif r1[1] + r1[3] <= r2[1] - buffer_zone or r2[1] + r2[3] <= r1[1] - buffer_zone:
+            return False
+        return True
 
 
 class TileFiller:
@@ -433,14 +484,17 @@ class TileFiller:
                         tile.set(x, y, EMPTY)
             if TileFiller.calculate_partition(tile) == partition:
                 return
-        # raise ValueError("couldn't produce partition={}".format(partition))
 
     @staticmethod
-    def basic_room_fill(tile, partition, min_rooms=1, max_rooms=4, iter_limit=300, min_size=4, max_size=7):
+    def basic_room_fill(tile, partition, min_rooms=1, max_rooms=4, iter_limit=300,
+                        min_size=3, max_size=6, disjoint_rooms=True, connected_rooms=True):
+        """returns: list of room rectangles"""
         TileFiller.basic_floor_fill(tile, partition)
 
         n = random.randint(min_rooms, max_rooms)
         iteration = 0
+
+        rooms_placed = []
 
         while n > 0 and iteration < iter_limit:
             iteration += 1
@@ -449,18 +503,231 @@ class TileFiller:
             x = random.randint(1, tile.w() - w - 2)
             y = random.randint(1, tile.h() - h - 2)
 
+            room_rect = [x, y, w, h]
+
+            if disjoint_rooms:
+                bad_intersect = False
+                for r in rooms_placed:
+                    if RectUtils.rects_intersect(room_rect, r):
+                        bad_intersect = True
+                        break
+                if bad_intersect:
+                    continue
+
+            if connected_rooms:
+                not_connected = True
+                for (x, y) in RectUtils.coords_around_rect(room_rect):
+                    if tile.get(x, y) != EMPTY:
+                        not_connected = False
+                        break
+                if not_connected:
+                    continue
+
             was_empty = []
-            for xy in RectUtils.coords_in_rect([x, y, w, h]):
+            for xy in RectUtils.coords_in_rect(room_rect):
                 if tile.get(xy[0], xy[1]) == EMPTY:
                     was_empty.append(xy)
                     tile.set(xy[0], xy[1], FLOOR)
 
             if TileFiller.calculate_partition(tile) == partition:
                 # added a room successfully!
+                rooms_placed.append(room_rect)
                 n -= 1
             else:
                 for xy in was_empty:
                     tile.set(xy[0], xy[1], EMPTY)
+
+        return rooms_placed
+
+
+class TileGridBuilder:
+
+    @staticmethod
+    def is_dangly(x, y, tile_grid):
+        if tile_grid.get(x, y) != EMPTY:
+            count = 0
+            for n in TileFiller.neighbhors(x, y):
+                if tile_grid.get(n[0], n[1]) != EMPTY:
+                    count += 1
+            if count <= 1:
+                return True
+        return False
+
+    @staticmethod
+    def clean_up_dangly_bits(tile_grid, source_xy=None):
+        if source_xy is not None:
+            if TileGridBuilder.is_dangly(source_xy[0], source_xy[1], tile_grid):
+                tile_grid.set(source_xy[0], source_xy[1], EMPTY)
+                for n in TileFiller.neighbhors(source_xy[0], source_xy[1]):
+                    TileGridBuilder.clean_up_dangly_bits(tile_grid, source_xy=n)
+            else:
+                return
+        else:
+            for x in range(0, tile_grid.w()):
+                for y in range(0, tile_grid.h()):
+                    if TileGridBuilder.is_dangly(x, y, tile_grid):
+                        TileGridBuilder.clean_up_dangly_bits(tile_grid, source_xy=(x, y))
+
+    @staticmethod
+    def is_valid_door_coord(x, y, tile_grid):
+        horz_door = (tile_grid.get(x-1, y) == FLOOR and tile_grid.get(x+1, y) == FLOOR and
+                     tile_grid.get(x, y-1) == EMPTY and tile_grid.get(x, y+1) == EMPTY)
+        vert_door = (tile_grid.get(x, y-1) == FLOOR and tile_grid.get(x, y+1) == FLOOR and
+                     tile_grid.get(x-1, y) == EMPTY and tile_grid.get(x+1, y) == EMPTY)
+
+        return horz_door != vert_door
+
+    @staticmethod
+    def clean_up_doors(tile_grid):
+        for x in range(0, tile_grid.w()):
+            for y in range(0, tile_grid.h()):
+                if tile_grid.get(x, y) == DOOR and not TileGridBuilder.is_valid_door_coord(x, y, tile_grid):
+                    tile_grid.set(x, y, FLOOR)
+
+
+class Feature(Tileish):
+
+    def __init__(self, feat_id, replace, place, can_rotate=True):
+        self.feat_id = feat_id
+        self.replace = replace
+        self.place = place
+        self.can_rotate = can_rotate
+
+        self._validate()
+
+    def _validate(self):
+        if len(self.replace) == 0 or len(self.replace[0]) == 0:
+            raise ValueError("empty feature {}".format(self.feat_id))
+        for row in self.replace:
+            if len(row) != len(self.replace[0]):
+                raise ValueError("non-rectangular feature {}".format(self.feat_id))
+
+        if len(self.replace) != len(self.place):
+            raise ValueError("invalid feature {}: mismatched place/replace heights {} != {}".format(
+                self.feat_id, len(self.replace), len(self.place)
+            ))
+        for i in range(0, len(self.replace)):
+            place_width = len(self.replace[i])
+            replace_width = len(self.place[i])
+            if place_width != replace_width:
+                raise ValueError("invalid feature {}: mismatched place/replace widths on row {}: {} != {}".format(
+                    self.feat_id, i, place_width, replace_width
+                ))
+
+    def w(self):
+        return len(self.replace[0])
+
+    def h(self):
+        return len(self.replace)
+
+    def get(self, x, y):
+        if 0 <= x < self.w() and 0 <= y < self.h():
+            return self.replace[y][x]
+        else:
+            return EMPTY
+
+    def get_place_val(self, x, y):
+        return self.place[y][x]
+
+    def rotated(self, rots=1):
+        if rots <= 0:
+            return self
+        elif not self.can_rotate:
+            return ValueError("can't rotate feature: {}".format(self.feat_id))
+
+        place = ["" for _ in range(0, self.w())]
+        replace = ["" for _ in range(0, self.w())]
+
+        for i in range(0, self.w()):
+            for j in range(self.h()-1, -1, -1):
+                place[i] = place[i] + self.place[j][i]
+                replace[i] = replace[i] + self.replace[j][i]
+
+        return Feature(self.feat_id, place, replace, can_rotate=True).rotated(rots=rots-1)
+
+    def can_place_at(self, tilish, x, y):
+        for feat_x in range(0, self.w()):
+            for feat_y in range(0, self.h()):
+                feat_val = self.get(feat_x, feat_y)
+                if feat_val == "?":
+                    continue
+                elif feat_val != tilish.get(x + feat_x, y + feat_y):
+                    # print("({} + {}, {} + {}) failed because {} != {}".format(x, feat_x, y, feat_y, feat_val, tilish.get(x + feat_x, y + feat_y)))
+                    return False
+        return True
+
+    def __str__(self):
+        return "Feature:[{}, replace={}, place={}]".format(self.feat_id, self.replace, self.place)
+
+
+class FeatureUtils:
+
+    @staticmethod
+    def all_possible_placements_overlapping_rect(feature, tilish, rect):
+        """returns: list of valid feature placements (x, y)"""
+        res = []
+        for x in range(rect[0] - feature.w() + 1, rect[0] + rect[2]):
+            for y in range(rect[1] - feature.h(), rect[1] + rect[3]):
+                if feature.can_place_at(tilish, x, y):
+                    res.append((x, y))
+        return res
+
+    @staticmethod
+    def try_to_place_feature_into_rect(feature, tilish, rect):
+        rots = [0]
+        if feature.can_rotate:
+            rots.extend([1, 2, 3])
+
+        random.shuffle(rots)
+        for rot in rots:
+            rotated_feature = feature.rotated(rot)
+            possible_placements = FeatureUtils.all_possible_placements_overlapping_rect(feature, tilish, rect)
+            if len(possible_placements) > 0:
+                placement = random.choice(possible_placements)
+                FeatureUtils.write_into(rotated_feature, tilish, placement[0], placement[1])
+                return True
+
+        return False
+
+    @staticmethod
+    def write_into(feature, tile_grid, x, y):
+        print("placing feature {} at ({}, {})".format(feature.feat_id, x, y))
+        for feat_x in range(0, feature.w()):
+            for feat_y in range(0, feature.h()):
+                feat_val = feature.get_place_val(feat_x, feat_y)
+                if feat_val != "?":
+                    tile_grid.set(x + feat_x, y + feat_y, feat_val)
+
+
+class Features:
+
+    START = Feature("start",
+                    ["XXX", "...", "?.?"],
+                    ["XpX", ".v.", "?.?"], can_rotate=False)
+
+    EXIT = Feature("exit_door",
+                   [".", "X"],
+                   [".", "e"], can_rotate=False)
+
+    SMALL_MONSTER = Feature("monster_2x2",
+                            ["XX", "XX"],
+                            ["mX", "Xm"])
+
+    LARGE_MONSTER = Feature("monster_3x3",
+                            ["XXX", "XXX", "XXX"],
+                            ["mXX", "XXm", "XmX"])
+
+    WISHING_WELL = Feature("wishing_well",
+                           ["....", "XXXX", "XXXX"],
+                           ["....", "XwwX", "XXXX"])
+
+    CHEST = Feature("chest",
+                    ["XXX", "XXX", "XXX"],
+                    ["XXX", "XcX", "XXX"])
+
+    @staticmethod
+    def get_random_feature():
+        return random.choice([Features.SMALL_MONSTER, Features.LARGE_MONSTER, Features.WISHING_WELL])
 
 
 class Partition:
@@ -533,11 +800,6 @@ class Partition:
     @staticmethod
     def random_partition(force_valid=True, min_doors=0, max_doors=8, force_doors=[], force_not_doors=[], force_connected=[]):
 
-        #print(
-        #    "called random_partition(force_valid={}, min_doors={}, max_doors={}, force_doors={}, force_not_doors={}, force_connected={})".format(
-        #        force_valid, min_doors, max_doors, force_doors, force_not_doors, force_connected
-        #    ))
-
         p = None
         while p is None or (force_valid and not p.is_valid()):
 
@@ -585,45 +847,84 @@ class Partition:
 
             p = Partition(res)
 
-        #print("  --> {}".format(p))
         return p
 
+
 if __name__ == "__main__":
-    #t = Tile(17)
+    dims = (3, 3)
+    start = (0, 0)
+    end = (dims[0]-1, dims[1]-1)
+    t_size = 12
+    path, p_grid = GridBuilder.random_partition_grid(dims[0], dims[1], start=start, end=end)
 
-    #p = Partition.random_partition(force_valid=True, min_doors=2)
+    t_grid = TileGrid(dims[0], dims[1], tile_size=(t_size, t_size))
 
-    # p = Partition([[0, 3, 4, 7], [1, 2], [5, 6]])
-    #TileFiller.basic_room_fill(t, p)
-    #print(t)
-    #print(p)
-
-    grid_size = (3, 1)
-    tile_grid = TileGrid(grid_size[0], grid_size[1])
-
-    for x in range(0, grid_size[0]):
-        for y in range(0, grid_size[1]):
-            t = Tile(17)
-            p = Partition.random_partition(force_valid=True, min_doors=2)
-            TileFiller.basic_room_fill(t, p)
-            tile_grid.set_tile(x, y, t)
-
-    print(tile_grid)
-
-    dims = (3, 2)
-    p_grid = GridBuilder.random_partition_grid(dims[0], dims[1], start=(0, 0), end=(dims[0]-1, dims[1]-1))
-
-    t_grid = TileGrid(dims[0], dims[1])
+    room_map = {}  # (grid_x, grid_y) -> list of room_rects
+    empty_rooms = []
 
     for x in range(0, dims[0]):
         for y in range(0, dims[1]):
             part = p_grid.get(x, y)
             if part is not None:
-                tile = Tile(17)
-                TileFiller.basic_room_fill(tile, part)
+                tile = Tile(t_size + 1, door_len=1, door_offs=3)
+                rooms_in_tile = TileFiller.basic_room_fill(tile, part, disjoint_rooms=True, connected_rooms=True)
+                rooms = [[x*t_size + r[0], y*t_size + r[1], r[2], r[3]] for r in rooms_in_tile]
+
+                if len(rooms) > 0:
+                    room_map[(x, y)] = rooms
+                    empty_rooms.extend(rooms)
+
                 t_grid.set_tile(x, y, tile)
 
+    TileGridBuilder.clean_up_dangly_bits(t_grid)
+    TileGridBuilder.clean_up_doors(t_grid)
+
+    if len(empty_rooms) < 4:
+        raise ValueError("super low number of rooms..?")
+
+    start_placed = False
+    for p in path:
+        rooms_in_p = list(room_map.get(p))
+        random.shuffle(rooms_in_p)
+        for r in rooms_in_p:
+            if r not in empty_rooms:
+                continue
+            if FeatureUtils.try_to_place_feature_into_rect(Features.START, t_grid, r):
+                start_placed = True
+                empty_rooms.remove(r)
+                break
+        if start_placed:
+            break
+
+    if not start_placed:
+        raise ValueError("failed to place start anywhere on path...")
+
+    end_placed = False
+    for p in reversed(path):
+        rooms_in_p = list(room_map.get(p))
+        random.shuffle(rooms_in_p)
+        for r in rooms_in_p:
+            if r not in empty_rooms:
+                continue
+            if FeatureUtils.try_to_place_feature_into_rect(Features.EXIT, t_grid, r):
+                end_placed = True
+                empty_rooms.remove(r)
+                break
+        if end_placed:
+            break
+
+    if not start_placed:
+        raise ValueError("failed to place end anywhere on path...")
+
+    while len(empty_rooms) > 0:
+        r = empty_rooms.pop()
+        feat = Features.get_random_feature()
+        if random.random() > 0.333:
+            FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+
     print(t_grid)
-    print(p_grid)
+
+
+
 
 
