@@ -155,7 +155,15 @@ Dungeon Generation:
         
      3. generate each tile based on the parition, populate with objects/enemies.
         - 
+        
+        
+SO lil gamedev update
+~the project is not dead~
+i took a break though, because the scope spiraled out of control and i burned out.
 
+having a story, npcs w/ dialog, boss fights, cutscenes, puzzles, procedurally generated enemies/loot, an inventory system, a save system, and custom art and music, AND implementing essentially all of this on my own from scratch, was a mistake.
+
+BUT, i still love the art and many of the mechanics i've designed, and currently i'm doing a lot of redesigning and prototyping 
 
 
 
