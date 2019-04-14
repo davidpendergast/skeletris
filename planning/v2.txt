@@ -156,6 +156,9 @@ Dungeon Generation:
      3. generate each tile based on the parition, populate with objects/enemies.
         - 
         
+itemization:
+    items are [unidentified] when dropped
+        
         
 SO lil gamedev update
 ~the project is not dead~
