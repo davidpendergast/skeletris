@@ -113,6 +113,28 @@ class Bosses:
     frog_airborn_falling = []
 
 
+class Font:
+    _alphabet = {}  # str -> img
+    _char_mappings = {
+        "→": chr(16),
+        "←": chr(17),
+        "↑": chr(24),
+        "↓": chr(25)
+    }
+
+    @staticmethod
+    def get_char(c):
+        if c in Font._char_mappings:
+            c = Font._char_mappings[c]
+
+        if c in Font._alphabet:
+            return Font._alphabet[c]
+        elif "?" in Font._alphabet:
+            return Font._alphabet["?"]
+        else:
+            return None
+
+
 def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
     img = ImageModel(x + shift[0], y + shift[1], w, h)
     all_imgs.append(img)
@@ -256,19 +278,6 @@ chest_shadow = make(96, 40, 32, 8)
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
-
-
-_chars = [letter for letter in string.ascii_lowercase]
-_chars.extend(c for c in "+-\".,!?_~%=:'><")
-_qmark = make(160, 115, 5, 5)
-alphabet = collections.defaultdict(lambda: _qmark)
-for i in range(0, len(_chars)):
-    alphabet[_chars[i]] = make(5*i, 115, 5, 5) if _chars[i] != "?" else _qmark
-
-_chars_2 = "0123456789[](){}←↑→↓"
-for i in range(0, len(_chars_2)):
-    c = _chars_2[i]
-    alphabet[c] = make(5*i, 120, 5, 5)
 
 _cached_text = set()
 _cached_text.update(["att:", "def:", "vit:", "miss", "dodge", "inventory",
@@ -508,7 +517,21 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
     Bosses.frog_airborn_falling = [make(448, 0, 48, 48, shift=start_pos)]
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img):
+def build_font_sheet(start_pos, raw_font_img, sheet):
+    print("font_sheet start_pos={}".format(start_pos))
+    sheet.blit(raw_font_img, start_pos)
+    # sheet needs to be a 32x8 grid of characters
+    char_w = round(raw_font_img.get_width() / 32)
+    char_h = round(raw_font_img.get_height() / 8)
+    for y in range(0, 8):
+        for x in range(0, 32):
+            c = chr(y*32 + x)
+            Font._alphabet[c] = make(x * char_w, y * char_h, char_w, char_h, shift=start_pos)
+
+    print("Font._alphabet = {}".format(Font._alphabet))
+
+
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img, raw_font_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -521,10 +544,13 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
         |             | trees.png       |
         |             *-----------------*
         |             | bosses.png      |
+        |             *-----------------*
+        |             | font.png        |
         *-------------*-----------------*
+
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img]
+    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img, raw_font_img]
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
     sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
@@ -551,6 +577,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
     print("building boss sheet...")
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
     _y += raw_boss_img.get_height()
+
+    print("building font sheet...")
+    build_font_sheet((_x, _y), raw_font_img, sheet)
+    _y += raw_font_img.get_height()
 
     draw_y = raw_image.get_height()
 
@@ -593,21 +623,23 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
     draw_x = 0
     draw_y += 16
 
+    _char_w = Font.get_char("a").width()
+    _char_h = Font.get_char("a").height()
     for text in _cached_text:
-        width = len(text) * (5 + 1) - 1
+        width = len(text) * _char_w
         if draw_x + width >= left_size[0]:
-            draw_y += 6
+            draw_y += _char_h
             draw_x = 0
 
-        cached_text_imgs[text] = make(draw_x, draw_y, width, 5)
+        cached_text_imgs[text] = make(draw_x, draw_y, width, _char_h)
 
         for letter in text:
             if letter != " ":
-                letter_img = alphabet[letter]
-                sheet.blit(raw_image, (draw_x, draw_y), letter_img.rect())
-                draw_x += 6
+                letter_img = Font.get_char(letter)
+                sheet.blit(sheet, (draw_x, draw_y), letter_img.rect())
+                draw_x += _char_w
 
-    draw_y += 6
+    draw_y += _char_h
 
     all_cube_configs = ItemFactory.get_all_possible_cube_configs(n=(4, 5, 6, 7))
     print("building {} item sprites...".format(len(all_cube_configs)))
@@ -712,7 +744,8 @@ if __name__ == "__main__":
     raw3 = pygame.image.load("assets/ui.png")
     raw4 = pygame.image.load("assets/trees.png")
     raw5 = pygame.image.load("assets/bosses.png")
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5)
+    raw6 = pygame.image.load("assets/font.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

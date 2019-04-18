@@ -1,11 +1,36 @@
 import re
 import random
+import time
 
-FLOOR = "X"
-WALL = "#"
+FLOOR = "."
+WALL = "x" # "█"
 DOOR = "0"
 
-EMPTY = "."
+EMPTY = " "
+
+MONSTER = "m"
+PLAYER = "p"
+ENTRANCE = "v"
+EXIT = "e"
+CHEST = "c"
+NPC = "n"
+STRAY_ITEM = "i"
+SPECIAL = "s"
+
+
+def color_char(c):
+    if c == DOOR:
+        return "\033[1;34m" + c + "\033[0;0m"  # blue
+    elif c == MONSTER:
+        return "\033[1;31m" + c + "\033[0;0m"  # red
+    elif c == CHEST:
+        return "\033[1;35m" + c + "\033[0;0m"  # magenta
+    elif c == EXIT or c == PLAYER or c == ENTRANCE:
+        return "\033[1;32m" + c + "\033[0;0m"  # green
+    elif c == EMPTY or c == WALL or c == FLOOR:
+        return c
+    else:
+        return "\033[1;33m" + c + "\033[0;0m"  # yellow
 
 
 class Tileish:
@@ -24,7 +49,7 @@ class Tileish:
         for y in range(0, self.h()):
             for x in range(0, self.w()):
                 val = self.get(x, y)
-                res.append(str(val) + " ")
+                res.append(str(color_char(val)) + " ")
             res.append("\n")
         return "".join(res)
 
@@ -265,8 +290,6 @@ class TileGrid(Tileish):
             t.set(rel_x, rel_y, val)
 
 
-
-
 class GridBuilder:
 
     @staticmethod
@@ -394,11 +417,17 @@ class RectUtils:
 class TileFiller:
 
     @staticmethod
-    def neighbhors(x, y):
+    def neighbhors(x, y, include_diags=False):
         yield (x + 1, y)
         yield (x, y + 1)
         yield (x - 1, y)
         yield (x, y - 1)
+
+        if include_diags:
+            yield (x + 1, y - 1)
+            yield (x + 1, y + 1)
+            yield (x - 1, y + 1)
+            yield (x - 1, y - 1)
 
     @staticmethod
     def flood_fill(tile, start_x, start_y, on_values):
@@ -584,6 +613,19 @@ class TileGridBuilder:
                 if tile_grid.get(x, y) == DOOR and not TileGridBuilder.is_valid_door_coord(x, y, tile_grid):
                     tile_grid.set(x, y, FLOOR)
 
+    @staticmethod
+    def add_walls(tile_grid):
+        needs_walls = []
+        for x in range(0, tile_grid.w()):
+            for y in range(0, tile_grid.h()):
+                if (tile_grid.get(x, y) == EMPTY):
+                    for n in TileFiller.neighbhors(x, y, include_diags=True):
+                        if tile_grid.get(n[0], n[1]) != EMPTY:
+                            needs_walls.append((x, y))
+                            continue
+        for (x, y) in needs_walls:
+            tile_grid.set(x, y, WALL)
+
 
 class Feature(Tileish):
 
@@ -652,7 +694,6 @@ class Feature(Tileish):
                 if feat_val == "?":
                     continue
                 elif feat_val != tilish.get(x + feat_x, y + feat_y):
-                    # print("({} + {}, {} + {}) failed because {} != {}".format(x, feat_x, y, feat_y, feat_val, tilish.get(x + feat_x, y + feat_y)))
                     return False
         return True
 
@@ -691,43 +732,81 @@ class FeatureUtils:
 
     @staticmethod
     def write_into(feature, tile_grid, x, y):
-        print("placing feature {} at ({}, {})".format(feature.feat_id, x, y))
+        # print("placing feature {} at ({}, {})".format(feature.feat_id, x, y))
         for feat_x in range(0, feature.w()):
             for feat_y in range(0, feature.h()):
                 feat_val = feature.get_place_val(feat_x, feat_y)
                 if feat_val != "?":
                     tile_grid.set(x + feat_x, y + feat_y, feat_val)
 
+    CHAR_MAP = {"X": FLOOR,
+                ".": EMPTY,
+                "p": PLAYER,
+                "v": ENTRANCE,
+                "e": EXIT,
+                "m": MONSTER,
+                "c": CHEST,
+                "i": STRAY_ITEM,
+                "n": NPC,
+                "s": SPECIAL}
+
+    @staticmethod
+    def convert_char(c):
+        if c in FeatureUtils.CHAR_MAP:
+            return FeatureUtils.CHAR_MAP[c]
+        else:
+            return c
+
+    @staticmethod
+    def convert(feature_def):
+        res = []
+        for word in feature_def:
+            new_word = "".join(FeatureUtils.convert_char(c) for c in word)
+            res.append(new_word)
+        return res
 
 class Features:
-
     START = Feature("start",
-                    ["XXX", "...", "?.?"],
-                    ["XpX", ".v.", "?.?"], can_rotate=False)
+                    FeatureUtils.convert(["XXX", "...", "?.?"]),
+                    FeatureUtils.convert(["XpX", ".v.", "?.?"]), can_rotate=False)
 
     EXIT = Feature("exit_door",
-                   [".", "X"],
-                   [".", "e"], can_rotate=False)
+                   FeatureUtils.convert([".", "X"]),
+                   FeatureUtils.convert([".", "e"]), can_rotate=False)
 
     SMALL_MONSTER = Feature("monster_2x2",
-                            ["XX", "XX"],
-                            ["mX", "Xm"])
+                            FeatureUtils.convert(["XX", "XX"]),
+                            FeatureUtils.convert(["mX", "Xm"]))
 
     LARGE_MONSTER = Feature("monster_3x3",
-                            ["XXX", "XXX", "XXX"],
-                            ["mXX", "XXm", "XmX"])
-
-    WISHING_WELL = Feature("wishing_well",
-                           ["....", "XXXX", "XXXX"],
-                           ["....", "XwwX", "XXXX"])
+                            FeatureUtils.convert(["XXX", "XXX", "XXX"]),
+                            FeatureUtils.convert(["mXX", "XXm", "XmX"]))
 
     CHEST = Feature("chest",
-                    ["XXX", "XXX", "XXX"],
-                    ["XXX", "XcX", "XXX"])
+                    FeatureUtils.convert(["XXX", "XXX", "XXX"]),
+                    FeatureUtils.convert(["XXX", "XcX", "XXX"]))
+
+    STRAY_ITEM = Feature("stray_item",
+                         FeatureUtils.convert(["X"]),
+                         FeatureUtils.convert(["i"]))
+
+    WISHING_WELL = Feature("wishing_well",
+                           FeatureUtils.convert(["....", "XXXX", "XXXX"]),
+                           FeatureUtils.convert(["....", "XnsX", "XXXX"]))
+
+    QUEST_NPC = Feature("quest_npc",
+                        FeatureUtils.convert(["XXX", "XXX", "..."]),
+                        FeatureUtils.convert(["XXX", "XnX", "..."]))
 
     @staticmethod
     def get_random_feature():
-        return random.choice([Features.SMALL_MONSTER, Features.LARGE_MONSTER, Features.WISHING_WELL])
+        return random.choice([Features.SMALL_MONSTER,
+                              Features.CHEST,
+                              Features.QUEST_NPC,
+                              Features.LARGE_MONSTER,
+                              Features.WISHING_WELL,
+                              Features.QUEST_NPC,
+                              Features.STRAY_ITEM])
 
 
 class Partition:
@@ -875,6 +954,11 @@ if __name__ == "__main__":
                     empty_rooms.extend(rooms)
 
                 t_grid.set_tile(x, y, tile)
+                print(t_grid)
+                time.sleep(0.5)
+
+    print(t_grid)
+    time.sleep(0.5)
 
     TileGridBuilder.clean_up_dangly_bits(t_grid)
     TileGridBuilder.clean_up_doors(t_grid)
@@ -916,6 +1000,9 @@ if __name__ == "__main__":
     if not start_placed:
         raise ValueError("failed to place end anywhere on path...")
 
+    print(t_grid)
+    time.sleep(0.5)
+
     while len(empty_rooms) > 0:
         r = empty_rooms.pop()
         feat = Features.get_random_feature()
@@ -923,6 +1010,12 @@ if __name__ == "__main__":
             FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
 
     print(t_grid)
+    time.sleep(0.5)
+
+    TileGridBuilder.add_walls(t_grid)
+
+    print(t_grid)
+    time.sleep(0.5)
 
 
 

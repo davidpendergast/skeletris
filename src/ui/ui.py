@@ -529,10 +529,10 @@ class TextImage:
 
     INVISIBLE_CHAR = "`"
 
-    X_KERNING = 1
-    Y_KERNING = 1
+    X_KERNING = 0
+    Y_KERNING = 0
 
-    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=2, center_w=None, y_kerning=None,
+    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=1, center_w=None, y_kerning=None,
                  custom_colors=None):
         self.x = x
         self.center_w = center_w
@@ -570,7 +570,7 @@ class TextImage:
     def calc_width(text, scale):
         max_line_w = 0
         cur_line_w = 0
-        char_w = (spriteref.alphabet["a"].width() + TextImage.X_KERNING) * scale
+        char_w = (spriteref.Font.get_char("a").width() + TextImage.X_KERNING) * scale
         for c in text:
             if c == "\n":
                 cur_line_w = 0
@@ -583,7 +583,7 @@ class TextImage:
         return self.actual_size
 
     def line_height(self):
-        return (spriteref.alphabet["a"].height() + self.y_kerning) * self.scale
+        return (spriteref.Font.get_char("a").height() + self.y_kerning) * self.scale
 
     def _build_images(self):
         ypos = TextImage.Y_KERNING
@@ -596,7 +596,7 @@ class TextImage:
 
         xpos = x_shift
 
-        a_sprite = spriteref.alphabet["a"]
+        a_sprite = spriteref.Font.get_char("a")
         idx = 0
         for chunk in self._text_chunks:
             if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
@@ -606,7 +606,7 @@ class TextImage:
                 ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
                 if len(chunk) == 1:
-                    sprite = spriteref.alphabet[chunk]
+                    sprite = spriteref.Font.get_char(chunk)
                 else:
                     sprite = spriteref.cached_text_imgs[chunk]
 

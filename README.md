@@ -3,13 +3,13 @@ babby's first ~~roguelike~~ action rpg
 
 here are the five most recent gifs committed:
 
+![94_basileus.gif](gifs/94_basileus.gif?raw=true "94_basileus")
+
+![93_dungeon_gen_4.gif](gifs/93_dungeon_gen_4.gif?raw=true "93_dungeon_gen_4")
+
+![92_dungeon_gen_3.gif](gifs/92_dungeon_gen_3.gif?raw=true "92_dungeon_gen_3")
+
+![91_dungeon_gen_2.gif](gifs/91_dungeon_gen_2.gif?raw=true "91_dungeon_gen_2")
+
 ![90_dungeon_gen.gif](gifs/90_dungeon_gen.gif?raw=true "90_dungeon_gen")
-
-![89_doctor.gif](gifs/89_doctor.gif?raw=true "89_doctor")
-
-![88_poppin_out.gif](gifs/88_poppin_out.gif?raw=true "88_poppin_out")
-
-![88_opening_cutscene.gif](gifs/88_opening_cutscene.gif?raw=true "88_opening_cutscene")
-
-![87_tentacles.gif](gifs/87_tentacles.gif?raw=true "87_tentacles")
 
