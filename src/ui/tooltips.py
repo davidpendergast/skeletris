@@ -66,6 +66,7 @@ class TitleImageAndStatsTooltip(Tooltip):
 
     def _build_images(self):
         sc = 2
+        text_sc = 1
         self.top_panel = ImageBundle(spriteref.UI.item_panel_top, self.xy[0], self.xy[1], layer=self.layer, scale=sc)
         h = self.top_panel.height()
         for i in range(0, len(self.non_core_stats)):
@@ -82,7 +83,8 @@ class TitleImageAndStatsTooltip(Tooltip):
 
         self.size = (self.top_panel.width(), h + self.bot_panel.height())
 
-        self.title_text = TextImage(self.xy[0] + 8 * sc, self.xy[1] + 6 * sc, self.title, self.layer, scale=sc, color=self.title_color)
+        self.title_text = TextImage(self.xy[0] + 8 * sc, self.xy[1] + 6 * sc, self.title, self.layer, scale=text_sc,
+                                    color=self.title_color)
 
         line_spacing = int(1.5 * sc)
 
@@ -90,20 +92,22 @@ class TitleImageAndStatsTooltip(Tooltip):
 
         if self.level is not None:
             lvl_str = "LVL:{}".format(self.level)
-            lvl_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, lvl_str, self.layer, scale=sc)
+            lvl_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, lvl_str, self.layer, scale=text_sc)
             self.core_texts.append(lvl_txt)
             h += lvl_txt.line_height()
 
         for stat in self.core_stats:
             h += line_spacing
-            stat_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(), scale=sc)
+            stat_txt = TextImage(self.xy[0] + 56 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(),
+                                 scale=text_sc)
             self.core_texts.append(stat_txt)
             h += stat_txt.line_height()
 
         h = 64 * sc
         for stat in self.non_core_stats:
             h += line_spacing
-            stat_txt = TextImage(self.xy[0] + 8 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(), scale=sc)
+            stat_txt = TextImage(self.xy[0] + 8 * sc, self.xy[1] + h, str(stat), self.layer, color=stat.color(),
+                                 scale=text_sc)
             self.non_core_texts.append(stat_txt)
             h += stat_txt.line_height()
 

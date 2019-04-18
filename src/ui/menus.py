@@ -149,7 +149,7 @@ class OptionsMenu(Menu):
         self.title_size = title_size
         self.options_text = options
 
-        self.spacing = 16
+        self.spacing = 8
         self.title_spacing = self.spacing * 4
 
         self._title_img = None
@@ -192,7 +192,7 @@ class OptionsMenu(Menu):
         for i in range(0, self.get_num_options()):
             if self._option_imgs[i] is None:
                 self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i), layer=spriteref.UI_0_LAYER,
-                                                 color=self.get_option_color(i), scale=3)
+                                                 color=self.get_option_color(i), scale=2)
 
     def _layout_rects(self):
         if self._title_rect is None:
@@ -332,8 +332,20 @@ class StartMenu(OptionsMenu):
     EXIT_OPT = 4
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.START_MENU, "cubelike",
-                             ["start", "load game", "controls", "sound", "exit"], title_size=10)
+        OptionsMenu.__init__(self, MenuManager.START_MENU,
+                "\n".join([
+                    " ▄████▄   █    ██  ▄▄▄▄   ▓█████  ██▓     ██▓ ██ ▄█▀▓█████ ",
+                    "▒██▀ ▀█   ██  ▓██▒▓█████▄ ▓█   ▀ ▓██▒    ▓██▒ ██▄█▒ ▓█   ▀ ",
+                    "▒▓█    ▄ ▓██  ▒██░▒██▒ ▄██▒███   ▒██░    ▒██▒▓███▄░ ▒███   ",
+                    "▒▓▓▄ ▄██▒▓▓█  ░██░▒██░█▀  ▒▓█  ▄ ▒██░    ░██░▓██ █▄ ▒▓█  ▄ ",
+                    "▒ ▓███▀ ░▒▒█████▓ ░▓█  ▀█▓░▒████▒░██████▒░██░▒██▒ █▄░▒████▒",
+                    "░ ░▒ ▒  ░░▒▓▒ ▒ ▒ ░▒▓███▀▒░░ ▒░ ░░ ▒░▓  ░░▓  ▒ ▒▒ ▓▒░░ ▒░ ░",
+                    "  ░  ▒   ░░▒░ ░ ░ ▒░▒   ░  ░ ░  ░░ ░ ▒  ░ ▒ ░░ ░▒ ▒░ ░ ░  ░",
+                    "░         ░░░ ░ ░  ░    ░    ░     ░ ░    ▒ ░░ ░░ ░    ░   ",
+                    "░ ░         ░      ░         ░  ░    ░  ░ ░  ░  ░      ░  ░",
+                    "░                       ░                                  "
+                ]),
+                ["start", "load game", "controls", "sound", "exit"], title_size=1)
 
     def get_song(self):
         return music.Songs.MENU_THEME
@@ -554,7 +566,7 @@ class SoundSettingsMenu(OptionsMenu):
     BACK_IDX = 2
 
     def __init__(self, prev_id):
-        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound settings", ["~music~", "~effects~", "back"])
+        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound", ["~music~", "~effects~", "back"])
         self.prev_id = prev_id
         self.music_enabled = gs.get_instance().settings().get(settings.MUSIC_VOLUME) > 0
         self.effects_enabled = gs.get_instance().settings().get(settings.EFFECTS_VOLUME) > 0

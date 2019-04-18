@@ -1617,22 +1617,27 @@ class HoverTextEntity(Entity):
                 self._text_img = None
 
         sc = 2
+        text_sc = 1
 
         if self._text_img is None:
-            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=sc)
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=text_sc)
 
         for i in range(0, len(self._border_imgs)):
             if i == 7:
                 continue  # bottom border is more complicated
             if self._border_imgs[i] is None:
-                self._border_imgs[i] = img.ImageBundle(spriteref.UI.hover_text_edges[i], 0, 0, scale=sc, layer=spriteref.ENTITY_LAYER)
+                self._border_imgs[i] = img.ImageBundle(spriteref.UI.hover_text_edges[i], 0, 0, scale=sc,
+                                                       layer=spriteref.ENTITY_LAYER)
 
         if self._bottom_imgs[0] is None:
-            self._bottom_imgs[0] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc, layer=spriteref.ENTITY_LAYER)
+            self._bottom_imgs[0] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc,
+                                                   layer=spriteref.ENTITY_LAYER)
         if self._bottom_imgs[1] is None:
-            self._bottom_imgs[1] = img.ImageBundle(spriteref.UI.hover_text_bottom_arrow, 0, 0, scale=sc, layer=spriteref.ENTITY_LAYER)
+            self._bottom_imgs[1] = img.ImageBundle(spriteref.UI.hover_text_bottom_arrow, 0, 0, scale=sc,
+                                                   layer=spriteref.ENTITY_LAYER)
         if self._bottom_imgs[2] is None:
-            self._bottom_imgs[2] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc, layer=spriteref.ENTITY_LAYER)
+            self._bottom_imgs[2] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc,
+                                                   layer=spriteref.ENTITY_LAYER)
 
         moved = self._update_position()
 

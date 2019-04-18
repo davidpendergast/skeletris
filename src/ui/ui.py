@@ -51,6 +51,7 @@ class InventoryPanel:
         self.title_text = None
 
         sc = 2
+        text_sc = 1
         
         self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width()*sc,
                 (128 + 16*self.state.rows)*sc]
@@ -69,13 +70,13 @@ class InventoryPanel:
         self.equip_img = None
         self.inv_img = None
         
-        self._build_images(sc)
+        self._build_images(sc, text_sc)
 
     def gs_info_is_outdated(self):
         return (self.kill_count != gs.get_instance().player_state().kill_count or
                 self.zone_level != gs.get_instance().get_zone_level())
         
-    def _build_images(self, sc):
+    def _build_images(self, sc, text_sc):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
@@ -83,36 +84,36 @@ class InventoryPanel:
         y = (128 + self.state.rows*16 - 16)*sc
         self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
         
-        self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(sc*3/2))
+        self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(text_sc*3/2))
         
         name_str = self.player_state.name()
         info_txt = "{}\n\nROOM:{}\nKILL:{}".format(name_str, self.zone_level, self.kill_count)
         i_xy = [self.info_rect[0], self.info_rect[1]]
-        self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=sc)
+        self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=text_sc)
         
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
         att_str = "ATT:{}".format(self.player_state.stat_value(StatType.ATT))
-        self.att_text = TextImage(*s_xy, att_str, self.layer, scale=sc,
+        self.att_text = TextImage(*s_xy, att_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
         s_xy[1] += self.att_text.line_height()
         
         def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
-        self.def_text = TextImage(*s_xy, def_str, self.layer, scale=sc,
+        self.def_text = TextImage(*s_xy, def_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
         s_xy[1] += self.def_text.line_height()
         
         vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
-        self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=sc,
+        self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
-        s_xy[1] += 2 * self.def_text.line_height()
+        s_xy[1] += self.def_text.line_height()
         
         hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))
-        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=sc,
+        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=text_sc,
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
         dps_str = "DPS:{}".format(round(self.player_state.stat_value(PlayerStatType.DPS)))
-        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=sc,
+        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=text_sc,
                 color=item_module.STAT_COLORS[None])
         
         e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
@@ -149,6 +150,7 @@ class InventoryPanel:
 class DialogPanel:
 
     BORDER_SIZE = 8, 8
+    TEXT_SCALE= 1
     SIZE = (256 * 2 - 16 * 2, 48 * 2 - 16)
 
     def __init__(self, dialog):
@@ -228,7 +230,7 @@ class DialogPanel:
             # gets updated automatically
 
         if len(text) > 0 and self._text_img is None:
-            wrapped_text = TextImage.wrap_words_to_fit(text, 2, text_area[2])
+            wrapped_text = TextImage.wrap_words_to_fit(text, DialogPanel.TEXT_SCALE, text_area[2])
             custom_colors = {}
             if self._option_selected is not None:
                 opt_text = self._dialog.get_options()[self._option_selected]
@@ -241,7 +243,8 @@ class DialogPanel:
                 except ValueError:
                     print("ERROR: option \"{}\" missing from dialog \"{}\"".format(opt_text, wrapped_text))
 
-            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, y_kerning=3,
+            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, scale=DialogPanel.TEXT_SCALE,
+                                       y_kerning=3,
                                        custom_colors=custom_colors)
             needs_update = True
 
@@ -537,7 +540,7 @@ class TextImage:
         self.x = x
         self.center_w = center_w
         self.y = y
-        self.text = text.lower()
+        self.text = text
         self.layer = layer
         self.color = color
         self.custom_colors = {} if custom_colors is None else custom_colors  # int index -> (int, int, int) color
@@ -715,7 +718,7 @@ class ItemImage:
 class CinematicPanel:
 
     IMAGE_SCALE = 6
-    TEXT_SCALE = 3
+    TEXT_SCALE = 2
 
     def __init__(self):
         self.current_image_img = None
@@ -746,7 +749,7 @@ class CinematicPanel:
             text_h = gs.get_instance().screen_size[1] // 5 - self.border
             text_y = gs.get_instance().screen_size[1] - text_h - self.border
             wrapped_text = TextImage.wrap_words_to_fit(new_text, text_scale, text_w)
-            self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=4)
+            self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=2)
             self.current_text = new_text
 
     def all_bundles(self):
