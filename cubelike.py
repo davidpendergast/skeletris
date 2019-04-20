@@ -16,6 +16,7 @@ import src.game.readme_writer as readme_writer
 import src.utils.profiling as profiling
 import src.game.events as events
 import src.game.sound_effects as sound_effects
+from src.world.worldview import WorldView
 
 
 print("launching Cubelike...")
@@ -98,6 +99,7 @@ def run():
     zones.init_zones()
         
     world = None
+    world_view = None
         
     clock = pygame.time.Clock()
     running = True
@@ -115,6 +117,7 @@ def run():
                     spawn_at = None
 
                 world = zones.build_world(event.get_next_zone(), spawn_at_door_with_zone_id=spawn_at)
+                world_view = WorldView(world)
 
                 # kind of a hack to prevent the world from flashing for a frame before the cinematic starts
                 if len(gs.get_instance().get_cinematics_queue()) > 0:
@@ -136,6 +139,7 @@ def run():
                 gs.get_instance().save_settings_to_disk()
                 gs.create_new(menu, from_pw=event.get_password())
                 world = None
+                world_view = None
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
@@ -170,6 +174,7 @@ def run():
             initial_zone_id = gs.get_instance().initial_zone_id
             loading_save = initial_zone_id != zones.first_zone_id()
             world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
+            world_view = WorldView(world)
 
             if len(gs.get_instance().get_cinematics_queue()) > 0:
                 gs.get_instance().menu_manager().update(world, input_state, render_eng)
@@ -211,6 +216,7 @@ def run():
             gs.get_instance().player_state().update(player, world, input_state)
 
             world.update_all(input_state, render_eng)
+            world_view.update_all(input_state, render_eng)
 
             gs.get_instance().dialog_manager().update(world, input_state)
 
@@ -220,7 +226,7 @@ def run():
                 render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 
         elif world is not None:
-            world.cleanup_active_bundles(render_eng)
+            world_view.cleanup_active_bundles(render_eng)
 
         gs.get_instance().menu_manager().update(world, input_state, render_eng)
 

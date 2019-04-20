@@ -281,7 +281,7 @@ class Zone:
     def __init__(self, name, level, filename=None, bg_color=None):
         self.name = name
         self.zone_id = None  # gets set by init_zones()
-        self.bg_color = bg_color if bg_color is not None else DARK_GREY
+        self.bg_color = bg_color if bg_color is not None else BLACK
         self.level = level
         self.blueprint_file = filename
 
@@ -432,7 +432,6 @@ class DesolateCaveZone(Zone):
                     floor_anim.set_sprite_offset((-16, -16))
                     world.add(floor_anim, gridcell=anim_pos)
                     world.set_floor_type(spriteref.FLOOR_PIT_ID, xy=anim_pos)
-                    world.update_geo_bundle(anim_pos[0], anim_pos[1])
 
                 if self.active_ticks in crack_ticks:
                     shards_anim = entities.AnimationEntity(0, 0, spriteref.floor_burst_shards,
@@ -452,16 +451,16 @@ class DesolateCaveZone(Zone):
             def finalize(self, world, input_state):
                 gs.get_instance().player_state().set_visible(True)
 
-        if not gs.get_instance().story_state().get(StoryStateKey.OPENING_CUTSCENE_SHOWN):
-            gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
-            gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
+        #if not gs.get_instance().story_state().get(StoryStateKey.OPENING_CUTSCENE_SHOWN):
+        #    gs.get_instance().get_cinematics_queue().extend(cinematics.opening_cinematic)
+        #    gs.get_instance().story_state().set(StoryStateKey.OPENING_CUTSCENE_SHOWN, True)
 
-            gs.get_instance().player_state().set_visible(False)
-            opening_dialog = dialog.Dialog.link_em_up([
-                dialog.Cutscene([dialog.PauseCutSceneAction(60), _JumpOuttaHoleAction(spawn), dialog.PauseCutSceneAction(50)]),
-                dialog.PlayerDialog("this must be the city. it looks like it hasn't been touched in ages.")
-            ])
-            gs.get_instance().dialog_manager().set_dialog(opening_dialog)
+        #    gs.get_instance().player_state().set_visible(False)
+        #    opening_dialog = dialog.Dialog.link_em_up([
+        #        dialog.Cutscene([dialog.PauseCutSceneAction(60), _JumpOuttaHoleAction(spawn), dialog.PauseCutSceneAction(50)]),
+        #        dialog.PlayerDialog("this must be the city. it looks like it hasn't been touched in ages.")
+        #    ])
+        #    gs.get_instance().dialog_manager().set_dialog(opening_dialog)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)

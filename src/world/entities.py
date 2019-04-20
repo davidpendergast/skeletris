@@ -1016,14 +1016,7 @@ class DoorEntity(Entity):
         if not gs.get_instance().world_updates_paused():
 
             if self.opening_count >= self.opening_duration:
-                # XXX kinda jank, we set the geo value to FLOOR when the door is set to open
-                # but we don't update the surrounding tile sprites until the opening animation
-                # is finished. This allows the player to pass through while the door is partially
-                # open, while also keeping the wall sprites correct.
-                #
-                # TODO this <will> cause bugs in the future
                 grid_xy = world.to_grid_coords(*self.center())
-                world.update_geo_bundle(*grid_xy, and_neighbors=True)
                 world.door_opened(*grid_xy)
                 world.remove(self)
                 gs.get_instance().event_queue().add(events.DoorOpenEvent(self.get_uid(), *grid_xy))

@@ -280,6 +280,7 @@ medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 enormous_shadow = make(128, 32, 48, 16)
 chest_shadow = make(96, 40, 32, 8)
+floor_shadow = make(176, 32, 4, 4)  # just a black square
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
