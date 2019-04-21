@@ -13,32 +13,42 @@ class WorldView:
         self.world = world
 
         self._geo_bundle_lookup = {}  # x,y -> bundle id
-        self._onscreen_lighting_bundles = {}  # x,y -> bundle_id
+        self._onscreen_geo_bundles = set()
+        self._dirty_geo_bundles = []
+
+        self._lighting_bundle_lookup = {}  # x,y -> bundle_id
+        self._onscreen_lighting_bundles = set()
+        self._dirty_lighting_bundles = []
 
         self._onscreen_entities = set()
 
-        self._onscreen_bundles = set()
+    def update_lighting_bundle(self, grid_x, grid_y):
+        if not self.world.is_valid(grid_x, grid_y):
+            return
+        sprite = self.calc_sprite_for_lighting(grid_x, grid_y)  # this may be None
+        bundle = self.get_lighting_bundle(grid_x, grid_y)
+        if bundle is not None:
+            sc = int(self.world.cellsize() / sprite.width()) if sprite is not None else 1
+            new_bun = bundle.update(new_model=sprite,
+                                    new_x=grid_x * self.world.cellsize(),
+                                    new_y=grid_y * self.world.cellsize(),
+                                    new_scale=sc, new_depth=10)
+            self._lighting_bundle_lookup[(grid_x, grid_y)] = new_bun
+            self._dirty_lighting_bundles.append((grid_x, grid_y))
 
-        self._dirty_bundles = []
-
-    def update_geo_bundle(self, grid_x, grid_y, and_neighbors=False):
+    def update_geo_bundle(self, grid_x, grid_y):
         if not self.world.is_valid(grid_x, grid_y):
             return
 
         bundle = self.get_geo_bundle(grid_x, grid_y)
-        sprite = self.calc_sprite_for_geo(grid_x, grid_y)
+        sprite = self.calc_sprite_for_geo(grid_x, grid_y)  # this may be None
         if bundle is not None:
-            if sprite is not None:
-                new_bun = bundle.update(new_model=sprite,
-                                        new_x=grid_x*self.world.cellsize(),
-                                        new_y=grid_y*self.world.cellsize(),
-                                        new_scale=4, new_depth=10)
-                self._geo_bundle_lookup[(grid_x, grid_y)] = new_bun
-                self._dirty_bundles.append((grid_x, grid_y))
-
-        if and_neighbors:
-            for n in World.ALL_NEIGHBORS:
-                self.update_geo_bundle(grid_x + n[0], grid_y + n[1], and_neighbors=False)
+            new_bun = bundle.update(new_model=sprite,
+                                    new_x=grid_x*self.world.cellsize(),
+                                    new_y=grid_y*self.world.cellsize(),
+                                    new_scale=4, new_depth=10)
+            self._geo_bundle_lookup[(grid_x, grid_y)] = new_bun
+            self._dirty_geo_bundles.append((grid_x, grid_y))
 
     def calc_sprite_for_geo(self, grid_x, grid_y):
         geo = self.world.get_geo(grid_x, grid_y)
@@ -65,6 +75,15 @@ class WorldView:
 
         return None
 
+    def calc_sprite_for_lighting(self, grid_x, grid_y):
+        if self.world.get_hidden(grid_x, grid_y):
+            return None
+        if self.world.get_geo(grid_x, grid_y) not in (World.FLOOR, World.DOOR):
+            return None
+
+        lightness_val = self.world.get_lighting(grid_x, grid_y)
+        return spriteref.get_floor_lighting(lightness_val)
+
     def get_geo_bundle(self, grid_x, grid_y):
         key = (grid_x, grid_y)
         if key in self._geo_bundle_lookup:
@@ -80,27 +99,48 @@ class WorldView:
             self.update_geo_bundle(grid_x, grid_y)
             return self._geo_bundle_lookup[key]
 
-    def _update_onscreen_geo_bundles(self, render_engine):
+    def get_lighting_bundle(self, grid_x, grid_y):
+        key = (grid_x, grid_y)
+        if key in self._lighting_bundle_lookup:
+            return self._lighting_bundle_lookup[key]
+        else:
+            self._lighting_bundle_lookup[key] = img.ImageBundle(None, 0, 0, layer=spriteref.SHADOW_LAYER)
+            self.update_lighting_bundle(grid_x, grid_y)
+            return self._lighting_bundle_lookup[key]
+
+    def _update_onscreen_tile_bundles(self, render_engine):
         px, py = gs.get_instance().get_world_camera()
         pw, ph = gs.get_instance().get_world_camera_size()
         grid_rect = [px // self.world.cellsize(), py // self.world.cellsize(),
                      pw // self.world.cellsize() + 3, ph // self.world.cellsize() + 3]
 
-        new_onscreen = set()
+        new_onscreen_geo = set()
+        new_onscreen_lighting = set()
         for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):
             for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
                 bun_key = (x, y)
                 bun = self.get_geo_bundle(*bun_key)
                 if bun is not None:
-                    new_onscreen.add(bun_key)
-                    if bun_key not in self._onscreen_bundles or bun_key in self._dirty_bundles:
+                    new_onscreen_geo.add(bun_key)
+                    if bun_key not in self._onscreen_geo_bundles or bun_key in self._dirty_geo_bundles:
                         render_engine.update(bun)
 
-        for bun_key in self._onscreen_bundles:
-            if bun_key not in new_onscreen:
+                l_bun = self.get_lighting_bundle(*bun_key)
+                if l_bun is not None:
+                    new_onscreen_lighting.add(bun_key)
+                    if bun_key not in self._onscreen_lighting_bundles or bun_key in self._dirty_lighting_bundles:
+                        render_engine.update(l_bun)
+
+        for bun_key in self._onscreen_geo_bundles:
+            if bun_key not in new_onscreen_geo:
                 render_engine.remove(self.get_geo_bundle(*bun_key))
 
-        self._onscreen_bundles = new_onscreen
+        for bun_key in self._onscreen_lighting_bundles:
+            if bun_key not in new_onscreen_lighting:
+                render_engine.remove(self.get_lighting_bundle(*bun_key))
+
+        self._onscreen_geo_bundles = new_onscreen_geo
+        self._onscreen_lighting_bundles = new_onscreen_lighting
 
     def cleanup_active_bundles(self, render_eng):
         for e in self._onscreen_entities:
@@ -108,9 +148,13 @@ class WorldView:
                 render_eng.remove(bun)
         self._onscreen_entities.clear()
 
-        for bun_key in self._onscreen_bundles:
+        for bun_key in self._onscreen_geo_bundles:
             render_eng.remove(self._geo_bundle_lookup[bun_key])
-        self._onscreen_bundles.clear()
+        self._onscreen_geo_bundles.clear()
+
+        for bun_key in self._onscreen_lighting_bundles:
+            render_eng.remove(self._lighting_bundle_lookup[bun_key])
+        self._onscreen_lighting_bundles.clear()
 
     def update_all(self, input_state, render_engine):
         cam_center = gs.get_instance().get_world_camera(center=True)
@@ -126,8 +170,12 @@ class WorldView:
         self._onscreen_entities = new_onscreens
 
         for dirty_xy in self.world._dirty_geo:
-            self.update_geo_bundle(dirty_xy[0], dirty_xy[1], and_neighbors=False)
+            self.update_geo_bundle(dirty_xy[0], dirty_xy[1])
         self.world._dirty_geo.clear()
+
+        for dirty_xy in self.world._dirty_lighting:
+            self.update_lighting_bundle(dirty_xy[0], dirty_xy[1])
+        self.world._dirty_lighting.clear()
 
         for e in self._onscreen_entities:
             for bun in e.all_bundles():
@@ -146,4 +194,4 @@ class WorldView:
                 new_pos = Utils.add(cam_center, move_xy)
                 gs.get_instance().set_world_camera_center(*Utils.round(new_pos))
 
-        self._update_onscreen_geo_bundles(render_engine)
+        self._update_onscreen_tile_bundles(render_engine)

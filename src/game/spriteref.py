@@ -280,7 +280,15 @@ medium_shadow = make(80, 40, 16, 8)
 large_shadow = make(96, 32, 32, 8)
 enormous_shadow = make(128, 32, 48, 16)
 chest_shadow = make(96, 40, 32, 8)
-floor_shadow = make(176, 32, 4, 4)  # just a black square
+
+floor_shadows = [make(176 + i, 32, 1, 1) for i in range(0, 8)]
+
+
+def get_floor_lighting(val):
+    darkness_val = Utils.bound(1-val, 0.0, 0.99)
+    idx = int(darkness_val * len(floor_shadows))
+    return floor_shadows[idx]
+
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]

@@ -56,6 +56,9 @@ class Entity(Updateable):
 
     def is_visible(self):
         return self._visible
+
+    def get_light_level(self):
+        return 0
         
     def center(self):
         return self.rect.center
@@ -632,6 +635,9 @@ class Player(Entity):
         
     def get_shadow_sprite(self):
         return self._shadow_sprite
+
+    def get_light_level(self):
+        return 6
                
     def update_images(self, sprite, facing_right, color=(1.0, 1.0, 1.0)):
         if self._img is None:

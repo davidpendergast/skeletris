@@ -20,18 +20,21 @@ class World:
     def __init__(self, width, height):
         self._size = (width, height)
         self._level_geo = []
-        self._level_lighting = []  # floats from 0.0 (totally dark) to 1.0 (fully lit)
+        self._level_lighting = []  # 0.0 = totally dark, 1.0 = fully lit
         self._hidden = []
-        self._active_light_events = []
-        self._light_update_freq = 1  # ticks per update
+
+        self._cached_light_sources = set()  # used to track changes in lighting between updates
+
         self._bg_color = (92, 92, 92)
 
-        self._dirty_geo = set()  # tells the WorldView to update the bundles at these coords
+        # tells the WorldView to update the bundles at these coords
+        self._dirty_geo = set()
+        self._dirty_lighting = set()
 
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
-            self._hidden.append([False] * height)
             self._level_lighting.append([0.0] * height)
+            self._hidden.append([False] * height)
 
         self.entities = []
         self._ents_to_remove = []
@@ -117,6 +120,17 @@ class World:
         else:
             for e in self.entities:
                 yield e
+
+    def get_light_sources(self, onscreen=True):
+        """returns: set of (grid_x, grid_y, int: light_range)"""
+        search_domain = self._onscreen_entities if onscreen else self.entities
+        res = set()
+        for e in search_domain:
+            if e.get_light_level() > 0:
+                xy = self.to_grid_coords(e.center()[0], e.center()[1])
+                res.add((xy[0], xy[1], e.get_light_level()))
+
+        return res
 
     def visible_entities(self, cam_center):
         for e in self.all_entities(onscreen=True):
@@ -206,6 +220,64 @@ class World:
         else:
             return False
 
+    def get_lighting(self, grid_x, grid_y):
+        if not self.is_valid(grid_x, grid_y):
+            return 0.0
+        else:
+            return self._level_lighting[grid_x][grid_y]
+
+    def _set_lighting(self, grid_x, grid_y, val):
+        if val < 0 or val > 1:
+            raise ValueError("light value out of range: {}".format(val))
+
+        if not self.is_valid(grid_x, grid_y):
+            return
+        elif self._level_lighting[grid_x][grid_y] == val:
+            return
+        else:
+            self._dirty_lighting.add((grid_x, grid_y))
+            self._level_lighting[grid_x][grid_y] = val
+
+    def _recalc_lighting(self, old_lighting, new_lighting):
+        """
+        :param old_lighting: set of (grid_x, grid_y, int: light range)
+        :param new_lighting: set of (grid_x, grid_y, int: light range)
+        """
+
+        deleted = []
+        for src in old_lighting:
+            if src not in new_lighting:
+                deleted.append(src)
+
+        for d_src in deleted:
+            grid_x = d_src[0]
+            grid_y = d_src[1]
+            dist = d_src[2]
+
+            for x in range(grid_x - dist, grid_x + dist + 1):
+                for y in range(grid_y - dist, grid_y + dist + 1):
+                    self._set_lighting(x, y, 0.0)
+
+        if len(deleted) == 0:
+            to_add = []
+            for src in new_lighting:
+                if src not in old_lighting:
+                    to_add.append(src)
+        else:
+            to_add = new_lighting
+
+        for src in to_add:
+            grid_x = src[0]
+            grid_y = src[1]
+            max_dist = src[2]
+            for x in range(grid_x - max_dist, grid_x + max_dist + 1):
+                for y in range(grid_y - max_dist, grid_y + max_dist + 1):
+                    xy_dist = Utils.dist((x, y), (grid_x, grid_y))
+                    if xy_dist <= max_dist:
+                        level = 1 - (xy_dist / max_dist)**1.5
+                        if level > self.get_lighting(x, y):
+                            self._set_lighting(x, y, level)
+
     def set_bg_color(self, color):
         self._bg_color = color
 
@@ -216,6 +288,7 @@ class World:
         if self.get_geo(grid_x, grid_y) == World.FLOOR and self._hidden[grid_x][grid_y] != val:
             self._hidden[grid_x][grid_y] = val
             self._dirty_geo.add((grid_x, grid_y))
+            self._dirty_lighting.add((grid_x, grid_y))
 
             if and_fill_adj_floors:
                 for n in World.NEIGHBORS:
@@ -250,6 +323,8 @@ class World:
         self._ents_to_add.clear()
 
     def update_all(self, input_state, render_engine):
+        old_lighting = self._cached_light_sources
+
         self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
@@ -272,5 +347,12 @@ class World:
 
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
+
+        new_lighting = self.get_light_sources(onscreen=False)
+
+        if old_lighting != new_lighting:
+            self._recalc_lighting(old_lighting, new_lighting)
+            self._cached_light_sources = new_lighting
+
 
 
