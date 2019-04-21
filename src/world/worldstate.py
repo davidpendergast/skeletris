@@ -29,7 +29,7 @@ class World:
 
         # tells the WorldView to update the bundles at these coords
         self._dirty_geo = set()
-        self._dirty_lighting = set()
+        # self._dirty_lighting = set()
 
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
@@ -234,8 +234,8 @@ class World:
             return
         elif self._level_lighting[grid_x][grid_y] == val:
             return
-        else:
-            self._dirty_lighting.add((grid_x, grid_y))
+        elif self.get_geo(grid_x, grid_y) in (World.FLOOR, World.DOOR):
+            self._dirty_geo.add((grid_x, grid_y))
             self._level_lighting[grid_x][grid_y] = val
 
     def _recalc_lighting(self, old_lighting, new_lighting):
@@ -288,7 +288,6 @@ class World:
         if self.get_geo(grid_x, grid_y) == World.FLOOR and self._hidden[grid_x][grid_y] != val:
             self._hidden[grid_x][grid_y] = val
             self._dirty_geo.add((grid_x, grid_y))
-            self._dirty_lighting.add((grid_x, grid_y))
 
             if and_fill_adj_floors:
                 for n in World.NEIGHBORS:

@@ -393,12 +393,26 @@ FLOOR_HOLE_ID = 4
 FLOOR_FANCY_ID = 5
 FLOOR_SWAMP_ID = 6
 FLOOR_PIT_ID = 7
-_floor_lookup = [floors, floors_alt, floors_cracked, floors_dark_cracked,
+_floor_types = [floors, floors_alt, floors_cracked, floors_dark_cracked,
                  floors_hole, floors_fancy, floors_swamp, floors_pit]
 
+floor_darkness_resolution = 8  # adjustable, used to generate floor sprites
+_floor_lookup = {}  # (floor_id, encoding, darkness) -> ImageModel
 
-def get_floor(encoding, floor_type_id=FLOOR_NORMAL_ID):
-    return _floor_lookup[floor_type_id][encoding]
+for floor_id in range(0, len(_floor_types)):
+    for floor_encoding in range(0, 8):
+        _floor_lookup[(floor_id, floor_encoding, 0)] = _floor_types[floor_id][floor_encoding]
+
+
+def get_floor(encoding, floor_type_id=FLOOR_NORMAL_ID, darkness_level=0.0):
+    dark_idx = Utils.bound(int(darkness_level * floor_darkness_resolution), 0, floor_darkness_resolution - 1)
+    key = (floor_type_id, encoding, dark_idx)
+    if key in _floor_lookup:
+        return _floor_lookup[key]
+    else:
+        print("WARN: floor sprite not found for (encoding={}, id={}, darkness={})".format(
+            encoding, floor_type_id, darkness_level))
+        return _floor_lookup[(0, FLOOR_NORMAL_ID, 0)]
 
 
 def _get_wall_corner_loc(spot, bools, wall_pieces):
@@ -449,6 +463,22 @@ def _draw_cd_image(sheet, rect, prog, color):
             angle_prog = (math.atan2(c_y - y, c_x - x) + math.pi) / (2 * math.pi)
             if angle_prog > prog:
                 sheet.set_at((x, y), color)
+
+
+def _draw_dark_floor(sheet, darkness, src_rect, dest_rect):
+    sheet.blit(sheet, dest_rect, src_rect)
+
+    MAX_CHANGE = 224
+
+    for x in range(dest_rect[0], dest_rect[0] + dest_rect[2]):
+        for y in range(dest_rect[1], dest_rect[1] + dest_rect[3]):
+            rgb = list(sheet.get_at((x, y)))
+            for i in range(0, 3):
+                val = rgb[i] / 255
+                new_val = (1 - darkness) * val ** (1 / (1 - darkness))
+                new_val = max(val - MAX_CHANGE, new_val)
+                rgb[i] = int(255 * new_val)
+            sheet.set_at((x, y), rgb)
 
 
 def build_cine_sheet(start_pos, raw_cine_img, sheet):
@@ -744,6 +774,29 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
         draw_x += cd_size
 
     draw_y += cd_size
+    draw_x = 0
+
+    num_floor_types = len(_floor_types)
+    print("drawing {} darkened floor tiles...".format(num_floor_types * floor_darkness_resolution))
+    dest_r = [0, 0, 0, 0]
+
+    for floor_id in range(0, num_floor_types):
+        for encoding in range(0, 8):
+            for darkness in range(1, floor_darkness_resolution):
+                fully_bright = _floor_lookup[(floor_id, encoding, 0)]
+                src_r = fully_bright.rect()
+                dest_r = [draw_x, draw_y, src_r[2], src_r[3]]
+                if dest_r[0] + dest_r[2] > raw_image.get_width():
+                    draw_x = 0
+                    draw_y += src_r[3]
+                    dest_r = [draw_x, draw_y, src_r[2], src_r[3]]
+
+                _draw_dark_floor(sheet, darkness / floor_darkness_resolution, src_r, dest_r)
+                _floor_lookup[(floor_id, encoding, darkness)] = make(dest_r[0], dest_r[1], dest_r[2], dest_r[3])
+                draw_x += dest_r[2]
+
+    draw_y += dest_r[3]
+    draw_x = 0
 
     for img in all_imgs:
         img.set_sheet_size(sheet_size)
