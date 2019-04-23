@@ -4,7 +4,7 @@ from enum import Enum
 
 from src.attacks import attacks as attacks
 from src.game import spriteref as spriteref
-from src.game.stats import PlayerStatType, StatType
+from src.game.stats import ActorStatType, StatType
 from src.utils.util import Utils
 from src.world.entities import AnimationEntity, Player, ReturnExitEntity, FloatingTextEntity, ItemEntity, ExitEntity, PickupEntity, HoverTextEntity, PotionEntity, Pushable
 import src.game.events as events
@@ -36,7 +36,7 @@ class ActorState(Pushable):
         self._name = name
         self._level = level
         self._base_values = base_values
-        self.current_hp = self.stat_value(PlayerStatType.HP)
+        self.current_hp = self.stat_value(ActorStatType.HP)
 
         self.attack_state = attacks.AttackState()
 
@@ -85,7 +85,7 @@ class ActorState(Pushable):
             self.remove_status(s)
 
     def max_hp(self):
-        return self.stat_value(PlayerStatType.HP)
+        return self.stat_value(ActorStatType.HP)
 
     def hp(self):
         return Utils.bound(self.current_hp, 0, self.max_hp())
@@ -97,7 +97,7 @@ class ActorState(Pushable):
         return (1, 0, 0) if not self.has_status(attacks.StatusEffect.POISON) else (0.2, 0.7, 0.2)
 
     def move_speed(self):
-        return self.stat_value(PlayerStatType.MOVESPEED)
+        return self.stat_value(ActorStatType.MOVESPEED)
 
     def recoil_progress(self):
         return Utils.bound(self.took_damage_x_ticks_ago / self.damage_recoil, 0.0, 1.0)
@@ -187,16 +187,16 @@ class ActorState(Pushable):
         """
             returns: None if stat is not derived, else stat value
         """
-        if stat_type is PlayerStatType.HP:
+        if stat_type is ActorStatType.HP:
             vit = self.stat_value(StatType.VIT)
             plus_hp = self.stat_value(StatType.MAX_HEALTH)
             return round(vit * 4 * (1 + plus_hp / 100))
 
-        elif stat_type is PlayerStatType.MOVESPEED:
+        elif stat_type is ActorStatType.MOVESPEED:
             base = self._base_values[stat_type]
             return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
 
-        elif stat_type is PlayerStatType.DPS:
+        elif stat_type is ActorStatType.DPS:
             return self.attack_state.get_dps(self)
 
     def stat_value(self, stat_type):
@@ -213,7 +213,7 @@ class PlayerState(ActorState):
             StatType.ATT: 10,
             StatType.DEF: 10,
             StatType.VIT: 10,
-            PlayerStatType.MOVESPEED: 2.5,
+            ActorStatType.MOVESPEED: 2.5,
         })
 
         self.current_sprite = spriteref.player_idle_0
@@ -781,7 +781,7 @@ class EnemyState(ActorState):
 
         color = self.recoil_color()
         sprite = self._get_sprite(entity, world)
-        health_ratio = Utils.bound(self.hp() / self.stat_value(PlayerStatType.HP), 0.0, 1.0)
+        health_ratio = Utils.bound(self.hp() / self.stat_value(ActorStatType.HP), 0.0, 1.0)
         hp_color = self.get_hp_color()
 
         entity.update_images(sprite, self.facing_left, health_ratio, color=color, hp_color=hp_color,

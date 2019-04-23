@@ -5,7 +5,7 @@ from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.items.item as item_module
 from src.utils.util import Utils
-from src.game.stats import PlayerStatType, StatType
+from src.game.stats import ActorStatType, StatType
 import src.game.globalstate as gs
 
 
@@ -107,12 +107,12 @@ class InventoryPanel:
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
         s_xy[1] += self.def_text.line_height()
         
-        hp_str = "HP: {}".format(self.player_state.stat_value(PlayerStatType.HP))
+        hp_str = "HP: {}".format(self.player_state.stat_value(ActorStatType.HP))
         self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=text_sc,
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
-        dps_str = "DPS:{}".format(round(self.player_state.stat_value(PlayerStatType.DPS)))
+        dps_str = "DPS:{}".format(round(self.player_state.stat_value(ActorStatType.DPS)))
         self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=text_sc,
                 color=item_module.STAT_COLORS[None])
         

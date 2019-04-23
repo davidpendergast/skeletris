@@ -13,6 +13,7 @@ import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
+from src.game.gameengine import ActorStateNew, ActorController, PlayerController, ActionType
 
 ENTITY_UID_COUNTER = 0
 
@@ -171,6 +172,9 @@ class Entity(Updateable):
     
     def is_player(self):
         return False
+
+    def is_actor(self):
+        return False
         
     def is_item(self):
         return False
@@ -220,9 +224,6 @@ class Entity(Updateable):
     def can_damage(self, other):
         return ((self.is_player() and other.is_enemy()) or
                 (self.is_enemy() and other.is_player()))
-
-    def get_actorstate(self):
-        return None
 
     def __eq__(self, other):
         return other is not None and self._uid == other._uid
@@ -622,50 +623,148 @@ class FloatingTextEntity(Entity):
             yield e
 
 
-class Player(Entity):
+class ActorEntity(Entity):
 
-    def __init__(self, x, y):
-        Entity.__init__(self, x, y, 24, 12)
+    def __init__(self, idle_sprites, actor_state, actor_controller):
+        Entity.__init__(self, 0, 0, 24, 24)
+        self.actor_state = actor_state
+        self.actor_controller = actor_controller
+
+        self.executing_action = None
+        self.executing_action_duration = 1
+        self.executing_action_ticks = 0
+
+        self.idle_sprites = Utils.listify(idle_sprites)
+        self.facing_right = random.random() > 0.5
+        self.color = (1, 1, 1)
 
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
-    
-    def set_shadow_sprite(self, sprite):
-        self._shadow_sprite = sprite
-        
+
     def get_shadow_sprite(self):
         return self._shadow_sprite
 
     def get_light_level(self):
         return 6
-               
-    def update_images(self, sprite, facing_right, color=(1.0, 1.0, 1.0)):
-        if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
-
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (sprite.height() * self._img.scale() - self.h())        
-        
-        depth = self.get_depth()
-        xflip = not facing_right
-        self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
-                new_depth=depth, new_xflip=xflip)
-        
-        super().update_images(0)  # get the shadow
 
     def cleanup(self, render_engine):
         render_engine.remove(self._img)
         render_engine.remove(self._shadow)
+
+    def get_actor_state(self):
+        return self.actor_state
+
+    def get_controller(self):
+        return self.actor_controller
+
+    def choose_next_action(self, world, input_state):
+        next_action = self.get_controller().get_next_action(self, world, input_state)
+        if next_action.is_possible(world):
+            self.set_action(next_action, next_action.get_duration())
+        else:
+            raise ValueError("{} received impossible action: {}".format(self, next_action))
+
+    def is_actor(self):
+        return True
+
+    def set_action(self, action, duration):
+        if self.executing_action is not None and action is not None:
+            msg = "error setting action {}, actor already has action: {}".format(action, self.executing_action)
+            raise ValueError(msg)
+
+        self.executing_action = action
+        self.executing_action_duration = duration
+        self.executing_action_ticks = 0
+
+    def is_performing_action(self):
+        return self.executing_action is not None
+
+    def update_action(self, world):
+        if self.executing_action is not None:
+            self.executing_action_ticks += 1
+            if self.executing_action_ticks >= self.executing_action_duration:
+                if self.executing_action.cmd_type != ActionType.PLAYER_WAIT:
+                    print("INFO: finalizing action {}".format(self.executing_action))
+                self.executing_action.finalize(world)
+
+                self.executing_action = None
+                self.executing_action_duration = 1
+                self.executing_action_ticks = 0
+            else:
+                prog = Utils.bound(self.executing_action_ticks / self.executing_action_duration, 0.0, 1.0)
+                self.executing_action.animate_in_world(prog, world)
+
+    def update(self, world, input_state, render_engine):
+        Entity.update(self, world, input_state, render_engine)
+        if self.is_performing_action():
+            self.update_action(world)
+
+        old_facing_right = self.facing_right
+
+        if self.get_vel()[0] < -1.5:
+            self.facing_right = False
+        elif self.get_vel()[0] > 1.5:
+            self.facing_right = True
+
+        if old_facing_right != self.facing_right:
+            print("turned around because vel={}".format(self.get_vel()))
+
+        self.update_images()
+
+    def get_sprite(self):
+        tick = gs.get_instance().anim_tick
+        return self.idle_sprites[(tick // 4) % len(self.idle_sprites)]
+
+    def set_facing_right(self, facing_right):
+        self.facing_right = facing_right
+
+    def set_color(self, color=(1.0, 1.0, 1.0)):
+        self.color = color
+
+    def update_images(self):
+        if self._img is None:
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
+
+        sprite = self.get_sprite()
+
+        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+
+        depth = self.get_depth()
+        xflip = not self.facing_right
+        self._img = self._img.update(new_model=sprite, new_color=self.color, new_x=x, new_y=y,
+                                     new_depth=depth, new_xflip=xflip)
+
+        super().update_images(0)  # get the shadow
+
+
+class Player(ActorEntity):
+
+    def __init__(self, x, y):
+        ActorEntity.__init__(self, spriteref.player_idle_all, ActorStateNew("player", 1, {}, 0), PlayerController())
+        self.set_x(x)
+        self.set_y(y)
+
+        self.special_action_sprite = None
+
+    def set_special_action_sprite(self, sprite):
+        self.special_action_sprite = sprite
+
+    def get_sprite(self):
+        if self.is_performing_action() and self.special_action_sprite is not None:
+            return self.special_action_sprite
+        elif Utils.mag(self.get_vel()) < 0.05:
+            return ActorEntity.get_sprite(self)
+        else:
+            anim_tick = gs.get_instance().anim_tick
+            walking = spriteref.player_move_all
+            return walking[(anim_tick // 2) % len(walking)]
             
     def update(self, world, input_state, render_engine):
-        # player updates are handled by PlayerState
-        pass
+        ActorEntity.update(self, world, input_state, render_engine)
         
     def is_player(self):
         return True
-
-    def get_actorstate(self):
-        return gs.get_instance().player_state()
 
     def valid_to_stand_on(self, world, x, y):
         return (Entity.valid_to_stand_on(self, world, x, y) and

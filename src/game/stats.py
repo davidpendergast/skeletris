@@ -3,21 +3,27 @@ import math
 from enum import Enum
 
 
-class PlayerStatType(str, Enum):
+class ActorStatType(str, Enum):
+    """These are stats on actors, often derived from multiple StatTypes."""
     HP = "HP",
-    DPS = "DPS",
-    MOVESPEED = "MOVE_SPEED",
-    ATTACK_RADIUS = "ATTACK_RADIUS",
+    MAX_HP = "MAX_HP",
+    MAX_ENERGY = "MAX_ENERGY",
+    LIGHT_RADIUS = "LIGHT_RADIUS",
+
+    DPS = "DPS",                      # TODO delete
+    MOVESPEED = "MOVE_SPEED",         # TODO delete
+    ATTACK_RADIUS = "ATTACK_RADIUS",  # TODO delete
 
 
 class StatType(str, Enum):
+    """These are stats on items"""
     ATT = "ATT",
     DEF = "DEF",
     VIT = "VIT",
-    ATTACK_RADIUS = "ATTACK_RADIUS",
-    ATTACK_SPEED = "ATTACK_SPEED",
+    ATTACK_RADIUS = "ATTACK_RADIUS",    # TODO delete
+    ATTACK_SPEED = "ATTACK_SPEED",      # TODO delete
     ATTACK_DAMAGE = "ATTACK_DAMAGE",
-    MOVEMENT_SPEED = "MOVEMENT_SPEED",
+    MOVEMENT_SPEED = "MOVEMENT_SPEED",  # TODO delete
     DODGE = "DODGE",
     ACCURACY = "ACCURACY",
     LIFE_REGEN = "LIFE_REGEN",

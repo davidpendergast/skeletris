@@ -15,7 +15,7 @@ class World:
     FLOOR = 3
     HOLE = 4
     
-    SOLIDS = [WALL, DOOR, HOLE]
+    SOLIDS = [WALL, DOOR, HOLE, EMPTY]
     
     def __init__(self, width, height):
         self._size = (width, height)
@@ -302,6 +302,27 @@ class World:
     def is_solid_at(self, pixel_x, pixel_y):
         geo = self.get_geo_at(pixel_x, pixel_y)
         return geo in World.SOLIDS
+
+    def is_solid(self, grid_x, grid_y):
+        geo = self.get_geo(grid_x, grid_y)
+        return geo in World.SOLIDS
+
+    def get_actor_in_cell(self, grid_x, grid_y):
+        """returns: an ActorState, if there's an actor entity in the specified cell"""
+        for e in self.entities:
+            if e.is_actor():
+                grid_pos = self.to_grid_coords(e.center()[0], e.center()[1])
+                if grid_x == grid_pos[0] and grid_y == grid_pos[1]:
+                    return e
+        return None
+
+    def get_actors(self):
+        res = []
+        for e in self.entities:
+            if e.is_actor():
+                res.append(e)
+        res.sort(key=lambda a: a.get_uid())
+        return res
             
     def is_valid(self, grid_x, grid_y):
         return 0 <= grid_x < self.size()[0] and 0 <= grid_y < self.size()[1]
