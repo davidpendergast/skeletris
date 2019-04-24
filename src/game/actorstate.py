@@ -678,9 +678,6 @@ class EnemyState(ActorState):
 
         gs.get_instance().event_queue().add(events.EnemyDiedEvent(entity.get_uid(), self.template, position))
 
-        if self.template.increment_kill_count_on_death():
-            gs.get_instance().player_state().kill_count += 1
-
     def _get_sprite(self, entity, world):
         return self.sprites[((gs.get_instance().anim_tick + self._anim_offset) // 2) % len(self.sprites)]
 

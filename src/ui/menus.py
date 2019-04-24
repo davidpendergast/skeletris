@@ -1179,7 +1179,11 @@ class InGameUiState(Menu):
                     if p is not None:
                         p_center = p.center()  # drop position
                         drop_dir = Utils.sub(world_pos, p_center)
-                        gs.get_instance().player_state().drop_held_item(p, world, direction=drop_dir)
+
+                        item = ps.held_item
+                        ps.held_item = None
+
+                        world.add_item_as_entity(item, p_center, direction=drop_dir)
                         destroy_image = True
 
         if input_state.was_pressed(gs.get_instance().settings().rotate_cw_key()) and ps.held_item is not None:

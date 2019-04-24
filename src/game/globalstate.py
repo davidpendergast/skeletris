@@ -255,8 +255,8 @@ class GlobalState:
         inv_items = self.player_state().inventory().inv_grid.to_map()
 
         save_blob = SaveDataBlob(self.current_zone.ZONE_ID,
-                                 self.player_state().kill_count,
-                                 self.player_state().num_potions,
+                                 10,
+                                 5,
                                  equip_items,
                                  inv_items,
                                  self.story_state())
@@ -408,8 +408,8 @@ def create_new(menu, from_pw=None):
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()
 
-    import src.game.actorstate as actorstate
-    player_state = actorstate.PlayerState("ghast", inventory_state)
+    import src.game.gameengine as gameengine
+    player_state = gameengine.ActorStateNew("player", 5, {}, inventory_state, 0)
 
     new_instance.set_player_state(player_state)
 
@@ -419,8 +419,6 @@ def create_new(menu, from_pw=None):
         save_data = SaveDataBlob.load_from_disk(from_pw)
         if save_data is not None:
             loaded_from_pw = True
-            player_state.num_potions = save_data.num_potions
-            player_state.kill_count = save_data.kill_count
 
             for xy in save_data.equipment_positions:
                 item = save_data.equipment_positions[xy]

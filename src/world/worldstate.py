@@ -1,6 +1,4 @@
-import math
 
-import src.renderengine.img as img
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.globalstate as gs
@@ -64,6 +62,18 @@ class World:
             entity.set_y(y)
 
         self._ents_to_add.append(entity)
+
+    def add_item_as_entity(self, item, pos, direction=None):
+        if item is None:
+            return
+        else:
+            import src.world.entities as entities
+            if direction is not None:
+                vel = entities.PickupEntity.rand_vel(speed=None, direction=direction)
+            else:
+                vel = (0, 1)
+
+            self.add(entities.ItemEntity(item, pos[0], pos[1], vel=vel))
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)

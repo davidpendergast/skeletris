@@ -10,27 +10,46 @@ import src.game.settings as settings
 
 class ActorStateNew:
 
-    def __init__(self, name, level, base_stats, alignment):
-        self.name = name
+    def __init__(self, name, level, base_stats, inventory, alignment):
+        self.name_ = name
         self.level = level
         self.base_stats = base_stats
 
-        self.equipped_items = []
+        self.inventory_ = inventory
+
         self.permanent_effects = []
         self.status_effects = []
-
-        self.inv_items = []
 
         self.current_hp = 5  # self.stat_value(ActorStatType.MAX_HP)
         self.current_energy = 0
 
         self.alignment = alignment  # what "team" the actor is on.
 
+        self.held_item = None  # item being held above the actor's head
+
     def stat_value(self, stat_type):
         if stat_type == ActorStatType.MAX_ENERGY:
             return 5
         else:
-            return 0
+            return 2
+
+    def hp(self):
+        return self.current_hp
+
+    def set_hp(self, val):
+        self.current_hp = min(val, self.max_hp())
+
+    def max_hp(self):
+        return 5
+
+    def is_dead(self):
+        return self.hp() <= 0
+
+    def inventory(self):
+        return self.inventory_
+
+    def name(self):
+        return self.name_
 
 
 class ActorController:

@@ -741,7 +741,7 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
-        ActorEntity.__init__(self, spriteref.player_idle_all, ActorStateNew("player", 1, {}, 0), PlayerController())
+        ActorEntity.__init__(self, spriteref.player_idle_all, gs.get_instance().player_state(), PlayerController())
         self.set_x(x)
         self.set_y(y)
 
@@ -1000,7 +1000,7 @@ class PickupEntity(Entity):
             world.remove(self)
 
     def on_pickup(self, world):
-        gs.get_instance().player_state().picked_up(self, world)
+        pass
 
     def is_pickup(self):
         return True
@@ -1300,8 +1300,8 @@ class SaveStationEntity(Entity):
                 else:
                     gs.get_instance().dialog_manager().set_dialog(Dialog("failed to save.", spriteref.save_station_faces))
 
-            gs.get_instance().player_state().do_full_heal()
-            gs.get_instance().player_state().remove_all_statuses()
+            # gs.get_instance().player_state().do_full_heal()
+            # gs.get_instance().player_state().remove_all_statuses()
 
         e_listener = question.build_listener(_do_save, single_use=True)
 

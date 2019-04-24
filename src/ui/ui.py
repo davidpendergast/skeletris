@@ -42,8 +42,8 @@ class InventoryPanel:
         self.player_state = gs.get_instance().player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
-        self.kill_count = gs.get_instance().player_state().kill_count
-        self.zone_level = gs.get_instance().get_zone_level()
+        self.kill_count = 10
+        self.zone_level = 10
 
         self.top_img = None
         self.mid_imgs = []
@@ -73,8 +73,8 @@ class InventoryPanel:
         self._build_images(sc, text_sc)
 
     def gs_info_is_outdated(self):
-        return (self.kill_count != gs.get_instance().player_state().kill_count or
-                self.zone_level != gs.get_instance().get_zone_level())
+        return (self.kill_count != 10 or
+                self.zone_level != 10)
         
     def _build_images(self, sc, text_sc):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
@@ -365,7 +365,7 @@ class HealthBarPanel:
             dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
             self._floating_bars.append([dmg_img, 0])
 
-        bar_color = gs.get_instance().player_state().get_hp_color()
+        bar_color = (1.0, 0.25, 0.25)
 
         for i in range(0, len(self._floating_bars)):
             img, cur_dur = self._floating_bars[i]
@@ -475,26 +475,27 @@ class HealthBarPanel:
 
     def get_action_item_state(self, idx):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
-        p_state = gs.get_instance().player_state()
-        cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
-        if idx == 0:
-            return (spriteref.UI.attack_action, cooldowns[idx],
-                    Utils.stringify_key(gs.get_instance().settings().attack_key()[0]), None)
-        elif idx == 1:
-            return (spriteref.UI.potion_action, cooldowns[idx],
-                    Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().player_state().num_potions))
-        elif idx == 2:
-            return (spriteref.UI.inspect_action, cooldowns[idx],
-                    Utils.stringify_key(gs.get_instance().settings().interact_key()[0]), None)
-        elif idx == 4:
-            return (spriteref.UI.inventory_action, cooldowns[idx],
-                    Utils.stringify_key(gs.get_instance().settings().inventory_key()[0]), None)
-        else:
-            return None
+        return None
+        #p_state = gs.get_instance().player_state()
+        #cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
+        #if idx == 0:
+        #    return (spriteref.UI.attack_action, cooldowns[idx],
+        #            Utils.stringify_key(gs.get_instance().settings().attack_key()[0]), None)
+        #elif idx == 1:
+        #    return (spriteref.UI.potion_action, cooldowns[idx],
+        #            Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().player_state().num_potions))
+        #elif idx == 2:
+        #    return (spriteref.UI.inspect_action, cooldowns[idx],
+        #            Utils.stringify_key(gs.get_instance().settings().interact_key()[0]), None)
+        #elif idx == 4:
+        #    return (spriteref.UI.inventory_action, cooldowns[idx],
+        #            Utils.stringify_key(gs.get_instance().settings().inventory_key()[0]), None)
+        #else:
+        #    return None
 
     def update(self, world, input_state, render_eng):
         p_state = gs.get_instance().player_state()
-        new_dmg, new_healing = p_state.damage_and_healing_last_tick()
+        new_dmg, new_healing = 0, 0
 
         if len(self._floating_bars) > 0:
             new_bars = []
