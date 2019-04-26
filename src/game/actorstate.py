@@ -15,15 +15,6 @@ import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
 
 
-def show_floating_text(text, color, scale, entity, world):
-    x_offs = int(15 * (0.5 - random.random()))
-    text = FloatingTextEntity(text, 25, color, anchor=None, scale=scale,
-                              start_offs=(x_offs, -64), end_offs=(x_offs, -96))
-    text.set_x(entity.center()[0] - text.w() // 2)
-    text.set_y(entity.center()[1] - text.h() // 2)
-    world.add(text)
-
-
 class ActorState(Pushable):
 
     R_TEXT_COLOR = (0.75, 0.0, 0.0)

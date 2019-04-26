@@ -280,20 +280,10 @@ class WorldBlueprint:
         for spawn_pos in self.enemy_spawns:
             if len(self.enemy_types) > 0:
                 template = random.choice(self.enemy_types)
-                enemies = EnemyFactory.gen_enemies(self.level, force_template=template)
-                for e in enemies:
-                    w.add(e, gridcell=spawn_pos)
+                enemy = EnemyFactory.gen_enemy(template, self.level)
+                w.add(enemy, gridcell=spawn_pos)
             else:
                 print("WARN: Zone has no defined enemy types. Skipping enemy spawn at {}".format(spawn_pos))
-
-        for spawn_pos in self.rare_enemy_spawns:
-            if len(self.enemy_types) > 0:
-                template = random.choice(self.enemy_types)
-                enemies = EnemyFactory.gen_enemies(self.level, force_rare=True, force_template=template)
-                for e in enemies:
-                    w.add(e, gridcell=spawn_pos)
-            else:
-                print("WARN: Zone has no defined enemy types. Skipping rare enemy spawn at {}".format(spawn_pos))
 
         if self.save_station is not None:
             save_entity = SaveStationEntity(*self.save_station)

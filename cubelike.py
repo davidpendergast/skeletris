@@ -213,10 +213,6 @@ def run():
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())
 
-            for actor in world.get_actors():
-                if not actor.is_performing_action():
-                    actor.choose_next_action(world, input_state)
-
             world.update_all(input_state, render_eng)
             world_view.update_all(input_state, render_eng)
 

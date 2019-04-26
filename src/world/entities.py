@@ -13,7 +13,7 @@ import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
-from src.game.gameengine import ActorStateNew, ActorController, PlayerController, ActionType
+from src.game.gameengine import ActorStateNew, ActorController, PlayerController, ActionType, EnemyController
 
 ENTITY_UID_COUNTER = 0
 
@@ -389,61 +389,6 @@ class ProjectileEntity(Entity):
         return self._source_state
 
 
-class MinionProjectile(ProjectileEntity):
-
-    def __init__(self, cx, cy, source, target, duration, color, source_state, attack):
-        ProjectileEntity.__init__(self, cx, cy, 24, source, duration, source_state, attack)
-        self._target = target
-        self._color = color
-        self._min_speed = 1.25
-        self._max_speed = 2.5
-        self._vel = Utils.rand_vec(self._min_speed)
-
-    def get_sprite(self, world):
-        return spriteref.floaty_guys[gs.get_instance().anim_tick % 2]
-
-    def get_color(self, world):
-        return self._color
-
-    def get_vel(self):
-        prog = self.get_progress()
-        if prog < 0.15:
-            pass
-        elif prog < 0.35:
-            a = Utils.bound((prog - 0.15) / 0.15, 0, 1)
-            speed = self._min_speed * (1 - a) + self._max_speed * a
-            vel = Utils.set_length(Utils.sub(self._target.center(), self.center()), speed)
-            self._vel = vel
-
-        return self._vel
-
-    def touched_entity(self, entity, world):
-        if entity is self._target:
-            t_state = entity.get_actorstate()
-            if t_state is None:
-                return True  # uhh weird
-
-            if t_state.is_invuln():
-                return False
-
-            att_state = self.get_source_state().get_attack_state()
-            att_state.delayed_attack_landed(self.center(), entity, self.get_attack())
-            world.remove(self)
-
-            explosion = AnimationEntity(*self.center(), spriteref.explosions, 45,
-                                        spriteref.ENTITY_LAYER, scale=2)
-            explosion.set_color(self.get_color(world))
-            world.add(explosion)
-
-            return True
-
-    def get_potential_hits(self, world):
-        if Utils.dist(self._target.center(), self.center()) <= self.get_radius():
-            return [self._target]
-        else:
-            return []
-
-
 class AnimationEntity(Entity):
 
         LOOP_ON_FINISH = 1
@@ -645,7 +590,7 @@ class ActorEntity(Entity):
         return self._shadow_sprite
 
     def get_light_level(self):
-        return 6
+        return self.actor_state.light_level()
 
     def cleanup(self, render_engine):
         render_engine.remove(self._img)
@@ -660,7 +605,10 @@ class ActorEntity(Entity):
     def choose_next_action(self, world, input_state):
         next_action = self.get_controller().get_next_action(self, world, input_state)
         if next_action.is_possible(world):
-            self.set_action(next_action, next_action.get_duration())
+            dur_modifier = self.get_actor_state().turn_duration_modifier()
+            dur = Utils.bound(int(next_action.get_duration() * dur_modifier), 1, None)
+            self.set_action(next_action, dur)
+            return next_action
         else:
             raise ValueError("{} received impossible action: {}".format(self, next_action))
 
@@ -672,9 +620,16 @@ class ActorEntity(Entity):
             msg = "error setting action {}, actor already has action: {}".format(action, self.executing_action)
             raise ValueError(msg)
 
+        if action.get_type() == ActionType.PLAYER_WAIT:
+            # this is a special action, we want to do nothing
+            # while keeping the player first in line to act.
+            return
+
         self.executing_action = action
         self.executing_action_duration = duration
         self.executing_action_ticks = 0
+        self.get_actor_state().set_energy(0)
+        self.get_actor_state().update_last_turn_tick()
 
     def is_performing_action(self):
         return self.executing_action is not None
@@ -718,6 +673,9 @@ class ActorEntity(Entity):
     def set_facing_right(self, facing_right):
         self.facing_right = facing_right
 
+    def is_facing_right(self):
+        return self.facing_right
+
     def set_color(self, color=(1.0, 1.0, 1.0)):
         self.color = color
 
@@ -731,7 +689,7 @@ class ActorEntity(Entity):
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
 
         depth = self.get_depth()
-        xflip = not self.facing_right
+        xflip = self.is_facing_right()
         self._img = self._img.update(new_model=sprite, new_color=self.color, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip)
 
@@ -745,7 +703,7 @@ class Player(ActorEntity):
         self.set_x(x)
         self.set_y(y)
 
-        self.special_action_sprite = None
+        self.special_action_sprite = None  # TODO - this is dumb, actorstate should hold sprite info
 
     def set_special_action_sprite(self, sprite):
         self.special_action_sprite = sprite
@@ -766,56 +724,40 @@ class Player(ActorEntity):
     def is_player(self):
         return True
 
+    def is_facing_right(self):
+        # player sprites are drawn reverse of everyone else (._.)
+        return not super().is_facing_right()
+
     def valid_to_stand_on(self, world, x, y):
         return (Entity.valid_to_stand_on(self, world, x, y) and
                 not world.get_hidden_at(x, y))
  
  
-class Enemy(Entity):
+class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state):
-        Entity.__init__(self, x, y, 32, 32)
+    def __init__(self, x, y, state, sprites):
+        ActorEntity.__init__(self, sprites, state, EnemyController())
         self.state = state
-        self._img = None
+        self.sprites = sprites
         self._healthbar_img = None
-        self._shadow_sprite = spriteref.large_shadow
-        self._hurtbox_radius = 0
-        
-    def get_shadow_sprite(self):
-        return self._shadow_sprite
 
-    def set_hurtbox(self, radius):
-        self._hurtbox_radius = radius
-
-    def hurtbox(self):
-        return self._hurtbox_radius
-    
-    def update_images(self, sprite, facing_left, health_ratio, color=(1, 1, 1), hp_color=(1, 0, 0),
-                      shadow_sprite=None, offset=(0, 0)):
-
-        if self._img is None:
-            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
-
-        if shadow_sprite is not None:
-            self._shadow_sprite = shadow_sprite
-
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + offset[0]
-        y = self.y() - (sprite.height() * self._img.scale() - self.h()) + offset[1]
-        depth = self.get_depth()
-        xflip = not facing_left
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
-                                     new_depth=depth, new_xflip=xflip, new_color=color)
-
+    def _update_healthbar_img(self, render_engine):
+        health_ratio = Utils.bound(self.get_actor_state().hp() / self.get_actor_state().max_hp(), 0.0, 1.0)
         if health_ratio < 1.0 and self._healthbar_img is None:
             self._healthbar_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         if self._healthbar_img is not None:
-            n = len(spriteref.progress_spinner)
-            hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
-            hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
-            hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
-            self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
-                                                             new_depth=depth, new_color=hp_color)
+            if health_ratio < 1.0:
+                n = len(spriteref.progress_spinner)
+                hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
+                hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
+                hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
+                self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
+                                                                 new_depth=self.center()[1], new_color=(1.0, 0.25, 0.25))
+            else:
+                # we're fully healed now, so remove the healthbar
+                render_engine.remove(self._healthbar_img)
+                self._healthbar_img = None
 
     def all_bundles(self, extras=[]):
         for bun in Entity.all_bundles(self, extras=extras):
@@ -825,14 +767,12 @@ class Enemy(Entity):
             yield self._healthbar_img
         
     def update(self, world, input_state, render_engine):
-        self.state.update(self, world, input_state)
-        super().update_images(gs.get_instance().anim_tick)  # TODO - shadows are dumb
+        ActorEntity.update(self, world, input_state, render_engine)
+
+        self._update_healthbar_img(render_engine)
         
     def is_enemy(self):
         return True
-
-    def get_actorstate(self):
-        return self.state
         
 
 class ChestEntity(Entity):

@@ -101,6 +101,18 @@ class InventoryState:
         return InventoryState()
 
 
+class FakeInventoryState(InventoryState):
+
+    def __init__(self):
+        InventoryState.__init__(self)  # TODO - make an actual superclass
+        self.equipped_items = []
+        self.inv_items = []
+
+    def all_equipped_items(self):
+        return list(self.equipped_items)
+
+
+
         
         
         

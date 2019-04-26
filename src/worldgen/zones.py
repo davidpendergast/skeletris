@@ -400,6 +400,9 @@ class DesolateCaveZone(Zone):
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         spawn = bp.player_spawn
+
+        bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
+        bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
         w = bp.build_world()
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
@@ -549,7 +552,7 @@ class FrogLairZone(Zone):
 
         if not gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
             frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
-            frog_entity = enemies.EnemyFactory.gen_enemy(self.get_level(), force_template=enemies.TEMPLATE_FROG_BOSS)
+            frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG_BOSS, self.get_level())
             w.add(frog_entity, gridcell=frog_spawn)
 
             def kill_action(_event, _world):

@@ -10,6 +10,8 @@ import src.game.stats as stats
 import src.attacks.attacks as attacks
 from src.game.loot import LootFactory
 from src.utils.util import Utils
+import src.game.gameengine as gameengine
+import src.game.inventory as inventory
 
 
 NUM_EXTRA_STATS_RANGE = [
@@ -94,9 +96,6 @@ class EnemyTemplate:
 
     def can_attack(self):
         return True
-
-    def get_hurtbox(self):
-        return 5
 
 
 class FlappumTemplate(EnemyTemplate):
@@ -289,9 +288,6 @@ class FrogBoss(EnemyTemplate):
     def get_possible_special_attacks(self):
         return []
 
-    def get_hurtbox(self):
-        return 15
-
 
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = TrilliteTemplate()
@@ -335,60 +331,22 @@ def get_rand_template_for_level(level, rand_val):
 class EnemyFactory:
 
     @staticmethod
-    def get_state(template, level, stats, is_rare):
-        if template is TEMPLATE_FROG_BOSS:
-            return bosses.FrogBossState(template, level, stats)
-        else:
-            return EnemyState(template, level, stats, is_rare)
+    def get_state(template, level):
+        return gameengine.ActorStateNew(template.get_name(), level, template.get_base_stats(),
+                                        inventory.FakeInventoryState(), 1)
 
     @staticmethod
-    def gen_enemy(level, force_template=None, force_rare=False):
-        if force_template is not None:
-            template = force_template
-        else:
-            template = get_rand_template_for_level(level, random.random())
-
-        is_rare = force_rare or random.random() < EnemyRates.chance_to_be_rare(level)
-
-        enemy_stats = template.get_base_stats()
-        # TODO - rareness should affect stats
-        n_extra = random.randint(NUM_EXTRA_STATS_RANGE[0][level], NUM_EXTRA_STATS_RANGE[1][level])
-
-        for _ in range(0, n_extra):
-            stat_type = ENEMY_STATS[int(random.random() * len(ENEMY_STATS))]
-            mult_low, mult_high = STATS_MULTIPLIER_RANGE[0][level], STATS_MULTIPLIER_RANGE[1][level]
-            mult = mult_low + random.random()*(mult_high - mult_low)
-            value_low, value_high = stats.ItemStatRanges.get_range(stat_type, level)
-            stat_value = int(mult * random.randint(value_low, value_high))
-            if stat_type in enemy_stats:
-                enemy_stats[stat_type] += stat_value
-            else:
-                enemy_stats[stat_type] = stat_value
-
-        state = EnemyFactory.get_state(template, level, enemy_stats, is_rare)
-
-        if is_rare:
-            sp_atts = template.get_possible_special_attacks()
-            if len(sp_atts) > 0:
-                idx = int(random.random() * len(sp_atts))
-                state.set_special_attack(sp_atts[idx])
-
-        res = Enemy(0, 0, state)
-        res.set_hurtbox(template.get_hurtbox())
-
-        return res
+    def gen_enemy(template, level):
+        return EnemyFactory.gen_enemies(template, level, n=1)[0]
 
     @staticmethod
-    def gen_enemies(level, n=None, force_template=None, force_rare=False):
-        if n is None:
-            min_n = EnemyRates.min_pack_size(level)
-            max_n = EnemyRates.max_pack_size(level)
-            n = int(max(1, min_n + (max_n - min_n)*random.random()))
+    def gen_enemies(template, level, n=1):
+        template = template if template is not None else get_rand_template_for_level(level, random.random())
 
-        first = EnemyFactory.gen_enemy(level, force_template=force_template, force_rare=force_rare)
-        res = [first]
-        for _ in range(1, n):
-            res.append(Enemy(0, 0, first.state.duplicate()))
-
+        res = []
+        for _ in range(0, n):
+            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites()))
         return res
+
+
 

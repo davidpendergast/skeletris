@@ -7,6 +7,8 @@ import src.game.inputs as inputs
 import src.game.globalstate as gs
 import src.game.settings as settings
 
+import random
+
 
 class ActorStateNew:
 
@@ -22,6 +24,7 @@ class ActorStateNew:
 
         self.current_hp = 5  # self.stat_value(ActorStatType.MAX_HP)
         self.current_energy = 0
+        self._last_turn_tick = 0  # used to determine energization order
 
         self.alignment = alignment  # what "team" the actor is on.
 
@@ -36,11 +39,35 @@ class ActorStateNew:
     def hp(self):
         return self.current_hp
 
+    def turn_duration_modifier(self):
+        if self.alignment == 0:
+            return 1.0
+        else:
+            return 0.66
+
     def set_hp(self, val):
         self.current_hp = min(val, self.max_hp())
 
+    def energy(self):
+        return self.current_energy
+
+    def max_energy(self):
+        return 5
+
+    def last_turn_tick(self):
+        return self._last_turn_tick
+
+    def set_energy(self, val):
+        self.current_energy = Utils.bound(val, 0, self.max_energy())
+
+    def update_last_turn_tick(self):
+        self._last_turn_tick = gs.get_instance().tick_counter
+
     def max_hp(self):
         return 5
+
+    def light_level(self):
+        return 6 if self.alignment == 0 else 0
 
     def is_dead(self):
         return self.hp() <= 0
@@ -86,6 +113,22 @@ class PlayerController(ActorController):
             return PlayerWaitAction(actor, turn_right=turn)
 
 
+class EnemyController(ActorController):
+
+    def get_next_action(self, actor, world, input_state):
+        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+
+        neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
+        random.shuffle(neighbors)
+
+        for n in neighbors:
+            res = MoveToAction(actor, n)
+            if res.is_possible(world):
+                return res
+
+        return SkipTurnAction(actor, position=pos)
+
+
 class ActionType(Enum):
     MOVE_TO = "MOVE_TO"
     PICKUP_ITEM = "PICKUP_ITEM"
@@ -106,6 +149,9 @@ class Action:
         self.actor_entity = actor_entity
         self.item = item
         self.position = position
+
+    def get_type(self):
+        return self.cmd_type
 
     def is_possible(self, world):
         return True
@@ -182,6 +228,5 @@ class PlayerWaitAction(Action):
 
     def finalize(self, world):
         if self.turn_right is not None:
-            print("turning actor")
             self.actor_entity.facing_right = self.turn_right
 

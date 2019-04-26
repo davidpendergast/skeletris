@@ -184,6 +184,13 @@ class Utils:
         return (a * x * x) + (b * x)
 
     @staticmethod
+    def neighbors(x, y):
+        yield (x + 1, y)
+        yield (x, y + 1)
+        yield (x - 1, y)
+        yield (x, y - 1)
+
+    @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):
         if key not in json_blob or json_blob[key] is None:
             print("returning default {} for key {}".format(default, key))

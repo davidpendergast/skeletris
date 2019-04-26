@@ -74,6 +74,16 @@ class World:
                 vel = (0, 1)
 
             self.add(entities.ItemEntity(item, pos[0], pos[1], vel=vel))
+
+    def show_floating_text(self, text, color, scale, entity):
+        import src.world.entities as entities
+        import random  # just chill, it's fine
+        x_offs = int(15 * (0.5 - random.random()))
+        text = entities.FloatingTextEntity(text, 25, color, anchor=None, scale=scale,
+                                  start_offs=(x_offs, -64), end_offs=(x_offs, -96))
+        text.set_x(entity.center()[0] - text.w() // 2)
+        text.set_y(entity.center()[1] - text.h() // 2)
+        self.add(text)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)
@@ -367,16 +377,37 @@ class World:
 
         cam_center = gs.get_instance().get_world_camera(center=True)
 
+        an_actor_is_acting = False
+        actors_to_update = []
+
         for e in self.entities:
-            on_camera = Utils.dist(e.center(), cam_center) <= 800
+            on_camera = Utils.dist(e.center(), cam_center) <= 600
 
             if on_camera:
                 # TODO - separate render update from logic update
                 e.update(self, input_state, render_engine)
+                if e.is_actor():
+                    actors_to_update.append(e)
+                    if e.is_performing_action():
+                        an_actor_is_acting = True
+
                 self._onscreen_entities.add(e)
 
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
+
+        if not an_actor_is_acting:
+            # process the actors that have waited longest first
+            actors_to_update.sort(key=lambda a: a.get_actor_state().last_turn_tick())
+
+            for actor in actors_to_update:
+                a_state = actor.get_actor_state()
+                if a_state.energy() < a_state.max_energy():
+                    a_state.set_energy(a_state.energy() + 1)
+                    a_state.update_last_turn_tick()
+                else:
+                    actor.choose_next_action(self, input_state)
+                    break
 
         new_lighting = self.get_light_sources(onscreen=False)
 

@@ -208,7 +208,7 @@ class Attack:
         res = []
 
         for target in hit_entities:
-            if target.is_enemy() and Utils.dist(e_center, target.center()) <= att_range + target.hurtbox():
+            if target.is_enemy() and Utils.dist(e_center, target.center()) <= att_range + 15:
                 res.append(target)
             elif Utils.dist(e_center, target.center()) <= att_range:
                 res.append(target)
@@ -288,13 +288,6 @@ class SpawnMinionAttack(Attack):
         pos = entity.center()
         cond = lambda e: entity.can_damage(e) and not world.get_hidden_at(*e.center()) and e not in res
         targets_in_range = world.entities_in_circle(pos, self.projectile_range, cond=cond)
-
-        if len(targets_in_range) > 0:
-            src_state = entity.get_actorstate()
-            target_e = targets_in_range[0]
-
-            proj = entities.MinionProjectile(pos[0], pos[1], entity, target_e, 150, (1, 0, 1), src_state, self)
-            world.add(proj)
 
         return res
 
