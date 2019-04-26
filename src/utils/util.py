@@ -184,6 +184,39 @@ class Utils:
         return (a * x * x) + (b * x)
 
     @staticmethod
+    def get_shake_points(strength, duration, falloff=3, freq=6):
+        """
+        int strength: max pixel offset of shake
+        int duration: ticks for which the shake will remain active
+        int freq: "speed" of the shake. 1 is really fast, higher is slower
+        """
+
+        if duration % freq != 0:
+            duration += freq - (duration % freq)
+
+        decay = lambda t: math.exp(-falloff*(t / duration))
+        num_keypoints = int(duration / freq)
+        x_pts = [round(2 * (0.5 - random.random()) * strength * decay(t * freq)) for t in range(0, num_keypoints)]
+        y_pts = [round(2 * (0.5 - random.random()) * strength * decay(t * freq)) for t in range(0, num_keypoints)]
+        x_pts.append(0)
+        y_pts.append(0)
+
+        shake_pts = []
+        for i in range(0, duration):
+            if i % freq == 0:
+                shake_pts.append((x_pts[i // freq], y_pts[i // freq]))
+            else:
+                prev_pt = (x_pts[i // freq], y_pts[i // freq])
+                next_pt = (x_pts[i // freq + 1], y_pts[i // freq + 1])
+                shake_pts.append(Utils.linear_interp(prev_pt, next_pt, (i % freq) / freq))
+
+        if len(shake_pts) == 0:
+            return  # this shouldn't happen but ehh
+
+        shake_pts.reverse()  # this is used as a stack
+        return shake_pts
+
+    @staticmethod
     def neighbors(x, y):
         yield (x + 1, y)
         yield (x, y + 1)

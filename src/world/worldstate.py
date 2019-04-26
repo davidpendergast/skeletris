@@ -1,3 +1,4 @@
+import math
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -294,7 +295,8 @@ class World:
                 for y in range(grid_y - max_dist, grid_y + max_dist + 1):
                     xy_dist = Utils.dist((x, y), (grid_x, grid_y))
                     if xy_dist <= max_dist:
-                        level = 1 - (xy_dist / max_dist)**1.5
+                        mult = Utils.bound((max_dist / 6) ** (2 / 3), 0, 1)
+                        level = mult * (1 - (xy_dist / max_dist)**1.5)
                         if level > self.get_lighting(x, y):
                             self._set_lighting(x, y, level)
 

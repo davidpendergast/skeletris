@@ -93,6 +93,12 @@ class InventoryState:
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
+    def is_equipped(self, item):
+        for i in self.all_equipped_items():
+            if i == item:
+                return True
+        return False
+
     def to_json(self):
         return {}
 

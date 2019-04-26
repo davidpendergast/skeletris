@@ -581,10 +581,18 @@ class ActorEntity(Entity):
 
         self.idle_sprites = Utils.listify(idle_sprites)
         self.facing_right = random.random() > 0.5
-        self.color = (1, 1, 1)
+        self.base_color = (1, 1, 1)
 
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
+
+        # used to apply a 'bouncy' effect to the actor
+        self._perturb_points = []
+
+        # used to apply a color for a short duration
+        self._perturb_color = [0, 0, 0]
+        self._perturb_color_duration = 1
+        self._perturb_color_ticks = 1
 
     def get_shadow_sprite(self):
         return self._shadow_sprite
@@ -634,6 +642,27 @@ class ActorEntity(Entity):
     def is_performing_action(self):
         return self.executing_action is not None
 
+    def update_perturbations(self):
+        if len(self._perturb_points) > 0:
+            self._perturb_points.pop()
+
+        if self._perturb_color_ticks < self._perturb_color_duration:
+            self._perturb_color_ticks += 1
+
+    def get_perturbed_xy(self):
+        if len(self._perturb_points) == 0:
+            return (0, 0)
+        else:
+            x, y = self._perturb_points[-1]
+            return (round(x), round(y))
+
+    def get_perturbed_color(self):
+        if self._perturb_color_ticks >= self._perturb_color_duration:
+            return self.base_color
+        else:
+            prog = self._perturb_color_ticks / self._perturb_color_duration
+            return Utils.linear_interp(self._perturb_color, self.base_color, prog)
+
     def update_action(self, world):
         if self.executing_action is not None:
             self.executing_action_ticks += 1
@@ -654,16 +683,12 @@ class ActorEntity(Entity):
         if self.is_performing_action():
             self.update_action(world)
 
-        old_facing_right = self.facing_right
-
         if self.get_vel()[0] < -1.5:
             self.facing_right = False
         elif self.get_vel()[0] > 1.5:
             self.facing_right = True
 
-        if old_facing_right != self.facing_right:
-            print("turned around because vel={}".format(self.get_vel()))
-
+        self.update_perturbations()
         self.update_images()
 
     def get_sprite(self):
@@ -677,7 +702,21 @@ class ActorEntity(Entity):
         return self.facing_right
 
     def set_color(self, color=(1.0, 1.0, 1.0)):
-        self.color = color
+        self.base_color = color
+
+    def perturb(self, max_offset, duration):
+        self._perturb_points.clear()
+        self._perturb_points.extend(Utils.get_shake_points(max_offset, duration, freq=4, falloff=3))
+
+    def perturb_color(self, new_color, duration):
+        self._perturb_color[0] = new_color[0]
+        self._perturb_color[1] = new_color[1]
+        self._perturb_color[2] = new_color[2]
+        self._perturb_color_duration = duration
+        self._perturb_color_ticks = 0
+
+    def get_depth(self):
+        return super().get_depth() + self.get_perturbed_xy()[1]
 
     def update_images(self):
         if self._img is None:
@@ -685,12 +724,14 @@ class ActorEntity(Entity):
 
         sprite = self.get_sprite()
 
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+        xy_perturb = self.get_perturbed_xy()
+        x = self.x() + xy_perturb[0] - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.y() + xy_perturb[1] - (sprite.height() * self._img.scale() - self.h())
 
         depth = self.get_depth()
         xflip = self.is_facing_right()
-        self._img = self._img.update(new_model=sprite, new_color=self.color, new_x=x, new_y=y,
+        color = self.get_perturbed_color()
+        self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip)
 
         super().update_images(0)  # get the shadow
@@ -749,6 +790,7 @@ class Enemy(ActorEntity):
         if self._healthbar_img is not None:
             if health_ratio < 1.0:
                 n = len(spriteref.progress_spinner)
+                y = self.y() - self.get_sprite().height()
                 hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
                 hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
                 hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
