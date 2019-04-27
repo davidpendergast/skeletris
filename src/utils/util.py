@@ -217,11 +217,16 @@ class Utils:
         return shake_pts
 
     @staticmethod
-    def neighbors(x, y):
+    def neighbors(x, y, and_diags=False):
         yield (x + 1, y)
         yield (x, y + 1)
         yield (x - 1, y)
         yield (x, y - 1)
+        if and_diags:
+            yield (x + 1, y + 1)
+            yield (x - 1, y + 1)
+            yield (x + 1, y - 1)
+            yield (x - 1, y - 1)
 
     @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):

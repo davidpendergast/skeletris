@@ -530,27 +530,27 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.piece_bigs = [make(112 + i * 16, 80, 16, 16, shift=start_pos) for i in range(0, 6)]
     Items.item_entities = {}  # cubes -> sprite
 
-    Items.spear_big = make(208, 0, 16, 64, shift=start_pos)
-    Items.sword_big = make(224-208, 0, 16, 48, shift=start_pos)
-    Items.whip_big = make(224-208, 384-336, 32, 32, shift=start_pos)
-    Items.shield_alt_big = make(240-208, 0, 32, 32, shift=start_pos)
-    Items.shield_big = make(256-208, 384-336, 32, 32, shift=start_pos)
-    Items.wand_big = make(272-208, 0, 16, 48, shift=start_pos)
-    Items.dagger_big = make(288-208, 384-336, 16, 32, shift=start_pos)
-    Items.axe_big = make(288-208, 0, 32, 48, shift=start_pos)
-    Items.bow_big = make(320-208, 0, 16, 48, shift=start_pos)
+    Items.spear_big = make(0, 0, 16, 64, shift=start_pos)
+    Items.sword_big = make(16, 0, 16, 48, shift=start_pos)
+    Items.whip_big = make(16, 48, 32, 32, shift=start_pos)
+    Items.shield_alt_big = make(32, 0, 32, 32, shift=start_pos)
+    Items.shield_big = make(48, 48, 32, 32, shift=start_pos)
+    Items.wand_big = make(64, 0, 16, 48, shift=start_pos)
+    Items.dagger_big = make(80, 48, 16, 32, shift=start_pos)
+    Items.axe_big = make(80, 0, 32, 48, shift=start_pos)
+    Items.bow_big = make(112, 0, 16, 48, shift=start_pos)
 
-    Items.spear_small = make(336-208, 0, 5, 16, shift=start_pos)
-    Items.sword_small = make(341-208, 0, 5, 16, shift=start_pos)
-    Items.dagger_small = make(346-208, 0, 5, 16, shift=start_pos)
-    Items.shield_alt_small = make(351-208, 0, 7, 16, shift=start_pos)
-    Items.shield_small = make(361-208, 0, 7, 16, shift=start_pos)
-    Items.axe_small = make(368-208, 0, 7, 16, shift=start_pos)
-    Items.bow_small = make(379-208, 0, 5, 16, shift=start_pos)
-    Items.whip_small = make(384-208, 0, 8, 16, shift=start_pos)
-    Items.wand_small = make(395-208, 0, 5, 16, shift=start_pos)
+    Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
+    Items.sword_small = make(133, 0, 5, 16, shift=start_pos)
+    Items.dagger_small = make(138, 0, 5, 16, shift=start_pos)
+    Items.shield_alt_small = make(143, 0, 7, 16, shift=start_pos)
+    Items.shield_small = make(153, 0, 7, 16, shift=start_pos)
+    Items.axe_small = make(160, 0, 7, 16, shift=start_pos)
+    Items.bow_small = make(171, 0, 5, 16, shift=start_pos)
+    Items.whip_small = make(176, 0, 8, 16, shift=start_pos)
+    Items.wand_small = make(187, 0, 5, 16, shift=start_pos)
 
-    Items.misc_small = make(400-208, 336-336, 5, 16, shift=start_pos)
+    Items.misc_small = make(192, 0, 5, 16, shift=start_pos)
 
 
 def build_ui_sheet(start_pos, raw_ui_img, sheet):

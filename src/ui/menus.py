@@ -1044,6 +1044,7 @@ class InGameUiState(Menu):
                 self.inventory_panel = None
 
         elif input_state.was_pressed(gs.get_instance().settings().inventory_key()):
+            print("pressed inventory key...")
             if self.inventory_panel is None:
                 self.rebuild_inventory(render_eng)
             else:

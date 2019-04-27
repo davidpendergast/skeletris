@@ -19,7 +19,7 @@ class ImageBundle:
     def new_bundle(layer_id, scale=1):
         return ImageBundle(None, 0, 0, layer=layer_id, scale=scale)
 
-    def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, color=(1, 1, 1), ratio=(1, 1), uid=None):
+    def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, rotation=0, color=(1, 1, 1), ratio=(1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid
         self._model = model
         self._x = x
@@ -28,11 +28,12 @@ class ImageBundle:
         self._scale = scale
         self._depth = depth
         self._xflip = xflip
+        self._rotation = rotation
         self._color = color
         self._ratio = ratio
             
     def update(self, new_model=None, new_x=None, new_y=None, new_scale=None, new_depth=None,
-               new_xflip=None, new_color=None, new_ratio=None):
+               new_xflip=None, new_color=None, new_rotation=None, new_ratio=None):
                 
         model = self.model() if new_model is None else new_model
         x = self.x() if new_x is None else new_x
@@ -41,6 +42,7 @@ class ImageBundle:
         depth = self.depth() if new_depth is None else new_depth
         xflip = self.xflip() if new_xflip is None else new_xflip
         color = self.color() if new_color is None else new_color
+        rotation = self.rotation() if new_rotation is None else new_rotation
         ratio = self.ratio() if new_ratio is None else new_ratio
         
         if (model == self.model() and 
@@ -85,6 +87,10 @@ class ImageBundle:
         
     def xflip(self):
         return self._xflip
+
+    def rotation(self):
+        """returns: int: 0, 1, 2, or 3 representing a number of clockwise 90 degree rotations."""
+        return self._rotation
         
     def color(self):
         return self._color
@@ -108,6 +114,12 @@ class ImageBundle:
 
         w = int(model.w * self.scale() * self.ratio()[0])
         h = int(model.h * self.scale() * self.ratio()[1])
+
+        if self.rotation() == 1 or self._rotation == 3:
+            temp_w = w
+            w = h
+            h = temp_w
+
         color = self.color()
         
         vertices.extend([
@@ -120,15 +132,24 @@ class ImageBundle:
             colors.extend([
                     color, color, color, color   
             ])
+
+        corners = [
+            model.tx1, model.ty2,
+            model.tx1, model.ty1,
+            model.tx2, model.ty1,
+            model.tx2, model.ty2
+        ]
+
+        if self.xflip():
+            corners[0] = model.tx2
+            corners[2] = model.tx2
+            corners[4] = model.tx1
+            corners[6] = model.tx1
+
+        for _ in range(0, self.rotation()):
+            corners = corners[2:] + corners[:2]
         
-        tx1 = model.tx1 if not self.xflip() else model.tx2
-        tx2 = model.tx2 if not self.xflip() else model.tx1
-        
-        texts.extend([
-                tx1, model.ty2,
-                tx1, model.ty1,
-                tx2, model.ty1,
-                tx2, model.ty2])
+        texts.extend(corners)
         
         i = 0 if len(indices) == 0 else indices[-1] + 1
         indices.extend([i, i+1, i+2, i, i+2, i+3])

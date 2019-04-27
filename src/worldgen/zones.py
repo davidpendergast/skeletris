@@ -403,10 +403,10 @@ class DesolateCaveZone(Zone):
 
         bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
         bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
-        bp.chest_spawns.append((spawn[0] - 1, spawn[1]))
-        bp.chest_spawns.append((spawn[0] - 1, spawn[1] - 1))
-        bp.chest_spawns.append((spawn[0] + 1, spawn[1]))
-        bp.chest_spawns.append((spawn[0], spawn[1] + 1))
+
+        for n in Utils.neighbors(*spawn, and_diags=True):
+            bp.chest_spawns.append((n[0], n[1]))
+
         w = bp.build_world()
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
