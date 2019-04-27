@@ -113,13 +113,13 @@ class SaveDataBlob:
         num_potions = int(blob["num_potions"])
         zone_id = str(blob["zone_id"])
 
-        from src.items.item import Item
+        from src.items.item import StatCubesItem
         equipment_positions = {}
         for x_y_item in blob["equipment"]:
             try:
                 x = int(x_y_item[0])
                 y = int(x_y_item[1])
-                item = Item.from_json(x_y_item[2])
+                item = StatCubesItem.from_json(x_y_item[2])
                 equipment_positions[(x, y)] = item
             except:
                 print("ERROR: couldn't deserialize item: {}".format(x_y_item))
@@ -130,7 +130,7 @@ class SaveDataBlob:
             try:
                 x = int(x_y_item[0])
                 y = int(x_y_item[1])
-                item = Item.from_json(x_y_item[2])
+                item = StatCubesItem.from_json(x_y_item[2])
                 inventory_positions[(x, y)] = item
             except:
                 print("ERROR: couldn't deserialize item: {}".format(x_y_item))

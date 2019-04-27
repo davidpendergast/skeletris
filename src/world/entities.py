@@ -911,7 +911,7 @@ class PickupEntity(Entity):
 class ItemEntity(PickupEntity):
     def __init__(self, item, cx, cy, vel=None):
         self.item = item
-        sprite = spriteref.get_item_entity_sprite(self.item.cubes)
+        sprite = item.get_entity_sprite()
         PickupEntity.__init__(self, cx, cy, [sprite], vel=vel)
 
     def get_color(self):

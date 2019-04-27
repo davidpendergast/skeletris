@@ -1186,10 +1186,11 @@ class InGameUiState(Menu):
                         world.add_item_as_entity(item, p_center, direction=drop_dir)
                         destroy_image = True
 
-        if input_state.was_pressed(gs.get_instance().settings().rotate_cw_key()) and ps.held_item is not None:
-            ps.held_item = item_module.ItemFactory.rotate_item(ps.held_item)
-            create_image = True
-            destroy_image = True
+        if input_state.was_pressed(gs.get_instance().settings().rotate_cw_key()):
+            if ps.held_item is not None and ps.held_item.can_rotate():
+                ps.held_item = ps.held_item.rotate()
+                create_image = True
+                destroy_image = True
 
         if destroy_image:
             self._destroy_panel(self.item_on_cursor_image, render_eng)

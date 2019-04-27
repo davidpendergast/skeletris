@@ -11,7 +11,7 @@ class TooltipFactory:
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
-        if isinstance(obj, item.Item):
+        if isinstance(obj, item.StatCubesItem):
             return ItemInfoTooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, EnemyState):
             return EnemyInfoTooltip(obj, xy=xy, layer=layer)

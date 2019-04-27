@@ -1,9 +1,13 @@
 import random
 import uuid
 import collections
+from enum import Enum
 
 from src.game.stats import StatType, ItemStatRanges
 from src.utils.util import Utils
+import src.renderengine.img as img
+from src.items.cubeutils import CubeUtils
+import src.game.spriteref as spriteref
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 
@@ -111,6 +115,88 @@ class ItemStat:
 
 
 class Item:
+
+    def __init__(self, name, cubes, stats, color, uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+        self.name = name
+        self.stats = tuple(stats)
+        self.cubes = tuple(CubeUtils.clean_cubes(cubes))
+        self.color = color
+        self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
+        self.sprite_rotation = 0
+        self._can_rotate = can_rotate
+        self.title_color = title_color
+        self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
+
+    def get_title_color(self):
+        return self.title_color
+
+    def can_equip(self):
+        return False
+
+    def can_rotate(self):
+        return self._can_rotate
+
+    def rotate(self):
+        return self  # TODO
+
+    def w(self):
+        return max([c[0] for c in self.cubes]) + 1
+
+    def h(self):
+        return max([c[1] for c in self.cubes]) + 1
+
+    def all_stats(self):
+        return self.stats
+
+    def core_stats(self):
+        return [s for s in self.stats if s.stat_type in CORE_STATS]
+
+    def non_core_stats(self):
+        return [s for s in self.stats if s.stat_type not in CORE_STATS]
+
+    def get_small_img(self, scale, layer_id, input_img=None):
+        pass
+
+    def get_big_img(self, scale, layer_id, input_img=None):
+        pass
+
+    def get_entity_sprite(self):
+        return spriteref.item_misc_small
+
+
+class SpriteItem(Item):
+
+    def __init__(self, name, cubes, stats, color, small_sprite, big_sprite, sprite_rotation=0,
+                 uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+
+        Item.__init__(self, name, cubes, stats, color, uuid_str=uuid_str,
+                      can_rotate=can_rotate, title_color=title_color)
+        self._small_sprite = small_sprite
+        self._big_sprite = big_sprite
+        self._sprite_rotation = sprite_rotation
+
+    def big_sprite(self):
+        return self._big_sprite
+
+    def get_entity_sprite(self):
+        return self._small_sprite
+
+    def get_big_img(self, scale, layer_id, input_img=None):
+        if input_img is None:
+            input_img = img.ImageBundle.new_bundle(layer_id, scale=scale)
+        input_img.update(new_model=self.big_sprite())
+        return input_img
+
+
+class WeaponItem(SpriteItem):
+
+    def __init__(self, name, cubes, stats, big_sprite, small_sprite, uuid_str=None):
+        SpriteItem.__init__(self, name, cubes, stats, (1, 1, 1), small_sprite, big_sprite, uuid_str=uuid_str,
+                            can_rotate=True, title_color=(1, 1, 1))
+
+
+class StatCubesItem(Item):
+
     def __init__(self, name, level, stats, cubes, color, cube_art=None, uuid_str=None):
         """
             name: str
@@ -121,34 +207,25 @@ class Item:
             cube_art: dict of (x, y) -> int: art_id
             uuid_str: str
         """
-        self.name = name
+        Item.__init__(self, name, cubes, stats, color, uuid_str=uuid_str, can_rotate=True, title_color=(1, 1, 1))
         self.level = level
-        self.stats = tuple(stats)
-        self.cubes = tuple(ItemFactory.clean_cubes(cubes))
-        self.color = color
+        self.cubes = tuple(CubeUtils.clean_cubes(cubes))
         self.cube_art = {} if cube_art is None else cube_art
-        self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
-
-    def get_title_color(self):
-        return (1, 1, 1)
     
     def level_string(self):
         return "lvl:{}".format(self.level)
-        
-    def w(self):
-        return max([c[0] for c in self.cubes]) + 1
-        
-    def h(self):
-        return max([c[1] for c in self.cubes]) + 1
-        
-    def all_stats(self):
-        return self.stats
-        
-    def core_stats(self):
-        return [s for s in self.stats if s.stat_type in CORE_STATS]
-        
-    def non_core_stats(self):
-        return [s for s in self.stats if s.stat_type not in CORE_STATS]
+
+    def can_equip(self):
+        return True
+
+    def rotate(self):
+        new_cubes = []
+        for cube in self.cubes:
+            new_cubes.append((5 - cube[1], cube[0]))
+        new_cubes = CubeUtils.clean_cubes(new_cubes)
+
+        return StatCubesItem(self.name, self.level, self.stats,
+                             new_cubes, self.color, cube_art=self.cube_art, uuid_str=self.uuid)
         
     def __str__(self):
         res = "[{}]".format(self.name)
@@ -166,6 +243,9 @@ class Item:
                     res += "- "    
         res += "\n[" + "_"*len(self.name) + "]"
         return res
+
+    def get_entity_sprite(self):
+        return spriteref.get_item_entity_sprite(self.cubes)
 
     def to_json(self):
         blob = {
@@ -217,7 +297,7 @@ class Item:
 
         uuid_str = str(blob["uuid"])
 
-        return Item(name, level, stats, cubes, color, cube_art=cube_art, uuid_str=uuid_str)
+        return StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art, uuid_str=uuid_str)
 
     def test_equals(self, other):
         try:
@@ -241,87 +321,46 @@ class Item:
 
     def __hash__(self):
         return hash(self.uuid)
-        
+
+
+class ItemType(Enum):
+
+    STAT_CUBE_5 = "STAT_CUBE_5",
+    STAT_CUBE_6 = "STAT_CUBE_6",
+    STAT_CUBE_7 = "STAT_CUBE_7",
+
+    SWORD_WEAPON = "SWORD_WEAPON",
+    SHIELD_WEAPON = "SHIELD_WEAPON",
+    SPEAR_WEAPON = "SPEAR_WEAPON",
+    WHIP_WEAPON = "WHIP_WEAPON",
+    DAGGER_WEAPON = "DAGGER_WEAPON",
+    AXE_WEAPON = "AXE_WEAPON",
+    BOW_WEAPON = "BOW_WEAPON",
+    WAND_WEAPON = "WAND_WEAPON",
+
+
 class ItemFactory:
 
     @staticmethod
-    def item_size(cubes):
-        x_range = [cubes[0][0], cubes[0][0]]
-        y_range = [cubes[0][1], cubes[0][1]]
-        for c in cubes:
-            x_range[0] = min(x_range[0], c[0])
-            x_range[1] = max(x_range[1], c[0])
-            y_range[0] = min(y_range[0], c[1])
-            y_range[1] = max(y_range[1], c[1])
-        return (x_range[1] - x_range[0] + 1, y_range[1] - y_range[0] + 1)
+    def gen_item(level, item_type):
+        if item_type == ItemType.STAT_CUBE_5:
+            return StatCubesItemFactory.gen_item(level, n_cubes=5)
+        elif item_type == ItemType.STAT_CUBE_6:
+            return StatCubesItemFactory.gen_item(level, n_cubes=6)
+        elif item_type == ItemType.STAT_CUBE_7:
+            return StatCubesItemFactory.gen_item(level, n_cubes=7)
 
-    @staticmethod
-    def clean_cubes(cubes):
-        temp = list(cubes)
-        temp = ItemFactory._push_to_origin(temp)
-        temp.sort(key=lambda c: c[0] + 1000*c[1])
-        return tuple(temp)
+        elif item_type == ItemType.SWORD_WEAPON:
+            cubes = [(0, 0), (0, 1), (0, 2)]
+            return WeaponItem("Sword of Truth", cubes, {}, spriteref.item_sword_big, spriteref.item_sword_small)
+        elif item_type == ItemType.WHIP_WEAPON:
+            cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
+            return WeaponItem("Whip of Fury", cubes, {}, spriteref.item_whip_big, spriteref.item_whip_small)
 
-    @staticmethod
-    def rotate_item(item):
-        new_cubes = []
-        for cube in item.cubes:
-            new_cubes.append((5 - cube[1], cube[0]))
-        new_cubes = ItemFactory.clean_cubes(new_cubes)
+        return None
 
-        return Item(item.name, item.level, item.stats,
-                    new_cubes, item.color, cube_art=item.cube_art, uuid_str=item.uuid)
 
-    @staticmethod
-    def do_seed(seed):
-        if seed is not None:
-            random.seed(seed)
-
-    @staticmethod
-    def gen_cubes(n, size=(5, 5), seed=None):
-        ItemFactory.do_seed(seed)
-        if n > size[0] * size[1]:
-            raise ValueError("{} is too many cubes for {}".format(n, size))
-           
-        choices = []
-        for x in range(0, size[0]):
-            for y in range(0, size[1]):
-                choices.append((x, y))
-        random.shuffle(choices)
-        rejects = []
-        neighbors = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        diag = [(-1, -1), (1, -1), (1, 1), (-1, 1)]
-        res = [choices.pop()]
-        
-        while len(res) < n:
-            c = choices.pop()
-            
-            # if it's touching a cube we already have, add it.
-            touch = sum([int((n[0]+c[0], n[1]+c[1]) in res) for n in neighbors])
-            touch_diag = sum([int((n[0]+c[0], n[1]+c[1]) in res) for n in diag])
-            
-            if touch > 0 and (touch_diag == 0 or random.random() < 0.5):
-                res.append(c)
-            else:
-                rejects.append(c)
-                
-            if len(choices) == 0:
-                choices = rejects
-                random.shuffle(choices)
-                rejects = []
-        
-        res = ItemFactory.clean_cubes(res)
-                
-        return tuple(res)
-
-    @staticmethod
-    def _push_to_origin(cubes):
-        min_x = min([c[0] for c in cubes])
-        min_y = min([c[1] for c in cubes])
-        if min_x != 0 or min_y != 0:
-            return [(c[0] - min_x, c[1] - min_y) for c in cubes]
-        else:
-            return cubes
+class StatCubesItemFactory:
 
     @staticmethod
     def gen_core_stat(lvl):
@@ -361,26 +400,25 @@ class ItemFactory:
         return name
 
     @staticmethod
-    def gen_item(level):
-        primary_stat = ItemFactory.gen_core_stat(level)
-        n_secondary_stats = int(4 * random.random())
-        n_cubes = 5 + int(2 * random.random())
+    def gen_item(level, n_cubes=None):
+        primary_stat = StatCubesItemFactory.gen_core_stat(level)
+        n_cubes = n_cubes if n_cubes is not None else 5 + int(2 * random.random())
+        n_secondary_stats = Utils.bound(int((n_cubes-4) * random.random()), 0, 4)
 
-        secondary_stats = ItemFactory.gen_non_core_stats(level, n_secondary_stats, exclude=[primary_stat.stat_type])
+        secondary_stats = StatCubesItemFactory.gen_non_core_stats(level, n_secondary_stats, exclude=[primary_stat.stat_type])
 
         core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
 
-        cubes = ItemFactory.gen_cubes(n_cubes)
-        special_stats = ItemFactory.get_special_stats(cubes)
+        cubes = CubeUtils.gen_cubes(n_cubes)
+        special_stats = StatCubesItemFactory.get_special_stats(cubes)
 
-        name = ItemFactory.get_name(
+        name = StatCubesItemFactory.get_name(
                 list(map(lambda x: x.stat_type, core_stats)),
                 list(map(lambda x: x.stat_type, non_core_stats)),
                 list(map(lambda x: x.stat_type, special_stats)))
         
         stats = core_stats + non_core_stats + special_stats
-
 
         color = tuple([0.5 + random.random() * 0.25] * 3)
         if len(core_stats) > 0:
@@ -402,49 +440,8 @@ class ItemFactory:
             if i < len(cubes_copy):
                 cube_art[cubes_copy[i]] = 1 + int(5*random.random())
 
-        return Item(name, level, stats, cubes, color, cube_art=cube_art)
+        return StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art)
 
-    NEIGHBORS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-
-    @staticmethod
-    def _get_all_possible_cube_configs_helper(n, size, base, already_seen):
-        if n <= 0:
-            return []
-        else:
-            res = []
-            for cube in base:
-                for n_offs in ItemFactory.NEIGHBORS:
-                    neighbor = (cube[0] + n_offs[0], cube[1] + n_offs[1])
-                    if neighbor not in base:
-                        base_copy = [c for c in base]
-                        base_copy.append(neighbor)
-                        base_copy = ItemFactory.clean_cubes(base_copy)
-
-                        bc_size = ItemFactory.item_size(base_copy)
-
-                        if bc_size[0] <= size[0] and bc_size[1] <= size[1] and base_copy not in already_seen:
-                            already_seen.add(base_copy)
-                            if n == 1:
-                                res.append(base_copy)
-                            else:
-                                res.extend(ItemFactory._get_all_possible_cube_configs_helper(n-1, size,
-                                                                                             base_copy, already_seen))
-            return res
-
-    @staticmethod
-    def get_all_possible_cube_configs(n=(5, 6, 7), size=(5, 5)):
-        """
-        :param n: number of allowable cubes. Either a list of numbers or a single number.
-        :param size: bounding size of allowable cube configs.
-        :return: all possible cube configurations
-        """
-        try:
-            res = []
-            for num in n:
-                res.extend(ItemFactory._get_all_possible_cube_configs_helper(num-1, size, [(0, 0)], set()))
-            return res
-        except TypeError:
-            return ItemFactory._get_all_possible_cube_configs_helper(n-1, size, [(0, 0)], set())
 
 
 class ItemTest:
@@ -453,9 +450,9 @@ class ItemTest:
     def test_item_serialization():
         n = 1000
         for _ in range(0, n):
-            item = ItemFactory.gen_item(int(random.random() * 64))
+            item = StatCubesItemFactory.gen_item(int(random.random() * 64))
             as_json = item.to_json()
-            back_to_item = Item.from_json(as_json)
+            back_to_item = StatCubesItem.from_json(as_json)
 
             if not item.test_equals(back_to_item):
                 print("ERROR: test failure on test_equals")
@@ -473,11 +470,11 @@ class ItemTest:
     def test_item_rotation():
         n = 1000
         for _ in range(0, n):
-            item = ItemFactory.gen_item(int(random.random() * 64))
-            rot1 = ItemFactory.rotate_item(item)
-            rot2 = ItemFactory.rotate_item(rot1)
-            rot3 = ItemFactory.rotate_item(rot2)
-            rot4 = ItemFactory.rotate_item(rot3)
+            item = StatCubesItemFactory.gen_item(int(random.random() * 64))
+            rot1 = CubeUtils.rotate_item(item)
+            rot2 = CubeUtils.rotate_item(rot1)
+            rot3 = CubeUtils.rotate_item(rot2)
+            rot4 = CubeUtils.rotate_item(rot3)
 
             if not item.test_equals(rot4):
                 print("ERROR: test failure on test_item_rotation")

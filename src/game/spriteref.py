@@ -4,7 +4,7 @@ import math
 import string
 import collections
 
-from src.items.item import ItemFactory
+from src.items.cubeutils import CubeUtils
 from src.utils.util import Utils
 from src.game.messages import Messages
 
@@ -264,6 +264,28 @@ item_piece_small = make(72, 32, 4, 4)
 item_piece_small_inverted = make(76, 32, 4, 4)
 item_piece_bigs = [make(i*16, 96, 16, 16) for i in range(0, 6)]
 item_entities = {}  # cubes -> sprite
+
+item_spear_big = make(208, 336, 16, 64)
+item_sword_big = make(224, 336, 16, 48)
+item_whip_big = make(224, 384, 32, 32)
+item_shield_alt_big = make(240, 336, 32, 32)
+item_shield_big = make(256, 284, 32, 32)
+item_wand_big = make(272, 336, 16, 48)
+item_dagger_big = make(288, 384, 16, 32)
+item_axe_big = make(288, 336, 32, 48)
+item_bow_big = make(320, 336, 16, 48)
+
+item_spear_small = make(336, 336, 5, 16)
+item_sword_small = make(341, 336, 5, 16)
+item_dagger_small = make(346, 336, 5, 16)
+item_shield_alt_small = make(351, 336, 7, 16)
+item_shield_small = make(361, 336, 7, 16)
+item_axe_small = make(368, 336, 7, 16)
+item_bow_small = make(379, 336, 5, 16)
+item_whip_small = make(384, 336, 8, 16)
+item_wand_small = make(395, 336, 5, 16)
+
+item_misc_small = make(400, 336, 5, 16)
 
 
 def get_item_entity_sprite(cubes):
@@ -686,7 +708,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
 
     draw_y += _char_h
 
-    all_cube_configs = ItemFactory.get_all_possible_cube_configs(n=(4, 5, 6, 7))
+    all_cube_configs = CubeUtils.get_all_possible_cube_configs(n=(4, 5, 6, 7))
     print("building {} item sprites...".format(len(all_cube_configs)))
 
     draw_x = 0
