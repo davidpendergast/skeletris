@@ -58,6 +58,9 @@ class Entity(Updateable):
     def is_visible(self):
         return self._visible
 
+    def visible_in_darkness(self):
+        return True
+
     def get_light_level(self):
         return 0
         
@@ -291,104 +294,6 @@ class Pushable:
         self.active_pushes.add(Pushable.Push(vector, duration))
 
 
-class ProjectileEntity(Entity):
-
-    def __init__(self, cx, cy, radius, source, duration, source_state, attack):
-        Entity.__init__(self, cx-radius, cy-radius, radius*2, radius*2)
-        self._sprite_offset = (0, 0)
-        self._radius = radius
-        self._source = source
-        self._tick_count = 0
-        self._duration = duration
-        self._attack = attack
-        self._source_state = source_state
-        self._poll_rate = 0.1
-
-    def _update_images(self, sprite, color):
-        Entity.update_images(self, gs.get_instance().anim_tick)
-
-        if self._img is None:
-            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
-        self._img = self._img.update(new_model=sprite)
-
-        x = self.center()[0] - self._img.width() // 2 + self._sprite_offset[0]
-        y = self.center()[1] - self._img.height() // 2 + self._sprite_offset[1]
-
-        self._img = self._img.update(new_color=color, new_x=x, new_y=y)
-
-    def update(self, world, input_state, render_engine):
-        was_removed = False
-        if not gs.get_instance().world_updates_paused():
-            if 0 < self._duration <= self._tick_count:
-                world.remove(self)
-                was_removed = True
-            else:
-                vel = self.get_vel()
-
-                self.move(vel[0], vel[1])
-
-                # check every five-ish ticks, lol
-                if random.random() < self._poll_rate:
-                    potential_hits = self.get_potential_hits(world)
-                    for e in potential_hits:
-                        self_destroyed = self.touched_entity(e, world)
-                        if self_destroyed:
-                            break
-
-        if not was_removed:
-            color = self.get_color(world)
-            spr = self.get_sprite(world)
-            self._update_images(spr, color)
-
-        if not gs.get_instance().world_updates_paused():
-            self._tick_count += 1
-
-    def get_potential_hits(self, world):
-        res = []
-        in_range = world.entities_in_circle(self.center(), self._radius)
-        for e in in_range:
-            if self.get_source().can_damage(e):
-                res.append(e)
-        random.shuffle(res)
-        return res
-
-    def get_progress(self):
-        if self._duration > 0:
-            return Utils.bound(self._tick_count / self._duration, 0, 0.999)
-        else:
-            return 0.0
-
-    def get_vel(self):
-        return (0, 0)
-
-    def get_sprite(self, world):
-        return spriteref.explosions
-
-    def get_color(self, world):
-        return (1, 1, 1)
-
-    def get_radius(self):
-        return self._radius
-
-    def set_sprite_offset(self, offset):
-        self._sprite_offset = offset
-
-    def touched_entity(self, entity, world):
-        return False
-
-    def get_shadow_sprite(self):
-        return spriteref.small_shadow
-
-    def get_attack(self):
-        return self._attack
-
-    def get_source(self):
-        return self._source
-
-    def get_source_state(self):
-        return self._source_state
-
-
 class AnimationEntity(Entity):
 
         LOOP_ON_FINISH = 1
@@ -600,6 +505,9 @@ class ActorEntity(Entity):
     def get_light_level(self):
         return self.actor_state.light_level()
 
+    def visible_in_darkness(self):
+        return False
+
     def cleanup(self, render_engine):
         render_engine.remove(self._img)
         render_engine.remove(self._shadow)
@@ -758,6 +666,9 @@ class Player(ActorEntity):
             anim_tick = gs.get_instance().anim_tick
             walking = spriteref.player_move_all
             return walking[(anim_tick // 2) % len(walking)]
+
+    def visible_in_darkness(self):
+        return True
             
     def update(self, world, input_state, render_engine):
         ActorEntity.update(self, world, input_state, render_engine)
@@ -828,6 +739,9 @@ class ChestEntity(Entity):
     
     def get_shadow_sprite(self):
         return spriteref.chest_shadow
+
+    def visible_in_darkness(self):
+        return False
         
     def update_images(self, anim_tick):
         if self.is_open():
@@ -912,6 +826,9 @@ class PickupEntity(Entity):
 
     def get_shadow_sprite(self):
         return spriteref.small_shadow
+
+    def visible_in_darkness(self):
+        return False
 
     def get_color(self):
         return (1, 1, 1)
@@ -1263,6 +1180,9 @@ class SaveStationEntity(Entity):
     def is_save_station(self):
         return True
 
+    def visible_in_darkness(self):
+        return False
+
     def is_interactable(self):
         return True
 
@@ -1529,6 +1449,9 @@ class NpcEntity(Entity):
 
     def get_shadow_sprite(self):
         return self._shadow_sprite
+
+    def visible_in_darkness(self):
+        return False
 
     def update_images(self, sprite, facing_left, color=(1, 1, 1), shadow_sprite=None):
         if self._img is None:

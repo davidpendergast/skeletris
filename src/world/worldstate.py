@@ -159,6 +159,10 @@ class World:
             on_camera = Utils.dist(e.center(), cam_center) <= 800
             is_hidden = not e.is_visible() or self.get_hidden(*self.to_grid_coords(*e_center))
 
+            if not is_hidden and not e.visible_in_darkness():
+                light_level = self.get_lighting(*self.to_grid_coords(*e_center))
+                is_hidden = (light_level == 0)
+
             if on_camera and not is_hidden:
                 yield e
 
@@ -380,29 +384,32 @@ class World:
         cam_center = gs.get_instance().get_world_camera(center=True)
 
         an_actor_is_acting = False
-        actors_to_update = []
+        actors_to_process = []
+
+        player = self.get_player()
 
         for e in self.entities:
             on_camera = Utils.dist(e.center(), cam_center) <= 600
+            near_player = player is not None and Utils.dist(e.center(), player.center()) <= 600
 
-            if on_camera:
-                # TODO - separate render update from logic update
+            if on_camera or near_player:
                 e.update(self, input_state, render_engine)
-                if e.is_actor():
-                    actors_to_update.append(e)
+                self._onscreen_entities.add(e)
+
+                if e.is_actor() and near_player:
+                    actors_to_process.append(e)
                     if e.is_performing_action():
                         an_actor_is_acting = True
-
-                self._onscreen_entities.add(e)
 
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
 
+        # TODO - probably want to speed up actors in darkness
         if not an_actor_is_acting:
             # process the actors that have waited longest first
-            actors_to_update.sort(key=lambda a: a.get_actor_state().last_turn_tick())
+            actors_to_process.sort(key=lambda a: a.get_actor_state().last_turn_tick())
 
-            for actor in actors_to_update:
+            for actor in actors_to_process:
                 a_state = actor.get_actor_state()
                 if a_state.energy() < a_state.max_energy():
                     a_state.set_energy(a_state.energy() + 1)
