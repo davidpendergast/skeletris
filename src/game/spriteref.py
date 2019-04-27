@@ -118,18 +118,6 @@ class UI:
         return UI.health_bars_with_length[round(pcnt_full * 256)]
 
 
-class Trees:
-
-    trees = []  # list of lists
-
-    @staticmethod
-    def get_tree(tree_id, lean_ratio):
-        """lean_ratio: 0 is fully left, 1.0 is fully right"""
-        tree_frames = Trees.trees[tree_id % len(Trees.trees)]
-        lean_ratio = Utils.bound(lean_ratio, 0.0, 0.999)
-        return tree_frames[int(lean_ratio * (len(tree_frames)))]
-
-
 class Bosses:
 
     cave_horror_idle = []
@@ -603,21 +591,6 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.locked_door_panel = make(272, 0, 96, 112, shift=start_pos)
 
 
-def build_tree_sheet(start_pos, raw_tree_img, sheet):
-    sheet.blit(raw_tree_img, start_pos)
-    tree_size = (256, 256)
-    n_trees = raw_tree_img.get_height() // tree_size[1]
-    n_frames = raw_tree_img.get_width() // tree_size[0]
-    print("making {} trees with {} frames each".format(n_trees, n_frames))
-    for y in range(0, n_trees):
-        cur_tree = []
-        for x in range(0, n_frames):
-            x_pos = start_pos[0] + x*tree_size[0]
-            y_pos = start_pos[1] + y*tree_size[1]
-            cur_tree.append(make(x_pos, y_pos, tree_size[0], tree_size[1]))
-        Trees.trees.append(cur_tree)
-
-
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
     sheet.blit(raw_boss_img, start_pos)
     Bosses.cave_horror_idle = [make(i * 240, 80, 240, 240, shift=start_pos) for i in range(0, 2)]
@@ -644,7 +617,7 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
     print("Font._alphabet = {}".format(Font._alphabet))
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_tree_img, raw_boss_img, raw_font_img):
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -656,8 +629,6 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_tr
         |             *-----------------*
         |             | items.png       |
         |             *-----------------*
-        |             | trees.png       |
-        |             *-----------------*
         |             | bosses.png      |
         |             *-----------------*
         |             | font.png        |
@@ -665,7 +636,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_tr
 
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_tree_img, raw_boss_img, raw_font_img]
+    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img]
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
     sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
@@ -688,10 +659,6 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_tr
     print("building items sheet...")
     build_items_sheet((_x, _y), raw_items_img, sheet)
     _y += raw_items_img.get_height()
-
-    print("building tree sheet...")
-    build_tree_sheet((_x, _y), raw_tree_img, sheet)
-    _y += raw_tree_img.get_height()
 
     print("building boss sheet...")
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
@@ -871,10 +838,9 @@ if __name__ == "__main__":
     raw2 = pygame.image.load("assets/cinematics.png")
     raw3 = pygame.image.load("assets/ui.png")
     raw4 = pygame.image.load("assets/items.png")
-    raw5 = pygame.image.load("assets/trees.png")
-    raw6 = pygame.image.load("assets/bosses.png")
-    raw7 = pygame.image.load("assets/font.png")
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7)
+    raw5 = pygame.image.load("assets/bosses.png")
+    raw6 = pygame.image.load("assets/font.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

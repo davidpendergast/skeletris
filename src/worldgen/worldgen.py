@@ -3,7 +3,7 @@ import random
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
 from src.world.entities import Player, ExitEntity, LockedDoorEntity, SaveStationEntity, SensorDoorEntity, \
-    TreeEntity, BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity
+    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
