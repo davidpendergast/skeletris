@@ -53,6 +53,35 @@ class Cinematics:
                    size[0], size[1])
 
 
+class Items:
+    piece_small = None
+    piece_small_inverted = None
+    piece_bigs = []
+    item_entities = {}  # cubes -> sprite
+
+    spear_big = None
+    sword_big = None
+    whip_big = None
+    shield_alt_big = None
+    shield_big = None
+    wand_big = None
+    dagger_big = None
+    axe_big = None
+    bow_big = None
+
+    spear_small = None
+    sword_small = None
+    dagger_small = None
+    shield_alt_small = None
+    shield_small = None
+    axe_small = None
+    bow_small = None
+    whip_small = None
+    wand_small = None
+
+    misc_small = None
+
+
 class UI:
     item_panel_top = None
     item_panel_middle = None
@@ -274,37 +303,10 @@ doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 potion_small = make(64, 32, 8, 8)
 potion_big = make(48, 32, 16, 16)
 
-item_piece_small = make(72, 32, 4, 4)
-item_piece_small_inverted = make(76, 32, 4, 4)
-item_piece_bigs = [make(i*16, 96, 16, 16) for i in range(0, 6)]
-item_entities = {}  # cubes -> sprite
-
-item_spear_big = make(208, 336, 16, 64)
-item_sword_big = make(224, 336, 16, 48)
-item_whip_big = make(224, 384, 32, 32)
-item_shield_alt_big = make(240, 336, 32, 32)
-item_shield_big = make(256, 384, 32, 32)
-item_wand_big = make(272, 336, 16, 48)
-item_dagger_big = make(288, 384, 16, 32)
-item_axe_big = make(288, 336, 32, 48)
-item_bow_big = make(320, 336, 16, 48)
-
-item_spear_small = make(336, 336, 5, 16)
-item_sword_small = make(341, 336, 5, 16)
-item_dagger_small = make(346, 336, 5, 16)
-item_shield_alt_small = make(351, 336, 7, 16)
-item_shield_small = make(361, 336, 7, 16)
-item_axe_small = make(368, 336, 7, 16)
-item_bow_small = make(379, 336, 5, 16)
-item_whip_small = make(384, 336, 8, 16)
-item_wand_small = make(395, 336, 5, 16)
-
-item_misc_small = make(400, 336, 5, 16)
-
 
 def get_item_entity_sprite(cubes):
-    if cubes in item_entities:
-        return item_entities[cubes]
+    if cubes in Items.item_entities:
+        return Items.item_entities[cubes]
     else:
         # this could break in so many ways, better to fail somewhat gracefully
         print("ERROR: Failed to get entity sprite for item: {}".format(cubes))
@@ -533,6 +535,36 @@ def build_cine_sheet(start_pos, raw_cine_img, sheet):
     cs.frog_body = cs.convert([(4, 2), (5, 2)], start_pos)
 
 
+def build_items_sheet(start_pos, raw_item_img, sheet):
+    sheet.blit(raw_item_img, start_pos)
+    Items.piece_small = make(96, 80, 4, 4, shift=start_pos)
+    Items.piece_small_inverted = make(100, 80, 4, 4, shift=start_pos)
+    Items.piece_bigs = [make(112 + i * 16, 80, 16, 16, shift=start_pos) for i in range(0, 6)]
+    Items.item_entities = {}  # cubes -> sprite
+
+    Items.spear_big = make(208, 0, 16, 64, shift=start_pos)
+    Items.sword_big = make(224-208, 0, 16, 48, shift=start_pos)
+    Items.whip_big = make(224-208, 384-336, 32, 32, shift=start_pos)
+    Items.shield_alt_big = make(240-208, 0, 32, 32, shift=start_pos)
+    Items.shield_big = make(256-208, 384-336, 32, 32, shift=start_pos)
+    Items.wand_big = make(272-208, 0, 16, 48, shift=start_pos)
+    Items.dagger_big = make(288-208, 384-336, 16, 32, shift=start_pos)
+    Items.axe_big = make(288-208, 0, 32, 48, shift=start_pos)
+    Items.bow_big = make(320-208, 0, 16, 48, shift=start_pos)
+
+    Items.spear_small = make(336-208, 0, 5, 16, shift=start_pos)
+    Items.sword_small = make(341-208, 0, 5, 16, shift=start_pos)
+    Items.dagger_small = make(346-208, 0, 5, 16, shift=start_pos)
+    Items.shield_alt_small = make(351-208, 0, 7, 16, shift=start_pos)
+    Items.shield_small = make(361-208, 0, 7, 16, shift=start_pos)
+    Items.axe_small = make(368-208, 0, 7, 16, shift=start_pos)
+    Items.bow_small = make(379-208, 0, 5, 16, shift=start_pos)
+    Items.whip_small = make(384-208, 0, 8, 16, shift=start_pos)
+    Items.wand_small = make(395-208, 0, 5, 16, shift=start_pos)
+
+    Items.misc_small = make(400-208, 336-336, 5, 16, shift=start_pos)
+
+
 def build_ui_sheet(start_pos, raw_ui_img, sheet):
     sheet.blit(raw_ui_img, start_pos)
 
@@ -612,7 +644,7 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
     print("Font._alphabet = {}".format(Font._alphabet))
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img, raw_font_img):
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_tree_img, raw_boss_img, raw_font_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -621,6 +653,8 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
         |             |-----------------*
         |-------------| ui.png          |
         | gen'd stuff |                 |
+        |             *-----------------*
+        |             | items.png       |
         |             *-----------------*
         |             | trees.png       |
         |             *-----------------*
@@ -631,7 +665,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
 
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_tree_img, raw_boss_img, raw_font_img]
+    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_tree_img, raw_boss_img, raw_font_img]
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
     sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
@@ -650,6 +684,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
     print("building ui sheet...")
     build_ui_sheet((_x, _y), raw_ui_img, sheet)
     _y += raw_ui_img.get_height()
+
+    print("building items sheet...")
+    build_items_sheet((_x, _y), raw_items_img, sheet)
+    _y += raw_items_img.get_height()
 
     print("building tree sheet...")
     build_tree_sheet((_x, _y), raw_tree_img, sheet)
@@ -729,30 +767,16 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_tree_img, raw_bos
     for item in all_cube_configs:
         w = 1
         h = 1
-        if len(item) == 4:
-            for c in item:
-                # outline
-                pygame.draw.rect(sheet, (0, 0, 0), [draw_x + c[0]*3, draw_y + c[1]*3, 6, 6], 0)
-            for c in item:
-                dest = (draw_x + c[0] * 3 + 1, draw_y + c[1] * 3 + 1)
-                piece_rect = item_piece_small_inverted.rect()
-                sheet.blit(raw_image, dest, piece_rect)
 
-                w = max(c[0] + 1, w)
-                h = max(c[1] + 1, h)
+        for c in item:
+            dest = (draw_x + c[0]*4, draw_y + c[1]*4)
+            piece_rect = Items.piece_small.rect()
+            sheet.blit(sheet, dest, piece_rect)
 
-            item_entities[item] = make(draw_x, draw_y, w * 3 + 3, h * 3 + 3)
+            w = max(c[0] + 1, w)
+            h = max(c[1] + 1, h)
 
-        else:
-            for c in item:
-                dest = (draw_x + c[0]*4, draw_y + c[1]*4)
-                piece_rect = item_piece_small.rect()
-                sheet.blit(raw_image, dest, piece_rect)
-
-                w = max(c[0] + 1, w)
-                h = max(c[1] + 1, h)
-
-            item_entities[item] = make(draw_x, draw_y, w * 4, h * 4)
+        Items.item_entities[item] = make(draw_x, draw_y, w * 4, h * 4)
 
         draw_x += 20
         if draw_x > left_size[0] - 20:
@@ -846,10 +870,11 @@ if __name__ == "__main__":
     raw = pygame.image.load("assets/image.png")
     raw2 = pygame.image.load("assets/cinematics.png")
     raw3 = pygame.image.load("assets/ui.png")
-    raw4 = pygame.image.load("assets/trees.png")
-    raw5 = pygame.image.load("assets/bosses.png")
-    raw6 = pygame.image.load("assets/font.png")
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6)
+    raw4 = pygame.image.load("assets/items.png")
+    raw5 = pygame.image.load("assets/trees.png")
+    raw6 = pygame.image.load("assets/bosses.png")
+    raw7 = pygame.image.load("assets/font.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7)
     print("created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

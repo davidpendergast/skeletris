@@ -23,7 +23,7 @@ class ItemGridImage:
         self._build_images()
         
     def _build_images(self):
-        cellsize = spriteref.item_piece_bigs[0].size()
+        cellsize = spriteref.Items.piece_bigs[0].size()
         for item in self.grid.all_items():
             pos = self.grid.get_pos(item)
             x_pos = self.x + pos[0] * cellsize[0] * self.scale
@@ -702,7 +702,7 @@ class ItemImage:
             for cube in self.item.cubes:
                 # pretty special-casey but.. it's fine
                 art = 0 if cube not in self.item.cube_art else self.item.cube_art[cube]
-                sprite = spriteref.item_piece_bigs[art]
+                sprite = spriteref.Items.piece_bigs[art]
                 xpos = self.x + sprite.width()*self.scale*cube[0]
                 ypos = self.y + sprite.height()*self.scale*cube[1]
                 img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color)
@@ -719,7 +719,7 @@ class ItemImage:
     @staticmethod
     def calc_size(item, scale):
         if isinstance(item, item_module.StatCubesItem):
-            sprite = spriteref.item_piece_bigs[0]
+            sprite = spriteref.Items.piece_bigs[0]
             return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
         elif isinstance(item, item_module.SpriteItem):
             sprite = item.big_sprite()
