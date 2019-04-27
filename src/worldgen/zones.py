@@ -404,7 +404,9 @@ class DesolateCaveZone(Zone):
         bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
         bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
         bp.chest_spawns.append((spawn[0] - 1, spawn[1]))
-        bp.chest_spawns.append((spawn[0], spawn[1] - 1))
+        bp.chest_spawns.append((spawn[0] - 1, spawn[1] - 1))
+        bp.chest_spawns.append((spawn[0] + 1, spawn[1]))
+        bp.chest_spawns.append((spawn[0], spawn[1] + 1))
         w = bp.build_world()
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
@@ -463,7 +465,7 @@ class DesolateCaveZone(Zone):
 
         wasd_message_pos = bp.player_spawn
         wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
-        w.add(wasd_message_box)
+        # w.add(wasd_message_box)
 
         return w
 

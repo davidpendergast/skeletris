@@ -58,6 +58,14 @@ class Entity(Updateable):
     def is_visible(self):
         return self._visible
 
+    def is_visible_in_world(self, world):
+        grid_xy = world.to_grid_coords(*self.center())
+        is_hidden = not self.is_visible() or world.get_hidden(grid_xy[0], grid_xy[1])
+        if not is_hidden and not self.visible_in_darkness():
+            light_level = world.get_lighting(grid_xy[0], grid_xy[1])
+            is_hidden = (light_level == 0)
+        return not is_hidden
+
     def visible_in_darkness(self):
         return True
 
@@ -505,6 +513,12 @@ class ActorEntity(Entity):
     def get_light_level(self):
         return self.actor_state.light_level()
 
+    def get_held_item(self):
+        return self.actor_state.held_item
+
+    def is_moving(self):
+        return Utils.mag(self.get_vel()) >= 0.05
+
     def visible_in_darkness(self):
         return False
 
@@ -518,10 +532,10 @@ class ActorEntity(Entity):
     def get_controller(self):
         return self.actor_controller
 
-    def choose_next_action(self, world, input_state):
+    def choose_next_action(self, world, input_state, and_finalize=False):
         next_action = self.get_controller().get_next_action(self, world, input_state)
         if next_action.is_possible(world):
-            dur_modifier = self.get_actor_state().turn_duration_modifier()
+            dur_modifier = 0 if and_finalize else self.get_actor_state().turn_duration_modifier()
             dur = Utils.bound(int(next_action.get_duration() * dur_modifier), 1, None)
             self.set_action(next_action, dur)
             return next_action
@@ -601,7 +615,8 @@ class ActorEntity(Entity):
 
     def get_sprite(self):
         tick = gs.get_instance().anim_tick
-        return self.idle_sprites[(tick // 4) % len(self.idle_sprites)]
+        anim_rate = 2 if self.is_moving() else 4
+        return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
 
     def set_facing_right(self, facing_right):
         self.facing_right = facing_right
@@ -654,24 +669,55 @@ class Player(ActorEntity):
 
         self.special_action_sprite = None  # TODO - this is dumb, actorstate should hold sprite info
 
+        self._held_item_img = None
+
     def set_special_action_sprite(self, sprite):
         self.special_action_sprite = sprite
 
     def get_sprite(self):
         if self.is_performing_action() and self.special_action_sprite is not None:
             return self.special_action_sprite
-        elif Utils.mag(self.get_vel()) < 0.05:
-            return ActorEntity.get_sprite(self)
         else:
             anim_tick = gs.get_instance().anim_tick
-            walking = spriteref.player_move_all
-            return walking[(anim_tick // 2) % len(walking)]
+            anim_rate = 2 if self.is_moving() else 4
+            holding_item = self.get_held_item() is not None
+            player_sprites = spriteref.get_player_sprites(self.is_moving(), holding_item)
+
+            return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+
+    def update_held_item_image(self, render_engine):
+        held_item = self.get_held_item()
+        scale = 2
+        if self._held_item_img is not None and held_item is None:
+            render_engine.remove(self._held_item_img)
+            self._held_item_img = None
+        elif held_item is not None and self._held_item_img is None:
+            self._held_item_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=scale)
+
+        if self._held_item_img is not None:
+            xy_perturb = self.get_perturbed_xy()
+            x_center = self.center()[0] + xy_perturb[0]
+            y_center = self.center()[1] + xy_perturb[1]
+
+            draw_x = x_center - int(self._held_item_img.width() / 2) - scale * (1 if self.is_facing_right() else -1)
+
+            if not self.is_moving():
+                bobs = (0, 1)
+                bob_offset = scale * bobs[(gs.get_instance().anim_tick // 4) % 2]
+            else:
+                bobs = (0, 1, 2, 1)  # these numbers are solely dependant on how the sprites are drawn..
+                bob_offset = scale * bobs[(gs.get_instance().anim_tick // 2) % 4]
+
+            draw_y = y_center - 26 * 2 - self._held_item_img.height() + bob_offset
+            self._held_item_img = self._held_item_img.update(new_model=held_item.get_entity_sprite(),
+                                                             new_x=draw_x, new_y=draw_y, new_color=held_item.color)
 
     def visible_in_darkness(self):
         return True
             
     def update(self, world, input_state, render_engine):
         ActorEntity.update(self, world, input_state, render_engine)
+        self.update_held_item_image(render_engine)
         
     def is_player(self):
         return True
@@ -683,6 +729,12 @@ class Player(ActorEntity):
     def valid_to_stand_on(self, world, x, y):
         return (Entity.valid_to_stand_on(self, world, x, y) and
                 not world.get_hidden_at(x, y))
+
+    def all_bundles(self, extras=[]):
+        for b in super().all_bundles(extras=extras):
+            yield b
+        if self._held_item_img is not None:
+            yield self._held_item_img
  
  
 class Enemy(ActorEntity):

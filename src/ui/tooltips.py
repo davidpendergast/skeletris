@@ -11,7 +11,7 @@ class TooltipFactory:
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
-        if isinstance(obj, item.StatCubesItem):
+        if isinstance(obj, item.Item):
             return ItemInfoTooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, EnemyState):
             return EnemyInfoTooltip(obj, xy=xy, layer=layer)
@@ -141,7 +141,7 @@ class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
     def __init__(self, item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         self.item = item
-        TitleImageAndStatsTooltip.__init__(self, item.name, item.level, item.all_stats(),
+        TitleImageAndStatsTooltip.__init__(self, item.name, 1, item.all_stats(),
                                            title_color=item.get_title_color(), xy=xy, layer=layer)
 
     def get_target(self):

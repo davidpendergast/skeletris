@@ -971,14 +971,15 @@ class InGameUiState(Menu):
 
         if self.top_right_info_panel is None and obj_to_display is not None:
             new_panel = TooltipFactory.build_tooltip(obj_to_display, layer=spriteref.UI_0_LAYER)
-            w = new_panel.get_rect()[2]
+            w = new_panel.get_rect()[2] if new_panel is not None else 0
             xy = (gs.get_instance().screen_size[0] - w - 16, 16)
 
             # XXX building it twice because we don't know how wide it will be beforehand...
             new_panel = TooltipFactory.build_tooltip(obj_to_display, xy=xy, layer=spriteref.UI_0_LAYER)
             self.top_right_info_panel = new_panel
-            for bun in self.top_right_info_panel.all_bundles():
-                render_eng.update(bun)
+            if self.top_right_info_panel is not None:
+                for bun in self.top_right_info_panel.all_bundles():
+                    render_eng.update(bun)
 
     def _update_tooltip(self, world, input_state, render_eng):
         needs_update = False

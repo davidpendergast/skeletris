@@ -164,6 +164,20 @@ player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 player_idle_arms_up_all = [make(160, 0, 16, 32), make(176, 0, 16, 32)]
 player_move_arms_up_all = [make(192 + 16*i, 0, 16, 32) for i in range(0, 4)]
 
+
+def get_player_sprites(moving, holding_item):
+    if moving:
+        if holding_item:
+            return player_move_arms_up_all
+        else:
+            return player_move_all
+    else:
+        if holding_item:
+            return player_idle_arms_up_all
+        else:
+            return player_idle_all
+
+
 player_death_seq = [make(112 + 32*i, 208, 32, 32) for i in range(0, 5)]
 
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
@@ -269,7 +283,7 @@ item_spear_big = make(208, 336, 16, 64)
 item_sword_big = make(224, 336, 16, 48)
 item_whip_big = make(224, 384, 32, 32)
 item_shield_alt_big = make(240, 336, 32, 32)
-item_shield_big = make(256, 284, 32, 32)
+item_shield_big = make(256, 384, 32, 32)
 item_wand_big = make(272, 336, 16, 48)
 item_dagger_big = make(288, 384, 16, 32)
 item_axe_big = make(288, 336, 32, 48)

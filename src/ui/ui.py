@@ -692,29 +692,38 @@ class ItemImage:
         self.y = y
         self.item = item
         self.scale = scale
-        self._cube_images = []
+        self._bundles = []
         self.layer = layer
 
         self._build_images()
 
     def _build_images(self):
-        for cube in self.item.cubes:
-            art = 0 if cube not in self.item.cube_art else self.item.cube_art[cube]
-            sprite = spriteref.item_piece_bigs[art]
-            xpos = self.x + sprite.width()*self.scale*cube[0]
-            ypos = self.y + sprite.height()*self.scale*cube[1]
-            img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color)
-            self._cube_images.append(img)
+        if isinstance(self.item, item_module.StatCubesItem):
+            for cube in self.item.cubes:
+                # pretty special-casey but.. it's fine
+                art = 0 if cube not in self.item.cube_art else self.item.cube_art[cube]
+                sprite = spriteref.item_piece_bigs[art]
+                xpos = self.x + sprite.width()*self.scale*cube[0]
+                ypos = self.y + sprite.height()*self.scale*cube[1]
+                img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color)
+                self._bundles.append(img)
+        elif isinstance(self.item, item_module.SpriteItem):
+            sprite = self.item.big_sprite()
+            img = ImageBundle(sprite, self.x, self.y, layer=self.layer, scale=self.scale, color=self.item.color)
+            self._bundles.append(img)
 
     def all_bundles(self):
-        for b in self._cube_images:
+        for b in self._bundles:
             yield b
 
     @staticmethod
     def calc_size(item, scale):
-        sprite = spriteref.item_piece_bigs[0]
-        return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
-
+        if isinstance(item, item_module.StatCubesItem):
+            sprite = spriteref.item_piece_bigs[0]
+            return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
+        elif isinstance(item, item_module.SpriteItem):
+            sprite = item.big_sprite()
+            return (scale*sprite.width(), scale*sprite.height())
 
 class CinematicPanel:
 

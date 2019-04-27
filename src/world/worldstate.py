@@ -155,15 +155,9 @@ class World:
 
     def visible_entities(self, cam_center):
         for e in self.all_entities(onscreen=True):
-            e_center = e.center()
             on_camera = Utils.dist(e.center(), cam_center) <= 800
-            is_hidden = not e.is_visible() or self.get_hidden(*self.to_grid_coords(*e_center))
 
-            if not is_hidden and not e.visible_in_darkness():
-                light_level = self.get_lighting(*self.to_grid_coords(*e_center))
-                is_hidden = (light_level == 0)
-
-            if on_camera and not is_hidden:
+            if on_camera and e.is_visible_in_world(self):
                 yield e
 
     def set_wall_type(self, wall_id, xy=None):
@@ -404,7 +398,6 @@ class World:
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
 
-        # TODO - probably want to speed up actors in darkness
         if not an_actor_is_acting:
             # process the actors that have waited longest first
             actors_to_process.sort(key=lambda a: a.get_actor_state().last_turn_tick())
@@ -415,7 +408,8 @@ class World:
                     a_state.set_energy(a_state.energy() + 1)
                     a_state.update_last_turn_tick()
                 else:
-                    actor.choose_next_action(self, input_state)
+                    not_visible = not actor.is_visible_in_world(self)
+                    actor.choose_next_action(self, input_state, and_finalize=not_visible)
                     break
 
         new_lighting = self.get_light_sources(onscreen=False)

@@ -356,6 +356,24 @@ class ItemFactory:
         elif item_type == ItemType.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             return WeaponItem("Whip of Fury", cubes, {}, spriteref.item_whip_big, spriteref.item_whip_small)
+        elif item_type == ItemType.DAGGER_WEAPON:
+            cubes = [(0, 0), (0, 1)]
+            return WeaponItem("Dagger of Fear", cubes, {}, spriteref.item_dagger_big, spriteref.item_dagger_small)
+        elif item_type == ItemType.SHIELD_WEAPON:
+            cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
+            return WeaponItem("Shield of Protection", cubes, {}, spriteref.item_shield_big, spriteref.item_shield_small)
+        elif item_type == ItemType.SPEAR_WEAPON:
+            cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
+            return WeaponItem("Spear of Justice", cubes, {}, spriteref.item_spear_big, spriteref.item_spear_small)
+        elif item_type == ItemType.WAND_WEAPON:
+            cubes = [(0, 0), (0, 1), (0, 2)]
+            return WeaponItem("Wand of Mystery", cubes, {}, spriteref.item_wand_big, spriteref.item_wand_small)
+        elif item_type == ItemType.BOW_WEAPON:
+            cubes = [(0, 0), (0, 1), (0, 2)]
+            return WeaponItem("Bow of Speed", cubes, {}, spriteref.item_bow_big, spriteref.item_bow_small)
+        elif item_type == ItemType.AXE_WEAPON:
+            cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
+            return WeaponItem("Axe of Striking", cubes, {}, spriteref.item_axe_big, spriteref.item_axe_small)
 
         return None
 
