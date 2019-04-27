@@ -794,6 +794,9 @@ class ChestEntity(Entity):
 
     def visible_in_darkness(self):
         return False
+
+    def get_depth(self):
+        return super().get_depth() + 1  # XXX need these to lose ties, basically
         
     def update_images(self, anim_tick):
         if self.is_open():
@@ -806,7 +809,7 @@ class ChestEntity(Entity):
         if self._img is None:
             self._img = img.ImageBundle(spriteref.chest_closed, 0, 0, layer=spriteref.ENTITY_LAYER)
 
-        x = self.x() - (model.width() * self._img.scale() - self.w())
+        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
@@ -815,7 +818,7 @@ class ChestEntity(Entity):
         sh_x = self._shadow.x()
         sh_y = self._shadow.y()
         sh_s = self._shadow.scale()
-        self._shadow = self._shadow.update(new_x=(sh_x + 7*sh_s), new_y=(sh_y - 2*sh_s))
+        self._shadow = self._shadow.update(new_x=(sh_x + 9*sh_s), new_y=(sh_y - 2*sh_s))
 
     def is_open(self):
         return self.current_cooldown <= 0
