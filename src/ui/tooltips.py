@@ -12,11 +12,10 @@ class TooltipFactory:
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, item.Item):
-            # return ItemInfoTooltip(obj, xy=xy, layer=layer)
             target_item = obj
             text = [
                 str(target_item.name),
-                "level {} ".format(target_item.get_level()) + str(target_item.get_type())
+                "Level {} ".format(target_item.get_level()) + str(target_item.get_type().get_name())
             ]
             for stat in target_item.all_stats():
                 text.append(str(stat))

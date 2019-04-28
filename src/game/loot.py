@@ -1,6 +1,6 @@
 import random
 
-from src.items.item import ItemFactory, ItemType
+from src.items.item import ItemFactory, ItemType, ItemTypes
 from src.game.droprates import EnemyDroprate, ChestDroprate
 
 
@@ -19,7 +19,7 @@ class LootFactory:
 
         loot = []
         while len(loot) < n_items:
-            item_type = random.choice([e for e in ItemType])
+            item_type = random.choice([e for e in ItemTypes.all_types()])
             item = ItemFactory.gen_item(level, item_type)
             if item is not None:
                 loot.append(item)

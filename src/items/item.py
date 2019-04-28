@@ -114,6 +114,60 @@ class ItemStat:
         return ItemStat(stat_type, value)
 
 
+class ItemTags(Enum):
+    EQUIPMENT = "Equipment"
+    WEAPON = "Weapon"
+    CONSUMABLE = "Consumable"
+    STORY = "Story"
+
+
+class ItemType:
+
+    def __init__(self, name, tags):
+        self.name = name
+        self.tags = tags
+
+    def get_name(self):
+        return self.name
+
+    def get_tags(self):
+        return self.tags
+
+    def has_tag(self, tag):
+        return tag in self.tags
+
+
+_ALL_TYPES = []
+
+
+def _new_type(name, tags):
+    res = ItemType(name, tags)
+    _ALL_TYPES.append(res)
+    return res
+
+
+class ItemTypes:
+
+    @staticmethod
+    def all_types():
+        return list(_ALL_TYPES)
+
+    STAT_CUBE_5 = _new_type("Small Trinket", (ItemTags.EQUIPMENT))
+    STAT_CUBE_6 = _new_type("Medium Relic", (ItemTags.EQUIPMENT))
+    STAT_CUBE_7 = _new_type("Large Artifact", (ItemTags.EQUIPMENT)),
+
+    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+
+    POTION = _new_type("Potion", (ItemTags.CONSUMABLE))
+
+
 class Item:
 
     def __init__(self, name, item_type, level, cubes, stats, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
@@ -226,11 +280,11 @@ class StatCubesItem(Item):
             uuid_str: str
         """
         if len(cubes) <= 5:
-            item_type = ItemType.STAT_CUBE_5
+            item_type = ItemTypes.STAT_CUBE_5
         elif len(cubes) == 6:
-            item_type = ItemType.STAT_CUBE_6
+            item_type = ItemTypes.STAT_CUBE_6
         else:
-            item_type = ItemType.STAT_CUBE_7
+            item_type = ItemTypes.STAT_CUBE_7
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
                       can_rotate=True, title_color=(1, 1, 1))
@@ -343,57 +397,41 @@ class StatCubesItem(Item):
         return hash(self.uuid)
 
 
-class ItemType(Enum):
-
-    STAT_CUBE_5 = "STAT_CUBE_5",
-    STAT_CUBE_6 = "STAT_CUBE_6",
-    STAT_CUBE_7 = "STAT_CUBE_7",
-
-    SWORD_WEAPON = "SWORD_WEAPON",
-    SHIELD_WEAPON = "SHIELD_WEAPON",
-    SPEAR_WEAPON = "SPEAR_WEAPON",
-    WHIP_WEAPON = "WHIP_WEAPON",
-    DAGGER_WEAPON = "DAGGER_WEAPON",
-    AXE_WEAPON = "AXE_WEAPON",
-    BOW_WEAPON = "BOW_WEAPON",
-    WAND_WEAPON = "WAND_WEAPON",
-
-
 class ItemFactory:
 
     @staticmethod
     def gen_item(level, item_type):
-        if item_type == ItemType.STAT_CUBE_5:
+        if item_type == ItemTypes.STAT_CUBE_5:
             return StatCubesItemFactory.gen_item(level, n_cubes=5)
-        elif item_type == ItemType.STAT_CUBE_6:
+        elif item_type == ItemTypes.STAT_CUBE_6:
             return StatCubesItemFactory.gen_item(level, n_cubes=6)
-        elif item_type == ItemType.STAT_CUBE_7:
+        elif item_type == ItemTypes.STAT_CUBE_7:
             return StatCubesItemFactory.gen_item(level, n_cubes=7)
 
-        elif item_type == ItemType.SWORD_WEAPON:
+        elif item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Sword of Truth", item_type, level, cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big)
-        elif item_type == ItemType.WHIP_WEAPON:
+            return SpriteItem("Light of Truth", item_type, level, cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big)
+        elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return SpriteItem("Whip of Fury", item_type, level, cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big)
-        elif item_type == ItemType.DAGGER_WEAPON:
+            return SpriteItem("Pain Rope", item_type, level, cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big)
+        elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
-            return SpriteItem("Dagger of Fear", item_type, level, cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big)
-        elif item_type == ItemType.SHIELD_WEAPON:
+            return SpriteItem("Quick Iron", item_type, level, cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big)
+        elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return SpriteItem("Shield of Protection", item_type, level, cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big)
-        elif item_type == ItemType.SPEAR_WEAPON:
+            return SpriteItem("Fortress of Mending", item_type, level, cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big)
+        elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
-            return SpriteItem("Spear of Justice", item_type, level, cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big)
-        elif item_type == ItemType.WAND_WEAPON:
+            return SpriteItem("Justice Beacon", item_type, level, cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big)
+        elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Wand of Mystery", item_type, level, cubes, {}, spriteref.Items.wand_small, spriteref.Items.wand_big)
-        elif item_type == ItemType.BOW_WEAPON:
+            return SpriteItem("Stick of Mystery", item_type, level, cubes, {}, spriteref.Items.wand_small, spriteref.Items.wand_big)
+        elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             return SpriteItem("Bow of Speed", item_type, level, cubes, {}, spriteref.Items.bow_small, spriteref.Items.bow_big)
-        elif item_type == ItemType.AXE_WEAPON:
+        elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
-            return SpriteItem("Axe of Striking", item_type, level, cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big)
+            return SpriteItem("Hatchet of Striking", item_type, level, cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big)
 
         return None
 
