@@ -749,17 +749,21 @@ class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites):
         ActorEntity.__init__(self, sprites, state, EnemyController())
+        self.set_x(x)
+        self.set_y(y)
         self.state = state
         self.sprites = sprites
         self._healthbar_img = None
 
-    def _update_healthbar_img(self, render_engine):
+    def _update_healthbar_img(self, world, render_engine):
         health_ratio = Utils.bound(self.get_actor_state().hp() / self.get_actor_state().max_hp(), 0.0, 1.0)
-        if health_ratio < 1.0 and self._healthbar_img is None:
+        should_display = health_ratio < 1.0 and self.is_visible_in_world(world)
+
+        if should_display and self._healthbar_img is None:
             self._healthbar_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         if self._healthbar_img is not None:
-            if health_ratio < 1.0:
+            if should_display:
                 n = len(spriteref.progress_spinner)
                 y = self.y() - self.get_sprite().height()
                 hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
@@ -768,7 +772,6 @@ class Enemy(ActorEntity):
                 self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
                                                                  new_depth=self.center()[1], new_color=(1.0, 0.25, 0.25))
             else:
-                # we're fully healed now, so remove the healthbar
                 render_engine.remove(self._healthbar_img)
                 self._healthbar_img = None
 
@@ -782,7 +785,7 @@ class Enemy(ActorEntity):
     def update(self, world, input_state, render_engine):
         ActorEntity.update(self, world, input_state, render_engine)
 
-        self._update_healthbar_img(render_engine)
+        self._update_healthbar_img(world, render_engine)
         
     def is_enemy(self):
         return True
