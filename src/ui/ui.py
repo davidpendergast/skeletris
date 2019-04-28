@@ -65,7 +65,6 @@ class InventoryPanel:
         self.def_text = None
         self.vit_text = None
         self.hp_text = None
-        self.dps_text = None 
         
         self.equip_img = None
         self.inv_img = None
@@ -112,10 +111,6 @@ class InventoryPanel:
                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
         
-        dps_str = "DPS:{}".format(round(self.player_state.stat_value(ActorStatType.DPS)))
-        self.dps_text = TextImage(*s_xy, dps_str, self.layer, scale=text_sc,
-                color=item_module.STAT_COLORS[None])
-        
         e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
         self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
         
@@ -138,8 +133,6 @@ class InventoryPanel:
         for bun in self.vit_text.all_bundles():
             yield bun
         for bun in self.hp_text.all_bundles():
-            yield bun
-        for bun in self.dps_text.all_bundles():
             yield bun
         for bun in self.equip_img.all_bundles():
             yield bun 

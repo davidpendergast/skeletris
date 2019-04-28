@@ -187,9 +187,6 @@ class ActorState(Pushable):
             base = self._base_values[stat_type]
             return base * (1 + self.stat_value(StatType.MOVEMENT_SPEED) / 100)
 
-        elif stat_type is ActorStatType.DPS:
-            return self.attack_state.get_dps(self)
-
     def stat_value(self, stat_type):
         return 0
 

@@ -10,7 +10,6 @@ class ActorStatType(str, Enum):
     MAX_ENERGY = "MAX_ENERGY",
     LIGHT_RADIUS = "LIGHT_RADIUS",
 
-    DPS = "DPS",                      # TODO delete
     MOVESPEED = "MOVE_SPEED",         # TODO delete
     ATTACK_RADIUS = "ATTACK_RADIUS",  # TODO delete
 

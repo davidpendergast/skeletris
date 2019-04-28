@@ -133,15 +133,6 @@ class AttackState:
     def delayed_attack_landed(self, pos, target_entity, attack):
         self._delayed_attacks_this_tick.append((pos, target_entity, attack))
 
-    def get_dps(self, stat_lookup):
-        if self.current_attack is None:
-            return 0.0
-
-        total_dur = self.get_delay_dur(stat_lookup) + self.get_attack_dur(stat_lookup)
-        total_dmg = self.get_dmg(stat_lookup)
-
-        return total_dmg / (total_dur / 60.0)
-
     def get_dmg(self, stat_lookup, attack=None):
         att = self.current_attack if attack is None else attack
         dmg = stat_lookup.stat_value(StatType.ATT)

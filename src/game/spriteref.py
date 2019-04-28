@@ -92,6 +92,8 @@ class UI:
     inv_panel_mid = None
     inv_panel_bot = None
 
+    tooltip_bg = None
+
     """
     0 1 2
     3 4 5
@@ -322,7 +324,7 @@ progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range
 
 _cached_text = set()
 _cached_text.update(["att:", "def:", "vit:", "miss", "dodge", "inventory",
-                     "lvl:", "room:", "kill:", "hp:", "dps:"])
+                     "lvl:", "room:", "kill:", "hp:"])
 for i in range(1, 10):
     _cached_text.add("+0.{}".format(i))
 for i in range(1, 100):
@@ -569,6 +571,8 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.potion_action = make(28, 252, 28, 28, shift=start_pos)
     UI.inspect_action = make(56, 252, 28, 28, shift=start_pos)
     UI.inventory_action = make(84, 252, 28, 28, shift=start_pos)
+
+    UI.tooltip_bg = make(48, 232, 2, 2, shift=start_pos)
 
     """
     0 1 2

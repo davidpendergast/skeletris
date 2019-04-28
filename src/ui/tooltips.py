@@ -12,7 +12,15 @@ class TooltipFactory:
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, item.Item):
-            return ItemInfoTooltip(obj, xy=xy, layer=layer)
+            # return ItemInfoTooltip(obj, xy=xy, layer=layer)
+            target_item = obj
+            text = [
+                str(target_item.name),
+                "level {} ".format(target_item.get_level()) + str(target_item.get_type())
+            ]
+            for stat in target_item.all_stats():
+                text.append(str(stat))
+            return TextOnlyTooltip(text, target=target_item, xy=xy, layer=layer)
         elif isinstance(obj, EnemyState):
             return EnemyInfoTooltip(obj, xy=xy, layer=layer)
         else:
@@ -21,9 +29,10 @@ class TooltipFactory:
 
 class Tooltip:
 
-    def __init__(self, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def __init__(self, xy=(0, 0), target=None, layer=spriteref.UI_TOOLTIP_LAYER):
         self.layer = layer
         self.xy = xy
+        self.target = target
 
     def all_bundles(self):
         return []
@@ -32,7 +41,7 @@ class Tooltip:
         """
             returns: object that this tooltip is 'for'
         """
-        return None
+        return self.target
 
     def get_rect(self):
         return [self.xy[0], self.xy[1], 0, 0]
@@ -182,3 +191,51 @@ class EnemyInfoTooltip(TitleImageAndStatsTooltip):
         x = rect[0] + rect[2] // 2 - sc * sprite.width() // 2
         y = rect[1] + rect[3] // 2 - sc * sprite.height() // 2
         return [bun.update(new_x=x, new_y=y, new_color=color, new_model=sprite)]
+
+
+class TextOnlyTooltip(Tooltip):
+
+    TEXT_SCALE = 1
+
+    def __init__(self, text_lines, target=None, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        Tooltip.__init__(self, xy=xy, target=target, layer=layer)
+        self.bg_sprite = spriteref.UI.tooltip_bg
+        self.text_lines = text_lines
+        self._rect = [xy[0], xy[1], 0, 0]
+
+        self._all_text_images = []
+        self._bg_image = None
+
+        self._build_images()
+
+    def get_rect(self):
+        return self._rect
+
+    def _build_images(self):
+        x = self.xy[0]
+        y = self.xy[1]
+
+        width = 0
+
+        for text in self.text_lines:
+            text_img = TextImage(x, y, text, self.layer, scale=TextOnlyTooltip.TEXT_SCALE)
+            y += text_img.size()[1]
+            width = max(width, text_img.size()[0])
+            self._all_text_images.append(text_img)
+
+        self._rect = [self.xy[0], self.xy[1], width, y - self.xy[1]]
+
+        if self._rect[2] > 0 and self._rect[3] > 0:
+            ratio = (int(0.5 + self._rect[2] / self.bg_sprite.width()),
+                     int(0.5 + self._rect[3] / self.bg_sprite.height()))
+            self._bg_image = ImageBundle(self.bg_sprite, self.xy[0], self.xy[1], layer=self.layer,
+                                         scale=1, ratio=ratio)
+
+    def all_bundles(self):
+        if self._bg_image is not None:
+            yield self._bg_image
+        for text_img in self._all_text_images:
+            for bun in text_img.all_bundles():
+                yield bun
+
+
