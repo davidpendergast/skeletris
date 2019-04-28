@@ -699,18 +699,26 @@ class Player(ActorEntity):
             x_center = self.center()[0] + xy_perturb[0]
             y_center = self.center()[1] + xy_perturb[1]
 
-            draw_x = x_center - int(self._held_item_img.width() / 2) - scale * (1 if self.is_facing_right() else -1)
+            item_sprite = held_item.get_entity_sprite()
+            sprite_rot = held_item.sprite_rotation()
+            sprite_w = item_sprite.width() if sprite_rot % 2 == 0 else item_sprite.height()
+            sprite_h = item_sprite.height() if sprite_rot % 2 == 0 else item_sprite.width()
+
+            draw_x = x_center - scale * (int(sprite_w / 2) + (1 if self.is_facing_right() else -1))
 
             if not self.is_moving():
                 bobs = (0, 1)
-                bob_offset = scale * bobs[(gs.get_instance().anim_tick // 4) % 2]
+                bob_offset = bobs[(gs.get_instance().anim_tick // 4) % 2]
             else:
                 bobs = (0, 1, 2, 1)  # these numbers are solely dependant on how the sprites are drawn..
-                bob_offset = scale * bobs[(gs.get_instance().anim_tick // 2) % 4]
+                bob_offset = bobs[(gs.get_instance().anim_tick // 2) % 4]
 
-            draw_y = y_center - 26 * 2 - self._held_item_img.height() + bob_offset
-            self._held_item_img = self._held_item_img.update(new_model=held_item.get_entity_sprite(),
-                                                             new_x=draw_x, new_y=draw_y, new_color=held_item.color)
+            draw_y = y_center - scale * (26 + sprite_h - bob_offset)
+            self._held_item_img = self._held_item_img.update(new_model=item_sprite,
+                                                             new_rotation=sprite_rot,
+                                                             new_x=draw_x, new_y=draw_y,
+                                                             new_color=held_item.color,
+                                                             new_scale=scale)
 
     def visible_in_darkness(self):
         return True
@@ -860,11 +868,14 @@ class PickupEntity(Entity):
         direction = Utils.set_length(direction, 1.0)
         return [speed * direction[0], speed * direction[1]]
 
-    def __init__(self, cx, cy, sprites, vel=None):
+    def __init__(self, cx, cy, sprites, sprite_rotation=0, vel=None):
         x = cx - 8
         y = cy - 8
         Entity.__init__(self, x, y, 16, 16)
         self.sprites = sprites
+        self.sprite_rotation = sprite_rotation
+        if self.sprite_rotation != 0:
+            print("PickupEntity sprite rot = {}".format(sprite_rotation))
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.95
         self.bounce_offset = int(random.random() * 100)
@@ -903,11 +914,16 @@ class PickupEntity(Entity):
         cur_sprite = self.get_sprite(anim_tick)
 
         offs = self.get_sprite_offset()
-        x = self.x() - (cur_sprite.width() * self._img.scale() - self.w()) // 2 + offs[0]
-        y = self.y() - (cur_sprite.height() * self._img.scale() - self.h()) + (2 - bounce) + offs[1]
+
+        spr_w = cur_sprite.width() if self.sprite_rotation % 2 == 0 else cur_sprite.height()
+        spr_h = cur_sprite.height() if self.sprite_rotation % 2 == 0 else cur_sprite.width()
+
+        x = self.x() - (spr_w * self._img.scale() - self.w()) // 2 + offs[0]
+        y = self.y() - (spr_h * self._img.scale() - self.h()) + (2 - bounce) + offs[1]
         depth = self.get_depth()
+
         self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),
-                                     new_model=cur_sprite, new_depth=depth)
+                                     new_model=cur_sprite, new_depth=depth, new_rotation=self.sprite_rotation)
 
         super().update_images(anim_tick)
 
@@ -967,7 +983,7 @@ class ItemEntity(PickupEntity):
     def __init__(self, item, cx, cy, vel=None):
         self.item = item
         sprite = item.get_entity_sprite()
-        PickupEntity.__init__(self, cx, cy, [sprite], vel=vel)
+        PickupEntity.__init__(self, cx, cy, [sprite], sprite_rotation=item.sprite_rotation(), vel=vel)
 
     def get_color(self):
         return self.get_item().color

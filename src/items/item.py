@@ -116,19 +116,20 @@ class ItemStat:
 
 class Item:
 
-    def __init__(self, name, cubes, stats, color, uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+    def __init__(self, name, cubes, stats, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
         self.name = name
         self.stats = tuple(stats)
         self.cubes = tuple(CubeUtils.clean_cubes(cubes))
         self.color = color
         self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
-        self.sprite_rotation = 0
         self._can_rotate = can_rotate
         self.title_color = title_color
-        self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
 
     def get_title_color(self):
         return self.title_color
+
+    def sprite_rotation(self):
+        return 0
 
     def can_equip(self):
         return False
@@ -137,7 +138,7 @@ class Item:
         return self._can_rotate
 
     def rotate(self):
-        return self  # TODO
+        return self
 
     def w(self):
         return max([c[0] for c in self.cubes]) + 1
@@ -166,10 +167,9 @@ class Item:
 
 class SpriteItem(Item):
 
-    def __init__(self, name, cubes, stats, color, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
-
-        Item.__init__(self, name, cubes, stats, color, uuid_str=uuid_str,
+    def __init__(self, name, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
+                 uuid_str=None, can_rotate=True, color=(1,1,1), title_color=(1, 1, 1)):
+        Item.__init__(self, name, cubes, stats, color=color, uuid_str=uuid_str,
                       can_rotate=can_rotate, title_color=title_color)
         self._small_sprite = small_sprite
         self._big_sprite = big_sprite
@@ -181,18 +181,26 @@ class SpriteItem(Item):
     def get_entity_sprite(self):
         return self._small_sprite
 
+    def sprite_rotation(self):
+        return self._sprite_rotation
+
     def get_big_img(self, scale, layer_id, input_img=None):
         if input_img is None:
             input_img = img.ImageBundle.new_bundle(layer_id, scale=scale)
         input_img.update(new_model=self.big_sprite())
         return input_img
 
+    def rotate(self):
+        if not self.can_rotate():
+            return self
+        else:
+            new_cubes = CubeUtils.rotate_cubes(self.cubes)
+            new_rotation = (self.sprite_rotation() + 1) % 4
+            print("rotating {} to {}".format(self, new_rotation))
 
-class WeaponItem(SpriteItem):
-
-    def __init__(self, name, cubes, stats, big_sprite, small_sprite, uuid_str=None):
-        SpriteItem.__init__(self, name, cubes, stats, (1, 1, 1), small_sprite, big_sprite, uuid_str=uuid_str,
-                            can_rotate=True, title_color=(1, 1, 1))
+            return SpriteItem(self.name, new_cubes, self.stats, self._small_sprite,
+                              self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
+                              can_rotate=self._can_rotate, title_color=self.title_color)
 
 
 class StatCubesItem(Item):
@@ -207,7 +215,7 @@ class StatCubesItem(Item):
             cube_art: dict of (x, y) -> int: art_id
             uuid_str: str
         """
-        Item.__init__(self, name, cubes, stats, color, uuid_str=uuid_str, can_rotate=True, title_color=(1, 1, 1))
+        Item.__init__(self, name, cubes, stats, color=color, uuid_str=uuid_str, can_rotate=True, title_color=(1, 1, 1))
         self.level = level
         self.cubes = tuple(CubeUtils.clean_cubes(cubes))
         self.cube_art = {} if cube_art is None else cube_art
@@ -219,11 +227,7 @@ class StatCubesItem(Item):
         return True
 
     def rotate(self):
-        new_cubes = []
-        for cube in self.cubes:
-            new_cubes.append((5 - cube[1], cube[0]))
-        new_cubes = CubeUtils.clean_cubes(new_cubes)
-
+        new_cubes = CubeUtils.rotate_cubes(self.cubes)
         return StatCubesItem(self.name, self.level, self.stats,
                              new_cubes, self.color, cube_art=self.cube_art, uuid_str=self.uuid)
         
@@ -352,28 +356,28 @@ class ItemFactory:
 
         elif item_type == ItemType.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return WeaponItem("Sword of Truth", cubes, {}, spriteref.Items.sword_big, spriteref.Items.sword_small)
+            return SpriteItem("Sword of Truth", cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big)
         elif item_type == ItemType.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return WeaponItem("Whip of Fury", cubes, {}, spriteref.Items.whip_big, spriteref.Items.whip_small)
+            return SpriteItem("Whip of Fury", cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big)
         elif item_type == ItemType.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
-            return WeaponItem("Dagger of Fear", cubes, {}, spriteref.Items.dagger_big, spriteref.Items.dagger_small)
+            return SpriteItem("Dagger of Fear", cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big)
         elif item_type == ItemType.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return WeaponItem("Shield of Protection", cubes, {}, spriteref.Items.shield_big, spriteref.Items.shield_small)
+            return SpriteItem("Shield of Protection", cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big)
         elif item_type == ItemType.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
-            return WeaponItem("Spear of Justice", cubes, {}, spriteref.Items.spear_big, spriteref.Items.spear_small)
+            return SpriteItem("Spear of Justice", cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big)
         elif item_type == ItemType.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return WeaponItem("Wand of Mystery", cubes, {}, spriteref.Items.wand_big, spriteref.Items.wand_small)
+            return SpriteItem("Wand of Mystery", cubes, {}, spriteref.Items.wand_small, spriteref.Items.wand_big)
         elif item_type == ItemType.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return WeaponItem("Bow of Speed", cubes, {}, spriteref.Items.bow_big, spriteref.Items.bow_small)
+            return SpriteItem("Bow of Speed", cubes, {}, spriteref.Items.bow_small, spriteref.Items.bow_big)
         elif item_type == ItemType.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
-            return WeaponItem("Axe of Striking", cubes, {}, spriteref.Items.axe_big, spriteref.Items.axe_small)
+            return SpriteItem("Axe of Striking", cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big)
 
         return None
 

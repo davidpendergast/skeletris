@@ -541,16 +541,16 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.bow_big = make(112, 0, 16, 48, shift=start_pos)
 
     Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
-    Items.sword_small = make(133, 0, 5, 16, shift=start_pos)
-    Items.dagger_small = make(138, 0, 5, 16, shift=start_pos)
-    Items.shield_alt_small = make(143, 0, 7, 16, shift=start_pos)
-    Items.shield_small = make(153, 0, 7, 16, shift=start_pos)
-    Items.axe_small = make(160, 0, 7, 16, shift=start_pos)
-    Items.bow_small = make(171, 0, 5, 16, shift=start_pos)
-    Items.whip_small = make(176, 0, 8, 16, shift=start_pos)
-    Items.wand_small = make(187, 0, 5, 16, shift=start_pos)
+    Items.sword_small = make(133, 3, 5, 13, shift=start_pos)
+    Items.dagger_small = make(138, 8, 5, 8, shift=start_pos)
+    Items.shield_alt_small = make(143, 9, 7, 7, shift=start_pos)
+    Items.shield_small = make(153, 7, 7, 9, shift=start_pos)
+    Items.axe_small = make(160, 4, 7, 12, shift=start_pos)
+    Items.bow_small = make(171, 5, 5, 11, shift=start_pos)
+    Items.whip_small = make(176, 7, 8, 9, shift=start_pos)
+    Items.wand_small = make(187, 7, 5, 9, shift=start_pos)
 
-    Items.misc_small = make(192, 0, 5, 16, shift=start_pos)
+    Items.misc_small = make(192, 12, 5, 4, shift=start_pos)
 
 
 def build_ui_sheet(start_pos, raw_ui_img, sheet):

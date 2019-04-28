@@ -709,7 +709,7 @@ class ItemImage:
                 self._bundles.append(img)
         elif isinstance(self.item, item_module.SpriteItem):
             sprite = self.item.big_sprite()
-            img = ImageBundle(sprite, self.x, self.y, layer=self.layer, scale=self.scale, color=self.item.color)
+            img = ImageBundle(sprite, self.x, self.y, layer=self.layer, rotation=self.item.sprite_rotation(), scale=self.scale, color=self.item.color)
             self._bundles.append(img)
 
     def all_bundles(self):
@@ -722,8 +722,12 @@ class ItemImage:
             sprite = spriteref.Items.piece_bigs[0]
             return (scale*sprite.width()*item.w(), scale*sprite.height()*item.h())
         elif isinstance(item, item_module.SpriteItem):
+            sprite_rot = item.sprite_rotation()
             sprite = item.big_sprite()
-            return (scale*sprite.width(), scale*sprite.height())
+            if sprite_rot % 2 == 0:
+                return (scale * sprite.width(), scale * sprite.height())
+            else:
+                return (scale * sprite.height(), scale * sprite.width())
 
 class CinematicPanel:
 

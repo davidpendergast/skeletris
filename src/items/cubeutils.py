@@ -21,6 +21,13 @@ class CubeUtils:
         return tuple(temp)
 
     @staticmethod
+    def rotate_cubes(cubes):
+        new_cubes = []
+        for cube in cubes:
+            new_cubes.append((5 - cube[1], cube[0]))
+        return CubeUtils.clean_cubes(new_cubes)
+
+    @staticmethod
     def do_seed(seed):
         if seed is not None:
             random.seed(seed)

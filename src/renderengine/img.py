@@ -52,10 +52,11 @@ class ImageBundle:
                 depth == self.depth() and 
                 xflip == self.xflip() and
                 color == self.color() and
-                ratio == self.ratio()):
+                ratio == self.ratio() and
+                rotation == self.rotation()):
             return self
         else:
-            return ImageBundle(model, x, y, scale=scale, depth=depth, xflip=xflip,
+            return ImageBundle(model, x, y, scale=scale, depth=depth, xflip=xflip, rotation=rotation,
                                layer=self.layer(), color=color, ratio=ratio, uid=self.uid())
         
     def model(self):
@@ -68,10 +69,20 @@ class ImageBundle:
         return self._y
         
     def width(self):
-        return self.model().width() * self.scale() if self.model() is not None else 0
+        if self.model() is None:
+            return 0
+        elif self.rotation() % 2 == 0:
+            return self.model().width() * self.scale()
+        else:
+            return self.model().height() * self.scale()
         
     def height(self):
-        return self.model().height() * self.scale() if self.model() is not None else 0
+        if self.model() is None:
+            return 0
+        elif self.rotation() % 2 == 0:
+            return self.model().height() * self.scale()
+        else:
+            return self.model().width() * self.scale()
 
     def size(self):
         return (self.width(), self.height())
