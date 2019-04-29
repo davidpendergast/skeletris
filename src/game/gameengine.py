@@ -179,6 +179,9 @@ class Action:
     def get_duration(self):
         return self.anim_duration
 
+    def start(self, world):
+        pass
+
     def finalize(self, world):
         pass
 
@@ -206,10 +209,10 @@ class MoveToAction(Action):
 
         return True
 
-    def animate_in_world(self, progress, world):
-        if self.start_pos is None:
-            self.start_pos = self.actor_entity.center()
+    def start(self, world):
+        self.start_pos = self.actor_entity.center()
 
+    def animate_in_world(self, progress, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
 
@@ -229,9 +232,10 @@ class AttackAction(Action):
     B_TEXT_COLOR = (0.1, 0.1, 0.65)
 
     def __init__(self, actor, item, position):
-        Action.__init__(self, ActionType.ATTACK, 20, actor, item=item, position=position)
+        Action.__init__(self, ActionType.ATTACK, 24, actor, item=item, position=position)
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
+        self._start_pos = None
 
     def is_possible(self, world):
         actor = self.actor_entity
@@ -255,12 +259,11 @@ class AttackAction(Action):
 
         return True
 
-    def _inflict_attack_if_necessary(self, world):
-        if self._results is None:
-            target = world.get_actor_in_cell(self.position[0], self.position[1])
-            self._results = (random.choice([0, 1, 2, 3]), target)
+    def _determine_attack_result(self, world):
+        target = world.get_actor_in_cell(self.position[0], self.position[1])
+        self._results = (random.choice([1, 2, 3]), target)
 
-    def _add_animations_if_necessary(self, world):
+    def _apply_attack_and_add_animations_if_necessary(self, world):
         if not self._did_animations:
             self._did_animations = True
             damage = self._results[0]
@@ -274,13 +277,42 @@ class AttackAction(Action):
                 target.perturb_color(AttackAction.R_TEXT_COLOR, 25)
                 target.perturb(20, 18)
 
+    def start(self, world):
+        self._determine_attack_result(world)
+        self._start_pos = self.actor_entity.center()
+
     def animate_in_world(self, progress, world):
-        self._inflict_attack_if_necessary(world)
-        self._add_animations_if_necessary(world)
+        run_at_pct = 0.3
+        recover_pcnt = 1 - run_at_pct
+
+        start_at = self._start_pos
+        target_at = self._results[1].center()
+        stop_at = target_at
+
+        vec = Utils.sub(target_at, start_at)
+        dist = Utils.mag(vec)
+        if dist > 16:
+            vec = Utils.set_length(vec, dist - 16)
+            stop_at = Utils.add(start_at, vec)
+
+        if progress <= run_at_pct:
+            new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
+        else:
+            self._apply_attack_and_add_animations_if_necessary(world)
+            new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
+
+        dxy = Utils.sub(new_pos, self.actor_entity.center())
+        self.actor_entity.move(dxy[0], dxy[1])
 
     def finalize(self, world):
-        self._inflict_attack_if_necessary(world)
-        self._add_animations_if_necessary(world)
+        self._apply_attack_and_add_animations_if_necessary(world)
+        self.actor_entity.set_center(self._start_pos[0], self._start_pos[1])
+
+        face_dir = Utils.sub(self._results[1].center(), self._start_pos)
+        if face_dir[0] < 3:
+            self.actor_entity.facing_right = False
+        elif face_dir[0] > 3:
+            self.actor_entity.facing_right = True
 
 
 class SkipTurnAction(Action):

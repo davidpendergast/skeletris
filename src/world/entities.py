@@ -588,10 +588,10 @@ class ActorEntity(Entity):
 
     def update_action(self, world):
         if self.executing_action is not None:
+            if self.executing_action_ticks == 0:
+                self.executing_action.start(world)
             self.executing_action_ticks += 1
             if self.executing_action_ticks >= self.executing_action_duration:
-                if self.executing_action.cmd_type != ActionType.PLAYER_WAIT:
-                    print("INFO: finalizing action {}".format(self.executing_action))
                 self.executing_action.finalize(world)
 
                 self.executing_action = None
@@ -668,23 +668,15 @@ class Player(ActorEntity):
         self.set_x(x)
         self.set_y(y)
 
-        self.special_action_sprite = None  # TODO - this is dumb, actorstate should hold sprite info
-
         self._held_item_img = None
 
-    def set_special_action_sprite(self, sprite):
-        self.special_action_sprite = sprite
-
     def get_sprite(self):
-        if self.is_performing_action() and self.special_action_sprite is not None:
-            return self.special_action_sprite
-        else:
-            anim_tick = gs.get_instance().anim_tick
-            anim_rate = 2 if self.is_moving() else 4
-            holding_item = self.get_held_item() is not None
-            player_sprites = spriteref.get_player_sprites(self.is_moving(), holding_item)
+        anim_tick = gs.get_instance().anim_tick
+        anim_rate = 2 if self.is_moving() else 4
+        holding_item = self.get_held_item() is not None
+        player_sprites = spriteref.get_player_sprites(self.is_moving(), holding_item)
 
-            return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+        return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
     def update_held_item_image(self, render_engine):
         held_item = self.get_held_item()
