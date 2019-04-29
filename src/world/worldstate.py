@@ -368,6 +368,8 @@ class World:
         self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
+            print("cleaning up {}".format([x for x in e.all_bundles()]))
+            e.cleanup(render_engine)
             self.entities.remove(e)  # n^2 but whatever
             e._alive = False
             if e in self._onscreen_entities:
@@ -390,7 +392,10 @@ class World:
                 e.update(self, input_state, render_engine)
                 self._onscreen_entities.add(e)
 
-                if e.is_actor() and near_player:
+                if e.is_actor() and not e.get_actor_state().is_alive():
+                    e.get_actor_state().handle_death(self, e)
+
+                elif e.is_actor() and near_player:
                     actors_to_process.append(e)
                     if e.is_performing_action():
                         an_actor_is_acting = True

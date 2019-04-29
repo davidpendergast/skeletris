@@ -1,11 +1,9 @@
 from src.game.stats import ActorStatType, StatType
 from enum import Enum
 from src.utils.util import Utils
-from src.world.worldstate import World
 
-import src.game.inputs as inputs
 import src.game.globalstate as gs
-import src.game.settings as settings
+import src.game.spriteref as spriteref
 
 import random
 
@@ -54,6 +52,9 @@ class ActorStateNew:
     def max_energy(self):
         return 5
 
+    def is_alive(self):
+        return self.current_hp > 0
+
     def last_turn_tick(self):
         return self._last_turn_tick
 
@@ -69,14 +70,24 @@ class ActorStateNew:
     def light_level(self):
         return 4 if self.alignment == 0 else 0
 
-    def is_dead(self):
-        return self.hp() <= 0
-
     def inventory(self):
         return self.inventory_
 
     def name(self):
         return self.name_
+
+    def handle_death(self, world, actor_entity):
+        pos = actor_entity.center()
+        for item in self.inventory().all_items():
+            world.add_item_as_entity(item, pos, direction=None)
+
+        from src.world.entities import AnimationEntity
+
+        splosion = AnimationEntity(pos[0], pos[1] - 24, spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
+        splosion.set_color((0, 0, 0))
+        world.add(splosion)
+
+        world.remove(actor_entity)
 
 
 class ActorController:

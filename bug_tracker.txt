@@ -1,11 +1,2 @@
 
-1. trilla babies can appear in walls (and stay stuck there until killed)
-
-2. pausing (via dialog) while taking damage blurs the health bar up across the screen
-
-3. enemies using Teleport can warp into hidden rooms
-
-6. save station dialog flickers away for a frame after pressing <yes>
-
-
-
+1. enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness

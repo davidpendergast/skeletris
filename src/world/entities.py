@@ -523,6 +523,7 @@ class ActorEntity(Entity):
         return False
 
     def cleanup(self, render_engine):
+        super().cleanup(render_engine)
         render_engine.remove(self._img)
         render_engine.remove(self._shadow)
 
@@ -776,15 +777,13 @@ class Enemy(ActorEntity):
                 self._healthbar_img = None
 
     def all_bundles(self, extras=[]):
-        for bun in Entity.all_bundles(self, extras=extras):
+        for bun in super().all_bundles(extras=extras):
             yield bun
-
         if self._healthbar_img is not None:
             yield self._healthbar_img
         
     def update(self, world, input_state, render_engine):
-        ActorEntity.update(self, world, input_state, render_engine)
-
+        super().update(world, input_state, render_engine)
         self._update_healthbar_img(world, render_engine)
         
     def is_enemy(self):

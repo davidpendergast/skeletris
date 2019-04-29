@@ -21,6 +21,8 @@ class ItemGrid:
         if self.can_place(item, pos):
             self.items[pos] = item
             self.place_order.append(item)
+            return True
+        return False
 
     def to_map(self):
         """
@@ -93,11 +95,28 @@ class InventoryState:
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
+    def all_inv_items(self):
+        return self.inv_grid.all_items()
+
     def is_equipped(self, item):
         for i in self.all_equipped_items():
             if i == item:
                 return True
         return False
+
+    def add_to_inv(self, item, pos=(0, 0)):
+        return self.inv_grid.place(item, pos)
+
+    def add_to_equipment(self, item, pos=(0, 0)):
+        return self.equip_grid.place(item, pos)
+
+    def all_items(self):
+        res = []
+        for i in self.all_equipped_items():
+            res.append(i)
+        for i in self.all_inv_items():
+            res.append(i)
+        return res
 
     def to_json(self):
         return {}
@@ -116,6 +135,15 @@ class FakeInventoryState(InventoryState):
 
     def all_equipped_items(self):
         return list(self.equipped_items)
+
+    def all_inv_items(self):
+        return list(self.inv_items)
+
+    def add_to_equipment(self, item, pos=(0, 0)):
+        self.equipped_items.append(item)
+
+    def add_to_inv(self, item, pos=(0, 0)):
+        self.inv_items.append(item)
 
 
 

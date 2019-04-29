@@ -1018,7 +1018,7 @@ class InGameUiState(Menu):
             for bun in current_tooltip.all_bundles():
                 render_eng.update(bun)
 
-        if gs.get_instance().player_state().is_dead() or obj_to_display is None:
+        if not gs.get_instance().player_state().is_alive() or obj_to_display is None:
             self.set_active_tooltip(None, render_eng)
 
     def _update_dialog_panel(self, world, input_state, render_eng):
@@ -1038,13 +1038,12 @@ class InGameUiState(Menu):
             self.dialog_panel.update(render_eng)
 
     def _update_inventory_panel(self, world, input_state, render_eng):
-        if gs.get_instance().player_state().is_dead():
+        if not gs.get_instance().player_state().is_alive():
             if self.inventory_panel is not None:
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
 
         elif input_state.was_pressed(gs.get_instance().settings().inventory_key()):
-            print("pressed inventory key...")
             if self.inventory_panel is None:
                 self.rebuild_inventory(render_eng)
             else:

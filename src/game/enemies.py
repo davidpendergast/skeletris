@@ -12,6 +12,7 @@ from src.game.loot import LootFactory
 from src.utils.util import Utils
 import src.game.gameengine as gameengine
 import src.game.inventory as inventory
+import src.items.item as item
 
 
 NUM_EXTRA_STATS_RANGE = [
@@ -332,8 +333,13 @@ class EnemyFactory:
 
     @staticmethod
     def get_state(template, level):
-        return gameengine.ActorStateNew(template.get_name(), level, template.get_base_stats(),
-                                        inventory.FakeInventoryState(), 1)
+        inv = inventory.FakeInventoryState()
+
+        item_type = random.choice(item.ItemTypes.all_types())
+        loot_item = item.ItemFactory.gen_item(level, item_type)
+        inv.add_to_inv(loot_item)
+
+        return gameengine.ActorStateNew(template.get_name(), level, template.get_base_stats(), inv, 1)
 
     @staticmethod
     def gen_enemy(template, level):
