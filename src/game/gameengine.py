@@ -1,14 +1,14 @@
-from src.game.stats import ActorStatType, StatType
 from enum import Enum
 from src.utils.util import Utils
 
 import src.game.globalstate as gs
 import src.game.spriteref as spriteref
+from src.game.stats import StatType
 
 import random
 
 
-class ActorStateNew:
+class ActorState:
 
     def __init__(self, name, level, base_stats, inventory, alignment):
         self.name_ = name
@@ -20,7 +20,7 @@ class ActorStateNew:
         self.permanent_effects = []
         self.status_effects = []
 
-        self.current_hp = 5  # self.stat_value(ActorStatType.MAX_HP)
+        self.current_hp = self.max_hp()
         self.current_energy = 0
         self._last_turn_tick = 0  # used to determine energization order
 
@@ -28,11 +28,28 @@ class ActorStateNew:
 
         self.held_item = None  # item being held above the actor's head
 
+    def all_stat_providers(self):
+        yield self.base_stats
+        for item in self.inventory().all_equipped_items():
+            yield item
+        for perm_effect in self.permanent_effects:
+            yield perm_effect
+        for status_effect in self.status_effects:
+            yield status_effect
+
     def stat_value(self, stat_type):
-        if stat_type == ActorStatType.MAX_ENERGY:
-            return 5
+        res = 0
+        for provider in self.all_stat_providers():
+            res += provider.stat_value(stat_type)
+        return res
+
+    def att_value_with_item(self, item):
+        res = self.stat_value(StatType.ATT)
+        if item is None:
+           res += self.stat_value(StatType.UNARMED_ATT)
         else:
-            return 2
+            res += item.stat_value(StatType.LOCAL_ATT)
+        return Utils.bound(res, 0, None)
 
     def hp(self):
         return self.current_hp
@@ -48,6 +65,10 @@ class ActorStateNew:
 
     def energy(self):
         return self.current_energy
+
+    def speed(self):
+        raw_val = self.stat_value(StatType.SPEED)
+        return Utils.bound(raw_val, 1, self.max_energy())
 
     def max_energy(self):
         return 8
@@ -65,10 +86,14 @@ class ActorStateNew:
         self._last_turn_tick = gs.get_instance().tick_counter
 
     def max_hp(self):
-        return 5
+        raw_value = self.stat_value(StatType.VIT)
+        return Utils.bound(raw_value, 1, 999)
 
     def light_level(self):
-        return 4 if self.alignment == 0 else 0
+        min_level = self.stat_value(StatType.MIN_LIGHT_LEVEL)
+        cur_level = self.stat_value(StatType.LIGHT_LEVEL)
+
+        return Utils.bound(max(min_level, cur_level), 0, 16)
 
     def inventory(self):
         return self.inventory_
@@ -261,7 +286,30 @@ class AttackAction(Action):
 
     def _determine_attack_result(self, world):
         target = world.get_actor_in_cell(self.position[0], self.position[1])
-        self._results = (random.choice([1, 2, 3]), target)
+        t_state = target.get_actor_state()
+
+        t_def = t_state.stat_value(StatType.DEF)
+        a_att = self.actor_entity.get_actor_state().att_value_with_item(self.item)
+
+        # explanation:
+        #   attacker rolls a D6 for each ATT value they have.
+        #   defender rolls a D4 for each DEF value they have.
+        #   defender uses each of their die to 'block' as many attacker dice as possible.
+        #       a die can only block a die with value less than or equal to it's own.
+        #   the number of unblocked attackers is the amount of damage dealt.
+
+        atts = [random.randint(1, 6) for _ in range(0, a_att)]
+        defs = [random.randint(1, 4) for _ in range(0, t_def)]
+
+        atts.sort()
+        defs.sort()
+
+        while len(atts) > 0 and len(defs) > 0:
+            defender = defs.pop(0)
+            if atts[0] <= defender:
+                atts.pop(0)
+
+        self._results = (len(atts), target)
 
     def _apply_attack_and_add_animations_if_necessary(self, world):
         if not self._did_animations:

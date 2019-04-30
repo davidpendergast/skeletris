@@ -13,7 +13,7 @@ import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
-from src.game.gameengine import ActorStateNew, ActorController, PlayerController, ActionType, EnemyController
+from src.game.gameengine import ActorState, ActorController, PlayerController, ActionType, EnemyController
 
 ENTITY_UID_COUNTER = 0
 

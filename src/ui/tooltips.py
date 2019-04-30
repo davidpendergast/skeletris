@@ -59,7 +59,6 @@ class TitleImageAndStatsTooltip(Tooltip):
         self.title_text = None
         self.core_texts = []
         self.non_core_texts = []
-        self.special_bundles = None
 
         self.size = (0, 0)
 
@@ -116,12 +115,6 @@ class TitleImageAndStatsTooltip(Tooltip):
             self.non_core_texts.append(stat_txt)
             h += stat_txt.line_height()
 
-        special_img_rect = [self.xy[0] + 8*sc, self.xy[1] + 16*sc, 40*sc, 40*sc]
-        self.special_bundles = [x for x in self.get_special_image_bundles(special_img_rect, sc)]
-
-    def get_special_image_bundles(self, rect, sc):
-        return []
-
     def all_bundles(self):
         yield self.top_panel
         for bun in self.mid_panels:
@@ -138,9 +131,6 @@ class TitleImageAndStatsTooltip(Tooltip):
             for bun in text.all_bundles():
                 yield bun
 
-        for bun in self.special_bundles:
-            yield bun
-
 
 class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
@@ -151,13 +141,6 @@ class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
     def get_target(self):
         return self.item
-
-    def get_special_image_bundles(self, rect, sc):
-        item_img_sc = sc // 2
-        item_img_size = ItemImage.calc_size(self.item, item_img_sc)
-        item_img_x = rect[0] + rect[2] // 2 - item_img_size[0] // 2
-        item_img_y = rect[1] + rect[3] // 2 - item_img_size[1] // 2
-        return ItemImage(item_img_x, item_img_y, self.item, self.layer, item_img_sc).all_bundles()
 
 
 class EnemyInfoTooltip(TitleImageAndStatsTooltip):

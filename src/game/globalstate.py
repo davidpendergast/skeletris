@@ -386,7 +386,8 @@ def create_new(menu, from_pw=None):
     inventory_state = inventory.InventoryState()
 
     import src.game.gameengine as gameengine
-    player_state = gameengine.ActorStateNew("player", 5, {}, inventory_state, 0)
+    import src.game.stats as stats
+    player_state = gameengine.ActorState("player", 5, stats.default_player_stats(), inventory_state, 0)
 
     new_instance.set_player_state(player_state)
 

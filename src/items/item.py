@@ -3,16 +3,13 @@ import uuid
 import collections
 from enum import Enum
 
-from src.game.stats import StatType, ItemStatRanges
+from src.game.stats import StatType, StatProvider, ItemStatRanges
 from src.utils.util import Utils
 import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
-
-# TODO - regen is too OP, decide whether to balance or totally remove
-SPECIAL_STATS = []
 
 NON_CORE_STATS = []
 
@@ -46,27 +43,11 @@ ITEM_NAME_END = {
 #    StatType.POTION_HEALING: "Renewal {}",
 #    StatType.POTION_COOLDOWN: "Wetness {}"
 }
-
-ITEM_NAME_SPECIAL_MODIFIER = {
-    #StatType.HOLE_BONUS: "Holy {}"
-}
  
 STAT_DESCRIPTIONS = {
     StatType.ATT: "+{} ATT",
     StatType.DEF: "+{} DEF",
     StatType.VIT: "+{} VIT",
-    #StatType.ATTACK_RADIUS: "+{}% ATT Range",
-    #StatType.ATTACK_SPEED: "+{}% Attack SPD",
-    #StatType.ATTACK_DAMAGE: "+{}% Attack DMG",
-    #StatType.MOVEMENT_SPEED: "+{}% Movespeed",
-    #StatType.DODGE: "+{} Dodge",
-    #StatType.ACCURACY: "+{} Accuracy",
-    #StatType.LIFE_REGEN: "+{} Life Regen",
-    #StatType.LIFE_ON_HIT: "+{} Life on Hit",
-    #StatType.LIFE_LEECH: "+{}% Life Leech",
-    #StatType.MAX_HEALTH: "+{}% Max HP",
-    #StatType.POTION_HEALING: "+{} Pot Heal",
-    #StatType.POTION_COOLDOWN: "-{}% Pot Delay"
 }    
 
 STAT_COLORS = collections.defaultdict(lambda: (0.85, 0.85, 0.85))
@@ -168,7 +149,7 @@ class ItemTypes:
     POTION = _new_type("Potion", (ItemTags.CONSUMABLE))
 
 
-class Item:
+class Item(StatProvider):
 
     def __init__(self, name, item_type, level, cubes, stats, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
         self.name = name
@@ -207,6 +188,13 @@ class Item:
 
     def h(self):
         return max([c[1] for c in self.cubes]) + 1
+
+    def stat_value(self, stat_type):
+        res = 0
+        for stat in self.all_stats():
+            if stat.stat_type == stat_type:
+                res += stat.value
+        return res
 
     def all_stats(self):
         return self.stats
@@ -458,20 +446,13 @@ class StatCubesItemFactory:
         return res
 
     @staticmethod
-    def get_special_stats(cubes):
-        return []
-
-    @staticmethod
-    def get_name(core_types, non_core_types, special_types):
+    def get_name(core_types, non_core_types):
         if len(core_types) > 2:
             core_types = core_types[:2]
         name = ITEM_CORE_NAME[tuple(core_types)]
         
         if len(non_core_types) > 0:
             name = ITEM_NAME_END[non_core_types[0]].format(name)
-        
-        if len(special_types) > 0:
-            name = ITEM_NAME_SPECIAL_MODIFIER[special_types[0]].format(name)
             
         return name
 
@@ -487,14 +468,12 @@ class StatCubesItemFactory:
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
 
         cubes = CubeUtils.gen_cubes(n_cubes)
-        special_stats = StatCubesItemFactory.get_special_stats(cubes)
 
         name = StatCubesItemFactory.get_name(
                 list(map(lambda x: x.stat_type, core_stats)),
-                list(map(lambda x: x.stat_type, non_core_stats)),
-                list(map(lambda x: x.stat_type, special_stats)))
+                list(map(lambda x: x.stat_type, non_core_stats)))
         
-        stats = core_stats + non_core_stats + special_stats
+        stats = core_stats + non_core_stats
 
         color = tuple([0.5 + random.random() * 0.25] * 3)
         if len(core_stats) > 0:

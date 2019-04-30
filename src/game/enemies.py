@@ -20,22 +20,6 @@ NUM_EXTRA_STATS_RANGE = [
 STATS_MULTIPLIER_RANGE = [stats._exp_map(64, 1, 3, integral=False),
                           stats._exp_map(64, 1.5, 6, integral=False)]
 
-ENEMY_STATS = [StatType.ATT,
-               StatType.DEF,
-               StatType.VIT,
-]
-
-TRUE_BASE_STATS = {
-    StatType.ATT: 10,
-    StatType.DEF: 10,
-    StatType.VIT: 10,
-}
-
-
-for stat in ENEMY_STATS:
-    if stat not in TRUE_BASE_STATS:
-        TRUE_BASE_STATS[stat] = 0
-
 
 class EnemyTemplate:
 
@@ -52,38 +36,17 @@ class EnemyTemplate:
     def get_name(self):
         return self._name
 
-    def get_pathfinding(self):
-        return PathfindingType.BASIC_CHASE
-
     def get_level_range(self):
         return (0, 64)
 
-    def get_attack(self):
-        return None
-
-    def get_lunges(self):
-        return False
-
-    def drops_loot(self):
-        return True
-
     def get_base_stats(self):
-        return dict(TRUE_BASE_STATS)
-
-    def special_death_action(self, level, entity, world):
-        pass
-
-    def get_possible_special_attacks(self):
-        return []
-
-    def show_death_explosion(self):
-        return True
-
-    def increment_kill_count_on_death(self):
-        return True
-
-    def can_attack(self):
-        return True
+        return stats.BasicStatLookup({
+            StatType.VIT: 3,
+            StatType.SPEED: 2,
+            StatType.ATT: 0,
+            StatType.UNARMED_ATT: 1,
+            StatType.DEF: 1
+        })
 
 
 class FlappumTemplate(EnemyTemplate):
@@ -94,9 +57,6 @@ class FlappumTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_flappum_all
 
-    def get_lunges(self):
-        return True
-
 
 class TrillaTemplate(EnemyTemplate):
 
@@ -105,10 +65,6 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
-
-    def get_base_stats(self):
-        base_stats = EnemyTemplate.get_base_stats(self)
-        return base_stats
 
     def drops_loot(self):
         return False
@@ -133,22 +89,6 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
 
-    def get_pathfinding(self):
-        return PathfindingType.BASIC_CHASE
-
-    def get_base_stats(self):
-        base_stats = EnemyTemplate.get_base_stats(self)
-        return base_stats
-
-    def drops_loot(self):
-        return False
-
-    def show_death_explosion(self):
-        return False
-
-    def increment_kill_count_on_death(self):
-        return False
-
 
 class MuncherTemplate(EnemyTemplate):
 
@@ -160,9 +100,6 @@ class MuncherTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
 
-    def get_lunges(self):
-        return True
-
 
 class CycloiTemplate(EnemyTemplate):
 
@@ -171,18 +108,6 @@ class CycloiTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_cyclops_all
-
-    def get_lunges(self):
-        return True
-
-    def get_pathfinding(self):
-        return PathfindingType.BASIC_CUT_OFF
-
-    def get_base_stats(self):
-        base_stats = EnemyTemplate.get_base_stats(self)
-        base_stats[StatType.DEF] += 15
-
-        return base_stats
 
 
 class DicelTemplate(EnemyTemplate):
@@ -222,15 +147,7 @@ class FrogBoss(EnemyTemplate):
         return spriteref.Bosses.frog_idle_1
 
     def get_base_stats(self):
-        base_stats = EnemyTemplate.get_base_stats(self)
-        base_stats[StatType.DEF] += 15
-        base_stats[StatType.VIT] += 35
-        base_stats[StatType.ATT] += 5
-
-        return base_stats
-
-    def get_possible_special_attacks(self):
-        return []
+        return EnemyTemplate.get_base_stats(self)
 
 
 TEMPLATE_TRILLA = TrillaTemplate()
@@ -282,7 +199,7 @@ class EnemyFactory:
         loot_item = item.ItemFactory.gen_item(level, item_type)
         inv.add_to_inv(loot_item)
 
-        return gameengine.ActorStateNew(template.get_name(), level, template.get_base_stats(), inv, 1)
+        return gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
 
     @staticmethod
     def gen_enemy(template, level):

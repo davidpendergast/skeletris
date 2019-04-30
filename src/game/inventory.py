@@ -1,4 +1,4 @@
-
+from src.game.stats import StatProvider
 
 class ItemGrid:
     def __init__(self, size):

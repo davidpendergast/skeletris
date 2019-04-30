@@ -3,31 +3,49 @@ import math
 from enum import Enum
 
 
-class ActorStatType(str, Enum):
-    """These are stats on actors, often derived from multiple StatTypes."""
-    HP = "HP",
-    MAX_HP = "MAX_HP",
-    MAX_ENERGY = "MAX_ENERGY",
-    LIGHT_RADIUS = "LIGHT_RADIUS",
-
-
 class StatType(str, Enum):
-    """These are stats on items"""
-    ATT = "ATT",
+    ATT = "ATT",                    # +ATT to *all* attacks
     DEF = "DEF",
     VIT = "VIT",
-    ATTACK_DAMAGE = "ATTACK_DAMAGE",
-    MOVEMENT_SPEED = "MOVEMENT_SPEED",  # TODO delete
-    DODGE = "DODGE",
-    ACCURACY = "ACCURACY",
-    LIFE_REGEN = "LIFE_REGEN",
-    LIFE_ON_HIT = "LIFE_ON_HIT",
-    LIFE_LEECH = "LIFE_LEECH",
-    MAX_HEALTH = "MAX_HEALTH",
-    POTION_HEALING = "POTION_HEALING",
-    POTION_COOLDOWN = "POTION_COOLDOWN",
+    SPEED = "SPEED"
 
-    HOLE_BONUS = "HOLE_BONUS"
+    LOCAL_ATT = "LOCAL_ATT"         # +ATT with *this* item
+    UNARMED_ATT = "UNARMED_ATT"     # +ATT with no item
+    MIN_LIGHT_LEVEL = "MIN_LIGHT_LEVEL"
+    LIGHT_LEVEL = "LIGHT_LEVEL"
+
+
+class StatProvider:
+
+    def stat_value(self, stat_type):
+        return 0
+
+
+def default_player_stats():
+    return BasicStatLookup({
+        StatType.ATT: 0,
+        StatType.VIT: 8,
+        StatType.DEF: 1,
+        StatType.UNARMED_ATT: 2,
+        StatType.LIGHT_LEVEL: 5,
+        StatType.MIN_LIGHT_LEVEL: 2,
+        StatType.SPEED: 4
+    })
+
+
+class BasicStatLookup(StatProvider):
+
+    def __init__(self, lookup_dict):
+        self.lookup = lookup_dict
+
+    def stat_value(self, stat_type):
+        if stat_type in self.lookup:
+            return self.lookup[stat_type]
+        else:
+            return 0
+
+    def set_stat_value(self, stat_type, val):
+        self.lookup[stat_type] = val
 
 
 def _exp_map(x1, y0, y1, intensity=0, integral=True):
