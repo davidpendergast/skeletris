@@ -164,6 +164,11 @@ class EnemyController(ActorController):
         random.shuffle(neighbors)
 
         for n in neighbors:
+            res = AttackAction(actor, None, n)
+            if res.is_possible(world):
+                return res
+
+        for n in neighbors:
             res = MoveToAction(actor, n)
             if res.is_possible(world):
                 return res
@@ -279,7 +284,7 @@ class AttackAction(Action):
             return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
-        if target is None:
+        if target is None or target.get_actor_state().alignment == actor.get_actor_state().alignment:
             return False
 
         return True
