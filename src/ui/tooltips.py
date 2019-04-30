@@ -3,7 +3,6 @@ import src.items.item as item
 from src.renderengine.img import ImageBundle
 from src.ui.ui import TextImage, ItemImage
 from src.game.stats import StatType
-from src.game.actorstate import EnemyState
 import src.game.enemies as enemies
 
 
@@ -20,8 +19,6 @@ class TooltipFactory:
             for stat in target_item.all_stats():
                 text.append(str(stat))
             return TextOnlyTooltip(text, target=target_item, xy=xy, layer=layer)
-        elif isinstance(obj, EnemyState):
-            return EnemyInfoTooltip(obj, xy=xy, layer=layer)
         else:
             return None
 

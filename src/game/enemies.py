@@ -2,12 +2,9 @@ import random
 
 import src.game.spriteref as spriteref
 from src.world.entities import Enemy
-from src.game.actorstate import EnemyState, PathfindingType
-import src.game.bosses as bosses
 from src.game.droprates import EnemyRates
 from src.game.stats import StatType
 import src.game.stats as stats
-import src.attacks.attacks as attacks
 from src.game.loot import LootFactory
 from src.utils.util import Utils
 import src.game.gameengine as gameengine
@@ -26,22 +23,12 @@ STATS_MULTIPLIER_RANGE = [stats._exp_map(64, 1, 3, integral=False),
 ENEMY_STATS = [StatType.ATT,
                StatType.DEF,
                StatType.VIT,
-               StatType.ATTACK_DAMAGE,
-               StatType.ATTACK_RADIUS,
-               StatType.ATTACK_SPEED,
-               StatType.MOVEMENT_SPEED,
-               StatType.DODGE,
-               StatType.ACCURACY,
-               # StatType.LIFE_REGEN,  # probably too OP
-               StatType.MAX_HEALTH
 ]
 
 TRUE_BASE_STATS = {
     StatType.ATT: 10,
     StatType.DEF: 10,
     StatType.VIT: 10,
-    StatType.MOVEMENT_SPEED: -35,
-    StatType.ATTACK_RADIUS: -25
 }
 
 
@@ -72,7 +59,7 @@ class EnemyTemplate:
         return (0, 64)
 
     def get_attack(self):
-        return attacks.TOUCH_ATTACK
+        return None
 
     def get_lunges(self):
         return False
@@ -87,7 +74,7 @@ class EnemyTemplate:
         pass
 
     def get_possible_special_attacks(self):
-        return attacks.ALL_SPECIAL_ATTACKS
+        return []
 
     def show_death_explosion(self):
         return True
@@ -121,29 +108,7 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         base_stats = EnemyTemplate.get_base_stats(self)
-        base_stats[StatType.MOVEMENT_SPEED] += 20
         return base_stats
-
-    def special_death_action(self, level, entity, world):
-        base_stats = entity.state.get_base_stats()
-
-        att_dmg = base_stats[StatType.ATTACK_DAMAGE]
-        hp_bonus = base_stats[StatType.MAX_HEALTH]
-
-        base_stats[StatType.ATTACK_DAMAGE] = max(-90, att_dmg - 35)
-        base_stats[StatType.MAX_HEALTH] = max(-90, hp_bonus - 50)
-        base_stats[StatType.MOVEMENT_SPEED] += 10
-
-        pos = entity.center()
-        for _ in range(0, 3):
-            e_state = EnemyState(TEMPLATE_TRILLITE, level, dict(base_stats), entity.state.is_rare)
-            # kind of a hack to get them to scoot outwards lol
-            e_state.dmg_color = (1, 1, 1)
-            e_state.took_damage_x_ticks_ago = 0
-            e_state.set_color_x_ticks_ago = 0
-            e_state.push(Utils.rand_vec(3), 15)
-            e_state.set_special_attack(entity.state.special_attack)
-            world.add(Enemy(pos[0], pos[1], e_state))
 
     def drops_loot(self):
         return False
@@ -173,27 +138,7 @@ class SmallMuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         base_stats = EnemyTemplate.get_base_stats(self)
-        base_stats[StatType.MOVEMENT_SPEED] -= 35
-        base_stats[StatType.VIT] = 1  # one hit kill
-        base_stats[StatType.LIFE_ON_HIT] = -4  # transforms upon successful attack
         return base_stats
-
-    def special_death_action(self, level, entity, world):
-        base_stats = entity.state.get_base_stats()
-
-        base_stats[StatType.VIT] = EnemyTemplate.get_base_stats(self)[StatType.VIT]
-        base_stats[StatType.ATTACK_DAMAGE] += 35
-        base_stats[StatType.MOVEMENT_SPEED] += 65  # fast boys
-        base_stats[StatType.LIFE_ON_HIT] += 4  # gotta undo the negative LoH
-
-        template = TEMPLATE_MUNCHER_ALT if self._is_alt else TEMPLATE_MUNCHER
-        e_state = EnemyState(template, level, dict(base_stats), entity.state.is_rare)
-        e_state.set_special_attack(entity.state.special_attack)
-
-        new_muncher = Enemy(0, 0, e_state)
-        pos = entity.center()
-        new_muncher.set_center(pos[0], pos[1])
-        world.add(new_muncher)
 
     def drops_loot(self):
         return False
@@ -281,8 +226,6 @@ class FrogBoss(EnemyTemplate):
         base_stats[StatType.DEF] += 15
         base_stats[StatType.VIT] += 35
         base_stats[StatType.ATT] += 5
-        base_stats[StatType.MOVEMENT_SPEED] += 65
-        base_stats[StatType.ATTACK_RADIUS] += 15
 
         return base_stats
 

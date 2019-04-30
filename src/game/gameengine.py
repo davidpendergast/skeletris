@@ -50,7 +50,7 @@ class ActorStateNew:
         return self.current_energy
 
     def max_energy(self):
-        return 5
+        return 8
 
     def is_alive(self):
         return self.current_hp > 0

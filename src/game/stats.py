@@ -10,17 +10,12 @@ class ActorStatType(str, Enum):
     MAX_ENERGY = "MAX_ENERGY",
     LIGHT_RADIUS = "LIGHT_RADIUS",
 
-    MOVESPEED = "MOVE_SPEED",         # TODO delete
-    ATTACK_RADIUS = "ATTACK_RADIUS",  # TODO delete
-
 
 class StatType(str, Enum):
     """These are stats on items"""
     ATT = "ATT",
     DEF = "DEF",
     VIT = "VIT",
-    ATTACK_RADIUS = "ATTACK_RADIUS",    # TODO delete
-    ATTACK_SPEED = "ATTACK_SPEED",      # TODO delete
     ATTACK_DAMAGE = "ATTACK_DAMAGE",
     MOVEMENT_SPEED = "MOVEMENT_SPEED",  # TODO delete
     DODGE = "DODGE",
@@ -76,19 +71,6 @@ class ItemStatRanges:
         StatType.ATT: PRIMARY_RANGES,
         StatType.DEF: PRIMARY_RANGES,
         StatType.VIT: PRIMARY_RANGES,
-
-        StatType.ATTACK_RADIUS: PCNT_RANGES,
-        StatType.ATTACK_SPEED: PCNT_RANGES,
-        StatType.ATTACK_DAMAGE: PCNT_RANGES,
-        StatType.MOVEMENT_SPEED: MOVE_SPEED_RANGE,
-        StatType.DODGE: SECONDARY_RANGES,
-        StatType.ACCURACY: SECONDARY_RANGES,
-        StatType.LIFE_REGEN: LIFE_REGEN_RANGE,
-        StatType.LIFE_ON_HIT: LIFE_ON_HIT_RANGE,
-        StatType.LIFE_LEECH: LIFE_LEECH_RANGE,
-        StatType.MAX_HEALTH: PCNT_RANGES,
-        StatType.POTION_HEALING: PCNT_RANGES,
-        StatType.POTION_COOLDOWN: PCNT_RANGES
     }
 
     @staticmethod

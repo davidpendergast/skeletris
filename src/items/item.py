@@ -12,9 +12,9 @@ import src.game.spriteref as spriteref
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 
 # TODO - regen is too OP, decide whether to balance or totally remove
-SPECIAL_STATS = [StatType.HOLE_BONUS, StatType.LIFE_REGEN]
+SPECIAL_STATS = []
 
-NON_CORE_STATS = [s for s in StatType if (s not in CORE_STATS and s not in SPECIAL_STATS)]
+NON_CORE_STATS = []
 
 ITEM_CORE_NAME = {
     (): "Vessel",
@@ -33,40 +33,40 @@ ITEM_CORE_NAME = {
 }
      
 ITEM_NAME_END = {
-    StatType.ATTACK_RADIUS: "{} of Envy",
-    StatType.ATTACK_SPEED: "Haste {}",
-    StatType.ATTACK_DAMAGE: "{} of Fury",
-    StatType.MOVEMENT_SPEED: "Pride {}",
-    StatType.DODGE: "Hiding {}",
-    StatType.ACCURACY: "Truth {}",
-    StatType.LIFE_REGEN: "Growth {}",
-    StatType.LIFE_ON_HIT: "{} of Feed",
-    StatType.LIFE_LEECH: "{} of Lust",
-    StatType.MAX_HEALTH: "Gluttony {}",
-    StatType.POTION_HEALING: "Renewal {}",
-    StatType.POTION_COOLDOWN: "Wetness {}"
+#    StatType.ATTACK_RADIUS: "{} of Envy",
+#    StatType.ATTACK_SPEED: "Haste {}",
+#    StatType.ATTACK_DAMAGE: "{} of Fury",
+#    StatType.MOVEMENT_SPEED: "Pride {}",
+#    StatType.DODGE: "Hiding {}",
+#    StatType.ACCURACY: "Truth {}",
+#    StatType.LIFE_REGEN: "Growth {}",
+#    StatType.LIFE_ON_HIT: "{} of Feed",
+#    StatType.LIFE_LEECH: "{} of Lust",
+#    StatType.MAX_HEALTH: "Gluttony {}",
+#    StatType.POTION_HEALING: "Renewal {}",
+#    StatType.POTION_COOLDOWN: "Wetness {}"
 }
 
 ITEM_NAME_SPECIAL_MODIFIER = {
-    StatType.HOLE_BONUS: "Holy {}"
+    #StatType.HOLE_BONUS: "Holy {}"
 }
  
 STAT_DESCRIPTIONS = {
     StatType.ATT: "+{} ATT",
     StatType.DEF: "+{} DEF",
     StatType.VIT: "+{} VIT",
-    StatType.ATTACK_RADIUS: "+{}% ATT Range",
-    StatType.ATTACK_SPEED: "+{}% Attack SPD",
-    StatType.ATTACK_DAMAGE: "+{}% Attack DMG",
-    StatType.MOVEMENT_SPEED: "+{}% Movespeed",
-    StatType.DODGE: "+{} Dodge",
-    StatType.ACCURACY: "+{} Accuracy",
-    StatType.LIFE_REGEN: "+{} Life Regen",
-    StatType.LIFE_ON_HIT: "+{} Life on Hit",
-    StatType.LIFE_LEECH: "+{}% Life Leech",
-    StatType.MAX_HEALTH: "+{}% Max HP",
-    StatType.POTION_HEALING: "+{} Pot Heal",
-    StatType.POTION_COOLDOWN: "-{}% Pot Delay"
+    #StatType.ATTACK_RADIUS: "+{}% ATT Range",
+    #StatType.ATTACK_SPEED: "+{}% Attack SPD",
+    #StatType.ATTACK_DAMAGE: "+{}% Attack DMG",
+    #StatType.MOVEMENT_SPEED: "+{}% Movespeed",
+    #StatType.DODGE: "+{} Dodge",
+    #StatType.ACCURACY: "+{} Accuracy",
+    #StatType.LIFE_REGEN: "+{} Life Regen",
+    #StatType.LIFE_ON_HIT: "+{} Life on Hit",
+    #StatType.LIFE_LEECH: "+{}% Life Leech",
+    #StatType.MAX_HEALTH: "+{}% Max HP",
+    #StatType.POTION_HEALING: "+{} Pot Heal",
+    #StatType.POTION_COOLDOWN: "-{}% Pot Delay"
 }    
 
 STAT_COLORS = collections.defaultdict(lambda: (0.85, 0.85, 0.85))
