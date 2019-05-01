@@ -527,15 +527,8 @@ class ActorEntity(Entity):
     def get_controller(self):
         return self.actor_controller
 
-    def choose_next_action(self, world, input_state):
-        next_action = self.get_controller().get_next_action(self, world, input_state)
-        if next_action.is_possible(world):
-            dur_modifier = self.get_actor_state().turn_duration_modifier()
-            dur = Utils.bound(int(next_action.get_duration() * dur_modifier), 1, None)
-            self.set_action(next_action, dur)
-            return next_action
-        else:
-            raise ValueError("{} received impossible action: {}".format(self, next_action))
+    def request_next_action(self, world, input_state):
+        return self.get_controller().get_next_action(self, world, input_state)
 
     def is_actor(self):
         return True
@@ -545,16 +538,9 @@ class ActorEntity(Entity):
             msg = "error setting action {}, actor already has action: {}".format(action, self.executing_action)
             raise ValueError(msg)
 
-        if action.get_type() == ActionType.PLAYER_WAIT:
-            # this is a special action, we want to do nothing
-            # while keeping the player first in line to act.
-            return
-
         self.executing_action = action
         self.executing_action_duration = duration
         self.executing_action_ticks = 0
-        self.get_actor_state().set_energy(0)
-        self.get_actor_state().update_last_turn_tick()
 
     def is_performing_action(self):
         return self.executing_action is not None

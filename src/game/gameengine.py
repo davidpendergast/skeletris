@@ -203,6 +203,9 @@ class Action:
     def get_position(self):
         return self.position
 
+    def is_fake_player_wait_action(self):
+        return self.get_type() == ActionType.PLAYER_WAIT
+
     def is_possible(self, world):
         return True
 

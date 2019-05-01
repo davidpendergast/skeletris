@@ -413,11 +413,27 @@ class World:
             for actor in actors_to_process:
                 a_state = actor.get_actor_state()
                 if a_state.energy() < a_state.max_energy():
-                    a_state.set_energy(a_state.energy() + 1)
+                    a_state.set_energy(a_state.energy() + a_state.speed())
                     a_state.update_last_turn_tick()
                 else:
                     not_visible = not actor.is_visible_in_world(self)
-                    action = actor.choose_next_action(self, input_state)
+
+                    # TODO - this should return a list of actions, in order of preference
+                    action = actor.request_next_action(self, input_state)
+
+                    if action.is_fake_player_wait_action():
+                        break
+                    else:
+                        a_state.update_last_turn_tick()
+                        a_state.set_energy(0)
+
+                        if action.is_possible(self):
+                            dur_modifier = a_state.turn_duration_modifier()
+                            dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
+                            actor.set_action(action, dur)
+                        else:
+                            raise ValueError("{} received impossible action: {}".format(actor, action))
+
                     action_pos = action.get_position()
                     if not_visible and (action_pos is None or not self.get_visible(*action_pos)):
                         # this actor is hidden by darkness, need to instantly update them
