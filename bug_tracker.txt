@@ -1,4 +1,0 @@
-
-1. enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
-
-2. player walking animation is jerky, seems to show single frame of idle between move actions
