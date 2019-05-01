@@ -35,7 +35,6 @@ class Entity(Updateable):
         self._shadow = None  # shadow image: ImageBundle
         self._last_vel = (0, 0)
         self._alive = False  # World sets this upon adding/removing the entity
-        self._visible = True
         
     def x(self):
         return self.rect[0]
@@ -52,19 +51,14 @@ class Entity(Updateable):
     def get_vel(self):
         return self._last_vel
 
-    def set_visible(self, val):
-        self._visible = val
-
-    def is_visible(self):
-        return self._visible
-
     def is_visible_in_world(self, world):
         grid_xy = world.to_grid_coords(*self.center())
-        is_hidden = not self.is_visible() or world.get_hidden(grid_xy[0], grid_xy[1])
-        if not is_hidden and not self.visible_in_darkness():
-            light_level = world.get_lighting(grid_xy[0], grid_xy[1])
-            is_hidden = (light_level == 0)
-        return not is_hidden
+        if world.get_hidden(grid_xy[0], grid_xy[1]):
+            return False
+        elif self.visible_in_darkness():
+            return True
+        else:
+            return world.get_visible(grid_xy[0], grid_xy[1])
 
     def visible_in_darkness(self):
         return True
@@ -533,10 +527,10 @@ class ActorEntity(Entity):
     def get_controller(self):
         return self.actor_controller
 
-    def choose_next_action(self, world, input_state, and_finalize=False):
+    def choose_next_action(self, world, input_state):
         next_action = self.get_controller().get_next_action(self, world, input_state)
         if next_action.is_possible(world):
-            dur_modifier = 0 if and_finalize else self.get_actor_state().turn_duration_modifier()
+            dur_modifier = self.get_actor_state().turn_duration_modifier()
             dur = Utils.bound(int(next_action.get_duration() * dur_modifier), 1, None)
             self.set_action(next_action, dur)
             return next_action
@@ -586,12 +580,12 @@ class ActorEntity(Entity):
             prog = self._perturb_color_ticks / self._perturb_color_duration
             return Utils.linear_interp(self._perturb_color, self.base_color, prog)
 
-    def update_action(self, world):
+    def update_action(self, world, force_finalize=False):
         if self.executing_action is not None:
             if self.executing_action_ticks == 0:
                 self.executing_action.start(world)
             self.executing_action_ticks += 1
-            if self.executing_action_ticks >= self.executing_action_duration:
+            if force_finalize or self.executing_action_ticks >= self.executing_action_duration:
                 self.executing_action.finalize(world)
 
                 self.executing_action = None

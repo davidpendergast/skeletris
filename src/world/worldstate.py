@@ -239,6 +239,9 @@ class World:
         else:
             return False
 
+    def get_visible(self, grid_x, grid_y):
+        return not self.get_hidden(grid_x, grid_y) and self.get_lighting(grid_x, grid_y) > 0
+
     def get_lighting(self, grid_x, grid_y):
         if not self.is_valid(grid_x, grid_y):
             return 0.0
@@ -414,9 +417,16 @@ class World:
                     a_state.update_last_turn_tick()
                 else:
                     not_visible = not actor.is_visible_in_world(self)
-                    actor.choose_next_action(self, input_state, and_finalize=not_visible)
-                    break
-
+                    action = actor.choose_next_action(self, input_state)
+                    action_pos = action.get_position()
+                    if not_visible and (action_pos is None or not self.get_visible(*action_pos)):
+                        # this actor is hidden by darkness, need to instantly update them
+                        # and importantly, keep updating other actors on the same tick.
+                        # otherwise the game will pause for several ticks when enemies are
+                        # in darkness, basically telling the player they're there
+                        actor.update_action(self, force_finalize=True)
+                    else:
+                        break
         new_lighting = self.get_light_sources(onscreen=False)
 
         if old_lighting != new_lighting:

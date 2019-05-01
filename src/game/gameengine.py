@@ -200,6 +200,9 @@ class Action:
     def get_type(self):
         return self.cmd_type
 
+    def get_position(self):
+        return self.position
+
     def is_possible(self, world):
         return True
 
@@ -366,6 +369,13 @@ class AttackAction(Action):
             self.actor_entity.facing_right = False
         elif face_dir[0] > 3:
             self.actor_entity.facing_right = True
+
+        # make victim face attacker iff attack landed
+        if self._results[0] > 0:
+            if face_dir[0] < 3:
+                self._results[1].facing_right = True
+            elif face_dir[0] > 3:
+                self._results[1].facing_right = False
 
 
 class SkipTurnAction(Action):
