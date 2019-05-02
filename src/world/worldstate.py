@@ -331,13 +331,31 @@ class World:
         return geo in World.SOLIDS
 
     def get_actor_in_cell(self, grid_x, grid_y):
-        """returns: an ActorState, if there's an actor entity in the specified cell"""
+        """returns: an ActorEntity, if there's an actor entity in the specified cell"""
         for e in self.entities:
             if e.is_actor():
                 grid_pos = self.to_grid_coords(e.center()[0], e.center()[1])
                 if grid_x == grid_pos[0] and grid_y == grid_pos[1]:
                     return e
         return None
+
+    def get_door_in_cell(self, grid_x, grid_y):
+        doors = self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_door())
+        if len(doors) == 0:
+            return None
+        else:
+            if len(doors) > 0:
+                print("WARN: multiple doors in cell ({}, {}): {}".format(grid_x, grid_y, doors))
+            return doors[0]
+
+    def get_entities_in_cell(self, grid_x, grid_y, cond=None):
+        res = []
+        for e in self.entities:
+            if cond is None or cond(e):
+                grid_pos = self.to_grid_coords(e.center()[0], e.center()[1])
+                if grid_x == grid_pos[0] and grid_y == grid_pos[1]:
+                    res.append(e)
+        return res
 
     def get_actors(self):
         res = []

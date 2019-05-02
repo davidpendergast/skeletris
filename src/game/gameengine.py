@@ -140,6 +140,7 @@ class PlayerController(ActorController):
         res_list = []
         if target_pos is not None:
             res_list.append(AttackAction(actor, None, target_pos))
+            res_list.append(OpenDoorAction(actor, target_pos))
             res_list.append(MoveToAction(actor, target_pos))
 
         if input_state.is_held(gs.get_instance().settings().enter_key()):
@@ -186,7 +187,9 @@ class ActionType(Enum):
     PLAYER_WAIT = "PLAYER_WAIT"  # special command used by player to indicate they're still deciding
     SKIP_TURN = "SKIP_TURN"
     CONSUME_ITEM = "CONSUME_ITEM"
+
     OPEN_DOOR = "OPEN_DOOR"
+    OPEN_CHEST = "OPEN_CHEST"
 
 
 class Action:
@@ -259,7 +262,49 @@ class MoveToAction(Action):
     def finalize(self, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
-        self.actor_entity.set_center(end_pos[0], end_pos[1])
+        self.actor_entity.move_to(end_pos[0], end_pos[1])
+
+
+class OpenDoorAction(MoveToAction):
+
+    def __init__(self, actor, position):
+        MoveToAction.__init__(self, actor, position)
+        self.door_entity = None
+
+    def is_possible(self, world):
+        pix_pos = self.actor_entity.center()
+        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
+
+        dx = abs(self.position[0] - pos[0])
+        dy = abs(self.position[1] - pos[1])
+        if dx + dy != 1:
+            return False
+
+        if world.get_actor_in_cell(self.position[0], self.position[1]) is not None:
+            return False
+
+        from src.world.worldstate import World
+        if world.get_geo(self.position[0], self.position[1]) != World.DOOR:
+            return False
+
+        if world.get_door_in_cell(*self.position) is None:
+            return False
+
+        return True
+
+    def start(self, world):
+        super().start(world)
+        self.door_entity = world.get_door_in_cell(*self.position)
+
+    def animate_in_world(self, progress, world):
+        super().animate_in_world(progress, world)
+        self.door_entity.set_open_progress_for_render(progress)
+
+    def finalize(self, world):
+        end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
+                   int(world.cellsize() * (self.position[1] + 0.5)))
+        self.door_entity.remove_self_from_world(world)
+        self.actor_entity.move_to(end_pos[0], end_pos[1])
 
 
 class AttackAction(Action):
@@ -365,7 +410,7 @@ class AttackAction(Action):
 
     def finalize(self, world):
         self._apply_attack_and_add_animations_if_necessary(world)
-        self.actor_entity.set_center(self._start_pos[0], self._start_pos[1])
+        self.actor_entity.move_to(self._start_pos[0], self._start_pos[1])
 
         face_dir = Utils.sub(self._results[1].center(), self._start_pos)
         if face_dir[0] < 3:

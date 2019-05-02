@@ -401,9 +401,9 @@ class DesolateCaveZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         spawn = bp.player_spawn
 
-        bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
-        bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
-        bp.enemy_spawns.append((spawn[0] - 6, spawn[1] + 1))
+        #bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
+        #bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
+        #bp.enemy_spawns.append((spawn[0] - 6, spawn[1] + 1))
 
         for n in Utils.neighbors(*spawn, and_diags=True):
             bp.chest_spawns.append((n[0], n[1]))

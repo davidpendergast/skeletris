@@ -2,12 +2,13 @@
 [bugs]
 
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
- - player walking animation is jerky, seems to show single frame of idle between move actions
  - camera and lighting shouldn't change when player attacks
  
  
 [current features]
 
+ - opening chests should be an action
+ - items on ground that are too far away shouldn't be grabbable
  - using items
     - hold item above head while using (very cute)
     - item targeting system
@@ -31,7 +32,6 @@
     - save machine
     - other strange entities?
  - choose name for game
- - opening doors / chests should be an action
  - design and implement basic stats
  - enemy generation
  
