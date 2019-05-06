@@ -13,7 +13,7 @@ import src.game.music as music
 import src.game.cinematics as cinematics
 import src.game.globalstate as gs
 from src.game.storystate import StoryStateKey
-from src.game.updatable import Updater
+from src.worldgen import worldgen2
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -28,7 +28,7 @@ def first_zone_id():
 
 
 def first_zone():
-    return _ALL_ZONES[_FIRST_ZONE_ID]
+    return get_zone(_FIRST_ZONE_ID)
 
 
 def all_zone_ids():
@@ -39,6 +39,10 @@ def get_zone(zone_id):
     return _ALL_ZONES[zone_id]
 
 
+def generated_zone_id(level):
+    return "generated_{}".format(level)
+
+
 def init_zones():
     _ALL_ZONES.clear()
     for zone_cls in Zone.__subclasses__():
@@ -46,14 +50,21 @@ def init_zones():
         zone_instance.zone_id = zone_cls.ZONE_ID
         make(zone_instance)
 
+    n_generated_zones = 256
+    for i in range(0, n_generated_zones):
+        _ALL_ZONES[generated_zone_id(i)] = ZoneBuilder.build_me_a_zone(i)
+
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = DesolateCaveZone.ZONE_ID
+    _FIRST_ZONE_ID = generated_zone_id(1)
 
     _ZONE_TRANSITIONS.clear()
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
     _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [DesolateCaveZone3.ZONE_ID]
     _ZONE_TRANSITIONS[DesolateCaveZone3.ZONE_ID] = [FrogLairZone.ZONE_ID]
     _ZONE_TRANSITIONS[FrogLairZone.ZONE_ID] = [TombTownZone.ZONE_ID]
+
+    for i in range(0, n_generated_zones-1):
+        _ZONE_TRANSITIONS[generated_zone_id(i)] = [generated_zone_id(i+1)]
 
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
@@ -95,7 +106,7 @@ def get_exits(zone_id):
 
 
 def get_enemy_types(zone_id):
-    return _ALL_ZONES[zone_id].get_enemies()
+    return get_zone(zone_id).get_enemies()
 
 
 class ZoneLoader:
@@ -370,6 +381,144 @@ class TestZone(Zone):
         glorple.set_y(p.y() - 50)
         w.add(glorple)
         return w
+
+
+class ZoneBuilder:
+
+    @staticmethod
+    def _add_entities_for_tile(level, x, y, tile_type, world):
+        if tile_type == worldgen2.TileType.PLAYER:
+            world.add(entities.Player(0, 0), gridcell=(x, y))
+        elif tile_type == worldgen2.TileType.CHEST:
+            # TODO - we probably want to generate the loot here
+            world.add(entities.ChestEntity(0, 0), gridcell=(x, y))
+        elif tile_type == worldgen2.TileType.MONSTER:
+            e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FLAPPUM, level)
+            world.add(e, gridcell=(x, y))
+        elif tile_type == worldgen2.TileType.ENTRANCE:
+            world.add(entities.ReturnExitEntity(x, y, None))
+        elif tile_type == worldgen2.TileType.EXIT:
+            world.add(entities.ExitEntity(x, y, generated_zone_id(level + 1)))
+        elif tile_type == worldgen2.TileType.NPC:
+            pass
+        elif tile_type == worldgen2.TileType.STRAY_ITEM:
+            pass
+
+    @staticmethod
+    def _tile_grid_to_world(level, t_grid):
+        w = t_grid.w()
+        h = t_grid.h()
+        world = World(t_grid.w(), t_grid.h())
+
+        for x in range(0, w):
+            for y in range(0, h):
+                tile_type = t_grid.get(x, y)
+                if tile_type == worldgen2.TileType.EMPTY:
+                    world.set_geo(x, y, World.EMPTY)
+                elif tile_type == worldgen2.TileType.WALL:
+                    world.set_geo(x, y, World.WALL)
+                elif tile_type == worldgen2.TileType.DOOR:
+                    world.set_geo(x, y, World.DOOR)
+                    world.add(entities.DoorEntity(x, y))
+                else:
+                    world.set_geo(x, y, World.FLOOR)
+                    if random.random() < 0.25:
+                        world.set_floor_type(spriteref.FLOOR_CRACKED_ID, xy=(x, y))
+
+                ZoneBuilder._add_entities_for_tile(level, x, y, tile_type, world)
+
+        return world
+
+    @staticmethod
+    def generate_new_world(level):
+        dims = (3, 3)
+        start = (0, 0)
+        end = (dims[0] - 1, dims[1] - 1)
+        t_size = 12
+        path, p_grid = worldgen2.GridBuilder.random_partition_grid(dims[0], dims[1], start=start, end=end)
+
+        t_grid = worldgen2.TileGrid(dims[0], dims[1], tile_size=(t_size, t_size))
+
+        room_map = {}  # (grid_x, grid_y) -> list of room_rects
+        empty_rooms = []
+
+        for x in range(0, dims[0]):
+            for y in range(0, dims[1]):
+                part = p_grid.get(x, y)
+                if part is not None:
+                    tile = worldgen2.Tile(t_size + 1, door_len=1, door_offs=3)
+                    rooms_in_tile = worldgen2.TileFiller.basic_room_fill(tile, part, disjoint_rooms=True,
+                                                                         connected_rooms=True)
+                    rooms = [[x * t_size + r[0], y * t_size + r[1], r[2], r[3]] for r in rooms_in_tile]
+
+                    if len(rooms) > 0:
+                        room_map[(x, y)] = rooms
+                        empty_rooms.extend(rooms)
+
+                    t_grid.set_tile(x, y, tile)
+
+        worldgen2.TileGridBuilder.clean_up_dangly_bits(t_grid)
+        worldgen2.TileGridBuilder.clean_up_doors(t_grid)
+
+        if len(empty_rooms) < 4:
+            raise ValueError("super low number of rooms..?")
+
+        start_placed = False
+        for p in path:
+            rooms_in_p = list(room_map.get(p))
+            random.shuffle(rooms_in_p)
+            for r in rooms_in_p:
+                if r not in empty_rooms:
+                    continue
+                if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.START, t_grid, r):
+                    start_placed = True
+                    empty_rooms.remove(r)
+                    break
+            if start_placed:
+                break
+
+        if not start_placed:
+            raise ValueError("failed to place start anywhere on path...")
+
+        end_placed = False
+        for p in reversed(path):
+            rooms_in_p = list(room_map.get(p))
+            random.shuffle(rooms_in_p)
+            for r in rooms_in_p:
+                if r not in empty_rooms:
+                    continue
+                if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.EXIT, t_grid, r):
+                    end_placed = True
+                    empty_rooms.remove(r)
+                    break
+            if end_placed:
+                break
+
+        if not start_placed:
+            raise ValueError("failed to place end anywhere on path...")
+
+        while len(empty_rooms) > 0:
+            r = empty_rooms.pop()
+            feat = worldgen2.Features.get_random_feature()
+            if random.random() > 0.333:
+                worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+
+        worldgen2.TileGridBuilder.add_walls(t_grid)
+
+        print("INFO: generated world: level={}".format(level))
+        print(t_grid)
+
+        return ZoneBuilder._tile_grid_to_world(level, t_grid)
+
+    @staticmethod
+    def build_me_a_zone(level):
+        zone = Zone("Depth {}".format(level), level, bg_color=BLACK)
+        zone.zone_id = generated_zone_id(level)
+        zone.ZONE_ID = zone.zone_id
+
+        zone.build_world = lambda: ZoneBuilder.generate_new_world(level)
+
+        return zone
 
 
 class DesolateCaveZone(Zone):

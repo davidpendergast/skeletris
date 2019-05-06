@@ -3,6 +3,7 @@
 
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
  - camera and lighting shouldn't change when player attacks
+ - performance drop when too many tiles are visible onscreen
  
  
 [current features]
@@ -25,7 +26,10 @@
     - on all UI items (re-implementing swing in pygame part X/?)
  - varying text colors in single TextImage
  - level generation
-    - hook up what we've got already, see how well it plays
+    - reduce "size" of rooms
+    - chest loot generation
+    - doors to move between zones
+    - decoration entities
  - make sure death menu sequence still works
  - remove remaining cruft from cubelike 1.0
     - password page

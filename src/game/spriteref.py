@@ -92,6 +92,8 @@ class UI:
     inv_panel_mid = None
     inv_panel_bot = None
 
+    world_cursors = []
+
     tooltip_bg = None
 
     """
@@ -566,6 +568,8 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.inv_panel_top = make(0, 0, 160, 128, shift=start_pos)
     UI.inv_panel_mid = make(0, 128, 160, 16, shift=start_pos)
     UI.inv_panel_bot = make(0, 296, 160, 25, shift=start_pos)
+
+    UI.world_cursors = [make(0 + i*16, 280, 16, 16, shift=start_pos) for i in range(0, 2)]
 
     UI.attack_action = make(0, 252, 28, 28, shift=start_pos)
     UI.potion_action = make(28, 252, 28, 28, shift=start_pos)

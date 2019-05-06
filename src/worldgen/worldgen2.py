@@ -2,32 +2,33 @@ import re
 import random
 import time
 
-FLOOR = "."
-WALL = "x" # "█"
-DOOR = "0"
 
-EMPTY = " "
+class TileType:
+    FLOOR = "."
+    WALL = "x"  # "█"
+    DOOR = "0"
+    EMPTY = " "
 
-MONSTER = "m"
-PLAYER = "p"
-ENTRANCE = "v"
-EXIT = "e"
-CHEST = "c"
-NPC = "n"
-STRAY_ITEM = "i"
-SPECIAL = "s"
+    MONSTER = "m"
+    PLAYER = "p"
+    ENTRANCE = "v"
+    EXIT = "e"
+    CHEST = "c"
+    NPC = "n"
+    STRAY_ITEM = "i"
+    SPECIAL = "s"
 
 
 def color_char(c):
-    if c == DOOR:
+    if c == TileType.DOOR:
         return "\033[1;34m" + c + "\033[0;0m"  # blue
-    elif c == MONSTER:
+    elif c == TileType.MONSTER:
         return "\033[1;31m" + c + "\033[0;0m"  # red
-    elif c == CHEST:
+    elif c == TileType.CHEST:
         return "\033[1;35m" + c + "\033[0;0m"  # magenta
-    elif c == EXIT or c == PLAYER or c == ENTRANCE:
+    elif c == TileType.EXIT or c == TileType.PLAYER or c == TileType.ENTRANCE:
         return "\033[1;32m" + c + "\033[0;0m"  # green
-    elif c == EMPTY or c == WALL or c == FLOOR:
+    elif c == TileType.EMPTY or c == TileType.WALL or c == TileType.FLOOR:
         return c
     else:
         return "\033[1;33m" + c + "\033[0;0m"  # yellow
@@ -36,7 +37,7 @@ def color_char(c):
 class Tileish:
 
     def get(self, x, y):
-        return EMPTY
+        return TileType.EMPTY
 
     def w(self):
         return 0
@@ -59,7 +60,7 @@ class Tile(Tileish):
     def __init__(self, size, door_offs=3, door_len=2):
         self.grid = []
         for i in range(0, size):
-            self.grid.append([EMPTY for _ in range(0, size)])
+            self.grid.append([TileType.EMPTY for _ in range(0, size)])
 
         self._door_offs = door_offs
         self._door_length = door_len
@@ -71,7 +72,7 @@ class Tile(Tileish):
         if self.in_tile(x, y):
             return self.grid[x][y]
         else:
-            return EMPTY
+            return TileType.EMPTY
 
     def set(self, x, y, val):
         self.grid[x][y] = val
@@ -265,7 +266,7 @@ class TileGrid(Tileish):
     def get(self, x, y):
         t = self.tile_at(x, y)
         if t is None:
-            return EMPTY
+            return TileType.EMPTY
         else:
             rel_x, rel_y = self.rel_coords(x, y)
             return t.get(rel_x, rel_y)
@@ -281,7 +282,7 @@ class TileGrid(Tileish):
     def set(self, x, y, val):
         t = self.tile_at(x, y)
         if t is None:
-            if val is not EMPTY:
+            if val is not TileType.EMPTY:
                 raise ValueError("tile is None at ({}, {})".format(x, y))
             else:
                 return
@@ -458,7 +459,7 @@ class TileFiller:
         while len(all_doors) > 0:
             d_num = all_doors.pop(0)
             d_x, d_y = tile.door_coords(d_num)[0]
-            touches = [xy for xy in TileFiller.flood_fill(tile, d_x, d_y, (DOOR, FLOOR))]
+            touches = [xy for xy in TileFiller.flood_fill(tile, d_x, d_y, (TileType.DOOR, TileType.FLOOR))]
             if len(touches) > 0:
                 group = [d_num]
                 for d in list(all_doors):
@@ -470,14 +471,14 @@ class TileFiller:
 
     @staticmethod
     def basic_door_fill(tile, partition):
-        tile.fill(0, 0, tile.w(), tile.h(), EMPTY)
+        tile.fill(0, 0, tile.w(), tile.h(), TileType.EMPTY)
 
         for i in range(0, 8):
             for (x, y) in tile.door_coords(i):
                 if i in partition.as_map:
-                    tile.set(x, y, DOOR)
+                    tile.set(x, y, TileType.DOOR)
                 else:
-                    tile.set(x, y, EMPTY)
+                    tile.set(x, y, TileType.EMPTY)
 
     @staticmethod
     def basic_floor_fill(tile, partition):
@@ -489,7 +490,7 @@ class TileFiller:
                 hub_coords = tile.hub_coords(i)
                 full_rect = RectUtils.rect_containing(door_coords + hub_coords)
                 for (x, y) in RectUtils.coords_in_rect(full_rect):
-                    tile.replace(x, y, EMPTY, FLOOR)
+                    tile.replace(x, y, TileType.EMPTY, TileType.FLOOR)
 
                 if int(i/2) in unfilled_hubs:
                     unfilled_hubs.remove((i + i % 2) % 8)
@@ -508,9 +509,9 @@ class TileFiller:
             for i in range(0, len(toggle_zones)):
                 for (x, y) in toggle_zones[i]:
                     if zone_toggle[i]:
-                        tile.set(x, y, FLOOR)
+                        tile.set(x, y, TileType.FLOOR)
                     else:
-                        tile.set(x, y, EMPTY)
+                        tile.set(x, y, TileType.EMPTY)
             if TileFiller.calculate_partition(tile) == partition:
                 return
 
@@ -546,7 +547,7 @@ class TileFiller:
             if connected_rooms:
                 not_connected = True
                 for (x, y) in RectUtils.coords_around_rect(room_rect):
-                    if tile.get(x, y) != EMPTY:
+                    if tile.get(x, y) != TileType.EMPTY:
                         not_connected = False
                         break
                 if not_connected:
@@ -554,9 +555,9 @@ class TileFiller:
 
             was_empty = []
             for xy in RectUtils.coords_in_rect(room_rect):
-                if tile.get(xy[0], xy[1]) == EMPTY:
+                if tile.get(xy[0], xy[1]) == TileType.EMPTY:
                     was_empty.append(xy)
-                    tile.set(xy[0], xy[1], FLOOR)
+                    tile.set(xy[0], xy[1], TileType.FLOOR)
 
             if TileFiller.calculate_partition(tile) == partition:
                 # added a room successfully!
@@ -564,7 +565,7 @@ class TileFiller:
                 n -= 1
             else:
                 for xy in was_empty:
-                    tile.set(xy[0], xy[1], EMPTY)
+                    tile.set(xy[0], xy[1], TileType.EMPTY)
 
         return rooms_placed
 
@@ -573,10 +574,10 @@ class TileGridBuilder:
 
     @staticmethod
     def is_dangly(x, y, tile_grid):
-        if tile_grid.get(x, y) != EMPTY:
+        if tile_grid.get(x, y) != TileType.EMPTY:
             count = 0
             for n in TileFiller.neighbhors(x, y):
-                if tile_grid.get(n[0], n[1]) != EMPTY:
+                if tile_grid.get(n[0], n[1]) != TileType.EMPTY:
                     count += 1
             if count <= 1:
                 return True
@@ -586,7 +587,7 @@ class TileGridBuilder:
     def clean_up_dangly_bits(tile_grid, source_xy=None):
         if source_xy is not None:
             if TileGridBuilder.is_dangly(source_xy[0], source_xy[1], tile_grid):
-                tile_grid.set(source_xy[0], source_xy[1], EMPTY)
+                tile_grid.set(source_xy[0], source_xy[1], TileType.EMPTY)
                 for n in TileFiller.neighbhors(source_xy[0], source_xy[1]):
                     TileGridBuilder.clean_up_dangly_bits(tile_grid, source_xy=n)
             else:
@@ -599,10 +600,10 @@ class TileGridBuilder:
 
     @staticmethod
     def is_valid_door_coord(x, y, tile_grid):
-        horz_door = (tile_grid.get(x-1, y) == FLOOR and tile_grid.get(x+1, y) == FLOOR and
-                     tile_grid.get(x, y-1) == EMPTY and tile_grid.get(x, y+1) == EMPTY)
-        vert_door = (tile_grid.get(x, y-1) == FLOOR and tile_grid.get(x, y+1) == FLOOR and
-                     tile_grid.get(x-1, y) == EMPTY and tile_grid.get(x+1, y) == EMPTY)
+        horz_door = (tile_grid.get(x-1, y) == TileType.FLOOR and tile_grid.get(x+1, y) == TileType.FLOOR and
+                     tile_grid.get(x, y-1) == TileType.EMPTY and tile_grid.get(x, y+1) == TileType.EMPTY)
+        vert_door = (tile_grid.get(x, y-1) == TileType.FLOOR and tile_grid.get(x, y+1) == TileType.FLOOR and
+                     tile_grid.get(x-1, y) == TileType.EMPTY and tile_grid.get(x+1, y) == TileType.EMPTY)
 
         return horz_door != vert_door
 
@@ -610,21 +611,21 @@ class TileGridBuilder:
     def clean_up_doors(tile_grid):
         for x in range(0, tile_grid.w()):
             for y in range(0, tile_grid.h()):
-                if tile_grid.get(x, y) == DOOR and not TileGridBuilder.is_valid_door_coord(x, y, tile_grid):
-                    tile_grid.set(x, y, FLOOR)
+                if tile_grid.get(x, y) == TileType.DOOR and not TileGridBuilder.is_valid_door_coord(x, y, tile_grid):
+                    tile_grid.set(x, y, TileType.FLOOR)
 
     @staticmethod
     def add_walls(tile_grid):
         needs_walls = []
         for x in range(0, tile_grid.w()):
             for y in range(0, tile_grid.h()):
-                if (tile_grid.get(x, y) == EMPTY):
+                if (tile_grid.get(x, y) == TileType.EMPTY):
                     for n in TileFiller.neighbhors(x, y, include_diags=True):
-                        if tile_grid.get(n[0], n[1]) != EMPTY:
+                        if tile_grid.get(n[0], n[1]) != TileType.EMPTY:
                             needs_walls.append((x, y))
                             continue
         for (x, y) in needs_walls:
-            tile_grid.set(x, y, WALL)
+            tile_grid.set(x, y, TileType.WALL)
 
 
 class Feature(Tileish):
@@ -666,7 +667,7 @@ class Feature(Tileish):
         if 0 <= x < self.w() and 0 <= y < self.h():
             return self.replace[y][x]
         else:
-            return EMPTY
+            return TileType.EMPTY
 
     def get_place_val(self, x, y):
         return self.place[y][x]
@@ -739,16 +740,16 @@ class FeatureUtils:
                 if feat_val != "?":
                     tile_grid.set(x + feat_x, y + feat_y, feat_val)
 
-    CHAR_MAP = {"X": FLOOR,
-                ".": EMPTY,
-                "p": PLAYER,
-                "v": ENTRANCE,
-                "e": EXIT,
-                "m": MONSTER,
-                "c": CHEST,
-                "i": STRAY_ITEM,
-                "n": NPC,
-                "s": SPECIAL}
+    CHAR_MAP = {"X": TileType.FLOOR,
+                ".": TileType.EMPTY,
+                "p": TileType.PLAYER,
+                "v": TileType.ENTRANCE,
+                "e": TileType.EXIT,
+                "m": TileType.MONSTER,
+                "c": TileType.CHEST,
+                "i": TileType.STRAY_ITEM,
+                "n": TileType.NPC,
+                "s": TileType.SPECIAL}
 
     @staticmethod
     def convert_char(c):
@@ -764,6 +765,7 @@ class FeatureUtils:
             new_word = "".join(FeatureUtils.convert_char(c) for c in word)
             res.append(new_word)
         return res
+
 
 class Features:
     START = Feature("start",
@@ -805,7 +807,6 @@ class Features:
                               Features.QUEST_NPC,
                               Features.LARGE_MONSTER,
                               Features.WISHING_WELL,
-                              Features.QUEST_NPC,
                               Features.STRAY_ITEM])
 
 
@@ -1000,22 +1001,13 @@ if __name__ == "__main__":
     if not start_placed:
         raise ValueError("failed to place end anywhere on path...")
 
-    print(t_grid)
-    time.sleep(0.5)
-
     while len(empty_rooms) > 0:
         r = empty_rooms.pop()
         feat = Features.get_random_feature()
         if random.random() > 0.333:
             FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
 
-    print(t_grid)
-    time.sleep(0.5)
-
     TileGridBuilder.add_walls(t_grid)
-
-    print(t_grid)
-    time.sleep(0.5)
 
 
 
