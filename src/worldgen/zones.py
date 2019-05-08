@@ -505,6 +505,7 @@ class ZoneBuilder:
                 worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
 
         worldgen2.TileGridBuilder.add_walls(t_grid)
+        worldgen2.TileGridBuilder.fill_empty_islands_with_walls(t_grid)
 
         print("INFO: generated world: level={}".format(level))
         print(t_grid)

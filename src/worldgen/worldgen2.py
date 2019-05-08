@@ -1,6 +1,7 @@
 import re
 import random
 import time
+from src.utils.util import Utils
 
 
 class TileType:
@@ -44,6 +45,9 @@ class Tileish:
 
     def h(self):
         return 0
+
+    def is_valid(self, x, y):
+        return 0 <= x < self.w() and 0 <= y < self.h()
 
     def __str__(self):
         res = []
@@ -180,7 +184,7 @@ class PartitionGrid:
     def set(self, x, y, p):
         self.partitions[x][y] = p
 
-    def is_valid_at(self, x, y, p, direction=None):
+    def can_place_at(self, x, y, p, direction=None):
         if not (0 <= x < self.w() and 0 <= y < self.h()):
             return False
         elif direction is not None:
@@ -192,10 +196,10 @@ class PartitionGrid:
                     return False
             return True
         else:
-            return (self.is_valid_at(x, y, p, direction=(0, -1)) and
-                    self.is_valid_at(x, y, p, direction=(1, 0)) and
-                    self.is_valid_at(x, y, p, direction=(0, 1)) and
-                    self.is_valid_at(x, y, p, direction=(-1, 0)))
+            return (self.can_place_at(x, y, p, direction=(0, -1)) and
+                    self.can_place_at(x, y, p, direction=(1, 0)) and
+                    self.can_place_at(x, y, p, direction=(0, 1)) and
+                    self.can_place_at(x, y, p, direction=(-1, 0)))
 
     def has_door(self, x, y, door_num):
         """returns: True, False or None if partition is None"""
@@ -234,6 +238,7 @@ class PartitionGrid:
 class TileGrid(Tileish):
 
     def __init__(self, grid_w, grid_h, tile_size=(16, 16)):
+        Tileish.__init__(self)
         self.tile_size = tile_size
         self.tiles = [None] * grid_w
         for i in range(0, len(self.tiles)):
@@ -299,7 +304,7 @@ class GridBuilder:
         bad = []
         while path[-1] != p2:
             cur = path[-1]
-            neighbors = list(TileFiller.neighbhors(cur[0], cur[1]))
+            neighbors = list(Utils.neighbors(cur[0], cur[1]))
             random.shuffle(neighbors)
 
             added_n = False
@@ -418,19 +423,6 @@ class RectUtils:
 class TileFiller:
 
     @staticmethod
-    def neighbhors(x, y, include_diags=False):
-        yield (x + 1, y)
-        yield (x, y + 1)
-        yield (x - 1, y)
-        yield (x, y - 1)
-
-        if include_diags:
-            yield (x + 1, y - 1)
-            yield (x + 1, y + 1)
-            yield (x - 1, y + 1)
-            yield (x - 1, y - 1)
-
-    @staticmethod
     def flood_fill(tile, start_x, start_y, on_values):
         if tile.get(start_x, start_y) not in on_values:
             return
@@ -443,7 +435,7 @@ class TileFiller:
                 x, y = q.pop()
                 if tile.get(x, y) in on_values:
                     yield (x, y)
-                    for (n_x, n_y) in TileFiller.neighbhors(x, y):
+                    for (n_x, n_y) in Utils.neighbors(x, y):
                         if tile.in_tile(n_x, n_y) and (n_x, n_y) not in seen:
                             seen[(n_x, n_y)] = None
                             q.append((n_x, n_y))
@@ -576,7 +568,7 @@ class TileGridBuilder:
     def is_dangly(x, y, tile_grid):
         if tile_grid.get(x, y) != TileType.EMPTY:
             count = 0
-            for n in TileFiller.neighbhors(x, y):
+            for n in Utils.neighbors(x, y):
                 if tile_grid.get(n[0], n[1]) != TileType.EMPTY:
                     count += 1
             if count <= 1:
@@ -588,7 +580,7 @@ class TileGridBuilder:
         if source_xy is not None:
             if TileGridBuilder.is_dangly(source_xy[0], source_xy[1], tile_grid):
                 tile_grid.set(source_xy[0], source_xy[1], TileType.EMPTY)
-                for n in TileFiller.neighbhors(source_xy[0], source_xy[1]):
+                for n in Utils.neighbors(source_xy[0], source_xy[1]):
                     TileGridBuilder.clean_up_dangly_bits(tile_grid, source_xy=n)
             else:
                 return
@@ -620,12 +612,44 @@ class TileGridBuilder:
         for x in range(0, tile_grid.w()):
             for y in range(0, tile_grid.h()):
                 if (tile_grid.get(x, y) == TileType.EMPTY):
-                    for n in TileFiller.neighbhors(x, y, include_diags=True):
+                    for n in Utils.neighbors(x, y, and_diags=True):
                         if tile_grid.get(n[0], n[1]) != TileType.EMPTY:
                             needs_walls.append((x, y))
                             continue
         for (x, y) in needs_walls:
             tile_grid.set(x, y, TileType.WALL)
+
+    @staticmethod
+    def flood_search(tile_grid, x, y, on_values):
+        res = set()
+        if tile_grid.get(x, y) not in on_values:
+            return res
+        else:
+            seen = set()
+            seen.add((x, y))
+            q = [(x, y)]
+            while len(q) > 0:
+                pos = q.pop()
+                res.add(pos)
+
+                for n in Utils.neighbors(pos[0], pos[1]):
+                    if tile_grid.is_valid(n[0], n[1]) and n not in seen and tile_grid.get(n[0], n[1]) in on_values:
+                        seen.add(n)
+                        q.append(n)
+            return res
+
+    @staticmethod
+    def fill_empty_islands_with_walls(tile_grid, smaller_than=16):
+        seen = set()
+        for x in range(0, tile_grid.w()):
+            for y in range(0, tile_grid.h()):
+                if (x, y) in seen:
+                    continue
+                island = TileGridBuilder.flood_search(tile_grid, x, y, (TileType.EMPTY))
+                seen.update(island)
+                if 0 < len(island) < smaller_than:
+                    for pos in island:
+                        tile_grid.set(pos[0], pos[1], TileType.WALL)
 
 
 class Feature(Tileish):
@@ -664,7 +688,7 @@ class Feature(Tileish):
         return len(self.replace)
 
     def get(self, x, y):
-        if 0 <= x < self.w() and 0 <= y < self.h():
+        if self.is_valid(x, y):
             return self.replace[y][x]
         else:
             return TileType.EMPTY
