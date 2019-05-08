@@ -344,7 +344,7 @@ class World:
         if len(doors) == 0:
             return None
         else:
-            if len(doors) > 0:
+            if len(doors) > 1:
                 print("WARN: multiple doors in cell ({}, {}): {}".format(grid_x, grid_y, doors))
             return doors[0]
 

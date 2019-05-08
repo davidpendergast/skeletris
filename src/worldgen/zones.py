@@ -395,6 +395,8 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.MONSTER:
             e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FLAPPUM, level)
             world.add(e, gridcell=(x, y))
+        elif tile_type == worldgen2.TileType.DOOR:
+            world.add(entities.DoorEntity(x, y))
         elif tile_type == worldgen2.TileType.ENTRANCE:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
@@ -419,7 +421,6 @@ class ZoneBuilder:
                     world.set_geo(x, y, World.WALL)
                 elif tile_type == worldgen2.TileType.DOOR:
                     world.set_geo(x, y, World.DOOR)
-                    world.add(entities.DoorEntity(x, y))
                 else:
                     world.set_geo(x, y, World.FLOOR)
                     if random.random() < 0.25:

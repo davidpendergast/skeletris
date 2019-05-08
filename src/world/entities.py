@@ -507,6 +507,8 @@ class ActorEntity(Entity):
         self._perturb_color_duration = 1
         self._perturb_color_ticks = 1
 
+        self._was_moving = 60  # how long it's been since the actor was moving
+
     def get_shadow_sprite(self):
         return self._shadow_sprite
 
@@ -518,6 +520,9 @@ class ActorEntity(Entity):
 
     def is_moving(self):
         return Utils.mag(self.get_vel()) >= 0.05
+
+    def was_moving_recently(self, this_recently=5):
+        return self._was_moving <= this_recently
 
     def visible_in_darkness(self):
         return False
@@ -597,12 +602,17 @@ class ActorEntity(Entity):
         elif self.get_vel()[0] > 1.5:
             self.facing_right = True
 
+        if self.is_moving():
+            self._was_moving = 0
+        else:
+            self._was_moving = Utils.bound(self._was_moving + 1, 0, 60)
+
         self.update_perturbations()
         self.update_images()
 
     def get_sprite(self):
         tick = gs.get_instance().anim_tick
-        anim_rate = 2 if self.is_moving() else 4
+        anim_rate = 2 if self.was_moving_recently() else 4
         return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
 
     def set_facing_right(self, facing_right):
@@ -658,9 +668,9 @@ class Player(ActorEntity):
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
-        anim_rate = 2 if self.is_moving() else 4
+        anim_rate = 2 if self.was_moving_recently() else 4
         holding_item = self.get_held_item() is not None
-        player_sprites = spriteref.get_player_sprites(self.is_moving(), holding_item)
+        player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 

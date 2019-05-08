@@ -262,7 +262,7 @@ class MoveToAction(Action):
     def finalize(self, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
-        self.actor_entity.move_to(end_pos[0], end_pos[1])
+        self.actor_entity.set_center(end_pos[0], end_pos[1])
 
 
 class OpenDoorAction(MoveToAction):
@@ -304,7 +304,7 @@ class OpenDoorAction(MoveToAction):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
         self.door_entity.remove_self_from_world(world)
-        self.actor_entity.move_to(end_pos[0], end_pos[1])
+        self.actor_entity.set_center(end_pos[0], end_pos[1])
 
 
 class AttackAction(Action):
@@ -410,7 +410,7 @@ class AttackAction(Action):
 
     def finalize(self, world):
         self._apply_attack_and_add_animations_if_necessary(world)
-        self.actor_entity.move_to(self._start_pos[0], self._start_pos[1])
+        self.actor_entity.set_center(self._start_pos[0], self._start_pos[1])
 
         face_dir = Utils.sub(self._results[1].center(), self._start_pos)
         if face_dir[0] < 3:
