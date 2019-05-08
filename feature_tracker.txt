@@ -3,7 +3,7 @@
 
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
  - camera and lighting shouldn't change when player attacks
- - performance drop when too many tiles are visible onscreen
+ - player gets stuck in walking animation
  
  
 [current features]

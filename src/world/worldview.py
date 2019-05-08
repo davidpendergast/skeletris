@@ -12,7 +12,7 @@ class WorldView:
     def __init__(self, world):
         self.world = world
 
-        self._geo_bundle_lookup = {}  # x,y -> bundle id
+        self._geo_bundle_lookup = {}  # x,y -> ImageBundle
         self._onscreen_geo_bundles = set()
         self._dirty_geo_bundles = []
 
@@ -59,11 +59,11 @@ class WorldView:
 
         return None
 
-    def get_geo_bundle(self, grid_x, grid_y):
+    def get_geo_bundle(self, grid_x, grid_y, create_if_missing=True):
         key = (grid_x, grid_y)
         if key in self._geo_bundle_lookup:
             return self._geo_bundle_lookup[key]
-        else:
+        elif create_if_missing:
             geo = self.world.get_geo(grid_x, grid_y)
             if geo is World.WALL:
                 layer = spriteref.WALL_LAYER
@@ -73,6 +73,8 @@ class WorldView:
             self._geo_bundle_lookup[key] = img.ImageBundle(None, 0, 0, layer=layer)
             self.update_geo_bundle(grid_x, grid_y)
             return self._geo_bundle_lookup[key]
+        else:
+            return None
 
     def _update_onscreen_tile_bundles(self, render_engine):
         px, py = gs.get_instance().get_world_camera()
@@ -80,19 +82,32 @@ class WorldView:
         grid_rect = [px // self.world.cellsize(), py // self.world.cellsize(),
                      pw // self.world.cellsize() + 3, ph // self.world.cellsize() + 3]
 
+        old_onscreen_geo = self._onscreen_geo_bundles
         new_onscreen_geo = set()
         for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):
             for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
                 bun_key = (x, y)
-                bun = self.get_geo_bundle(*bun_key)
+
+                if bun_key in old_onscreen_geo:
+                    old_onscreen_geo.remove(bun_key)
+
+                bun = self.get_geo_bundle(*bun_key, create_if_missing=False)
+
+                if bun is None and self.world.get_geo(x, y) != World.EMPTY:
+                    bun = self.get_geo_bundle(*bun_key, create_if_missing=True)
+
                 if bun is not None:
                     new_onscreen_geo.add(bun_key)
                     if bun_key not in self._onscreen_geo_bundles or bun_key in self._dirty_geo_bundles:
                         render_engine.update(bun)
 
-        for bun_key in self._onscreen_geo_bundles:
-            if bun_key not in new_onscreen_geo:
-                render_engine.remove(self.get_geo_bundle(*bun_key))
+        # clear out the bundles that aren't onscreen anymore
+        for bun_key in old_onscreen_geo:
+            expired_bun = self.get_geo_bundle(*bun_key, create_if_missing=False)
+            if expired_bun is not None:
+                render_engine.remove(expired_bun)
+                if bun_key in self._geo_bundle_lookup:
+                    del self._geo_bundle_lookup[bun_key]
 
         self._onscreen_geo_bundles = new_onscreen_geo
 
@@ -104,6 +119,7 @@ class WorldView:
 
         for bun_key in self._onscreen_geo_bundles:
             render_eng.remove(self._geo_bundle_lookup[bun_key])
+        self._geo_bundle_lookup.clear()
         self._onscreen_geo_bundles.clear()
 
     def update_all(self, input_state, render_engine):
