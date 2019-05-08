@@ -391,7 +391,7 @@ class ZoneBuilder:
             world.add(entities.Player(0, 0), gridcell=(x, y))
         elif tile_type == worldgen2.TileType.CHEST:
             # TODO - we probably want to generate the loot here
-            world.add(entities.ChestEntity(0, 0), gridcell=(x, y))
+            world.add(entities.ChestEntity(x, y))
         elif tile_type == worldgen2.TileType.MONSTER:
             e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FLAPPUM, level)
             world.add(e, gridcell=(x, y))

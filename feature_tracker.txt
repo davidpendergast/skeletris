@@ -3,12 +3,12 @@
 
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
  - camera and lighting shouldn't change when player attacks
- - player gets stuck in walking animation
+ - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
+    - also can have rooms that border out-of-bounds with no walls in between
  
  
 [current features]
 
- - opening chests should be an action
  - items on ground that are too far away shouldn't be grabbable
  - using items
     - hold item above head while using (very cute)
@@ -47,6 +47,7 @@
  - one boss fight 
  - magic system
  - quest system
+ - status effects
  
  
 [~dream features~]

@@ -127,21 +127,33 @@ class PlayerController(ActorController):
     def get_next_action(self, actor, world, input_state):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
 
-        target_pos = None
+        dx = 0
+        dy = 0
         if input_state.is_held(gs.get_instance().settings().left_key()):
-            target_pos = (pos[0] - 1, pos[1])
+            dx -= 1
         elif input_state.is_held(gs.get_instance().settings().up_key()):
-            target_pos = (pos[0], pos[1] - 1)
+            dy -= 1
         elif input_state.is_held(gs.get_instance().settings().right_key()):
-            target_pos = (pos[0] + 1, pos[1])
+            dx += 1
         elif input_state.is_held(gs.get_instance().settings().down_key()):
-            target_pos = (pos[0], pos[1] + 1)
+            dy += 1
+
+        target_pos = None
+        if dx != 0:
+            target_pos = (pos[0] + dx, pos[1])
+        elif dy != 0:
+            target_pos = (pos[0], pos[1] + dy)
 
         res_list = []
         if target_pos is not None:
             res_list.append(AttackAction(actor, None, target_pos))
             res_list.append(OpenDoorAction(actor, target_pos))
             res_list.append(MoveToAction(actor, target_pos))
+
+            if target_pos == (pos[0], pos[1] - 1):
+                # if you try and fail to go up, that's interpreted as an 'interact'
+                # on the player's current position.
+                res_list.append(InteractAction(actor, pos))
 
         if input_state.is_held(gs.get_instance().settings().enter_key()):
             res_list.append(SkipTurnAction(actor, position=pos))
@@ -189,7 +201,6 @@ class ActionType(Enum):
     CONSUME_ITEM = "CONSUME_ITEM"
 
     OPEN_DOOR = "OPEN_DOOR"
-    OPEN_CHEST = "OPEN_CHEST"
 
 
 class Action:
@@ -435,6 +446,33 @@ class SkipTurnAction(Action):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
         return pos == self.position
+
+
+class InteractAction(Action):
+
+    def __init__(self, actor, position):
+        Action.__init__(self, ActionType.INTERACT, 10, actor, position=position)
+        self.target = None
+
+    def is_possible(self, world):
+        pix_pos = self.actor_entity.center()
+        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
+        if pos != self.position:
+            return False
+
+        return world.get_interactable_in_cell(pos[0], pos[1]) is not None
+
+    def start(self, world):
+        pix_pos = self.actor_entity.center()
+        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
+        self.target = world.get_interactable_in_cell(pos[0], pos[1])
+
+    def animate_in_world(self, world, progress):
+        pass
+
+    def finalize(self, world):
+        print("INFO: interacted with {}".format(self.target))
+        self.target.interact(world)
 
 
 class PlayerWaitAction(Action):

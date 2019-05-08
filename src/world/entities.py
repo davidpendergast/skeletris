@@ -715,6 +715,13 @@ class Player(ActorEntity):
     def update(self, world, input_state, render_engine):
         ActorEntity.update(self, world, input_state, render_engine)
         self.update_held_item_image(render_engine)
+
+    def request_next_action(self, world, input_state):
+        res = ActorEntity.request_next_action(self, world, input_state)
+        if res is not None and res.is_fake_player_wait_action():
+            if res.turn_right is not None:
+                self.facing_right = res.turn_right
+        return res
         
     def is_player(self):
         return True
@@ -779,10 +786,16 @@ class Enemy(ActorEntity):
         
 
 class ChestEntity(Entity):
-    def __init__(self, x, y):
-        Entity.__init__(self, x, y, 24, 24)
-        self.ticks_to_open = 60
-        self.current_cooldown = self.ticks_to_open
+    def __init__(self, grid_x, grid_y):
+        w = 24
+        # want it to be on the left or right of the cell
+        if random.random() > 0.5:
+            x_pos = int((grid_x + 1/3) * 64 - w/2)
+        else:
+            x_pos = int((grid_x + 2/3) * 64 - w/2)
+        Entity.__init__(self, x_pos, grid_y * 64, w, 24)
+        self._is_open = False
+        self._left_side = random.random() > 0.5
         
     def is_chest(self):
         return True
@@ -799,15 +812,13 @@ class ChestEntity(Entity):
     def update_images(self, anim_tick):
         if self.is_open():
             model = spriteref.chest_open_1
-        elif self.current_cooldown < self.ticks_to_open:
-            model = spriteref.chest_open_0
         else:
             model = spriteref.chest_closed
 
         if self._img is None:
             self._img = img.ImageBundle(spriteref.chest_closed, 0, 0, layer=spriteref.ENTITY_LAYER)
 
-        x = self.x() - (model.width() * self._img.scale() - self.w()) // 2
+        x = self.x() + self.w() // 2 - (model.width() * self._img.scale()) // 2
         y = self.y() - (model.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
@@ -819,33 +830,24 @@ class ChestEntity(Entity):
         self._shadow = self._shadow.update(new_x=(sh_x + 9*sh_s), new_y=(sh_y - 2*sh_s))
 
     def is_open(self):
-        return self.current_cooldown <= 0
-    
-    def _do_open(self, world, level):
-        loot = LootFactory.gen_chest_loot(level)
-
-        for item in loot:
-            world.add(ItemEntity(item, *self.center()))
+        return self._is_open
             
     def update(self, world, input_state, render_engine):
-        
-        if not gs.get_instance().world_updates_paused() and not self.is_open():
-            player_nearby = False
-            p = world.get_player()
-            if p is not None:
-                dx = self.center()[0] - p.center()[0]
-                dy = self.center()[1] - p.center()[1]
-                player_nearby = dx*dx + dy*dy < 30*30
-            
-            if player_nearby:
-                self.current_cooldown -= 1
-            else:
-                self.current_cooldown = self.ticks_to_open
-                
-            if self.is_open():
-                self._do_open(world, gs.get_instance().get_zone_level())
-             
         self.update_images(gs.get_instance().anim_tick)
+
+    def is_interactable(self):
+        return not self.is_open()
+
+    def interact(self, world):
+        if self._is_open:
+            return
+        else:
+            self._is_open = True
+            level = gs.get_instance().get_zone_level()
+            loot = LootFactory.gen_chest_loot(level)
+
+            for item in loot:
+                world.add(ItemEntity(item, *self.center()))
 
 
 class PickupEntity(Entity):
@@ -988,19 +990,7 @@ class ItemEntity(PickupEntity):
         return False
 
     def is_interactable(self):
-        return True
-
-    def interact_text(self):
-        return "pick up"
-
-    def interact(self, world):
-        if gs.get_instance().player_state().held_item is not None:
-            print("ERROR: cannot pick up item. already holding one.")
-            return
-        else:
-            gs.get_instance().player_state().held_item = self.item
-            print("INFO: picked up item " + str(self.item))
-            world.remove(self)
+        return False
 
 
 class PotionEntity(PickupEntity):
@@ -1185,6 +1175,9 @@ class ExitEntity(Entity):
 
     def sprite_offset(self, sprite, scale):
         return (0, -sprite.height() * scale)
+
+    def visible_in_darkness(self):
+        return False
 
     def update_images(self, anim_tick):
         if self._img is None:

@@ -793,8 +793,12 @@ class FeatureUtils:
 
 class Features:
     START = Feature("start",
-                    FeatureUtils.convert(["XXX", "...", "?.?"]),
-                    FeatureUtils.convert(["XpX", ".v.", "?.?"]), can_rotate=False)
+                    FeatureUtils.convert(["XXX",
+                                          "...",
+                                          "?.?"]),
+                    FeatureUtils.convert(["XpX",
+                                          ".v.",
+                                          "?.?"]), can_rotate=False)
 
     EXIT = Feature("exit_door",
                    FeatureUtils.convert([".", "X"]),
@@ -809,8 +813,8 @@ class Features:
                             FeatureUtils.convert(["mXX", "XXm", "XmX"]))
 
     CHEST = Feature("chest",
-                    FeatureUtils.convert(["XXX", "XXX", "XXX"]),
-                    FeatureUtils.convert(["XXX", "XcX", "XXX"]))
+                    FeatureUtils.convert([".", "X"]),
+                    FeatureUtils.convert([".", "c"]), can_rotate=False)
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["X"]),
@@ -821,8 +825,8 @@ class Features:
                            FeatureUtils.convert(["....", "XnsX", "XXXX"]))
 
     QUEST_NPC = Feature("quest_npc",
-                        FeatureUtils.convert(["XXX", "XXX", "..."]),
-                        FeatureUtils.convert(["XXX", "XnX", "..."]))
+                        FeatureUtils.convert([".", "X"]),
+                        FeatureUtils.convert([".", "n"]), can_rotate=False)
 
     @staticmethod
     def get_random_feature():

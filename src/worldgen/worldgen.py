@@ -290,7 +290,7 @@ class WorldBlueprint:
             w.add(save_entity)
 
         for chest_pos in self.chest_spawns:
-            w.add(ChestEntity(0, 0), gridcell=chest_pos)
+            w.add(ChestEntity(chest_pos[0], chest_pos[1]))
 
         w.add(Player(0, 0), gridcell=self.player_spawn)
 

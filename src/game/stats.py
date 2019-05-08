@@ -27,7 +27,7 @@ def default_player_stats():
         StatType.VIT: 8,
         StatType.DEF: 1,
         StatType.UNARMED_ATT: 2,
-        StatType.LIGHT_LEVEL: 5,
+        StatType.LIGHT_LEVEL: 4,
         StatType.MIN_LIGHT_LEVEL: 2,
         StatType.SPEED: 4
     })

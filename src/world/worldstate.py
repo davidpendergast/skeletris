@@ -348,6 +348,15 @@ class World:
                 print("WARN: multiple doors in cell ({}, {}): {}".format(grid_x, grid_y, doors))
             return doors[0]
 
+    def get_interactable_in_cell(self, grid_x, grid_y):
+        ents = self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_interactable())
+        if len(ents) == 0:
+            return None
+        else:
+            if len(ents) > 1:
+                print("WARN: multiple interactables in cell ({}, {}): {}".format(grid_x, grid_y, ents))
+            return ents[0]
+
     def get_entities_in_cell(self, grid_x, grid_y, cond=None):
         res = []
         for e in self.entities:
