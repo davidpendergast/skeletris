@@ -165,7 +165,8 @@ class DialogManager:
                 else:
                     cutscene.update(world, input_state)
             else:
-                if dialog.scroll_pos > 0 and input_state.was_pressed(gs.get_instance().settings().interact_key()):
+                all_keys = [k for k in gs.get_instance().settings().all_in_game_keys()]
+                if dialog.scroll_pos > 0 and input_state.was_pressed(all_keys):
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next())
                     else:

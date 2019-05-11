@@ -39,6 +39,10 @@ KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
 KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i])
 KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
 
+num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
+            pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
+
+KEY_MAPPED_ACTIONS = [Setting("action " + str(i), "ACTION_" + str(i), [num_keys[i]]) for i in range(1, 7)]
 
 # these are locked
 KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP])
@@ -138,3 +142,28 @@ class Settings:
 
     def rotate_cw_key(self):
         return self.get(KEY_ROTATE_CW)
+
+    def all_direction_keys(self):
+        for k in self.up_key():
+            yield k
+        for k in self.down_key():
+            yield k
+        for k in self.left_key():
+            yield k
+        for k in self.right_key():
+            yield k
+
+    def num_mapped_actions(self):
+        return len(KEY_MAPPED_ACTIONS)
+
+    def action_key(self, num):
+        return self.get(KEY_MAPPED_ACTIONS[num])
+
+    def all_in_game_keys(self):
+        for k in self.all_direction_keys():
+            yield k
+        for i in range(0, self.num_mapped_actions()):
+            for k in self.action_key(i):
+                yield k
+        for k in self.enter_key():
+            yield k

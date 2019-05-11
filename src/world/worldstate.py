@@ -422,18 +422,19 @@ class World:
                 e.update(self, input_state, render_engine)
                 self._onscreen_entities.add(e)
 
-                if e.is_actor() and not e.get_actor_state().is_alive():
-                    e.get_actor_state().handle_death(self, e)
+                if not gs.get_instance().world_updates_paused():
+                    if e.is_actor() and not e.get_actor_state().is_alive():
+                        e.get_actor_state().handle_death(self, e)
 
-                elif e.is_actor() and near_player:
-                    actors_to_process.append(e)
-                    if e.is_performing_action():
-                        an_actor_is_acting = True
+                    elif e.is_actor() and near_player:
+                        actors_to_process.append(e)
+                        if e.is_performing_action():
+                            an_actor_is_acting = True
 
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
 
-        if not an_actor_is_acting:
+        if not gs.get_instance().world_updates_paused() and not an_actor_is_acting:
             # process the actors that have waited longest first
             actors_to_process.sort(key=lambda a: a.get_actor_state().last_turn_tick())
 

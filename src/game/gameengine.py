@@ -184,6 +184,7 @@ class EnemyController(ActorController):
 
 class ActionType(Enum):
     MOVE_TO = "MOVE_TO"
+    SKIP_DIALOG = "SKIP_DIALOG"
     PICKUP_ITEM = "PICKUP_ITEM"
     DROP_ITEM = "DROP_ITEM"
     THROW_ITEM = "THROW_ITEM"
@@ -275,9 +276,8 @@ class MoveToAction(Action):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
 
-        cur_pos = self.actor_entity.center()
         new_pos = Utils.linear_interp(self.start_pos, end_pos, progress)
-        self.actor_entity.move(new_pos[0] - cur_pos[0], new_pos[1] - cur_pos[1])
+        self.actor_entity.move_to(new_pos[0], new_pos[1])
 
     def finalize(self, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
@@ -491,4 +491,6 @@ class PlayerWaitAction(Action):
 
     def is_possible(self, world):
         return True
+
+
 

@@ -388,7 +388,7 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.NPC:
             npc_id = random.choice(list(npc.TEMPLATES.keys()))
             template = npc.TEMPLATES[npc_id]
-            on_interact = lambda ent, world: print("INFO: interacted with {}".format(ent))
+            on_interact = lambda ent, world: gs.get_instance().dialog_manager().set_dialog(npc.get_sample_dialog(npc_id))
             world.add(entities.NpcEntity(x, y, template, on_interact))
         elif tile_type == worldgen2.TileType.STRAY_ITEM:
             pass

@@ -595,18 +595,19 @@ class ActorEntity(Entity):
 
     def update(self, world, input_state, render_engine):
         Entity.update(self, world, input_state, render_engine)
-        if self.is_performing_action():
-            self.update_action(world)
+        if not gs.get_instance().world_updates_paused():
+            if self.is_performing_action():
+                self.update_action(world)
 
-        if self.get_vel()[0] < -1.5:
-            self.facing_right = False
-        elif self.get_vel()[0] > 1.5:
-            self.facing_right = True
+            if self.get_vel()[0] < -1.5:
+                self.facing_right = False
+            elif self.get_vel()[0] > 1.5:
+                self.facing_right = True
 
-        if self.is_moving():
-            self._was_moving = 0
-        else:
-            self._was_moving = Utils.bound(self._was_moving + 1, 0, 60)
+            if self.is_moving():
+                self._was_moving = 0
+            else:
+                self._was_moving = Utils.bound(self._was_moving + 1, 0, 60)
 
         self.update_perturbations()
         self.update_images()

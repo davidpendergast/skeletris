@@ -1,9 +1,12 @@
 
 from enum import Enum
+import random
+
 import src.game.spriteref as sr
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
 import src.game.globalstate as gs
+import src.game.dialog as dialog
 
 
 class NpcID(Enum):
@@ -35,4 +38,21 @@ TEMPLATES = {
 
 def get_sprites(npc_id):
     return TEMPLATES[npc_id].talking_sprites
+
+
+def get_sample_dialog(npc_id):
+    sprites = TEMPLATES[npc_id].talking_sprites
+    options = [
+        [
+            dialog.NpcDialog("I hope you find a lot of stuff down here! That's what adventurers do, right? They look for stuff? ..to wear?", sprites),
+            dialog.NpcDialog("I usually just go to the store, but to each their own!", sprites),
+        ], [
+            dialog.NpcDialog("Hi! I don't have anything important to say, but it's a pleasure to meet you.", sprites)
+        ], [
+            dialog.NpcDialog("You're doing a great job so far!", sprites)
+        ]
+    ]
+
+    return dialog.Dialog.link_em_up(random.choice(options))
+
 
