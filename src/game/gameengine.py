@@ -148,12 +148,8 @@ class PlayerController(ActorController):
         if target_pos is not None:
             res_list.append(AttackAction(actor, None, target_pos))
             res_list.append(OpenDoorAction(actor, target_pos))
+            res_list.append(InteractAction(actor, target_pos))
             res_list.append(MoveToAction(actor, target_pos))
-
-            if target_pos == (pos[0], pos[1] - 1):
-                # if you try and fail to go up, that's interpreted as an 'interact'
-                # on the player's current position.
-                res_list.append(InteractAction(actor, pos))
 
         if input_state.is_held(gs.get_instance().settings().enter_key()):
             res_list.append(SkipTurnAction(actor, position=pos))
@@ -162,10 +158,7 @@ class PlayerController(ActorController):
             if action.is_possible(world):
                 return action
 
-        turn_left = input_state.was_pressed(gs.get_instance().settings().left_key())
-        turn_right = input_state.was_pressed(gs.get_instance().settings().right_key())
-        turn = None if (turn_left == turn_right) else turn_right
-        return PlayerWaitAction(actor, turn_right=turn)
+        return PlayerWaitAction(actor, position=target_pos)
 
 
 class EnemyController(ActorController):
@@ -217,6 +210,13 @@ class Action:
     def get_position(self):
         return self.position
 
+    def get_actor(self):
+        return self.actor_entity
+
+    def causes_turn(self):
+        """whether the actor should turn towards the target position at the start of this action."""
+        return True
+
     def is_fake_player_wait_action(self):
         return self.get_type() == ActionType.PLAYER_WAIT
 
@@ -228,6 +228,15 @@ class Action:
 
     def get_duration(self):
         return self.anim_duration
+
+    def pre_start(self, world):  # pre-start? this is dumb
+        if self.causes_turn() and self.get_position() is not None:
+            pos = self.get_actor().center()
+            grid_pos = world.to_grid_coords(*pos)
+            if grid_pos[0] < self.get_position()[0]:
+                self.get_actor().set_facing_right(False)
+            elif grid_pos[0] > self.get_position()[0]:
+                self.get_actor().set_facing_right(True)
 
     def start(self, world):
         pass
@@ -248,13 +257,13 @@ class MoveToAction(Action):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
-        dx = abs(self.position[0] - pos[0])
-        dy = abs(self.position[1] - pos[1])
-        if dx + dy != 1:
+        if Utils.dist_manhattan(self.position, pos) != 1:
             return False
         elif world.is_solid(self.position[0], self.position[1]):
             return False
         elif world.get_actor_in_cell(self.position[0], self.position[1]) is not None:
+            return False
+        elif world.get_interactable_in_cell(self.position[0], self.position[1]) is not None:
             return False
 
         return True
@@ -286,9 +295,7 @@ class OpenDoorAction(MoveToAction):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
-        dx = abs(self.position[0] - pos[0])
-        dy = abs(self.position[1] - pos[1])
-        if dx + dy != 1:
+        if Utils.dist_manhattan(self.position, pos) != 1:
             return False
 
         if world.get_actor_in_cell(self.position[0], self.position[1]) is not None:
@@ -457,34 +464,31 @@ class InteractAction(Action):
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
-        if pos != self.position:
+        if Utils.dist_manhattan(pos, self.position) != 1:
             return False
 
-        return world.get_interactable_in_cell(pos[0], pos[1]) is not None
+        return world.get_interactable_in_cell(self.position[0], self.position[1]) is not None
 
     def start(self, world):
-        pix_pos = self.actor_entity.center()
-        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
-        self.target = world.get_interactable_in_cell(pos[0], pos[1])
+        self.target = world.get_interactable_in_cell(self.position[0], self.position[1])
+        print("INFO: interacted with {}".format(self.target))
+        self.target.interact(world)
 
     def animate_in_world(self, world, progress):
         pass
 
     def finalize(self, world):
-        print("INFO: interacted with {}".format(self.target))
-        self.target.interact(world)
+        pass
 
 
 class PlayerWaitAction(Action):
 
-    def __init__(self, actor, turn_right=None):
-        Action.__init__(self, ActionType.PLAYER_WAIT, 1, actor)
-        self.turn_right = turn_right
+    def __init__(self, actor, position=None):
+        Action.__init__(self, ActionType.PLAYER_WAIT, 1, actor, position=position)
+
+    def causes_turn(self):
+        return True
 
     def is_possible(self, world):
         return True
-
-    def finalize(self, world):
-        if self.turn_right is not None:
-            self.actor_entity.facing_right = self.turn_right
 

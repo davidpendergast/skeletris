@@ -580,6 +580,7 @@ class ActorEntity(Entity):
     def update_action(self, world, force_finalize=False):
         if self.executing_action is not None:
             if self.executing_action_ticks == 0:
+                self.executing_action.pre_start(world)
                 self.executing_action.start(world)
             self.executing_action_ticks += 1
             if force_finalize or self.executing_action_ticks >= self.executing_action_duration:
@@ -717,11 +718,7 @@ class Player(ActorEntity):
         self.update_held_item_image(render_engine)
 
     def request_next_action(self, world, input_state):
-        res = ActorEntity.request_next_action(self, world, input_state)
-        if res is not None and res.is_fake_player_wait_action():
-            if res.turn_right is not None:
-                self.facing_right = res.turn_right
-        return res
+        return ActorEntity.request_next_action(self, world, input_state)
         
     def is_player(self):
         return True
@@ -729,6 +726,11 @@ class Player(ActorEntity):
     def is_facing_right(self):
         # player sprites are drawn reverse of everyone else (._.)
         return not super().is_facing_right()
+
+    def set_facing_right(self, facing_right):
+        # i don't wanna flip the sprites >:(
+        # they look better reversed
+        super().set_facing_right(not facing_right)
 
     def valid_to_stand_on(self, world, x, y):
         return (Entity.valid_to_stand_on(self, world, x, y) and
@@ -787,13 +789,8 @@ class Enemy(ActorEntity):
 
 class ChestEntity(Entity):
     def __init__(self, grid_x, grid_y):
-        w = 24
-        # want it to be on the left or right of the cell
-        if random.random() > 0.5:
-            x_pos = int((grid_x + 1/3) * 64 - w/2)
-        else:
-            x_pos = int((grid_x + 2/3) * 64 - w/2)
-        Entity.__init__(self, x_pos, grid_y * 64, w, 24)
+        Entity.__init__(self, 0, 0, 24, 24)
+        self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
         self._is_open = False
         self._left_side = random.random() > 0.5
         
@@ -1338,37 +1335,52 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, npc_id):
-        Entity.__init__(self, 0, 0, 24, 12)
-        self.npc_id = npc_id
-        self._shadow_sprite = None
-        self.facing_player = True
+    def __init__(self, grid_x, grid_y, npc_template, on_interact, color=(1, 1, 1)):
+        Entity.__init__(self, 0, 0, 24, 24)
+        self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
+        self.npc_template = npc_template
+        self.color = color
+        self.facing_right = True
+        self.on_interact = on_interact
 
     def get_shadow_sprite(self):
-        return self._shadow_sprite
+        return self.get_npc_template().shadow_sprite
+
+    def get_npc_template(self):
+        return self.npc_template
+
+    def get_sprite(self):
+        anim_tick = gs.get_instance().anim_tick
+        sprites = self.get_npc_template().world_sprites
+        return sprites[(anim_tick // 4) % len(sprites)]
 
     def visible_in_darkness(self):
         return False
 
-    def update_images(self, sprite, facing_left, color=(1, 1, 1), shadow_sprite=None):
+    def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
+        sprite = self.get_sprite()
         x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = self.get_depth()
-        xflip = not facing_left
+        xflip = self.facing_right
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
-                                     new_depth=depth, new_xflip=xflip, new_color=color)
+                                     new_depth=depth, new_xflip=xflip, new_color=self.color)
 
-        self._shadow_sprite = shadow_sprite
         Entity.update_images(self, 0)  # just updating shadow
 
     def update(self, world, input_state, render_engine):
-        gs.get_instance().npc_state().update(self, world, input_state, render_engine)
+        p = world.get_player()
+        if p is not None:
+            p_x = p.center()[0]
+            if p_x < self.center()[0] - 32:
+                self.facing_right = False
+            elif p_x > self.center()[0] + 32:
+                self.facing_right = True
 
-    def get_id(self):
-        return self.npc_id
+        self.update_images()
 
     def is_npc(self):
         return True
@@ -1376,14 +1388,9 @@ class NpcEntity(Entity):
     def is_interactable(self):
         return True
 
-    def interact_text(self):
-        return "talk"
-
     def interact(self, world):
-        gs.get_instance().event_queue().add(events.NpcInteractEvent(self.get_id()))
-
-    def __repr__(self):
-        return "NpcEntity({})".format(self.get_id())
+        if self.on_interact is not None:
+            self.on_interact(self, world)
 
 
 class TriggerBox(Entity):

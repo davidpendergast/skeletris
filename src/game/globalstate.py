@@ -147,7 +147,7 @@ class SaveDataBlob:
 
 class GlobalState:
 
-    def __init__(self, initial_zone_id, menu_manager, dialog_manager, npc_state, story_state):
+    def __init__(self, initial_zone_id, menu_manager, dialog_manager, story_state):
         self.screen_size = [800, 600]
         self.is_fullscreen = False
     
@@ -168,7 +168,6 @@ class GlobalState:
 
         self._menu_manager = menu_manager
         self._dialog_manager = dialog_manager
-        self._npc_state = npc_state
 
         self._cinematics_queue = []
 
@@ -267,9 +266,6 @@ class GlobalState:
             self.save_settings_to_disk()
 
         return (res, password)
-
-    def npc_state(self):
-        return self._npc_state
 
     def get_zone_level(self):
         if self.current_zone is None:
@@ -376,11 +372,8 @@ def create_new(menu, from_pw=None):
     import src.game.dialog as dialog
     dialog_manager = dialog.DialogManager()
 
-    import src.game.npc as npc
-    npc_state = npc.NpcState()
-
     import src.worldgen.zones as zones
-    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, npc_state, StoryState())
+    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, StoryState())
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()

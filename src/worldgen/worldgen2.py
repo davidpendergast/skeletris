@@ -702,15 +702,15 @@ class Feature(Tileish):
         elif not self.can_rotate:
             return ValueError("can't rotate feature: {}".format(self.feat_id))
 
-        place = ["" for _ in range(0, self.w())]
         replace = ["" for _ in range(0, self.w())]
+        place = ["" for _ in range(0, self.w())]
 
         for i in range(0, self.w()):
             for j in range(self.h()-1, -1, -1):
-                place[i] = place[i] + self.place[j][i]
                 replace[i] = replace[i] + self.replace[j][i]
+                place[i] = place[i] + self.place[j][i]
 
-        return Feature(self.feat_id, place, replace, can_rotate=True).rotated(rots=rots-1)
+        return Feature(self.feat_id, replace, place, can_rotate=True).rotated(rots=rots-1)
 
     def can_place_at(self, tilish, x, y):
         for feat_x in range(0, self.w()):
@@ -747,7 +747,7 @@ class FeatureUtils:
         random.shuffle(rots)
         for rot in rots:
             rotated_feature = feature.rotated(rot)
-            possible_placements = FeatureUtils.all_possible_placements_overlapping_rect(feature, tilish, rect)
+            possible_placements = FeatureUtils.all_possible_placements_overlapping_rect(rotated_feature, tilish, rect)
             if len(possible_placements) > 0:
                 placement = random.choice(possible_placements)
                 FeatureUtils.write_into(rotated_feature, tilish, placement[0], placement[1])
@@ -764,7 +764,8 @@ class FeatureUtils:
                 if feat_val != "?":
                     tile_grid.set(x + feat_x, y + feat_y, feat_val)
 
-    CHAR_MAP = {"X": TileType.FLOOR,
+    CHAR_MAP = {"W": TileType.WALL,
+                "-": TileType.FLOOR,
                 ".": TileType.EMPTY,
                 "p": TileType.PLAYER,
                 "v": TileType.ENTRANCE,
@@ -793,40 +794,36 @@ class FeatureUtils:
 
 class Features:
     START = Feature("start",
-                    FeatureUtils.convert(["XXX",
-                                          "...",
-                                          "?.?"]),
-                    FeatureUtils.convert(["XpX",
-                                          ".v.",
-                                          "?.?"]), can_rotate=False)
+                    FeatureUtils.convert(["---",
+                                          "WWW",
+                                          "..."]),
+                    FeatureUtils.convert(["-p-",
+                                          "WvW",
+                                          "WWW"]), can_rotate=False)
 
     EXIT = Feature("exit_door",
-                   FeatureUtils.convert([".", "X"]),
-                   FeatureUtils.convert([".", "e"]), can_rotate=False)
+                   FeatureUtils.convert(["W", "-"]),
+                   FeatureUtils.convert(["W", "e"]), can_rotate=False)
 
     SMALL_MONSTER = Feature("monster_2x2",
-                            FeatureUtils.convert(["XX", "XX"]),
-                            FeatureUtils.convert(["mX", "Xm"]))
+                            FeatureUtils.convert(["--", "--"]),
+                            FeatureUtils.convert(["m-", "--"]))
 
     LARGE_MONSTER = Feature("monster_3x3",
-                            FeatureUtils.convert(["XXX", "XXX", "XXX"]),
-                            FeatureUtils.convert(["mXX", "XXm", "XmX"]))
+                            FeatureUtils.convert(["---", "---", "---"]),
+                            FeatureUtils.convert(["m--", "--m", "-m-"]))
 
     CHEST = Feature("chest",
-                    FeatureUtils.convert([".", "X"]),
-                    FeatureUtils.convert([".", "c"]), can_rotate=False)
+                    FeatureUtils.convert(["W", "-"]),
+                    FeatureUtils.convert(["W", "c"]), can_rotate=True)
 
     STRAY_ITEM = Feature("stray_item",
-                         FeatureUtils.convert(["X"]),
+                         FeatureUtils.convert(["-"]),
                          FeatureUtils.convert(["i"]))
 
-    WISHING_WELL = Feature("wishing_well",
-                           FeatureUtils.convert(["....", "XXXX", "XXXX"]),
-                           FeatureUtils.convert(["....", "XnsX", "XXXX"]))
-
     QUEST_NPC = Feature("quest_npc",
-                        FeatureUtils.convert([".", "X"]),
-                        FeatureUtils.convert([".", "n"]), can_rotate=False)
+                        FeatureUtils.convert(["W", "-"]),
+                        FeatureUtils.convert(["W", "n"]), can_rotate=True)
 
     @staticmethod
     def get_random_feature():
@@ -834,8 +831,8 @@ class Features:
                               Features.CHEST,
                               Features.QUEST_NPC,
                               Features.LARGE_MONSTER,
-                              Features.WISHING_WELL,
-                              Features.STRAY_ITEM])
+                              Features.STRAY_ITEM
+                              ])
 
 
 class Partition:

@@ -449,7 +449,7 @@ class World:
                     action = actor.request_next_action(self, input_state)
 
                     if action.is_fake_player_wait_action():
-                        break
+                        action.pre_start(self)  # just to make the player turn
                     else:
                         a_state.update_last_turn_tick()
                         a_state.set_energy(0)

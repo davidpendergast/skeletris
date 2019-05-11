@@ -5,6 +5,7 @@
  - camera and lighting shouldn't change when player attacks
  - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
     - also can have rooms that border out-of-bounds with no walls in between
+    - actually a lot of wonkiness here
  
  
 [current features]

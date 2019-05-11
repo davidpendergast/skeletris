@@ -62,6 +62,13 @@ class Utils:
         return Utils.mag(Utils.sub(v1, v2))
 
     @staticmethod
+    def dist_manhattan(v1, v2):
+        res = 0
+        for i, j in zip(v1, v2):
+            res += abs(i - j)
+        return res
+
+    @staticmethod
     def rand_vec(length=1):
         angle = 6.2832 * random.random()
         return [length*math.cos(angle), length*math.sin(angle)]

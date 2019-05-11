@@ -14,6 +14,7 @@ import src.game.cinematics as cinematics
 import src.game.globalstate as gs
 from src.game.storystate import StoryStateKey
 from src.worldgen import worldgen2
+import src.game.npc as npc
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -363,23 +364,6 @@ class TestZone(Zone):
 
         p = w.get_player()
 
-        import src.game.npc as npc
-        mayor = entities.NpcEntity(npc.NpcID.MAYOR)
-        mayor.set_x(p.x() + 64)
-        mayor.set_y(p.y())
-        w.add(mayor)
-        mary_skelly = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
-        mary_skelly.set_x(p.x() + 72)
-        mary_skelly.set_y(p.y() + 48)
-        w.add(mary_skelly)
-        beanskull = entities.NpcEntity(npc.NpcID.BEANSKULL)
-        beanskull.set_x(p.x() - 16)
-        beanskull.set_y(p.y() + 32)
-        w.add(beanskull)
-        glorple = entities.NpcEntity(npc.NpcID.GLORPLE)
-        glorple.set_x(p.x() - 50)
-        glorple.set_y(p.y() - 50)
-        w.add(glorple)
         return w
 
 
@@ -402,7 +386,10 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.EXIT:
             world.add(entities.ExitEntity(x, y, generated_zone_id(level + 1)))
         elif tile_type == worldgen2.TileType.NPC:
-            pass
+            npc_id = random.choice(list(npc.TEMPLATES.keys()))
+            template = npc.TEMPLATES[npc_id]
+            on_interact = lambda ent, world: print("INFO: interacted with {}".format(ent))
+            world.add(entities.NpcEntity(x, y, template, on_interact))
         elif tile_type == worldgen2.TileType.STRAY_ITEM:
             pass
 
@@ -460,6 +447,8 @@ class ZoneBuilder:
 
         worldgen2.TileGridBuilder.clean_up_dangly_bits(t_grid)
         worldgen2.TileGridBuilder.clean_up_doors(t_grid)
+        worldgen2.TileGridBuilder.add_walls(t_grid)
+        worldgen2.TileGridBuilder.fill_empty_islands_with_walls(t_grid)
 
         if len(empty_rooms) < 4:
             raise ValueError("super low number of rooms..?")
@@ -498,14 +487,12 @@ class ZoneBuilder:
         if not start_placed:
             raise ValueError("failed to place end anywhere on path...")
 
+
         while len(empty_rooms) > 0:
             r = empty_rooms.pop()
-            feat = worldgen2.Features.get_random_feature()
-            if random.random() > 0.333:
+            if random.random() > 0.05:
+                feat = worldgen2.Features.get_random_feature()
                 worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
-
-        worldgen2.TileGridBuilder.add_walls(t_grid)
-        worldgen2.TileGridBuilder.fill_empty_islands_with_walls(t_grid)
 
         print("INFO: generated world: level={}".format(level))
         print(t_grid)

@@ -36,35 +36,3 @@ TEMPLATES = {
 def get_sprites(npc_id):
     return TEMPLATES[npc_id].talking_sprites
 
-
-class NpcState:
-    """
-    Tracks the state of all active NPCs in the world
-    """
-
-    def update(self, npc_entity, world, input_state, render_engine):
-        npc_id = npc_entity.get_id()
-        sprites = TEMPLATES[npc_id].world_sprites
-        cur_sprite = sprites[(gs.get_instance().anim_tick // 2) % len(sprites)]
-
-        facing_left = True
-        if npc_entity.get_vel()[0] < 0:
-            facing_left = True
-        elif npc_entity.get_vel()[0] > 0:
-            facing_left = False
-        elif npc_entity.facing_player:
-            p = world.get_player()
-            if p is not None:
-                facing_left = p.center()[0] <= npc_entity.center()[0]
-
-        shadow_spr = TEMPLATES[npc_id].shadow_sprite
-
-        npc_entity.update_images(cur_sprite, facing_left, shadow_sprite=shadow_spr)
-
-        interacted_with_me = gs.get_instance().event_queue().has_event(types=events.EventType.NPC_INTERACT,
-                                                        predicate=lambda e: e.get_npc_id() == npc_id)
-        if interacted_with_me:
-            self.interacted_with(npc_id, world)
-
-    def interacted_with(self, npc_id, world):
-        pass
