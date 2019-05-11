@@ -199,12 +199,6 @@ class Entity(Updateable):
     def is_pickup(self):
         return False
 
-    def is_attack_pickup(self):
-        return False
-
-    def is_potion(self):
-        return False
-
     def is_save_station(self):
         return False
 
@@ -864,8 +858,6 @@ class PickupEntity(Entity):
         Entity.__init__(self, x, y, 16, 16)
         self.sprites = sprites
         self.sprite_rotation = sprite_rotation
-        if self.sprite_rotation != 0:
-            print("PickupEntity sprite rot = {}".format(sprite_rotation))
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
         self.fric = 0.95
         self.bounce_offset = int(random.random() * 100)
@@ -989,18 +981,6 @@ class ItemEntity(PickupEntity):
 
     def is_interactable(self):
         return False
-
-
-class PotionEntity(PickupEntity):
-    def __init__(self, cx, cy, vel=None):
-        PickupEntity.__init__(self, cx, cy, [spriteref.potion_small], vel=vel)
-        self.pickup_delay = 10
-
-    def get_sprite_offset(self):
-        return (0, -2)
-
-    def is_potion(self):
-        return True
 
 
 class DoorEntity(Entity):

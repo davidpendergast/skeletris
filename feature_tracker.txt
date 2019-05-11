@@ -6,6 +6,40 @@
  - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
     - also can have rooms that border out-of-bounds with no walls in between
     - actually a lot of wonkiness here
+ - single pixel player jiggle when walking vertically (sometimes)
+ - player is always drawn overtop chests
+ - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
+        ValueError: tile is None at (6, 36)
+        
+        
+ ~NEED TO WORK THIS OUT BEFORE CONTINUING~
+
+[action-use design]
+ - at any point in time, actors have a set of 'available actions'
+    - these include basic actions (like moving, interacting, skipping)
+        as well as actions granted by items and other effects.
+ - some actions have dedicated hotkeys (like moving = WASD)
+ - some actions are 'mappable' meaning they can be bound to keys 1-6
+ - actions granted by items can be activated by right clicking the item and 
+        selecting the action from a dropdown list.
+        
+ - hotbar
+    - by default, only mapped action is UNARMED_ATTACK=1
+    - when you obtain/equip an item with mappable actions, those actions will
+        fill any empty hotbar slots. when you unequip, they become vacant again.
+        this is considered a "soft mapping". 
+    - you can also right-click a hotbar slot and select an available mappable 
+        action to map to that slot (or unmap it). this is a "hard mapping".
+    - soft mappings can be auto-overridden, and hard mappings can't.
+    - slot 1 is the "auto-attack slot". when you move into an enemy, if there's 
+        an attack in slot one, it is automatically used on the enemy. 
+    
+    - pressing a hotkey
+        - if the action doesn't require targeting, or there is only one valid
+            target, the action is used instantly.
+        - if the action requires targeting, targeting mode activates
+            [targeting mode]
+                ~todo~
  
  
 [current features]

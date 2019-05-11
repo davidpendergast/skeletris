@@ -624,9 +624,6 @@ class ControlsMenu(OptionsMenu):
         ("move left", settings.KEY_LEFT),
         ("move down", settings.KEY_DOWN),
         ("move right", settings.KEY_RIGHT),
-        ("interact", settings.KEY_INTERACT),
-        ("attack", settings.KEY_ATTACK),
-        ("use potion", settings.KEY_POTION),
         ("inventory", settings.KEY_INVENTORY),
         ("rotate item", settings.KEY_ROTATE_CW)
     ]

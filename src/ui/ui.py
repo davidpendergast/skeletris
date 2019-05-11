@@ -469,22 +469,6 @@ class HealthBarPanel:
     def get_action_item_state(self, idx):
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
         return None
-        #p_state = gs.get_instance().player_state()
-        #cooldowns = [p_state.get_cooldown_progress(i) for i in range(0, 6)]
-        #if idx == 0:
-        #    return (spriteref.UI.attack_action, cooldowns[idx],
-        #            Utils.stringify_key(gs.get_instance().settings().attack_key()[0]), None)
-        #elif idx == 1:
-        #    return (spriteref.UI.potion_action, cooldowns[idx],
-        #            Utils.stringify_key(gs.get_instance().settings().potion_key()[0]), str(gs.get_instance().player_state().num_potions))
-        #elif idx == 2:
-        #    return (spriteref.UI.inspect_action, cooldowns[idx],
-        #            Utils.stringify_key(gs.get_instance().settings().interact_key()[0]), None)
-        #elif idx == 4:
-        #    return (spriteref.UI.inventory_action, cooldowns[idx],
-        #            Utils.stringify_key(gs.get_instance().settings().inventory_key()[0]), None)
-        #else:
-        #    return None
 
     def update(self, world, input_state, render_eng):
         p_state = gs.get_instance().player_state()

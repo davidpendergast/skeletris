@@ -33,11 +33,8 @@ KEY_UP = Setting("move up", "UP", [pygame.K_w])
 KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a])
 KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d])
 KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s])
-KEY_ATTACK = Setting("attack", "ATTACK", [pygame.K_j])
 KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r])
 KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
-KEY_INTERACT = Setting("interact", "INTERACT", [pygame.K_i])
-KEY_POTION = Setting("potion", "POTION", [pygame.K_k])
 
 num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
@@ -121,18 +118,8 @@ class Settings:
     def menu_down_key(self):
         return self.get(KEY_MENU_DOWN)
 
-    def attack_key(self):
-        return self.get(KEY_ATTACK)
-
     def inventory_key(self):
         return self.get(KEY_INVENTORY)
-
-    def interact_key(self):
-        # kinda a hack, but I want enter to also be usable as the interact key.
-        return self.get(KEY_INTERACT) + self.enter_key()
-
-    def potion_key(self):
-        return self.get(KEY_POTION)
 
     def exit_key(self):
         return self.get(KEY_EXIT)

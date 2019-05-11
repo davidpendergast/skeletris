@@ -8,6 +8,7 @@ from src.utils.util import Utils
 import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
+from src.game.gameengine import ActionProvider, ActionType, ConsumeItemAction, AttackAction
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 
@@ -149,12 +150,48 @@ class ItemTypes:
     POTION = _new_type("Potion", (ItemTags.CONSUMABLE))
 
 
+class ConsumeItemActionProvider(ActionProvider):
+
+    def __init__(self):
+        ActionProvider.__init__(self, "Drink", ActionType.CONSUME_ITEM, color=(0.5, 1, 0.5))
+
+    def get_action(self, actor, position=None, item=None):
+        return ConsumeItemAction(actor, item)
+
+
+class AttackItemActionProvider(ActionProvider):
+
+    def __init__(self, name, icon, target_range):
+        ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
+                                target_positions=target_range, color=(1, 0.5, 0.5), needs_to_be_equipped=True)
+
+    def is_mappable(self):
+        return True
+
+    def get_action(self, actor, position=None, item=None):
+        return AttackAction(actor, item, position)
+
+
+class ItemActions:
+    _cardinal_targets_only = ((-1, 0), (1, 0), (0, -1), (0, 1))
+
+    CONSUME_ITEM = ConsumeItemActionProvider()
+    SWORD_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.sword_icon, _cardinal_targets_only)
+    SPEAR_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.spear_icon, _cardinal_targets_only)
+    WHIP_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.whip_icon, _cardinal_targets_only)
+    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, _cardinal_targets_only)  # TODO
+    DAGGER_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.dagger_icon, _cardinal_targets_only)
+    BOW_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.bow_icon, _cardinal_targets_only)
+    AXE_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.axe_icon, _cardinal_targets_only)
+
+
 class Item(StatProvider):
 
-    def __init__(self, name, item_type, level, cubes, stats, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+    def __init__(self, name, item_type, level, cubes, stats, actions=None, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
         self.name = name
         self.level = level
         self.item_type = item_type
+        self.item_actions = tuple() if actions is None else tuple(actions)
         self.stats = tuple(stats)
         self.cubes = tuple(CubeUtils.clean_cubes(cubes))
         self.color = color
@@ -199,6 +236,9 @@ class Item(StatProvider):
     def all_stats(self):
         return self.stats
 
+    def all_actions(self):
+        return self.item_actions
+
     def core_stats(self):
         return [s for s in self.stats if s.stat_type in CORE_STATS]
 
@@ -218,10 +258,10 @@ class Item(StatProvider):
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, color=(1,1,1), title_color=(1, 1, 1)):
+                 uuid_str=None, can_rotate=True, color=(1,1,1), title_color=(1, 1, 1), actions=None):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
-                      can_rotate=can_rotate, title_color=title_color)
+                      can_rotate=can_rotate, title_color=title_color, actions=actions)
 
         self._small_sprite = small_sprite
         self._big_sprite = big_sprite
@@ -252,7 +292,7 @@ class SpriteItem(Item):
 
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
-                              can_rotate=self._can_rotate, title_color=self.title_color)
+                              can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions)
 
 
 class StatCubesItem(Item):
@@ -396,30 +436,42 @@ class ItemFactory:
         elif item_type == ItemTypes.STAT_CUBE_7:
             return StatCubesItemFactory.gen_item(level, n_cubes=7)
 
+        elif item_type == ItemTypes.POTION:
+            cubes = [(0, 0)]
+            actions = [ItemActions.CONSUME_ITEM]
+            return SpriteItem("Potion of Null", item_type, level, cubes, {}, spriteref.Items.potion_small, spriteref.Items.potion_big, actions=actions)
+
         elif item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Light of Truth", item_type, level, cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big)
+            actions = [ItemActions.SWORD_ATTACK]
+            return SpriteItem("Light of Truth", item_type, level, cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return SpriteItem("Pain Rope", item_type, level, cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big)
+            actions = [ItemActions.WHIP_ATTACK]
+            return SpriteItem("Pain Rope", item_type, level, cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
-            return SpriteItem("Quick Iron", item_type, level, cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big)
+            actions = [ItemActions.DAGGER_ATTACK]
+            return SpriteItem("Quick Iron", item_type, level, cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            return SpriteItem("Fortress of Mending", item_type, level, cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big)
+            actions = [ItemActions.SHIELD_BLOCK]
+            return SpriteItem("Fortress of Mending", item_type, level, cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
-            return SpriteItem("Justice Beacon", item_type, level, cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big)
+            actions = [ItemActions.SPEAR_ATTACK]
+            return SpriteItem("Justice Beacon", item_type, level, cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             return SpriteItem("Stick of Mystery", item_type, level, cubes, {}, spriteref.Items.wand_small, spriteref.Items.wand_big)
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Bow of Speed", item_type, level, cubes, {}, spriteref.Items.bow_small, spriteref.Items.bow_big)
+            actions = [ItemActions.BOW_ATTACK]
+            return SpriteItem("Bow of Speed", item_type, level, cubes, {}, spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
-            return SpriteItem("Hatchet of Striking", item_type, level, cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big)
+            actions = [ItemActions.AXE_ATTACK]
+            return SpriteItem("Hatchet of Striking", item_type, level, cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
         return None
 

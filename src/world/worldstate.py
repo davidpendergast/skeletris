@@ -69,6 +69,7 @@ class World:
             return
         else:
             import src.world.entities as entities
+            import src.items.item as item_module
             if direction is not None:
                 vel = entities.PickupEntity.rand_vel(speed=None, direction=direction)
             else:

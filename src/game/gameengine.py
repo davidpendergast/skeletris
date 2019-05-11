@@ -37,6 +37,16 @@ class ActorState:
         for status_effect in self.status_effects:
             yield status_effect
 
+    def get_all_mappable_action_providers(self):
+        for item in self.inventory().all_equipped_items():
+            for action_provider in item.all_actions():
+                if action_provider.is_mappable():
+                    yield action_provider
+        for item in self.inventory().all_inv_items():
+            for action_provider in item.all_actions():
+                if action_provider.is_mappable() and not action_provider.needs_to_be_equipped:
+                    yield action_provider
+
     def stat_value(self, stat_type):
         res = 0
         for provider in self.all_stat_providers():
@@ -198,6 +208,7 @@ class ActionType(Enum):
 
 
 class Action:
+
     def __init__(self, cmd_type, anim_duration, actor_entity, item=None, position=None):
         self.cmd_type = cmd_type
         self.anim_duration = anim_duration
@@ -283,6 +294,32 @@ class MoveToAction(Action):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
         self.actor_entity.set_center(end_pos[0], end_pos[1])
+
+
+class ConsumeItemAction(Action):
+
+    def __init__(self, actor, item, position):
+        Action.__init__(self, actor, position=position, item=item)
+
+    def is_possible(self, world):
+        pix_pos = self.actor_entity.center()
+        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
+
+        if Utils.dist_manhattan(self.position, pos) != 0:
+            return False
+
+        # TODO need to ensure actor has item in equip/inv
+        return True
+
+    def start(self, world):
+        pass
+
+    def animate_in_world(self, progress, world):
+        pass
+
+    def finalize(self, world):
+        print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
+        # TODO - need to destroy item, apply status
 
 
 class OpenDoorAction(MoveToAction):
@@ -491,6 +528,34 @@ class PlayerWaitAction(Action):
 
     def is_possible(self, world):
         return True
+
+
+class ActionProvider:
+
+    def __init__(self, name, action_type, target_positions=None, icon_sprite=None, color=(1, 1, 1),
+                 needs_to_be_equipped=False):
+        self.name = name
+        self.color = color
+        self.action_type = action_type
+        self.valid_targets = [(0, 0)] if target_positions is None else [target_positions]
+        self.icon_sprite = icon_sprite
+        self.needs_to_be_equipped = needs_to_be_equipped
+
+    def is_mappable(self):
+        """Whether the action can be mapped to the action hotbar."""
+        return False
+
+    def needs_equipped(self):
+        return False
+
+    def get_icon(self):
+        return self.icon_sprite
+
+    def get_name(self):
+        return self.name
+
+    def get_action(self, actor, position=None, item=None):
+        return gameengine.SkipTurnAction()
 
 
 

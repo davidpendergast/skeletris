@@ -68,6 +68,7 @@ class Items:
     dagger_big = None
     axe_big = None
     bow_big = None
+    potion_big = None
 
     spear_small = None
     sword_small = None
@@ -78,8 +79,20 @@ class Items:
     bow_small = None
     whip_small = None
     wand_small = None
+    potion_small = None
 
     misc_small = None
+
+    spear_icon = None
+    sword_icon = None
+    axe_icon = None
+    whip_icon = None
+    unarmed_icon = None
+    bow_icon = None
+    potion_icon = None
+    dagger_icon = None
+    shield_icon = None
+    magic_icon =None
 
 
 class UI:
@@ -291,9 +304,6 @@ spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 
 doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
-
-potion_small = make(64, 32, 8, 8)
-potion_big = make(48, 32, 16, 16)
 
 
 def get_item_entity_sprite(cubes):
@@ -543,6 +553,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.dagger_big = make(80, 48, 16, 32, shift=start_pos)
     Items.axe_big = make(80, 0, 32, 48, shift=start_pos)
     Items.bow_big = make(112, 0, 16, 48, shift=start_pos)
+    Items.potion_big = make(144, 48, 16, 16, shift=start_pos)
 
     Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
     Items.sword_small = make(133, 3, 5, 13, shift=start_pos)
@@ -553,8 +564,20 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.bow_small = make(171, 5, 5, 11, shift=start_pos)
     Items.whip_small = make(176, 7, 8, 9, shift=start_pos)
     Items.wand_small = make(187, 7, 5, 9, shift=start_pos)
+    Items.potion_small = make(198, 8, 6, 8, shift=start_pos)
 
     Items.misc_small = make(192, 12, 5, 4, shift=start_pos)
+
+    Items.spear_icon = make(0, 80, 10, 10, shift=start_pos)
+    Items.sword_icon = make(10, 80, 10, 10, shift=start_pos)
+    Items.axe_icon = make(20, 80, 10, 10, shift=start_pos)
+    Items.whip_icon = make(30, 80, 10, 10, shift=start_pos)
+    Items.unarmed_icon = make(40, 80, 10, 10, shift=start_pos)
+    Items.bow_icon = make(0, 90, 10, 10, shift=start_pos)
+    Items.potion_icon = make(10, 90, 10, 10, shift=start_pos)
+    Items.dagger_icon = make(20, 90, 10, 10, shift=start_pos)
+    Items.shield_icon = make(30, 90, 10, 10, shift=start_pos)
+    Items.magic_icon = make(40, 90, 10, 10, shift=start_pos)
 
 
 def build_ui_sheet(start_pos, raw_ui_img, sheet):

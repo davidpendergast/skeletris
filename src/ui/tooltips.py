@@ -18,6 +18,9 @@ class TooltipFactory:
             ]
             for stat in target_item.all_stats():
                 text.append(str(stat))
+            for action in target_item.all_actions():
+                # TODO - action color
+                text.append(str(action.get_name()))
             return TextOnlyTooltip(text, target=target_item, xy=xy, layer=layer)
         else:
             return None
