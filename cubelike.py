@@ -44,12 +44,12 @@ def run():
     
     pygame.display.set_mode(SCREEN_SIZE, mods)
     
-    input_state = inputs.InputState()
-    gs.create_new(menus.StartMenu())
-    
     render_eng = RenderEngine()
     render_eng.init(*SCREEN_SIZE)
-    
+
+    input_state = inputs.InputState()
+    gs.create_new(menus.StartMenu())
+
     COLOR = True
     SORTS = True
     render_eng.add_layer(

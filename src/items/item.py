@@ -56,6 +56,7 @@ STAT_COLORS.update({
         StatType.ATT: (1, 0.65, 0.65),
         StatType.DEF: (0.65, 0.65, 1),
         StatType.VIT: (0.65, 1, 0.65),
+        StatType.SPEED: (1, 1, 0.65)
 })
 
 

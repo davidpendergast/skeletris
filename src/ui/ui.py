@@ -7,6 +7,7 @@ import src.items.item as item_module
 from src.utils.util import Utils
 from src.game.stats import StatType
 import src.game.globalstate as gs
+import src.utils.colors as colors
 
 
 class ItemGridImage:
@@ -42,38 +43,45 @@ class InventoryPanel:
         self.player_state = gs.get_instance().player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
-        self.kill_count = 10
-        self.zone_level = 10
 
         self.top_img = None
         self.mid_imgs = []
         self.bot_img = None
-        self.title_text = None
+
+        self.title_colors = colors.LIGHT_GRAY
+        self.eq_title_text = None
+        self.inv_title_text = None
 
         sc = 2
         text_sc = 1
         
-        self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width()*sc,
-                (128 + 16*self.state.rows)*sc]
-        self.equip_grid_rect = [8*sc, 24*sc, 80*sc, 80*sc]
+        self.total_rect = [0, 0,
+                           spriteref.UI.inv_panel_top.width() * sc,
+                           (128 + 16 * self.state.rows) * sc]
+
+        self.equip_grid_rect = [8*sc, 16*sc, 80*sc, 80*sc]
         self.inv_grid_rect = [8*sc, 112*sc, 144*sc, 16*self.state.rows*sc]
-        self.info_rect = [96*sc, 24*sc, 56*sc, 32*sc]
-        self.stats_rect = [96*sc, 64*sc, 56*sc, 40*sc]
-        
-        self.info_text = None
+        self.stats_rect = [96*sc, 16*sc, 56*sc, 80*sc]
+
+        self.eq_title_rect = [8*sc, 0*sc + 4, 80*sc, 16*sc - 4]
+        self.inv_title_rect = [8*sc, 96*sc + 4, 80*sc, 16*sc - 4]
+
+        self.lvl_text = None
         self.att_text = None
         self.def_text = None
         self.vit_text = None
         self.hp_text = None
+        self.spd_text = None
         
         self.equip_img = None
         self.inv_img = None
         
         self._build_images(sc, text_sc)
 
-    def gs_info_is_outdated(self):
-        return (self.kill_count != 10 or
-                self.zone_level != 10)
+    def _build_title_img(self, text, rect, scale):
+        res = TextImage(rect[0], 0, text, self.layer, scale=scale, color=self.title_colors)
+        new_y = rect[1] + (rect[3] - res.line_height()) // 2
+        return res.update(new_y=new_y)
         
     def _build_images(self, sc, text_sc):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
@@ -83,54 +91,77 @@ class InventoryPanel:
         y = (128 + self.state.rows*16 - 16)*sc
         self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
         
-        self.title_text = TextImage(8*sc, 8*sc, "Inventory", self.layer, scale=int(text_sc*3/2))
-        
-        name_str = self.player_state.name()
-        info_txt = "{}\n\nROOM:{}\nKILL:{}".format(name_str, self.zone_level, self.kill_count)
-        i_xy = [self.info_rect[0], self.info_rect[1]]
-        self.info_text = TextImage(*i_xy, info_txt, self.layer, scale=text_sc)
-        
+        self.inv_title_text = self._build_title_img("Inventory", self.inv_title_rect, text_sc)
+        self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect, text_sc)
+
+        # self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=text_sc)
+        # self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
+        # self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
+        # self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
+        # self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED])
+        # self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=item_module.STAT_COLORS[None])
+
+        self.update_stats_imgs()
+
+        e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
+        self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
+
+        inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
+        self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
+
+    def update_stats_imgs(self):
+        text_sc = 1
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
-        att_str = "ATT:{}".format(self.player_state.stat_value(StatType.ATT))
+
+        lvl_txt = "LVL:{}".format(gs.get_instance().get_zone_level())
+        self.lvl_text = TextImage(*s_xy, lvl_txt, self.layer, scale=text_sc)
+        s_xy[1] += self.lvl_text.line_height()
+
+        att_value = (self.player_state.stat_value(StatType.ATT) +
+                     self.player_state.stat_value(StatType.UNARMED_ATT))
+        att_str = "ATT:{}".format(att_value)
         self.att_text = TextImage(*s_xy, att_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
         s_xy[1] += self.att_text.line_height()
-        
+
         def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
         self.def_text = TextImage(*s_xy, def_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
         s_xy[1] += self.def_text.line_height()
-        
+
         vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
         self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=text_sc,
                                   color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
-        s_xy[1] += self.def_text.line_height()
-        
-        hp_str = "HP: {}".format(self.player_state.max_hp())
+        s_xy[1] += self.vit_text.line_height()
+
+        spd_str = "SPD:{}".format(self.player_state.stat_value(StatType.SPEED))
+        self.spd_text = TextImage(*s_xy, spd_str, self.layer, scale=text_sc,
+                                  color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED])
+        s_xy[1] += self.spd_text.line_height()
+
+        hp_str = "HP: {}/{}".format(self.player_state.hp(), self.player_state.max_hp())
         self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=text_sc,
-                color=item_module.STAT_COLORS[None])
+                                 color=item_module.STAT_COLORS[None])
         s_xy[1] += self.hp_text.line_height()
-        
-        e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
-        self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
-        
-        inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
-        self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
-        
+
     def all_bundles(self):
         yield self.top_img
         for img in self.mid_imgs:
             yield img
         yield self.bot_img
-        for bun in self.title_text.all_bundles():
+        for bun in self.inv_title_text.all_bundles():
             yield bun
-        for bun in self.info_text.all_bundles():
+        for bun in self.eq_title_text.all_bundles():
+            yield bun
+        for bun in self.lvl_text.all_bundles():
             yield bun
         for bun in self.att_text.all_bundles():
             yield bun
         for bun in self.def_text.all_bundles():
             yield bun
         for bun in self.vit_text.all_bundles():
+            yield bun
+        for bun in self.spd_text.all_bundles():
             yield bun
         for bun in self.hp_text.all_bundles():
             yield bun

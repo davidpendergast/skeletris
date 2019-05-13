@@ -31,6 +31,8 @@ class ImageBundle:
         self._rotation = rotation
         self._color = color
         self._ratio = ratio
+
+        self._is_destroyed = False
             
     def update(self, new_model=None, new_x=None, new_y=None, new_scale=None, new_depth=None,
                new_xflip=None, new_color=None, new_rotation=None, new_ratio=None):
@@ -56,8 +58,10 @@ class ImageBundle:
                 rotation == self.rotation()):
             return self
         else:
-            return ImageBundle(model, x, y, scale=scale, depth=depth, xflip=xflip, rotation=rotation,
-                               layer=self.layer(), color=color, ratio=ratio, uid=self.uid())
+            res = ImageBundle(model, x, y, scale=scale, depth=depth, xflip=xflip, rotation=rotation,
+                              layer=self.layer(), color=color, ratio=ratio, uid=self.uid())
+            res._is_destroyed = self._is_destroyed
+            return res
         
     def model(self):
         return self._model
@@ -114,6 +118,12 @@ class ImageBundle:
 
     def all_bundles(self):
         yield self
+
+    def mark_for_removal(self):
+        self._is_destroyed = True
+
+    def is_destroyed(self):
+        return self._is_destroyed
         
     def add_urself(self, vertices, texts, colors, indices):
         x = self.x()

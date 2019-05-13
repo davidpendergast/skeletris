@@ -63,6 +63,17 @@ class MenuManager:
             else:
                 self.get_active_menu().update(world, input_state, render_eng)
 
+                if input_state.mouse_in_window():
+                    xy = input_state.mouse_pos()
+                    cursor = self.get_active_menu().cursor_style_at(xy)
+                else:
+                    cursor = None
+                if cursor is None:
+                    pygame.mouse.set_visible(False)
+                else:
+                    pygame.mouse.set_visible(True)
+                    pygame.mouse.set_cursor(*cursor)
+
     def should_draw_world(self):
         return self._active_menu.keep_drawing_world_underneath()
 
@@ -139,6 +150,9 @@ class Menu:
         if panel is not None:
             bundles = panel.all_bundles()
             render_eng.clear_bundles(bundles)
+
+    def cursor_style_at(self, xy):
+        return pygame.cursors.arrow
 
 
 class OptionsMenu(Menu):
@@ -322,6 +336,39 @@ class OptionsMenu(Menu):
                     for bun in opt.all_bundles():
                         yield bun
 
+    def cursor_style_at(self, xy):
+        for i in range(0, self.get_num_options()):
+            if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], xy):
+                return pygame.cursors.diamond
+        return super().cursor_style_at(xy)
+
+
+TITLE_CANDIDATES = [
+    "\n".join([
+        "  ██████  ██ ▄█▀▓█████  ██▓    ▓█████▄▓██████▒ ██▀███   ██▒  ██████ ",
+        "▒██    ▒  ██▄█▒ ▒█   ▀ ▓██▒    ▓█   ▀▓  ██▒ ▒░▓██ ▒ ██░▒██▒▒██    ▒ ",
+        "░ ▓██▄   ▒███▄░ ▒███   ▒██░    ▒███  ▒ ▓██░ ░░▓██ ░▄█ ░▒██▒░ ▓██▄   ",
+        "  ▒   ██▒▓██ █▄ ▒▓█  ▄ ▒██░    ▒▓█  ▄░ ▓██▓ ░ ▒██▀▀█▄  ░██░  ▒   ██▒",
+        "▒██████▒▒▒██▒ █▄░▒████▒░██████▒░▒████▒ ▒██▒ ░ ░██▓ ▒██▒░██░▒██████▒▒",
+        "▒ ▒▓▒ ▒ ░▒ ▒▒ ▓▒░░ ▒░ ░░ ▒░▓  ░░░ ▒░ ░ ▒ ░░   ░ ▒▓ ░▒▓░░▓  ▒ ▒▓▒ ▒ ░",
+        "░ ░▒  ░ ░░ ░▒ ▒░ ░ ░  ░░ ░ ▒  ░ ░ ░  ░   ░      ░▒ ░ ▒░ ▒ ░░ ░▒  ░ ░",
+        "░  ░  ░  ░ ░░ ░    ░     ░ ░      ░    ░        ░░   ░  ▒ ░░  ░  ░  ",
+        "      ░  ░  ░      ░  ░    ░  ░   ░  ░           ░      ░        ░  "
+    ]),
+    "\n".join([
+        " ▄████▄   █    ██  ▄▄▄▄   ▓█████  ██▓     ██▓ ██ ▄█▀▓█████ ",
+        "▒██▀ ▀█   ██  ▓██▒▓█████▄ ▓█   ▀ ▓██▒    ▓██▒ ██▄█▒ ▓█   ▀ ",
+        "▒▓█    ▄ ▓██  ▒██░▒██▒ ▄██▒███   ▒██░    ▒██▒▓███▄░ ▒███   ",
+        "▒▓▓▄ ▄██▒▓▓█  ░██░▒██░█▀  ▒▓█  ▄ ▒██░    ░██░▓██ █▄ ▒▓█  ▄ ",
+        "▒ ▓███▀ ░▒▒█████▓ ░▓█  ▀█▓░▒████▒░██████▒░██░▒██▒ █▄░▒████▒",
+        "░ ░▒ ▒  ░░▒▓▒ ▒ ▒ ░▒▓███▀▒░░ ▒░ ░░ ▒░▓  ░░▓  ▒ ▒▒ ▓▒░░ ▒░ ░",
+        "  ░  ▒   ░░▒░ ░ ░ ▒░▒   ░  ░ ░  ░░ ░ ▒  ░ ▒ ░░ ░▒ ▒░ ░ ░  ░",
+        "░         ░░░ ░ ░  ░    ░    ░     ░ ░    ▒ ░░ ░░ ░    ░   ",
+        "░ ░         ░      ░         ░  ░    ░  ░ ░  ░  ░      ░  ░",
+        "░                       ░                                  "
+    ]),
+]
+
 
 class StartMenu(OptionsMenu):
 
@@ -333,19 +380,7 @@ class StartMenu(OptionsMenu):
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.START_MENU,
-                "\n".join([
-                    " ▄████▄   █    ██  ▄▄▄▄   ▓█████  ██▓     ██▓ ██ ▄█▀▓█████ ",
-                    "▒██▀ ▀█   ██  ▓██▒▓█████▄ ▓█   ▀ ▓██▒    ▓██▒ ██▄█▒ ▓█   ▀ ",
-                    "▒▓█    ▄ ▓██  ▒██░▒██▒ ▄██▒███   ▒██░    ▒██▒▓███▄░ ▒███   ",
-                    "▒▓▓▄ ▄██▒▓▓█  ░██░▒██░█▀  ▒▓█  ▄ ▒██░    ░██░▓██ █▄ ▒▓█  ▄ ",
-                    "▒ ▓███▀ ░▒▒█████▓ ░▓█  ▀█▓░▒████▒░██████▒░██░▒██▒ █▄░▒████▒",
-                    "░ ░▒ ▒  ░░▒▓▒ ▒ ▒ ░▒▓███▀▒░░ ▒░ ░░ ▒░▓  ░░▓  ▒ ▒▒ ▓▒░░ ▒░ ░",
-                    "  ░  ▒   ░░▒░ ░ ░ ▒░▒   ░  ░ ░  ░░ ░ ▒  ░ ▒ ░░ ░▒ ▒░ ░ ░  ░",
-                    "░         ░░░ ░ ░  ░    ░    ░     ░ ░    ▒ ░░ ░░ ░    ░   ",
-                    "░ ░         ░      ░         ░  ░    ░  ░ ░  ░  ░      ░  ░",
-                    "░                       ░                                  "
-                ]),
-                ["start", "load game", "controls", "sound", "exit"], title_size=1)
+                random.choice(TITLE_CANDIDATES), ["start", "load game", "controls", "sound", "exit"], title_size=1)
 
     def get_song(self):
         return music.Songs.MENU_THEME
@@ -1039,7 +1074,6 @@ class InGameUiState(Menu):
             if self.inventory_panel is not None:
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
-
         elif input_state.was_pressed(gs.get_instance().settings().inventory_key()):
             if self.inventory_panel is None:
                 self.rebuild_inventory(render_eng)
@@ -1047,8 +1081,8 @@ class InGameUiState(Menu):
                 self._destroy_panel(self.inventory_panel, render_eng)
                 self.inventory_panel = None
 
-        elif self.inventory_panel is not None and self.inventory_panel.gs_info_is_outdated():
-            self.rebuild_inventory(render_eng)
+        # if self.inventory_panel is not None:
+        #    self.inventory_panel.update_stats_imgs()
 
     def _update_health_bar_panel(self, world, input_state, render_eng):
         if self.health_bar_panel is None:
