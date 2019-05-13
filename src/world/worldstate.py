@@ -393,14 +393,14 @@ class World:
             e._alive = True
         self._ents_to_add.clear()
 
-    def update_all(self, input_state, render_engine):
+    def update_all(self, input_state):
         old_lighting = self._cached_light_sources
 
         self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
             print("cleaning up {}".format([x for x in e.all_bundles()]))
-            e.cleanup(render_engine)
+            e.cleanup()
             self.entities.remove(e)  # n^2 but whatever
             e._alive = False
             if e in self._onscreen_entities:
@@ -420,7 +420,7 @@ class World:
             near_player = player is not None and Utils.dist(e.center(), player.center()) <= 600
 
             if on_camera or near_player:
-                e.update(self, input_state, render_engine)
+                e.update(self, input_state)
                 self._onscreen_entities.add(e)
 
                 if not gs.get_instance().world_updates_paused():

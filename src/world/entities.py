@@ -14,6 +14,7 @@ from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
 from src.game.gameengine import ActorState, ActorController, PlayerController, ActionType, EnemyController
+from src.renderengine.engine import RenderEngine
 
 ENTITY_UID_COUNTER = 0
 
@@ -144,16 +145,17 @@ class Entity(Updateable):
         self._last_vel = (dx, dy)
         return True
         
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         pass
 
     def alive(self):
         """whether the entity is in a World"""
         return self._alive
         
-    def cleanup(self, render_engine):
+    def cleanup(self):
+        render_eng = RenderEngine.get_instance()
         for bundle in self.all_bundles():
-            render_engine.remove(bundle)
+            render_eng.remove(bundle)
 
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
@@ -374,7 +376,7 @@ class AnimationEntity(Entity):
         def get_progress(self):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
 
-        def update(self, world, input_state, render_engine):
+        def update(self, world, input_state):
             # these keep updating when game is paused
             if self.tick_count >= self.duration and self.on_finish_mode == AnimationEntity.DELETE_ON_FINISH:
                 world.remove(self)
@@ -455,7 +457,7 @@ class FloatingTextEntity(Entity):
 
         self.text_img.update(new_x=x, new_y=y)
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         # these keep updating even when updates are paused
         if self.tick_count >= self.duration:
             world.remove(self)
@@ -521,10 +523,11 @@ class ActorEntity(Entity):
     def visible_in_darkness(self):
         return False
 
-    def cleanup(self, render_engine):
-        super().cleanup(render_engine)
-        render_engine.remove(self._img)
-        render_engine.remove(self._shadow)
+    def cleanup(self):
+        super().cleanup()
+        render_eng = RenderEngine.get_instance()
+        render_eng.remove(self._img)
+        render_eng.remove(self._shadow)
 
     def get_actor_state(self):
         return self.actor_state
@@ -587,8 +590,8 @@ class ActorEntity(Entity):
                 prog = Utils.bound(self.executing_action_ticks / self.executing_action_duration, 0.0, 1.0)
                 self.executing_action.animate_in_world(prog, world)
 
-    def update(self, world, input_state, render_engine):
-        Entity.update(self, world, input_state, render_engine)
+    def update(self, world, input_state):
+        Entity.update(self, world, input_state)
         if not gs.get_instance().world_updates_paused():
             if self.is_performing_action():
                 self.update_action(world)
@@ -670,11 +673,11 @@ class Player(ActorEntity):
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
-    def update_held_item_image(self, render_engine):
+    def update_held_item_image(self):
         held_item = self.get_held_item()
         scale = 2
         if self._held_item_img is not None and held_item is None:
-            render_engine.remove(self._held_item_img)
+            RenderEngine.get_instance().remove(self._held_item_img)
             self._held_item_img = None
         elif held_item is not None and self._held_item_img is None:
             self._held_item_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=scale)
@@ -708,9 +711,9 @@ class Player(ActorEntity):
     def visible_in_darkness(self):
         return True
             
-    def update(self, world, input_state, render_engine):
-        ActorEntity.update(self, world, input_state, render_engine)
-        self.update_held_item_image(render_engine)
+    def update(self, world, input_state):
+        ActorEntity.update(self, world, input_state)
+        self.update_held_item_image()
 
     def request_next_action(self, world, input_state):
         return ActorEntity.request_next_action(self, world, input_state)
@@ -748,7 +751,7 @@ class Enemy(ActorEntity):
         self.sprites = sprites
         self._healthbar_img = None
 
-    def _update_healthbar_img(self, world, render_engine):
+    def _update_healthbar_img(self, world):
         health_ratio = Utils.bound(self.get_actor_state().hp() / self.get_actor_state().max_hp(), 0.0, 1.0)
         should_display = health_ratio < 1.0 and self.is_visible_in_world(world)
 
@@ -765,7 +768,7 @@ class Enemy(ActorEntity):
                 self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
                                                                  new_depth=self.center()[1], new_color=(1.0, 0.25, 0.25))
             else:
-                render_engine.remove(self._healthbar_img)
+                RenderEngine.get_instance().remove(self._healthbar_img)
                 self._healthbar_img = None
 
     def all_bundles(self, extras=[]):
@@ -774,9 +777,9 @@ class Enemy(ActorEntity):
         if self._healthbar_img is not None:
             yield self._healthbar_img
         
-    def update(self, world, input_state, render_engine):
-        super().update(world, input_state, render_engine)
-        self._update_healthbar_img(world, render_engine)
+    def update(self, world, input_state):
+        super().update(world, input_state)
+        self._update_healthbar_img(world)
         
     def is_enemy(self):
         return True
@@ -824,7 +827,7 @@ class ChestEntity(Entity):
     def is_open(self):
         return self._is_open
             
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         self.update_images(gs.get_instance().anim_tick)
 
     def is_interactable(self):
@@ -920,7 +923,7 @@ class PickupEntity(Entity):
             else:
                 return (0, 0)
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         if not gs.get_instance().world_updates_paused():
             vel_before = Utils.mag(self.vel)
 
@@ -1035,7 +1038,7 @@ class DoorEntity(Entity):
     def _get_sprites(self, is_horz):
         return spriteref.door_h if is_horz else spriteref.door_v
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
 
@@ -1077,7 +1080,7 @@ class SaveStationEntity(Entity):
         if self._shadow is not None:
             self._shadow = self._shadow.update(new_x=x)
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         self.update_images(gs.get_instance().anim_tick)
 
     def is_save_station(self):
@@ -1184,7 +1187,7 @@ class ExitEntity(Entity):
         else:
             self.count = 0
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
 
         if not gs.get_instance().world_updates_paused():
             if self.count < self.open_duration:
@@ -1259,7 +1262,7 @@ class DecorationEntity(Entity):
         self._sprites = Utils.listify(sprite)
         self._scale = scale
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
@@ -1352,7 +1355,7 @@ class NpcEntity(Entity):
 
         Entity.update_images(self, 0)  # just updating shadow
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         p = world.get_player()
         if p is not None:
             p_x = p.center()[0]
@@ -1388,7 +1391,7 @@ class TriggerBox(Entity):
         self.ignore_updates_paused = ignore_updates_paused
         self.box_id = box_id
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         if gs.get_instance().world_updates_paused() and not self.ignore_updates_paused:
             return
 
@@ -1397,17 +1400,17 @@ class TriggerBox(Entity):
         if self.player_inside != inside:
             if inside:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_enter_event(self.box_id))
-                self.player_entered(p, world, input_state, render_engine)
+                self.player_entered(p, world, input_state)
             else:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_exit_event(self.box_id))
-                self.player_left(p, world, input_state, render_engine)
+                self.player_left(p, world, input_state)
             self.player_inside = inside
             self.player_in_range_count = 0
 
         if self.player_inside:
             if not self.no_more_firings and self.player_in_range_count == self.delay:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self.box_id))
-                self.fire_action(p, world, input_state, render_engine)
+                self.fire_action(p, world, input_state)
                 if self.just_once:
                     self.no_more_firings = True
 
@@ -1497,11 +1500,12 @@ class HoverTextEntity(Entity):
 
         return changed
 
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         if self._dirty:
             if self._text_img is not None:
+                render_eng = RenderEngine.get_instance()
                 for bun in self._text_img.all_bundles():
-                    render_engine.remove(bun)
+                    render_eng.remove(bun)
                 self._text_img = None
 
         sc = 2

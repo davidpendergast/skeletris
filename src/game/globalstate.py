@@ -176,12 +176,6 @@ class GlobalState:
         self._event_queue = events.EventQueue()
         self._event_triggers = {}  # EventType -> list(EventListener)
 
-        """
-        some of the zones require additional updating logic to handle story / boss fight stuff. 
-        these Updaters handle that
-        """
-        self._zone_updaters = []
-
     def settings(self):
         return self._settings
 
@@ -203,19 +197,7 @@ class GlobalState:
 
         self._event_triggers[trigger.event_type].append(trigger)
 
-    def add_zone_updater(self, updater):
-        print("INFO: adding zone updater {}".format(updater))
-        self._zone_updaters.append(updater)
-
-    def remove_zone_updater(self, updater):
-        if updater in self._zone_updaters:
-            print("INFO: removed zone updater: {}".format(updater))
-            self._zone_updaters.remove(updater)
-        else:
-            print("WARN: trying to remove a zone updater that doesn't exist: {}".format(updater))
-
     def prepare_for_new_zone(self, zone):
-        self._zone_updaters.clear()
         self.clear_triggers(events.EventListenerScope.ZONE)
 
         self.current_zone = zone
@@ -327,7 +309,7 @@ class GlobalState:
         cam = self.get_world_camera()
         return (cam[0] + point[0], cam[1] + point[1])
         
-    def update(self, world, input_state, render_engine):
+    def update(self, world, input_state):
         self.event_queue().flip()
         if world is not None:
             for e in self.event_queue().all_events():
@@ -346,9 +328,6 @@ class GlobalState:
 
                 for t in triggers_to_remove:
                     self._event_triggers[t.event_type].remove(t)
-
-            for zone_update in self._zone_updaters:
-                zone_update.update(world, input_state, render_engine)
 
         if len(self._current_screenshakes) > 0:
             any_empty = False

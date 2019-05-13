@@ -8,6 +8,7 @@ from src.utils.util import Utils
 from src.game.stats import StatType
 import src.game.globalstate as gs
 import src.utils.colors as colors
+from src.renderengine.engine import RenderEngine
 
 
 class ItemGridImage:
@@ -274,7 +275,7 @@ class DialogPanel:
 
         return needs_update
 
-    def update(self, render_eng):
+    def update(self):
         do_text_rebuild = False
 
         new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
@@ -290,6 +291,8 @@ class DialogPanel:
         if option_idx != self._option_selected:
             do_text_rebuild = True
             self._option_selected = option_idx
+
+        render_eng = RenderEngine.get_instance()
 
         new_sprite = self._dialog.get_visible_sprite()
         if new_sprite is None and self._speaker_img is not None:
@@ -338,13 +341,13 @@ class PopupPanel:
     def size(self):
         return (self.rect[2], self.rect[3])
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         pass
 
-    def should_destroy(self, world, input_state, render_eng):
+    def should_destroy(self, world, input_state):
         return False
 
-    def prepare_to_destroy(self, world, input_state, render_eng):
+    def prepare_to_destroy(self, world, input_state):
         pass
 
     def all_bundles(self):
@@ -368,7 +371,7 @@ class HealthBarPanel:
         self._float_dur = 30
         self._float_height = 30
 
-    def update_images(self, cur_hp, max_hp, new_damage, new_healing, action_states, render_eng):
+    def update_images(self, cur_hp, max_hp, new_damage, new_healing, action_states):
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2)
@@ -408,6 +411,8 @@ class HealthBarPanel:
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
+        render_eng = RenderEngine.get_instance()
+
         x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
         y_start = y + 19 * 2
         for i in range(0, len(action_states)):
@@ -426,7 +431,7 @@ class HealthBarPanel:
                 cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start[i], new_y=y_start)
 
                 """Bonus Images"""
-                self.handle_bonus_images(i, x_start[i], y_start, render_eng)
+                self.handle_bonus_images(i, x_start[i], y_start)
 
                 """Cooldown Image"""
                 if state[1] >= 1:
@@ -469,7 +474,7 @@ class HealthBarPanel:
 
             self._action_imgs[i] = tuple(cur_img)
 
-    def handle_bonus_images(self, i, x_start, y_start, render_eng):
+    def handle_bonus_images(self, i, x_start, y_start):
         if i == 4:
             inv = gs.get_instance().player_state().inventory()
             items = inv.all_equipped_items()
@@ -485,6 +490,7 @@ class HealthBarPanel:
                 needs_rebuilt = True
 
             if needs_rebuilt:
+                render_eng = RenderEngine.get_instance()
                 for key in self._item_images:
                     render_eng.remove(self._item_images[key])
                 self._item_images = new_item_map
@@ -501,9 +507,11 @@ class HealthBarPanel:
         """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
         return None
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         p_state = gs.get_instance().player_state()
         new_dmg, new_healing = 0, 0
+
+        render_eng = RenderEngine.get_instance()
 
         if len(self._floating_bars) > 0:
             new_bars = []
@@ -515,7 +523,7 @@ class HealthBarPanel:
             self._floating_bars = new_bars
 
         action_states = [self.get_action_item_state(i) for i in range(0, 6)]
-        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states, render_eng)
+        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states)
 
         for bun in self.all_bundles():
             render_eng.update(bun)
@@ -737,6 +745,7 @@ class ItemImage:
             else:
                 return (scale * sprite.height(), scale * sprite.width())
 
+
 class CinematicPanel:
 
     IMAGE_SCALE = 6
@@ -748,7 +757,7 @@ class CinematicPanel:
         self.text_img = None
         self.border = 32
 
-    def update(self, render_engine, new_sprite, new_text):
+    def update(self, new_sprite, new_text):
         scale = CinematicPanel.IMAGE_SCALE
         if self.current_image_img is None:
             self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale)
@@ -760,8 +769,9 @@ class CinematicPanel:
 
         if new_text != self.current_text:
             if self.text_img is not None:
+                render_eng = RenderEngine.get_instance()
                 for bun in self.text_img.all_bundles():
-                    render_engine.remove(bun)
+                    render_eng.remove(bun)
                 self.text_img = None
 
         if self.text_img is None and new_text != "":

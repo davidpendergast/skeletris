@@ -13,6 +13,7 @@ import src.game.settings as settings
 import src.game.globalstate as gs
 import src.utils.passwordgen as passwordgen
 import src.game.sound_effects as sound_effects
+from src.renderengine.engine import RenderEngine
 
 
 class MenuManager:
@@ -33,7 +34,8 @@ class MenuManager:
         self._active_menu = StartMenu()
         self._next_active_menu = menu
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
+        render_eng = RenderEngine.get_instance()
         if self._next_active_menu is not None:
             for bun in self._active_menu.all_bundles():
                 render_eng.remove(bun)
@@ -61,7 +63,7 @@ class MenuManager:
                 # expected sometimes~
                 pass
             else:
-                self.get_active_menu().update(world, input_state, render_eng)
+                self.get_active_menu().update(world, input_state)
 
                 if input_state.mouse_in_window():
                     xy = input_state.mouse_pos()
@@ -115,7 +117,7 @@ class Menu:
     def get_type(self):
         return self._menu_type
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         pass
 
     def get_song(self):
@@ -141,15 +143,15 @@ class Menu:
     def get_active_tooltip(self):
         return self._active_tooltip
 
-    def set_active_tooltip(self, tooltip, render_eng):
+    def set_active_tooltip(self, tooltip):
         if self._active_tooltip is not None:
-            self._destroy_panel(self._active_tooltip, render_eng)
+            self._destroy_panel(self._active_tooltip)
         self._active_tooltip = tooltip
 
-    def _destroy_panel(self, panel, render_eng):
+    def _destroy_panel(self, panel):
         if panel is not None:
             bundles = panel.all_bundles()
-            render_eng.clear_bundles(bundles)
+            RenderEngine.get_instance().clear_bundles(bundles)
 
     def cursor_style_at(self, xy):
         return pygame.cursors.arrow
@@ -251,7 +253,7 @@ class OptionsMenu(Menu):
             sound_effects.play_sound(sound_effects.Effects.CLICK)
             self._selection = idx
 
-    def handle_inputs(self, world, input_state, render_eng):
+    def handle_inputs(self, world, input_state):
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
             self.esc_pressed()
         else:
@@ -306,14 +308,15 @@ class OptionsMenu(Menu):
                     if clicked_option is not None:
                         self.option_activated(clicked_option)
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         self.build_title_img()
         self.build_option_imgs()
         self._layout_rects()
         self._update_imgs()
 
-        self.handle_inputs(world, input_state, render_eng)
+        self.handle_inputs(world, input_state)
 
+        render_eng = RenderEngine.get_instance()
         for bun in self.all_bundles():
             render_eng.update(bun)
 
@@ -474,7 +477,7 @@ class PasswordEntryMenu(OptionsMenu):
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(StartMenu())
 
-    def build_pw_img(self, render_eng):
+    def build_pw_img(self):
         display_text = self._pw_text
 
         if len(display_text) < self._max_size:
@@ -488,6 +491,7 @@ class PasswordEntryMenu(OptionsMenu):
             display_text += missing_spaces
 
         if self._pw_text_img is not None and self._pw_text_img.text != display_text:
+            render_eng = RenderEngine.get_instance()
             for bun in self._pw_text_img.all_bundles():
                 render_eng.remove(bun)
             self._pw_text_img = None
@@ -554,7 +558,7 @@ class PasswordEntryMenu(OptionsMenu):
             for bun in self._pw_text_img.all_bundles():
                 yield bun
 
-    def handle_inputs(self, world, input_state, render_eng):
+    def handle_inputs(self, world, input_state):
         if self.green_countdown > 0:
             # pw is solved, we're just watching the animation now
             pass
@@ -569,13 +573,13 @@ class PasswordEntryMenu(OptionsMenu):
                 sound_effects.play_sound(sound_effects.Effects.CLICK)
                 self._pw_text += as_ascii
 
-        OptionsMenu.handle_inputs(self, world, input_state, render_eng)
+        OptionsMenu.handle_inputs(self, world, input_state)
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         # XXX mostly cannibalized from OptionMenu.update
         self.build_title_img()
         self.build_option_imgs()
-        self.build_pw_img(render_eng)
+        self.build_pw_img()
 
         self._layout_rects()
         self._update_imgs()
@@ -589,8 +593,9 @@ class PasswordEntryMenu(OptionsMenu):
         elif self.green_countdown > 0:
             self.green_countdown -= 1
 
-        self.handle_inputs(world, input_state, render_eng)
+        self.handle_inputs(world, input_state)
 
+        render_eng = RenderEngine.get_instance()
         for bun in self.all_bundles():
             render_eng.update(bun)
 
@@ -725,7 +730,7 @@ class KeybindingEditMenu(OptionsMenu):
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(self._return_menu_builder())
 
-    def handle_inputs(self, world, input_state, render_eng):
+    def handle_inputs(self, world, input_state):
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
             sound_effects.play_sound(sound_effects.Effects.NEGATIVE_2)
             self.esc_pressed()
@@ -762,7 +767,7 @@ class CinematicMenu(Menu):
         # each scene will specify its song
         return music.Songs.CONTINUE_CURRENT
 
-    def update(self, world, input_state, render_eng):
+    def update(self, world, input_state):
         if self.active_scene is None:
             cine_queue = gs.get_instance().get_cinematics_queue()
             if len(cine_queue) == 0:
@@ -792,7 +797,7 @@ class CinematicMenu(Menu):
 
                 current_text = vis_text + invis_text
 
-            self.cinematic_panel.update(render_eng, current_image, current_text)
+            self.cinematic_panel.update(current_image, current_text)
 
             if self.active_tick_count > 10 and input_state.was_pressed(gs.get_instance().settings().interact_key()):
                 if text_finished_scrolling:
@@ -802,6 +807,7 @@ class CinematicMenu(Menu):
 
             self.active_tick_count += 1
 
+        render_eng = RenderEngine.get_instance()
         for bun in self.all_bundles():
             render_eng.update(bun)
 
@@ -851,8 +857,8 @@ class DeathMenu(OptionsMenu):
         self._total_duration = 120
         self._flavor_tick = 0
 
-    def update(self, world, input_state, render_eng):
-        OptionsMenu.update(self, world, input_state, render_eng)
+    def update(self, world, input_state):
+        OptionsMenu.update(self, world, input_state)
 
         self._flavor_tick += 1
         if self._flavor_tick >= self._total_duration:
@@ -992,8 +998,9 @@ class InGameUiState(Menu):
     def _get_top_right_info_obj(self, world):
         return gs.get_instance().player_state().held_item
 
-    def _update_top_right_info_panel(self, world, input_state, render_eng):
+    def _update_top_right_info_panel(self, world, input_state):
         obj_to_display = self._get_top_right_info_obj(world)
+        render_eng = RenderEngine.get_instance()
 
         if self.top_right_info_panel is not None:
             if obj_to_display is None or self.top_right_info_panel.get_target() is not obj_to_display:
@@ -1013,7 +1020,7 @@ class InGameUiState(Menu):
                 for bun in self.top_right_info_panel.all_bundles():
                     render_eng.update(bun)
 
-    def _update_tooltip(self, world, input_state, render_eng):
+    def _update_tooltip(self, world, input_state):
         needs_update = False
         obj_to_display = None
         screen_pos = input_state.mouse_pos()
@@ -1034,11 +1041,13 @@ class InGameUiState(Menu):
                     if enemy_entity is not None:
                         obj_to_display = enemy_entity.state
 
+        render_eng = RenderEngine.get_instance()
+
         if obj_to_display is not None:
             current_tooltip = self.get_active_tooltip()
             if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
                 new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
-                self.set_active_tooltip(new_tooltip, render_eng)
+                self.set_active_tooltip(new_tooltip)
                 needs_update = True
 
             offs = (-screen_pos[0], -screen_pos[1])
@@ -1051,14 +1060,14 @@ class InGameUiState(Menu):
                 render_eng.update(bun)
 
         if not gs.get_instance().player_state().is_alive() or obj_to_display is None:
-            self.set_active_tooltip(None, render_eng)
+            self.set_active_tooltip(None)
 
-    def _update_dialog_panel(self, world, input_state, render_eng):
+    def _update_dialog_panel(self, world, input_state):
         should_destroy = (self.dialog_panel is not None and (not gs.get_instance().dialog_manager().is_active() or
                           self.dialog_panel.get_dialog() is not gs.get_instance().dialog_manager().get_dialog()))
 
         if should_destroy:
-            self._destroy_panel(self.dialog_panel, render_eng)
+            self._destroy_panel(self.dialog_panel)
             self.dialog_panel = None
 
         if gs.get_instance().dialog_manager().is_active():
@@ -1067,29 +1076,29 @@ class InGameUiState(Menu):
                 self.dialog_panel = DialogPanel(dialog)
 
         if self.dialog_panel is not None:
-            self.dialog_panel.update(render_eng)
+            self.dialog_panel.update()
 
-    def _update_inventory_panel(self, world, input_state, render_eng):
+    def _update_inventory_panel(self, world, input_state):
         if not gs.get_instance().player_state().is_alive():
             if self.inventory_panel is not None:
-                self._destroy_panel(self.inventory_panel, render_eng)
+                self._destroy_panel(self.inventory_panel)
                 self.inventory_panel = None
         elif input_state.was_pressed(gs.get_instance().settings().inventory_key()):
             if self.inventory_panel is None:
-                self.rebuild_inventory(render_eng)
+                self.rebuild_inventory()
             else:
-                self._destroy_panel(self.inventory_panel, render_eng)
+                self._destroy_panel(self.inventory_panel)
                 self.inventory_panel = None
 
         # if self.inventory_panel is not None:
         #    self.inventory_panel.update_stats_imgs()
 
-    def _update_health_bar_panel(self, world, input_state, render_eng):
+    def _update_health_bar_panel(self, world, input_state):
         if self.health_bar_panel is None:
             self.health_bar_panel = HealthBarPanel()
-        self.health_bar_panel.update(world, input_state, render_eng)
+        self.health_bar_panel.update(world, input_state)
 
-    def _update_world_ui_panel(self, world, input_state, render_eng):
+    def _update_world_ui_panel(self, world, input_state):
         if self.world_ui_panel is not None:
             inv_rect = self.get_inventory_rect()
             if inv_rect is None:
@@ -1099,9 +1108,10 @@ class InGameUiState(Menu):
             size = self.world_ui_panel.size()
             self.world_ui_panel.set_xy(center[0] - size[0] // 2, center[1] - size[1] // 2)
 
-            self.world_ui_panel.update(world, input_state, render_eng)
-            if self.world_ui_panel.should_destroy(world, input_state, render_eng):
-                self.world_ui_panel.prepare_to_destroy(world, input_state, render_eng)
+            self.world_ui_panel.update(world, input_state)
+            if self.world_ui_panel.should_destroy(world, input_state):
+                self.world_ui_panel.prepare_to_destroy(world, input_state)
+                render_eng = RenderEngine.get_instance()
                 for bun in self.world_ui_panel.all_bundles():
                     render_eng.remove(bun)
 
@@ -1145,7 +1155,7 @@ class InGameUiState(Menu):
 
         return None
 
-    def _update_item_on_cursor(self, world, input_state, render_eng):
+    def _update_item_on_cursor(self, world, input_state):
         destroy_image = False
         create_image = False
         rebuild_inventory = False
@@ -1225,27 +1235,29 @@ class InGameUiState(Menu):
                 destroy_image = True
 
         if destroy_image:
-            self._destroy_panel(self.item_on_cursor_image, render_eng)
+            self._destroy_panel(self.item_on_cursor_image)
             self.item_on_cursor_image = None
 
         if create_image:
             size = ItemImage.calc_size(ps.held_item, 2)
             self.item_on_cursor_image = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2)
             self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
+            render_eng = RenderEngine.get_instance()
             for bun in self.item_on_cursor_image.all_bundles():
                 render_eng.update(bun)
 
         if rebuild_inventory:
-            self.rebuild_inventory(render_eng)
+            self.rebuild_inventory()
 
         if self.item_on_cursor_image is not None:
             screen_pos = input_state.mouse_pos()
             if screen_pos is not None:
                 x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
                 y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
-                render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
+                RenderEngine.get_instance().set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
 
-    def rebuild_inventory(self, render_eng):
+    def rebuild_inventory(self):
+        render_eng = RenderEngine.get_instance()
         if self.inventory_panel is not None:
             for bun in self.inventory_panel.all_bundles():
                 render_eng.remove(bun)
@@ -1254,14 +1266,14 @@ class InGameUiState(Menu):
         for bun in self.inventory_panel.all_bundles():
             render_eng.update(bun)
 
-    def update(self, world, input_state, render_eng):
-        self._update_item_on_cursor(world, input_state, render_eng)
-        self._update_tooltip(world, input_state, render_eng)
-        self._update_top_right_info_panel(world, input_state, render_eng)
-        self._update_inventory_panel(world, input_state, render_eng)
-        self._update_health_bar_panel(world, input_state, render_eng)
-        self._update_dialog_panel(world, input_state, render_eng)
-        self._update_world_ui_panel(world, input_state, render_eng)
+    def update(self, world, input_state):
+        self._update_item_on_cursor(world, input_state)
+        self._update_tooltip(world, input_state)
+        self._update_top_right_info_panel(world, input_state)
+        self._update_inventory_panel(world, input_state)
+        self._update_health_bar_panel(world, input_state)
+        self._update_dialog_panel(world, input_state)
+        self._update_world_ui_panel(world, input_state)
 
         if len(gs.get_instance().get_cinematics_queue()) > 0:
             gs.get_instance().menu_manager().set_active_menu(CinematicMenu())

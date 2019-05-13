@@ -172,6 +172,22 @@ class Shader:
 
 class RenderEngine:
 
+    _SINGLETON = None
+
+    @staticmethod
+    def create_instance():
+        """intializes the RenderEngine singleton."""
+        if RenderEngine._SINGLETON is not None:
+            raise ValueError("There is already a RenderEngine initialized.")
+        else:
+            RenderEngine._SINGLETON = RenderEngine()
+            return RenderEngine._SINGLETON
+
+    @staticmethod
+    def get_instance():
+        """after init is called, returns the RenderEngine singleton."""
+        return RenderEngine._SINGLETON
+
     def __init__(self):
         self.bundles = {}  # (int) id -> bundle
         self.camera_pos = [0, 0]

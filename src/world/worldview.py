@@ -5,6 +5,7 @@ import src.renderengine.img as img
 import src.game.globalstate as gs
 from src.world.worldstate import World
 from src.utils.util import Utils
+from src.renderengine.engine import RenderEngine
 
 
 class WorldView:
@@ -76,11 +77,13 @@ class WorldView:
         else:
             return None
 
-    def _update_onscreen_tile_bundles(self, render_engine):
+    def _update_onscreen_tile_bundles(self):
         px, py = gs.get_instance().get_world_camera()
         pw, ph = gs.get_instance().get_world_camera_size()
         grid_rect = [px // self.world.cellsize(), py // self.world.cellsize(),
                      pw // self.world.cellsize() + 3, ph // self.world.cellsize() + 3]
+
+        render_eng = RenderEngine.get_instance()
 
         old_onscreen_geo = self._onscreen_geo_bundles
         new_onscreen_geo = set()
@@ -99,19 +102,20 @@ class WorldView:
                 if bun is not None:
                     new_onscreen_geo.add(bun_key)
                     if bun_key not in self._onscreen_geo_bundles or bun_key in self._dirty_geo_bundles:
-                        render_engine.update(bun)
+                        render_eng.update(bun)
 
         # clear out the bundles that aren't onscreen anymore
         for bun_key in old_onscreen_geo:
             expired_bun = self.get_geo_bundle(*bun_key, create_if_missing=False)
             if expired_bun is not None:
-                render_engine.remove(expired_bun)
+                render_eng.remove(expired_bun)
                 if bun_key in self._geo_bundle_lookup:
                     del self._geo_bundle_lookup[bun_key]
 
         self._onscreen_geo_bundles = new_onscreen_geo
 
-    def cleanup_active_bundles(self, render_eng):
+    def cleanup_active_bundles(self):
+        render_eng = RenderEngine.get_instance()
         for e in self._onscreen_entities:
             for bun in e.all_bundles():
                 render_eng.remove(bun)
@@ -122,7 +126,7 @@ class WorldView:
         self._geo_bundle_lookup.clear()
         self._onscreen_geo_bundles.clear()
 
-    def update_all(self, input_state, render_engine):
+    def update_all(self, input_state):
         cam_center = gs.get_instance().get_world_camera(center=True)
 
         new_onscreens = set()
@@ -131,8 +135,10 @@ class WorldView:
             if e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
 
+        render_eng = RenderEngine.get_instance()
+
         for leftover_e in self._onscreen_entities:
-            leftover_e.cleanup(render_engine)
+            leftover_e.cleanup()
         self._onscreen_entities = new_onscreens
 
         for dirty_xy in self.world._dirty_geo:
@@ -141,7 +147,7 @@ class WorldView:
 
         for e in self._onscreen_entities:
             for bun in e.all_bundles():
-                render_engine.update(bun)
+                render_eng.update(bun)
 
         p = self.world.get_player()
         if p is not None:
@@ -156,4 +162,4 @@ class WorldView:
                 new_pos = Utils.add(cam_center, move_xy)
                 gs.get_instance().set_world_camera_center(*Utils.round(new_pos))
 
-        self._update_onscreen_tile_bundles(render_engine)
+        self._update_onscreen_tile_bundles()

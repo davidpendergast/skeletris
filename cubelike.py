@@ -43,8 +43,8 @@ def run():
     pygame.display.set_caption("Cubelike")
     
     pygame.display.set_mode(SCREEN_SIZE, mods)
-    
-    render_eng = RenderEngine()
+
+    render_eng = RenderEngine.create_instance()
     render_eng.init(*SCREEN_SIZE)
 
     input_state = inputs.InputState()
@@ -105,7 +105,7 @@ def run():
     running = True
 
     while running:
-        gs.get_instance().update(world, input_state, render_eng)
+        gs.get_instance().update(world, input_state)
 
         for event in gs.get_instance().event_queue().all_events():
             if event.get_type() == events.EventType.NEW_ZONE:
@@ -121,7 +121,7 @@ def run():
 
                 # kind of a hack to prevent the world from flashing for a frame before the cinematic starts
                 if len(gs.get_instance().get_cinematics_queue()) > 0:
-                    gs.get_instance().menu_manager().update(world, input_state, render_eng)
+                    gs.get_instance().menu_manager().update(world, input_state)
 
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
@@ -177,7 +177,7 @@ def run():
             world_view = WorldView(world)
 
             if len(gs.get_instance().get_cinematics_queue()) > 0:
-                gs.get_instance().menu_manager().update(world, input_state, render_eng)
+                gs.get_instance().menu_manager().update(world, input_state)
                 world_active = False
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
@@ -213,8 +213,8 @@ def run():
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())
 
-            world.update_all(input_state, render_eng)
-            world_view.update_all(input_state, render_eng)
+            world.update_all(input_state)
+            world_view.update_all(input_state)
 
             gs.get_instance().dialog_manager().update(world, input_state)
 
@@ -224,9 +224,9 @@ def run():
                 render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 
         elif world is not None:
-            world_view.cleanup_active_bundles(render_eng)
+            world_view.cleanup_active_bundles()
 
-        gs.get_instance().menu_manager().update(world, input_state, render_eng)
+        gs.get_instance().menu_manager().update(world, input_state)
 
         render_eng.render_layers()
 
