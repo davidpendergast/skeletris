@@ -38,6 +38,7 @@ class ActorState:
             yield status_effect
 
     def get_all_mappable_action_providers(self):
+        yield ItemActions.UNARMED_ATTACK
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable():
@@ -555,7 +556,44 @@ class ActionProvider:
         return self.name
 
     def get_action(self, actor, position=None, item=None):
-        return gameengine.SkipTurnAction()
+        return SkipTurnAction()
+
+
+class ConsumeItemActionProvider(ActionProvider):
+
+    def __init__(self):
+        ActionProvider.__init__(self, "Drink", ActionType.CONSUME_ITEM, color=(0.5, 1, 0.5))
+
+    def get_action(self, actor, position=None, item=None):
+        return ConsumeItemAction(actor, item)
+
+
+class AttackItemActionProvider(ActionProvider):
+
+    def __init__(self, name, icon, target_range):
+        ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
+                                target_positions=target_range, color=(1, 0.5, 0.5), needs_to_be_equipped=True)
+
+    def is_mappable(self):
+        return True
+
+    def get_action(self, actor, position=None, item=None):
+        return AttackAction(actor, item, position)
+
+
+class ItemActions:
+    _cardinal_targets_only = ((-1, 0), (1, 0), (0, -1), (0, 1))
+
+    CONSUME_ITEM = ConsumeItemActionProvider()
+    SWORD_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.sword_icon, _cardinal_targets_only)
+    SPEAR_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.spear_icon, _cardinal_targets_only)
+    WHIP_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.whip_icon, _cardinal_targets_only)
+    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, _cardinal_targets_only)  # TODO
+    DAGGER_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.dagger_icon, _cardinal_targets_only)
+    BOW_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.bow_icon, _cardinal_targets_only)
+    AXE_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.axe_icon, _cardinal_targets_only)
+    UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, _cardinal_targets_only)
+    print("icon={}".format(spriteref.Items.unarmed_icon))
 
 
 

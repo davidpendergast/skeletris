@@ -47,8 +47,24 @@ def run():
     render_eng = RenderEngine.create_instance()
     render_eng.init(*SCREEN_SIZE)
 
-    input_state = inputs.InputState()
-    gs.create_new(menus.StartMenu())
+    raw_sheet = pygame.image.load(Utils.resource_path("assets/image.png"))
+    cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
+    ui_img = pygame.image.load(Utils.resource_path("assets/ui.png"))
+    items_img = pygame.image.load(Utils.resource_path("assets/items.png"))
+    boss_img = pygame.image.load(Utils.resource_path("assets/bosses.png"))
+    font_img = pygame.image.load(Utils.resource_path("assets/font.png"))
+
+    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img)
+    cinematics.init_cinematics()
+
+    window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
+    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
+    pygame.display.set_icon(window_icon)
+
+    texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
+    width = img_surface.get_width()
+    height = img_surface.get_height()
+    render_eng.set_texture(texture_data, width, height)
 
     COLOR = True
     SORTS = True
@@ -77,24 +93,9 @@ def run():
             "ui_tooltips", 25,
             False, COLOR)
 
-    raw_sheet = pygame.image.load(Utils.resource_path("assets/image.png"))
-    cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
-    ui_img = pygame.image.load(Utils.resource_path("assets/ui.png"))
-    items_img = pygame.image.load(Utils.resource_path("assets/items.png"))
-    boss_img = pygame.image.load(Utils.resource_path("assets/bosses.png"))
-    font_img = pygame.image.load(Utils.resource_path("assets/font.png"))
+    input_state = inputs.InputState()
 
-    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img)
-    cinematics.init_cinematics()
-    
-    window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
-    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
-    pygame.display.set_icon(window_icon)
-    
-    texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
-    width = img_surface.get_width()
-    height = img_surface.get_height()
-    render_eng.set_texture(texture_data, width, height)
+    gs.create_new(menus.StartMenu())
 
     zones.init_zones()
         

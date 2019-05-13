@@ -122,6 +122,7 @@ class UI:
     health_bar_top = None
     health_bar_full = None
     health_bars_with_length = []
+    status_bar_action_border = None
 
     locked_door_panel = None
 
@@ -618,6 +619,8 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     for i in range(0, 256):
         UI.health_bars_with_length.append(make(64, 160, i, 16, shift=start_pos))
     UI.health_bars_with_length.append(UI.health_bar_full)
+
+    UI.status_bar_action_border = make(0, 252, 28, 28, shift=start_pos)
 
     UI.locked_door_panel = make(272, 0, 96, 112, shift=start_pos)
 

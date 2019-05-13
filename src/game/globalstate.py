@@ -176,6 +176,8 @@ class GlobalState:
         self._event_queue = events.EventQueue()
         self._event_triggers = {}  # EventType -> list(EventListener)
 
+        self._mapped_actions = [None for _ in range(0, 6)]
+
     def settings(self):
         return self._settings
 
@@ -290,6 +292,17 @@ class GlobalState:
         
     def player_state(self):
         return self._player_state
+
+    def get_mapped_action(self, idx):
+        all_actions = list(self.player_state().get_all_mappable_action_providers())
+        if idx < len(all_actions):
+            return all_actions[idx]
+        else:
+            return None
+        # return self._mapped_actions[idx]
+
+    def set_mapped_action(self, idx, value, hard):
+        self._mapped_actions[idx] = value
     
     def set_world_camera_center(self, x, y):
         self._world_camera_center = (x, y)

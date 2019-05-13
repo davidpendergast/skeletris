@@ -380,15 +380,13 @@ class HealthBarPanel:
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
 
-        # (base_img, cooldown_img, left text, right text)
-        self._action_imgs = [(None, None, None, None)] * 6
-
-        self._item_images = {}  # (item, grid_pos) -> img
-
         self._float_dur = 30
         self._float_height = 30
 
-    def update_images(self, cur_hp, max_hp, new_damage, new_healing, action_states):
+        # (icon_sprite, border)
+        self._action_imgs = [(None, None)] * 6
+
+    def update_images(self, cur_hp, max_hp, new_damage, new_healing):
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH)
@@ -432,97 +430,26 @@ class HealthBarPanel:
 
         x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
         y_start = y + 19 * 2
-        for i in range(0, len(action_states)):
-            state = action_states[i]
-            cur_img = [img for img in self._action_imgs[i]]
-            if state is None:
-                for img in cur_img:
-                    if img is not None:
-                        for bun in img.all_bundles():
-                            render_eng.remove(bun)
-                self._action_imgs[i] = (None, None, None, None)
+        for i in range(0, 6):
+            action_prov = gs.get_instance().get_mapped_action(i)
+            if action_prov is None:
+                for img in self._action_imgs[i]:
+                    render_eng.remove(img)
+                self._action_imgs[i] = (None, None)
             else:
-                """Action Image"""
+                cur_img = [img for img in self._action_imgs[i]]
+                # icon image
                 if cur_img[0] is None:
-                    cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-                cur_img[0] = cur_img[0].update(new_model=state[0], new_x=x_start[i], new_y=y_start)
+                    cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4, depth=FG_DEPTH)
+                cur_img[0] = cur_img[0].update(new_model=action_prov.get_icon(),
+                                               new_x=x_start[i] + 8, new_y=y_start + 8)
+                # border image
+                if cur_img[1] is None:
+                    cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
+                cur_img[1] = cur_img[1].update(new_model=spriteref.UI.status_bar_action_border,
+                                               new_x=x_start[i], new_y=y_start)
 
-                """Bonus Images"""
-                self.handle_bonus_images(i, x_start[i], y_start)
-
-                """Cooldown Image"""
-                if state[1] >= 1:
-                    if cur_img[1] is not None:
-                        render_eng.remove(cur_img[1])
-                        cur_img[1] = None
-                else:
-                    if cur_img[1] is None:
-                        cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-                    cur_img[1] = cur_img[1].update(new_model=spriteref.get_cooldown_img(state[1]),
-                                                   new_x=x_start[i], new_y=y_start)
-
-                """Left Text"""
-                incorrect_text = state[2] is not None and cur_img[2] is not None and state[2] != cur_img[2].text
-                if state[2] is None or incorrect_text:
-                    if cur_img[2] is not None:
-                        for bun in cur_img[2].all_bundles():
-                            render_eng.remove(bun)
-                        cur_img[2] = None
-                if state[2] is not None:
-                    if cur_img[2] is None:
-                        cur_img[2] = TextImage(0, 0, state[2], spriteref.UI_0_LAYER)
-                    cur_img[2] = cur_img[2].update(new_x=x_start[i] + 1,
-                                                   new_y=y_start + 28*2 - cur_img[2].size()[1] - 2)
-
-                """Right Text"""
-                incorrect_text = state[3] is not None and cur_img[3] is not None and state[3] != cur_img[3].text
-                if state[3] is None or incorrect_text:
-                    if cur_img[3] is not None:
-                        for bun in cur_img[3].all_bundles():
-                            render_eng.remove(bun)
-                        cur_img[3] = None
-                if state[3] is not None:
-                    if cur_img[3] is None:
-                        cur_img[3] = TextImage(0, 0, state[3], spriteref.UI_0_LAYER)
-                    color = (1, 0.5, 0.5) if state[3] == "0" else (1.0, 1.0, 1.0)
-                    cur_img[3] = cur_img[3].update(new_x=x_start[i] - 3 + 28*2 - cur_img[3].size()[0],
-                                                   new_y=y_start + 28 * 2 - cur_img[2].size()[1] - 2,
-                                                   new_color=color)
-
-            self._action_imgs[i] = tuple(cur_img)
-
-    def handle_bonus_images(self, i, x_start, y_start):
-        if i == 4:
-            inv = gs.get_instance().player_state().inventory()
-            items = inv.all_equipped_items()
-            needs_rebuilt = False
-            new_item_map = {}
-            for item in items:
-                pos = inv.equip_grid.get_pos(item)
-                if (item, pos) not in self._item_images:
-                    needs_rebuilt = True
-                new_item_map[(item, pos)] = None
-
-            if len(new_item_map) != len(self._item_images):
-                needs_rebuilt = True
-
-            if needs_rebuilt:
-                render_eng = RenderEngine.get_instance()
-                for key in self._item_images:
-                    render_eng.remove(self._item_images[key])
-                self._item_images = new_item_map
-                for key in self._item_images:
-                    item, pos = key
-                    img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
-                    self._item_images[key] = img.update(
-                        new_x=x_start + 8 + pos[0] * 8,
-                        new_y=y_start + 6 + pos[1] * 8,
-                        new_model=spriteref.get_item_entity_sprite(item.cubes),
-                        new_color=(1, 1, 1))
-
-    def get_action_item_state(self, idx):
-        """returns: None if it's locked, else (sprite, cooldown_value, left_text, right_text)"""
-        return None
+                self._action_imgs[i] = tuple(cur_img)
 
     def update(self, world, input_state):
         p_state = gs.get_instance().player_state()
@@ -539,8 +466,7 @@ class HealthBarPanel:
                     new_bars.append([fb[0], fb[1] + 1])
             self._floating_bars = new_bars
 
-        action_states = [self.get_action_item_state(i) for i in range(0, 6)]
-        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing, action_states)
+        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing)
 
         for bun in self.all_bundles():
             render_eng.update(bun)
@@ -557,9 +483,6 @@ class HealthBarPanel:
                 if img is not None:
                     for bun in img.all_bundles():
                         yield bun
-        for key in self._item_images:
-            if self._item_images[key] is not None:
-                yield self._item_images[key]
 
 
 class TextImage:

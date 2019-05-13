@@ -13,7 +13,6 @@ import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
-from src.game.gameengine import ActorState, ActorController, PlayerController, ActionType, EnemyController
 from src.renderengine.engine import RenderEngine
 
 ENTITY_UID_COUNTER = 0
@@ -659,6 +658,7 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
+        from src.game.gameengine import PlayerController # TODO fix project structure
         ActorEntity.__init__(self, spriteref.player_idle_all, gs.get_instance().player_state(), PlayerController())
         self.set_x(x)
         self.set_y(y)
@@ -744,6 +744,7 @@ class Player(ActorEntity):
 class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites):
+        from src.game.gameengine import EnemyController  # TODO fix project structure
         ActorEntity.__init__(self, sprites, state, EnemyController())
         self.set_x(x)
         self.set_y(y)

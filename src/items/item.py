@@ -8,7 +8,6 @@ from src.utils.util import Utils
 import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
-from src.game.gameengine import ActionProvider, ActionType, ConsumeItemAction, AttackAction
 import src.utils.colors as colors
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
@@ -150,41 +149,6 @@ class ItemTypes:
     WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
 
     POTION = _new_type("Potion", (ItemTags.CONSUMABLE))
-
-
-class ConsumeItemActionProvider(ActionProvider):
-
-    def __init__(self):
-        ActionProvider.__init__(self, "Drink", ActionType.CONSUME_ITEM, color=(0.5, 1, 0.5))
-
-    def get_action(self, actor, position=None, item=None):
-        return ConsumeItemAction(actor, item)
-
-
-class AttackItemActionProvider(ActionProvider):
-
-    def __init__(self, name, icon, target_range):
-        ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
-                                target_positions=target_range, color=(1, 0.5, 0.5), needs_to_be_equipped=True)
-
-    def is_mappable(self):
-        return True
-
-    def get_action(self, actor, position=None, item=None):
-        return AttackAction(actor, item, position)
-
-
-class ItemActions:
-    _cardinal_targets_only = ((-1, 0), (1, 0), (0, -1), (0, 1))
-
-    CONSUME_ITEM = ConsumeItemActionProvider()
-    SWORD_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.sword_icon, _cardinal_targets_only)
-    SPEAR_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.spear_icon, _cardinal_targets_only)
-    WHIP_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.whip_icon, _cardinal_targets_only)
-    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, _cardinal_targets_only)  # TODO
-    DAGGER_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.dagger_icon, _cardinal_targets_only)
-    BOW_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.bow_icon, _cardinal_targets_only)
-    AXE_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.axe_icon, _cardinal_targets_only)
 
 
 class Item(StatProvider):
@@ -438,7 +402,9 @@ class ItemFactory:
         elif item_type == ItemTypes.STAT_CUBE_7:
             return StatCubesItemFactory.gen_item(level, n_cubes=7)
 
-        elif item_type == ItemTypes.POTION:
+        from src.game.gameengine import ItemActions
+
+        if item_type == ItemTypes.POTION:
             cubes = [(0, 0)]
             actions = [ItemActions.CONSUME_ITEM]
             return SpriteItem("Potion of Null", item_type, level, cubes, {}, spriteref.Items.potion_small, spriteref.Items.potion_big, actions=actions)
