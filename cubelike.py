@@ -71,7 +71,7 @@ def run():
     render_eng.add_layer(
             spriteref.UI_0_LAYER,
             "ui_0", 20, 
-            False, COLOR)
+            SORTS, COLOR)
     render_eng.add_layer(
             spriteref.UI_TOOLTIP_LAYER,
             "ui_tooltips", 25,

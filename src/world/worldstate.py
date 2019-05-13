@@ -399,7 +399,6 @@ class World:
         self.flush_new_entity_additions()
 
         for e in self._ents_to_remove:
-            print("cleaning up {}".format([x for x in e.all_bundles()]))
             e.cleanup()
             self.entities.remove(e)  # n^2 but whatever
             e._alive = False

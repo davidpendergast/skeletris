@@ -9,6 +9,7 @@ import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
 from src.game.gameengine import ActionProvider, ActionType, ConsumeItemAction, AttackAction
+import src.utils.colors as colors
 
 CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
 
@@ -51,7 +52,7 @@ STAT_DESCRIPTIONS = {
     StatType.VIT: "+{} VIT",
 }    
 
-STAT_COLORS = collections.defaultdict(lambda: (0.85, 0.85, 0.85))
+STAT_COLORS = collections.defaultdict(lambda: colors.LIGHT_GRAY)
 STAT_COLORS.update({
         StatType.ATT: (1, 0.65, 0.65),
         StatType.DEF: (0.65, 0.65, 1),

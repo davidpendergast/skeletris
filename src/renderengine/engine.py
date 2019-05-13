@@ -318,12 +318,13 @@ class RenderEngine:
     def update(self, img_bundle):
         if img_bundle is None:
             return
-            
-        uid = img_bundle.uid()
-        self.bundles[uid] = img_bundle
 
-        layer = self.layers[img_bundle.layer()]
-        layer.update(uid)
+        for bun in img_bundle.all_bundles():
+            uid = bun.uid()
+            self.bundles[uid] = bun
+
+            layer = self.layers[bun.layer()]
+            layer.update(uid)
         
     def __contains__(self, key):
         try:

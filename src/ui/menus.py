@@ -1050,7 +1050,7 @@ class InGameUiState(Menu):
                 self.set_active_tooltip(new_tooltip)
                 needs_update = True
 
-            offs = (-screen_pos[0], -screen_pos[1])
+            offs = (-screen_pos[0], -screen_pos[1] - 24)
             render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
 
         current_tooltip = self.get_active_tooltip()
@@ -1090,8 +1090,8 @@ class InGameUiState(Menu):
                 self._destroy_panel(self.inventory_panel)
                 self.inventory_panel = None
 
-        # if self.inventory_panel is not None:
-        #    self.inventory_panel.update_stats_imgs()
+        if self.inventory_panel is not None:
+            self.inventory_panel.update_stats_imgs()
 
     def _update_health_bar_panel(self, world, input_state):
         if self.health_bar_panel is None:

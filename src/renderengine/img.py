@@ -16,8 +16,8 @@ def gen_unique_id():
 class ImageBundle:
 
     @staticmethod
-    def new_bundle(layer_id, scale=1):
-        return ImageBundle(None, 0, 0, layer=layer_id, scale=scale)
+    def new_bundle(layer_id, scale=1, depth=0):
+        return ImageBundle(None, 0, 0, layer=layer_id, scale=scale, depth=depth)
 
     def __init__(self, model, x, y, layer=0, scale=1, depth=1, xflip=False, rotation=0, color=(1, 1, 1), ratio=(1, 1), uid=None):
         self._unique_id = gen_unique_id() if uid is None else uid

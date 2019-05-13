@@ -11,6 +11,10 @@ import src.utils.colors as colors
 from src.renderengine.engine import RenderEngine
 
 
+BG_DEPTH = 10
+FG_DEPTH = 5
+
+
 class ItemGridImage:
 
     def __init__(self, x, y, grid, layer, scale):
@@ -85,22 +89,22 @@ class InventoryPanel:
         return res.update(new_y=new_y)
         
     def _build_images(self, sc, text_sc):
-        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc)
+        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc, depth=BG_DEPTH)
         for i in range(0, self.state.rows - 1):
             y = (128 + i*16)*sc
-            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=sc))
+            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=sc, depth=BG_DEPTH))
         y = (128 + self.state.rows*16 - 16)*sc
-        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc)
+        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc, depth=BG_DEPTH)
         
         self.inv_title_text = self._build_title_img("Inventory", self.inv_title_rect, text_sc)
         self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect, text_sc)
 
-        # self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=text_sc)
-        # self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
-        # self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
-        # self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
-        # self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED])
-        # self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=item_module.STAT_COLORS[None])
+        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=text_sc, depth=FG_DEPTH)
+        self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.ATT], depth=FG_DEPTH)
+        self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.DEF], depth=FG_DEPTH)
+        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.VIT], depth=FG_DEPTH)
+        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED], depth=FG_DEPTH)
+        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=item_module.STAT_COLORS[None], depth=FG_DEPTH)
 
         self.update_stats_imgs()
 
@@ -111,49 +115,49 @@ class InventoryPanel:
         self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
 
     def update_stats_imgs(self):
-        text_sc = 1
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
 
+        render_eng = RenderEngine.get_instance()
+
         lvl_txt = "LVL:{}".format(gs.get_instance().get_zone_level())
-        self.lvl_text = TextImage(*s_xy, lvl_txt, self.layer, scale=text_sc)
+        if lvl_txt != self.lvl_text.get_text():
+            self.lvl_text = self.lvl_text.update(new_text=lvl_txt, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.lvl_text)
         s_xy[1] += self.lvl_text.line_height()
 
         att_value = (self.player_state.stat_value(StatType.ATT) +
                      self.player_state.stat_value(StatType.UNARMED_ATT))
         att_str = "ATT:{}".format(att_value)
-        self.att_text = TextImage(*s_xy, att_str, self.layer, scale=text_sc,
-                                  color=item_module.STAT_COLORS[src.game.stats.StatType.ATT])
+        if att_str != self.att_text.get_text():
+            self.att_text = self.att_text.update(new_text=att_str, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.att_text)
         s_xy[1] += self.att_text.line_height()
 
         def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
-        self.def_text = TextImage(*s_xy, def_str, self.layer, scale=text_sc,
-                                  color=item_module.STAT_COLORS[src.game.stats.StatType.DEF])
+        if def_str != self.def_text.get_text():
+            self.def_text = self.def_text.update(new_text=def_str, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.def_text)
         s_xy[1] += self.def_text.line_height()
 
         vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
-        self.vit_text = TextImage(*s_xy, vit_str, self.layer, scale=text_sc,
-                                  color=item_module.STAT_COLORS[src.game.stats.StatType.VIT])
+        if vit_str != self.vit_text.get_text():
+            self.vit_text = self.vit_text.update(new_text=vit_str, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.vit_text)
         s_xy[1] += self.vit_text.line_height()
 
         spd_str = "SPD:{}".format(self.player_state.stat_value(StatType.SPEED))
-        self.spd_text = TextImage(*s_xy, spd_str, self.layer, scale=text_sc,
-                                  color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED])
+        if spd_str != self.spd_text.get_text():
+            self.spd_text = self.spd_text.update(new_text=spd_str, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.spd_text)
         s_xy[1] += self.spd_text.line_height()
 
         hp_str = "HP: {}/{}".format(self.player_state.hp(), self.player_state.max_hp())
-        self.hp_text = TextImage(*s_xy, hp_str, self.layer, scale=text_sc,
-                                 color=item_module.STAT_COLORS[None])
+        if hp_str != self.hp_text.get_text():
+            self.hp_text = self.hp_text.update(new_text=hp_str, new_x=s_xy[0], new_y=s_xy[1])
+            render_eng.update(self.hp_text)
         s_xy[1] += self.hp_text.line_height()
 
-    def all_bundles(self):
-        yield self.top_img
-        for img in self.mid_imgs:
-            yield img
-        yield self.bot_img
-        for bun in self.inv_title_text.all_bundles():
-            yield bun
-        for bun in self.eq_title_text.all_bundles():
-            yield bun
+    def all_stat_text_bundles(self):
         for bun in self.lvl_text.all_bundles():
             yield bun
         for bun in self.att_text.all_bundles():
@@ -165,6 +169,18 @@ class InventoryPanel:
         for bun in self.spd_text.all_bundles():
             yield bun
         for bun in self.hp_text.all_bundles():
+            yield bun
+
+    def all_bundles(self):
+        yield self.top_img
+        for img in self.mid_imgs:
+            yield img
+        yield self.bot_img
+        for bun in self.inv_title_text.all_bundles():
+            yield bun
+        for bun in self.eq_title_text.all_bundles():
+            yield bun
+        for bun in self.all_stat_text_bundles():
             yield bun
         for bun in self.equip_img.all_bundles():
             yield bun 
@@ -206,15 +222,15 @@ class DialogPanel:
             border_sprites = spriteref.UI.text_panel_edges
 
             for i in range(0, DialogPanel.SIZE[0] // bw):
-                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh, layer=lay, scale=2)
+                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh, layer=lay, scale=2, depth=BG_DEPTH)
                 self._border_imgs.append(top_bord)
             for i in range(0, DialogPanel.SIZE[1] // bh):
-                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i, layer=lay, scale=2)
+                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i, layer=lay, scale=2, depth=BG_DEPTH)
                 self._border_imgs.append(l_bord)
-                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,  layer=lay, scale=2)
+                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,  layer=lay, scale=2, depth=BG_DEPTH)
                 self._border_imgs.append(r_bord)
-            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh, layer=lay, scale=2))
-            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh, layer=lay, scale=2))
+            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh, layer=lay, scale=2, depth=BG_DEPTH))
+            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh, layer=lay, scale=2, depth=BG_DEPTH))
             needs_update = True
 
         if len(self._bg_imgs) == 0:
@@ -225,7 +241,7 @@ class DialogPanel:
             bg_h *= sc
             for x1 in range(0, DialogPanel.SIZE[0] // bg_w):
                 for y1 in range(0, DialogPanel.SIZE[1] // bg_h):
-                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h, layer=lay, scale=sc))
+                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h, layer=lay, scale=sc, depth=BG_DEPTH))
             needs_update = True
 
         text_buffer = 6, 6
@@ -241,7 +257,7 @@ class DialogPanel:
                     x_pos = x + sprite_buffer[0]
                 else:
                     x_pos = x + DialogPanel.SIZE[0] - sprite.width() * 2 - sprite_buffer[0]
-                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2)
+                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2, depth=FG_DEPTH)
             self._speaker_img = self._speaker_img.update(new_model=sprite)
 
             if left_side:
@@ -270,7 +286,8 @@ class DialogPanel:
 
             self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, scale=DialogPanel.TEXT_SCALE,
                                        y_kerning=3,
-                                       custom_colors=custom_colors)
+                                       custom_colors=custom_colors,
+                                       depth=FG_DEPTH)
             needs_update = True
 
         return needs_update
@@ -374,9 +391,9 @@ class HealthBarPanel:
     def update_images(self, cur_hp, max_hp, new_damage, new_healing, action_states):
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
-                                        layer=spriteref.UI_0_LAYER, scale=2)
+                                        layer=spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH)
         if self._bar_img is None:
-            self._bar_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+            self._bar_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH + 1)
 
         x = gs.get_instance().screen_size[0] // 2 - self._top_img.width() // 2
         y = gs.get_instance().screen_size[1] - self._top_img.height()
@@ -389,7 +406,7 @@ class HealthBarPanel:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
             dmg_x = int(bar_x + hp_pcnt_full * bar_w)
             dmg_sprite = spriteref.UI.get_health_bar(pcnt_full)
-            dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2)
+            dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2, depth=0)
             self._floating_bars.append([dmg_img, 0])
 
         bar_color = (1.0, 0.25, 0.25)
@@ -552,7 +569,7 @@ class TextImage:
     X_KERNING = 0
     Y_KERNING = 0
 
-    def __init__(self, x, y, text, layer, try_split=True, color=(1, 1, 1), scale=1, center_w=None, y_kerning=None,
+    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=1, depth=0, center_w=None, y_kerning=None,
                  custom_colors=None):
         self.x = x
         self.center_w = center_w
@@ -560,13 +577,12 @@ class TextImage:
         self.text = text
         self.layer = layer
         self.color = color
+        self.depth = depth
         self.custom_colors = {} if custom_colors is None else custom_colors  # int index -> (int, int, int) color
         self.scale = scale
         self._letter_images = []
         self._letter_image_indexes = []
         self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
-
-        self._text_chunks = spriteref.split_text(self.text) if try_split else list(self.text)
 
         self._build_images()
 
@@ -599,6 +615,9 @@ class TextImage:
                 max_line_w = max(max_line_w, cur_line_w)
         return max_line_w
 
+    def get_text(self):
+        return self.text
+
     def size(self):
         return self.actual_size
 
@@ -618,7 +637,10 @@ class TextImage:
 
         a_sprite = spriteref.Font.get_char("a")
         idx = 0
-        for chunk in self._text_chunks:
+
+        text_chunks = spriteref.split_text(self.text)
+
+        for chunk in text_chunks:
             if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
                 xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
             elif chunk == "\n":
@@ -636,7 +658,7 @@ class TextImage:
                     color = self.color
 
                 img = ImageBundle(sprite, self.x + xpos, self.y + ypos, layer=self.layer,
-                                  scale=self.scale, color=color)
+                                  scale=self.scale, color=color, depth=self.depth)
 
                 self._letter_images.append(img)
                 self._letter_image_indexes.append(idx)
@@ -644,11 +666,22 @@ class TextImage:
 
             idx += len(chunk)
 
-    def update(self, new_x=None, new_y=None, new_depth=None, new_color=None, new_custom_colors=None):
+    def update(self, new_text=None, new_x=None, new_y=None, new_depth=None, new_color=None, new_custom_colors=None):
         dx = 0 if new_x is None else new_x - self.x
         dy = 0 if new_y is None else new_y - self.y
         self.custom_colors = new_custom_colors if new_custom_colors is not None else self.custom_colors
         self.color = new_color if new_color is not None else self.color
+
+        if new_text is not None and new_text != self.text:
+            render_eng = RenderEngine.get_instance()
+            for bun in self._letter_images:
+                if bun is not None:
+                    render_eng.remove(bun)
+            self._letter_images.clear()
+            self._letter_image_indexes.clear()
+
+            self.text = new_text
+            self._build_images()
 
         new_imgs = []
         for letter, idx in zip(self._letter_images, self._letter_image_indexes):
@@ -760,7 +793,7 @@ class CinematicPanel:
     def update(self, new_sprite, new_text):
         scale = CinematicPanel.IMAGE_SCALE
         if self.current_image_img is None:
-            self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale)
+            self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=scale)
 
         image_w = new_sprite.width() * scale
         new_x = gs.get_instance().screen_size[0] // 2 - image_w // 2

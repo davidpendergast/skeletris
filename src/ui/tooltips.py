@@ -167,7 +167,7 @@ class EnemyInfoTooltip(TitleImageAndStatsTooltip):
         return self.e_state
 
     def get_special_image_bundles(self, rect, sc):
-        bun = ImageBundle.new_bundle(self.layer, sc)
+        bun = ImageBundle.new_bundle(self.layer, scale=sc)
         sprite = self.e_state.template.get_sprites()[0]
         color = self.e_state.base_color()
         x = rect[0] + rect[2] // 2 - sc * sprite.width() // 2
