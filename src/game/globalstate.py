@@ -177,6 +177,7 @@ class GlobalState:
         self._event_triggers = {}  # EventType -> list(EventListener)
 
         self._mapped_actions = [None for _ in range(0, 6)]
+        self._action_to_target = None
 
     def settings(self):
         return self._settings
@@ -299,7 +300,22 @@ class GlobalState:
             return all_actions[idx]
         else:
             return None
-        # return self._mapped_actions[idx]
+
+    def get_targeting_action_provider(self):
+        return self._action_to_target
+
+    def get_targeting_action_color(self):
+        action_prov = self.get_targeting_action_provider()
+        if action_prov is None:
+            return (1, 1, 1)
+        else:
+            color = action_prov.get_color()
+            interp = 0.25 * (1 + math.sin(2 * math.pi * self.anim_tick / 8))
+            return Utils.linear_interp(color, (1, 1, 1), interp)
+
+    def set_targeting_action_provider(self, action_prov):
+        """returns: action that's currently being targeted"""
+        self._action_to_target = action_prov
 
     def set_mapped_action(self, idx, value, hard):
         self._mapped_actions[idx] = value

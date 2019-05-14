@@ -1271,6 +1271,16 @@ class InGameUiState(Menu):
         self._update_tooltip(world, input_state)
         self._update_top_right_info_panel(world, input_state)
         self._update_inventory_panel(world, input_state)
+
+        for i in range(0, 6):
+            cur_targeting_action = gs.get_instance().get_targeting_action_provider()
+            if input_state.was_pressed(gs.get_instance().settings().action_key(i)):
+                new_targeting_action = gs.get_instance().get_mapped_action(i)
+                if cur_targeting_action is new_targeting_action:
+                    gs.get_instance().set_targeting_action_provider(None)
+                else:
+                    gs.get_instance().set_targeting_action_provider(new_targeting_action)
+
         self._update_health_bar_panel(world, input_state)
         self._update_dialog_panel(world, input_state)
         self._update_world_ui_panel(world, input_state)

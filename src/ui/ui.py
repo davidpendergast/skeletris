@@ -428,6 +428,8 @@ class HealthBarPanel:
 
         render_eng = RenderEngine.get_instance()
 
+        targeting_action = gs.get_instance().get_targeting_action_provider()
+
         x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
         y_start = y + 19 * 2
         for i in range(0, 6):
@@ -438,15 +440,17 @@ class HealthBarPanel:
                 self._action_imgs[i] = (None, None)
             else:
                 cur_img = [img for img in self._action_imgs[i]]
+                color = gs.get_instance().get_targeting_action_color() if action_prov == targeting_action else (1, 1, 1)
+
                 # icon image
                 if cur_img[0] is None:
                     cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4, depth=FG_DEPTH)
-                cur_img[0] = cur_img[0].update(new_model=action_prov.get_icon(),
+                cur_img[0] = cur_img[0].update(new_model=action_prov.get_icon(), new_color=color,
                                                new_x=x_start[i] + 8, new_y=y_start + 8)
                 # border image
                 if cur_img[1] is None:
                     cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
-                cur_img[1] = cur_img[1].update(new_model=spriteref.UI.status_bar_action_border,
+                cur_img[1] = cur_img[1].update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
                                                new_x=x_start[i], new_y=y_start)
 
                 self._action_imgs[i] = tuple(cur_img)

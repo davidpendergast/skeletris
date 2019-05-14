@@ -406,6 +406,25 @@ class AnimationEntity(Entity):
             self.tick_count += 1
 
 
+class TargetingSelector(AnimationEntity):
+
+    def __init__(self, grid_x, grid_y, color):
+        AnimationEntity.__init__(self, grid_x*64, grid_y*64, spriteref.UI.world_cursors, 30, spriteref.ENTITY_LAYER,
+                                 w=64, h=64, scale=4)
+
+        self.on_finish_mode = AnimationEntity.LOOP_ON_FINISH
+        self.set_color(color)
+        self.set_x_centered(False)
+        self.set_y_centered(False)
+
+    def visible_in_darkness(self):
+        return True
+
+    def set_grid_xy(self, grid_x, grid_y):
+        self.set_x(grid_x * 64)
+        self.set_y(grid_y * 64)
+
+
 class AttackCircleArt(AnimationEntity):
 
     def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
@@ -658,12 +677,14 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
-        from src.game.gameengine import PlayerController # TODO fix project structure
+        from src.game.gameengine import PlayerController
         ActorEntity.__init__(self, spriteref.player_idle_all, gs.get_instance().player_state(), PlayerController())
         self.set_x(x)
         self.set_y(y)
 
         self._held_item_img = None
+
+        self._targeting_animation_entities = []
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
@@ -708,12 +729,43 @@ class Player(ActorEntity):
                                                              new_color=held_item.color,
                                                              new_scale=scale)
 
+    # TODO - this really shouldn't be inside Player..
+    def update_targeting_entities(self, world):
+        action_prov = gs.get_instance().get_targeting_action_provider()
+        if action_prov is None:
+            if len(self._targeting_animation_entities) > 0:
+                for ent in self._targeting_animation_entities:
+                    world.remove(ent)
+                self._targeting_animation_entities.clear()
+        else:
+            my_pos = world.to_grid_coords(*self.center())
+            positions = action_prov.get_targets(pos=my_pos)
+
+            positions = [p for p in positions if not world.is_solid(*p)]
+
+            color = gs.get_instance().get_targeting_action_color()
+
+            while len(self._targeting_animation_entities) > len(positions):
+                ent = self._targeting_animation_entities.pop()
+                world.remove(ent)
+            while len(positions) > len(self._targeting_animation_entities):
+                ent = TargetingSelector(0, 0, color)
+                self._targeting_animation_entities.append(ent)
+                world.add(ent, gridcell=my_pos)
+
+            for i in range(0, len(positions)):
+                pos = positions[i]
+                ent = self._targeting_animation_entities[i]
+                ent.set_grid_xy(pos[0], pos[1])
+                ent.set_color(color)
+
     def visible_in_darkness(self):
         return True
             
     def update(self, world, input_state):
         ActorEntity.update(self, world, input_state)
         self.update_held_item_image()
+        self.update_targeting_entities(world)
 
     def request_next_action(self, world, input_state):
         return ActorEntity.request_next_action(self, world, input_state)

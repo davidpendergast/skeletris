@@ -4,6 +4,7 @@ from src.utils.util import Utils
 import src.game.globalstate as gs
 import src.game.spriteref as spriteref
 from src.game.stats import StatType
+import src.utils.colors as colors
 
 import random
 
@@ -538,7 +539,7 @@ class ActionProvider:
         self.name = name
         self.color = color
         self.action_type = action_type
-        self.valid_targets = [(0, 0)] if target_positions is None else [target_positions]
+        self.valid_targets = [(0, 0)] if target_positions is None else target_positions
         self.icon_sprite = icon_sprite
         self.needs_to_be_equipped = needs_to_be_equipped
 
@@ -555,6 +556,12 @@ class ActionProvider:
     def get_name(self):
         return self.name
 
+    def get_color(self):
+        return self.color
+
+    def get_targets(self, pos=(0, 0)):
+        return [(p[0] + pos[0], p[1] + pos[1]) for p in self.valid_targets]
+
     def get_action(self, actor, position=None, item=None):
         return SkipTurnAction()
 
@@ -570,9 +577,9 @@ class ConsumeItemActionProvider(ActionProvider):
 
 class AttackItemActionProvider(ActionProvider):
 
-    def __init__(self, name, icon, target_range):
+    def __init__(self, name, icon, target_range, color=colors.RED):
         ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
-                                target_positions=target_range, color=(1, 0.5, 0.5), needs_to_be_equipped=True)
+                                target_positions=target_range, color=color, needs_to_be_equipped=True)
 
     def is_mappable(self):
         return True
@@ -582,18 +589,19 @@ class AttackItemActionProvider(ActionProvider):
 
 
 class ItemActions:
-    _cardinal_targets_only = ((-1, 0), (1, 0), (0, -1), (0, 1))
+    _cardinal_1 = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    _cardinal_2 = [(-2, 0), (2, 0), (0, -2), (0, 2)]
+    _cardinal_3 = [(-3, 0), (3, 0), (0, -3), (0, 3)]
 
     CONSUME_ITEM = ConsumeItemActionProvider()
-    SWORD_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.sword_icon, _cardinal_targets_only)
-    SPEAR_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.spear_icon, _cardinal_targets_only)
-    WHIP_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.whip_icon, _cardinal_targets_only)
-    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, _cardinal_targets_only)  # TODO
-    DAGGER_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.dagger_icon, _cardinal_targets_only)
-    BOW_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.bow_icon, _cardinal_targets_only)
-    AXE_ATTACK = AttackItemActionProvider("Attack", spriteref.Items.axe_icon, _cardinal_targets_only)
-    UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, _cardinal_targets_only)
-    print("icon={}".format(spriteref.Items.unarmed_icon))
+    SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, _cardinal_1)
+    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, _cardinal_1 + _cardinal_2)
+    WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, _cardinal_1)
+    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, [(0, 0)], color=colors.BLUE)
+    DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, _cardinal_1)
+    BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, _cardinal_2 + _cardinal_3)
+    AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, _cardinal_1)
+    UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, _cardinal_1)
 
 
 
