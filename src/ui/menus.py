@@ -1276,7 +1276,7 @@ class InGameUiState(Menu):
             cur_targeting_action = gs.get_instance().get_targeting_action_provider()
             if input_state.was_pressed(gs.get_instance().settings().action_key(i)):
                 new_targeting_action = gs.get_instance().get_mapped_action(i)
-                if cur_targeting_action is new_targeting_action:
+                if cur_targeting_action == new_targeting_action:
                     gs.get_instance().set_targeting_action_provider(None)
                 else:
                     gs.get_instance().set_targeting_action_provider(new_targeting_action)

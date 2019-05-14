@@ -43,11 +43,11 @@ class ActorState:
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable():
-                    yield action_provider
+                    yield ItemActionProvider(item, action_provider)
         for item in self.inventory().all_inv_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable() and not action_provider.needs_to_be_equipped:
-                    yield action_provider
+                    yield ItemActionProvider(item, action_provider)
 
     def stat_value(self, stat_type):
         res = 0
@@ -157,6 +157,16 @@ class PlayerController(ActorController):
             target_pos = (pos[0], pos[1] + dy)
 
         res_list = []
+
+        action_prov = gs.get_instance().get_targeting_action_provider()
+        if action_prov is not None:
+            action_targets = action_prov.get_targets(pos=pos)
+            if target_pos is not None:
+                for i in range(0, 5):
+                    extended_target_pos = (target_pos[0] + dx*i, target_pos[1] + dy*i)
+                    if extended_target_pos in action_targets:
+                        res_list.append(action_prov.get_action(actor, position=extended_target_pos))
+
         if target_pos is not None:
             res_list.append(AttackAction(actor, None, target_pos))
             res_list.append(OpenDoorAction(actor, target_pos))
@@ -381,14 +391,16 @@ class AttackAction(Action):
             if not actor.get_actor_state().inventory().is_equipped(self.item):
                 return False
 
-        in_range = False
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        for n in Utils.neighbors(pos[0], pos[1]):
-            # TODO - items will have their own ranges
-            if n == self.position:
-                in_range = True
-                break
-        if not in_range:
+        attack_range = [n for n in Utils.neighbors(pos[0], pos[1])]
+        if self.item is not None:
+            for action_prov in self.item.all_actions():
+                if action_prov.get_type() == ActionType.ATTACK:
+                    # TODO - indicative of bad organization that we're going *back into* the action provider
+                    # TODO - to figure out the attack range... but gotta go fast..
+                    attack_range = action_prov.get_targets(pos=pos)
+
+        if self.position not in attack_range:
             return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
@@ -553,6 +565,9 @@ class ActionProvider:
     def get_icon(self):
         return self.icon_sprite
 
+    def get_type(self):
+        return self.action_type
+
     def get_name(self):
         return self.name
 
@@ -564,6 +579,47 @@ class ActionProvider:
 
     def get_action(self, actor, position=None, item=None):
         return SkipTurnAction()
+
+
+class ItemActionProvider(ActionProvider):
+
+    def __init__(self, item, action_provider):
+        ActionProvider.__init__(self, None, None)
+        self.item = item
+        self.action_provider = action_provider
+
+    def __eq__(self, other):
+        if isinstance(other, ItemActionProvider):
+            return self.item == other.item and self.action_provider == other.action_provider
+        else:
+            return False
+
+    def is_mappable(self):
+        """Whether the action can be mapped to the action hotbar."""
+        return self.action_provider.is_mappable()
+
+    def get_type(self):
+        return self.action_provider.get_type()
+
+    def needs_equipped(self):
+        return self.action_provider.needs_equipped()
+
+    def get_icon(self):
+        return self.action_provider.get_icon()
+
+    def get_name(self):
+        return self.action_provider.get_name()
+
+    def get_color(self):
+        return self.action_provider.get_color()
+
+    def get_targets(self, pos=(0, 0)):
+        return self.action_provider.get_targets(pos=pos)
+
+    def get_action(self, actor, position=None, item=None):
+        if item is not None:
+            raise ValueError("Cannot pass an item to an ItemActionProvider: {}".format(item))
+        return self.action_provider.get_action(actor, position=position, item=self.item)
 
 
 class ConsumeItemActionProvider(ActionProvider):

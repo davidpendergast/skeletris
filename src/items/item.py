@@ -407,39 +407,48 @@ class ItemFactory:
         if item_type == ItemTypes.POTION:
             cubes = [(0, 0)]
             actions = [ItemActions.CONSUME_ITEM]
-            return SpriteItem("Potion of Null", item_type, level, cubes, {}, spriteref.Items.potion_small, spriteref.Items.potion_big, actions=actions)
+            return SpriteItem("Potion of Null", item_type, level, cubes, {},
+                              spriteref.Items.potion_small, spriteref.Items.potion_big, actions=actions)
 
         elif item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
-            return SpriteItem("Light of Truth", item_type, level, cubes, {}, spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
+            return SpriteItem("Light of Truth", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+                              spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
-            return SpriteItem("Pain Rope", item_type, level, cubes, {}, spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
+            return SpriteItem("Pain Rope", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+                              spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
-            return SpriteItem("Quick Iron", item_type, level, cubes, {}, spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
+            return SpriteItem("Quick Iron", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+                              spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_BLOCK]
-            return SpriteItem("Fortress of Mending", item_type, level, cubes, {}, spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
+            return SpriteItem("Fortress of Mending", item_type, level, cubes, [ItemStat(StatType.DEF, 3)],
+                              spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
-            return SpriteItem("Justice Beacon", item_type, level, cubes, {}, spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
+            return SpriteItem("Justice Beacon", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+                              spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Stick of Mystery", item_type, level, cubes, {}, spriteref.Items.wand_small, spriteref.Items.wand_big)
+            return SpriteItem("Stick of Mystery", item_type, level, cubes, [],
+                              spriteref.Items.wand_small, spriteref.Items.wand_big)
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
-            return SpriteItem("Bow of Speed", item_type, level, cubes, {}, spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
+            return SpriteItem("Bow of Speed", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+                              spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]
-            return SpriteItem("Hatchet of Striking", item_type, level, cubes, {}, spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
+            return SpriteItem("Hatchet of Striking", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 5)],
+                              spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
         return None
 
