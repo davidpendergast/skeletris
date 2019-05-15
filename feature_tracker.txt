@@ -10,7 +10,6 @@
  - player is always drawn overtop chests
  - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
         ValueError: tile is None at (6, 36)
- - possible for inventory to NPE during grid's _build_image (get_pos(item) returns None)
  - "target selector" entities remain onscreen after player has died
         
  ~NEED TO WORK THIS OUT BEFORE CONTINUING~

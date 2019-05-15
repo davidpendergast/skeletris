@@ -1,12 +1,16 @@
-from src.game.stats import StatProvider
+import collections
+
 
 class ItemGrid:
+
     def __init__(self, size):
         self.size = size
-        self.place_order = []
-        self.items = {}  # coords -> item
+        self.items = collections.OrderedDict()  # item -> pos: (int: x, int: y)
     
     def can_place(self, item, pos):
+        if item in self.items:
+            print("WARN: Attempting to place into a grid it's already inside? item={}".format(item))
+            return False
         if (item.w() + pos[0] > self.size[0] or 
                 item.h() + pos[1] > self.size[1]):
             return False
@@ -19,22 +23,12 @@ class ItemGrid:
         
     def place(self, item, pos):
         if self.can_place(item, pos):
-            self.items[pos] = item
-            self.place_order.append(item)
+            self.items[item] = pos
             return True
         return False
-
-    def to_map(self):
-        """
-        returns: (int, int) -> Item
-        """
-        res = {}
-        res.update(self.items)
-        return res
             
     def try_to_replace(self, item, pos):
-        if (item.w() + pos[0] > self.size[0] or 
-                item.h() + pos[1] > self.size[1]):
+        if item.w() + pos[0] > self.size[0] or item.h() + pos[1] > self.size[1]:
             return None
         
         hit_item = None    
@@ -56,18 +50,17 @@ class ItemGrid:
             return None
 
     def remove(self, item):
-        for pos in self.items:
-            if self.items[pos] is item:
-                del self.items[pos]
-                self.place_order.remove(item)
-                return True
+        if item in self.items:
+            del self.items[item]
+            return True
         return False
         
     def item_at_position(self, pos):
-        for origin in self.items:
-            for cell in self._cells_occupied(self.items[origin], origin):
+        for item in self.items:
+            origin = self.items[item]
+            for cell in self._cells_occupied(item, origin):
                 if cell == pos:
-                    return self.items[origin]
+                    return item
         return None
         
     def _cells_occupied(self, item, pos):
@@ -75,13 +68,14 @@ class ItemGrid:
             yield (pos[0] + cube[0], pos[1] + cube[1])
         
     def all_items(self):
-        return list(self.place_order)
+        for item in self.items:
+            yield item
         
     def get_pos(self, item):
-        for pos in self.items:  # inefficient but whatever
-            if self.items[pos] is item:
-                return pos
-        return None
+        if item in self.items:
+            return self.items[item]
+        else:
+            return None
         
 
 class InventoryState:

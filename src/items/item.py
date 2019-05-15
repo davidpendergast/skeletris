@@ -165,6 +165,15 @@ class Item(StatProvider):
         self._can_rotate = can_rotate
         self.title_color = title_color
 
+    def __eq__(self, other):
+        if isinstance(other, Item):
+            return self.uuid == other.uuid
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.uuid)
+
     def get_type(self):
         return self.item_type
 

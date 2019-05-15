@@ -235,14 +235,14 @@ class GlobalState:
             already_used = SaveDataBlob.get_current_passwords_from_disk()
             password = passwordgen.gen_unique_password(already_used)
 
-        equip_items = self.player_state().inventory().equip_grid.to_map()
-        inv_items = self.player_state().inventory().inv_grid.to_map()
+        # equip_items = self.player_state().inventory().equip_grid.to_map()
+        # inv_items = self.player_state().inventory().inv_grid.to_map()
 
         save_blob = SaveDataBlob(self.current_zone.ZONE_ID,
                                  10,
                                  5,
-                                 equip_items,
-                                 inv_items,
+                                 None,  # equip_items,
+                                 None,  # inv_items,
                                  self.story_state())
 
         res = save_blob.save_to_disk(password)
@@ -275,6 +275,7 @@ class GlobalState:
         """
         shake_pts = Utils.get_shake_points(strength, duration, falloff=falloff, freq=freq)
         self._current_screenshakes.append(shake_pts)
+        return [pt for pt in shake_pts]
 
     def get_screenshake(self):
         if len(self._current_screenshakes) == 0:

@@ -69,6 +69,9 @@ class Entity(Updateable):
     def center(self):
         return self.rect.center
 
+    def get_render_center(self):
+        return self.center()
+
     def set_center(self, cx, cy):
         self.set_x(cx - self.w() / 2)
         self.set_y(cy - self.h() / 2)
@@ -159,7 +162,7 @@ class Entity(Updateable):
     def update_images(self, anim_tick):
         if self._shadow is None and self.get_shadow_sprite() is not None:
             self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0, layer=spriteref.SHADOW_LAYER,
-                scale=2, depth=-1)
+                                           scale=2, depth=-1)
         
         if self._shadow is not None:    
             sh_model = self.get_shadow_sprite()
@@ -167,16 +170,18 @@ class Entity(Updateable):
                 # TODO no way to del shadows
                 return
             
-            sh_scale = self._shadow.scale()    
-            sh_x = self.x() - (sh_model.width() * sh_scale - self.w()) // 2
-            sh_y = self.y() + self.h() - (sh_model.height() * sh_scale // 2)
-            self._shadow = self._shadow.update(new_model=sh_model, 
-                    new_x=sh_x, new_y=sh_y)
+            sh_scale = self._shadow.scale()
+            self_x = self.get_render_center()[0] - self.w() // 2
+            self_y = self.get_render_center()[1] - self.h() // 2
+            sh_x = self_x - (sh_model.width() * sh_scale - self.w()) // 2
+            sh_y = self_y + self.h() - (sh_model.height() * sh_scale // 2)
+            self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y)
     
     def get_shadow_sprite(self):
         return None
 
     def get_depth(self):
+        # TODO - just noticed this, WHAT THE HELL??
         """
             returns: value in [4, 5]
         """
@@ -521,6 +526,9 @@ class ActorEntity(Entity):
         self._perturb_color_duration = 1
         self._perturb_color_ticks = 1
 
+        # used to visually move the actor without actually moving them
+        self._draw_offset = (0, 0)
+
         self._was_moving = 60  # how long it's been since the actor was moving
 
     def get_shadow_sprite(self):
@@ -531,6 +539,10 @@ class ActorEntity(Entity):
 
     def get_held_item(self):
         return self.actor_state.held_item
+
+    def set_vel(self, vel):
+        """this doesn't move the actor or anything. just sets self._last_vel to whatever"""
+        self._last_vel = vel
 
     def is_moving(self):
         return Utils.mag(self.get_vel()) >= 0.05
@@ -584,6 +596,18 @@ class ActorEntity(Entity):
         else:
             x, y = self._perturb_points[-1]
             return (round(x), round(y))
+
+    def get_draw_offset(self):
+        return self._draw_offset
+
+    def set_draw_offset(self, dx, dy):
+        self._draw_offset = (dx, dy)
+
+    def get_render_center(self):
+        """returns: center (x, y) of actor"""
+        x = self.center()[0] + self.get_draw_offset()[0] + self.get_perturbed_xy()[0]
+        y = self.center()[1] + self.get_draw_offset()[1] + self.get_perturbed_xy()[1]
+        return (round(x), round(y))
 
     def get_perturbed_color(self):
         if self._perturb_color_ticks >= self._perturb_color_duration:
@@ -693,6 +717,12 @@ class Player(ActorEntity):
         player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+
+    def perturb(self, max_offset, duration):
+        shake_pts = gs.get_instance().add_screenshake(max_offset, duration, falloff=3, freq=4)
+
+        self._perturb_points.clear()
+        self._perturb_points.extend(shake_pts)
 
     def update_held_item_image(self):
         held_item = self.get_held_item()
