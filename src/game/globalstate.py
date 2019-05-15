@@ -304,7 +304,23 @@ class GlobalState:
             return None
 
     def get_targeting_action_provider(self):
-        return self._action_to_target
+        if self.player_state().held_item is not None:
+            return None
+        elif self._action_to_target is not None:
+            item = self._action_to_target.get_item()
+            if item is None:
+                return self._action_to_target
+
+            is_equipped = self.player_state().inventory().is_equipped(item)
+            in_inv = self.player_state().inventory().is_in_inventory(item)
+            if self._action_to_target.needs_equipped():
+                if is_equipped:
+                    return self._action_to_target
+            else:
+                if is_equipped or in_inv:
+                    return self._action_to_target
+
+        return None
 
     def get_targeting_action_color(self):
         action_prov = self.get_targeting_action_provider()

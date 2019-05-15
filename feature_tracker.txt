@@ -44,8 +44,7 @@
 [current features]
 
  - items on ground that are too far away shouldn't be grabbable
- - using items
-    - hold item above head while using (very cute)
+ - using consumable items
  - using mouse to request actions (this may not even be necessary)
     - right click menu on things
     - mouse cursor stuff

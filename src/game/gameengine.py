@@ -27,7 +27,7 @@ class ActorState:
 
         self.alignment = alignment  # what "team" the actor is on.
 
-        self.held_item = None  # item being held above the actor's head
+        self.held_item = None  # item on the mouse cursor TODO - this doesn't belong here~
 
     def all_stat_providers(self):
         yield self.base_stats
@@ -233,6 +233,9 @@ class Action:
 
     def get_position(self):
         return self.position
+
+    def get_item(self):
+        return self.item
 
     def get_actor(self):
         return self.actor_entity
@@ -568,6 +571,9 @@ class ActionProvider:
     def get_icon(self):
         return self.icon_sprite
 
+    def get_item(self):
+        return None
+
     def get_type(self):
         return self.action_type
 
@@ -603,6 +609,9 @@ class ItemActionProvider(ActionProvider):
 
     def get_type(self):
         return self.action_provider.get_type()
+
+    def get_item(self):
+        return self.item
 
     def needs_equipped(self):
         return self.action_provider.needs_equipped()
@@ -641,6 +650,9 @@ class AttackItemActionProvider(ActionProvider):
                                 target_positions=target_range, color=color, needs_to_be_equipped=True)
 
     def is_mappable(self):
+        return True
+
+    def needs_equipped(self):
         return True
 
     def get_action(self, actor, position=None, item=None):

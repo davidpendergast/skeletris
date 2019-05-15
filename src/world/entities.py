@@ -537,7 +537,11 @@ class ActorEntity(Entity):
     def get_light_level(self):
         return self.actor_state.light_level()
 
-    def get_held_item(self):
+    def get_visually_held_item(self):
+        if self.executing_action is not None:
+            if self.executing_action.get_item() is not None:
+                return self.executing_action.get_item()
+
         return self.actor_state.held_item
 
     def set_vel(self, vel):
@@ -712,10 +716,21 @@ class Player(ActorEntity):
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
         anim_rate = 2 if self.was_moving_recently() else 4
-        holding_item = self.get_held_item() is not None
+        holding_item = self.get_visually_held_item() is not None
         player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+
+    def get_visually_held_item(self):
+        if self.executing_action is not None:
+            if self.executing_action.get_item() is not None:
+                return self.executing_action.get_item()
+
+        action_prov = gs.get_instance().get_targeting_action_provider()
+        if action_prov is not None and action_prov.get_item() is not None:
+           return action_prov.get_item()
+
+        return self.actor_state.held_item
 
     def perturb(self, max_offset, duration):
         shake_pts = gs.get_instance().add_screenshake(max_offset, duration, falloff=3, freq=4)
@@ -724,7 +739,7 @@ class Player(ActorEntity):
         self._perturb_points.extend(shake_pts)
 
     def update_held_item_image(self):
-        held_item = self.get_held_item()
+        held_item = self.get_visually_held_item()
         scale = 2
         if self._held_item_img is not None and held_item is None:
             RenderEngine.get_instance().remove(self._held_item_img)
@@ -733,9 +748,8 @@ class Player(ActorEntity):
             self._held_item_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=scale)
 
         if self._held_item_img is not None:
-            xy_perturb = self.get_perturbed_xy()
-            x_center = self.center()[0] + xy_perturb[0]
-            y_center = self.center()[1] + xy_perturb[1]
+            x_center = self.get_render_center()[0]
+            y_center = self.get_render_center()[1]
 
             item_sprite = held_item.get_entity_sprite()
             sprite_rot = held_item.sprite_rotation()

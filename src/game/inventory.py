@@ -93,10 +93,10 @@ class InventoryState:
         return self.inv_grid.all_items()
 
     def is_equipped(self, item):
-        for i in self.all_equipped_items():
-            if i == item:
-                return True
-        return False
+        return self.equip_grid.get_pos(item) is not None
+
+    def is_in_inventory(self, item):
+        return self.inv_grid.get_pos(item) is not None
 
     def add_to_inv(self, item, pos=(0, 0)):
         return self.inv_grid.place(item, pos)
