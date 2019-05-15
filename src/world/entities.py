@@ -604,7 +604,7 @@ class ActorEntity(Entity):
         self._draw_offset = (dx, dy)
 
     def get_render_center(self):
-        """returns: center (x, y) of actor"""
+        """returns: the center point (x, y) of where the actor should be drawn."""
         x = self.center()[0] + self.get_draw_offset()[0] + self.get_perturbed_xy()[0]
         y = self.center()[1] + self.get_draw_offset()[1] + self.get_perturbed_xy()[1]
         return (round(x), round(y))
@@ -685,9 +685,8 @@ class ActorEntity(Entity):
 
         sprite = self.get_sprite()
 
-        xy_perturb = self.get_perturbed_xy()
-        x = self.x() + xy_perturb[0] - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() + xy_perturb[1] - (sprite.height() * self._img.scale() - self.h())
+        x = self.get_render_center()[0] - self.w() // 2 - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.get_render_center()[1] - self.h() // 2 - (sprite.height() * self._img.scale() - self.h())
 
         depth = self.get_depth()
         xflip = self.is_facing_right()

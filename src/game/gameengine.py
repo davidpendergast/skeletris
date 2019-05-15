@@ -383,7 +383,6 @@ class AttackAction(Action):
         Action.__init__(self, ActionType.ATTACK, 24, actor, item=item, position=position)
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
-        self._start_pos = None
 
     def is_possible(self, world):
         actor = self.actor_entity
@@ -452,13 +451,12 @@ class AttackAction(Action):
 
     def start(self, world):
         self._determine_attack_result(world)
-        self._start_pos = self.actor_entity.center()
 
     def animate_in_world(self, progress, world):
         run_at_pct = 0.3
         recover_pcnt = 1 - run_at_pct
 
-        start_at = self._start_pos
+        start_at = self.actor_entity.center()
         target_at = self._results[1].center()
         stop_at = target_at
 
@@ -474,24 +472,29 @@ class AttackAction(Action):
             self._apply_attack_and_add_animations_if_necessary(world)
             new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
 
-        dxy = Utils.sub(new_pos, self.actor_entity.center())
-        self.actor_entity.move(dxy[0], dxy[1])
+        pre_move_offset = self.actor_entity.get_draw_offset()
+        new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
+        vel = Utils.sub(new_move_offset, pre_move_offset)
+
+        self.actor_entity.set_draw_offset(*new_move_offset)
+        self.actor_entity.set_vel(vel)
 
     def finalize(self, world):
         self._apply_attack_and_add_animations_if_necessary(world)
-        self.actor_entity.set_center(self._start_pos[0], self._start_pos[1])
+        self.actor_entity.set_draw_offset(0, 0)
+        self.actor_entity.set_vel((0, 0))
 
-        face_dir = Utils.sub(self._results[1].center(), self._start_pos)
-        if face_dir[0] < 3:
+        face_dir = Utils.sub(self._results[1].center(), self.actor_entity.center())
+        if face_dir[0] < -world.cellsize() // 2:
             self.actor_entity.facing_right = False
-        elif face_dir[0] > 3:
+        elif face_dir[0] > world.cellsize() // 2:
             self.actor_entity.facing_right = True
 
         # make victim face attacker iff attack landed
         if self._results[0] > 0:
-            if face_dir[0] < 3:
+            if face_dir[0] < world.cellsize() // 2:
                 self._results[1].facing_right = True
-            elif face_dir[0] > 3:
+            elif face_dir[0] > world.cellsize() // 2:
                 self._results[1].facing_right = False
 
 
