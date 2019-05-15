@@ -161,7 +161,8 @@ class GlobalState:
         self._settings_filename = "settings.json"
         self._settings.load_from_file(self._path_to_settings())
 
-        self._world_camera_center = [0, 0]
+        self._camera_center_in_world = (0, 0)
+        self._camera_center_on_screen = (self.screen_size[0] // 2, self.screen_size[1] // 2)
         self._player_state = None
 
         self._story_state = story_state
@@ -321,22 +322,36 @@ class GlobalState:
     def set_mapped_action(self, idx, value, hard):
         self._mapped_actions[idx] = value
     
-    def set_world_camera_center(self, x, y):
-        self._world_camera_center = (x, y)
+    def set_camera_center_in_world(self, x, y):
+        """(int: x, int: y) position in world"""
+        self._camera_center_in_world = (x, y)
+
+    def get_camera_center_in_world(self):
+        return self._camera_center_in_world
+
+    def set_camera_center_on_screen(self, px, py):
+        """(int: x, int: y) pixel position on screen"""
+        self._camera_center_on_screen = (px, py)
+
+    def get_camera_center_on_screen(self):
+        return self._camera_center_on_screen
     
-    def get_world_camera(self, center=False):
-        if center:
-            return tuple(self._world_camera_center)
-        else:
-            offs_x = self._world_camera_center[0] - self.screen_size[0] // 2
-            offs_y = self._world_camera_center[1] - self.screen_size[1] // 2
-            return (offs_x, offs_y)
+    def get_actual_camera_xy(self):
+        cam_center = self.get_actual_camera_center()
+        offs_x = cam_center[0] - self.screen_size[0] // 2
+        offs_y = cam_center[1] - self.screen_size[1] // 2
+        return (offs_x, offs_y)
+
+    def get_actual_camera_center(self):
+        x = self._camera_center_in_world[0] - (self._camera_center_on_screen[0] - self.screen_size[0] // 2)
+        y = self._camera_center_in_world[1] - (self._camera_center_on_screen[1] - self.screen_size[1] // 2)
+        return (x, y)
 
     def get_world_camera_size(self):
         return self.screen_size
         
     def screen_to_world_coords(self, point):
-        cam = self.get_world_camera()
+        cam = self.get_actual_camera_xy()
         return (cam[0] + point[0], cam[1] + point[1])
         
     def update(self, world, input_state):

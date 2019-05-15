@@ -407,7 +407,7 @@ class World:
 
         self._ents_to_remove.clear()
 
-        cam_center = gs.get_instance().get_world_camera(center=True)
+        cam_center = gs.get_instance().get_actual_camera_center()
 
         an_actor_is_acting = False
         actors_to_process = []

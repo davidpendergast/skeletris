@@ -2,7 +2,6 @@
 [bugs]
 
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
- - camera and lighting shouldn't change when player attacks
  - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
     - also can have rooms that border out-of-bounds with no walls in between
     - actually a lot of wonkiness here
@@ -47,15 +46,13 @@
  - items on ground that are too far away shouldn't be grabbable
  - using items
     - hold item above head while using (very cute)
-    - item targeting system
- - using mouse to request actions
+ - using mouse to request actions (this may not even be necessary)
     - right click menu on things
     - mouse cursor stuff
  - choosing actions through UI
     - mappable actions to 1-6
     - attacking with items
         - via right-clicking the equipped item
-        - via pressing hotkey / button in HUD
  - tooltips
     - on enemies
     - on all UI items (re-implementing swing in pygame part X/?)
@@ -66,12 +63,12 @@
     - doors to move between zones
     - decoration entities
  - make sure death menu sequence still works
+    - it does not 
  - remove remaining cruft from cubelike 1.0
     - password page
     - save machine
     - other strange entities?
  - choose name for game
- - design and implement basic stats
  - enemy generation
  
  

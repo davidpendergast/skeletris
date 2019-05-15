@@ -220,7 +220,7 @@ def run():
             gs.get_instance().dialog_manager().update(world, input_state)
 
             shake = gs.get_instance().get_screenshake()
-            camera = gs.get_instance().get_world_camera()
+            camera = gs.get_instance().get_actual_camera_xy()
             for layer_id in spriteref.WORLD_LAYERS:
                 render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 

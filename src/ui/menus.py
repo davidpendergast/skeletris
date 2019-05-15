@@ -57,6 +57,9 @@ class MenuManager:
             else:
                 for layer in spriteref.WORLD_LAYERS:
                     render_eng.show_layer(layer)
+                c_xy = self.get_active_menu().get_camera_center_point_on_screen()
+                if c_xy is not None:
+                    gs.get_instance().set_camera_center_on_screen(c_xy[0], c_xy[1])
 
         else:
             if world is None and self.should_draw_world():
@@ -64,6 +67,16 @@ class MenuManager:
                 pass
             else:
                 self.get_active_menu().update(world, input_state)
+
+                c_xy = self.get_active_menu().get_camera_center_point_on_screen()
+                if c_xy is not None:
+                    cur_center = gs.get_instance().get_camera_center_on_screen()
+                    if cur_center != c_xy:
+                        if Utils.dist(c_xy, cur_center) <= 2:
+                            gs.get_instance().set_camera_center_on_screen(c_xy[0], c_xy[1])
+                        else:
+                            new_center = Utils.round(Utils.linear_interp(cur_center, c_xy, 0.12))
+                            gs.get_instance().set_camera_center_on_screen(new_center[0], new_center[1])
 
                 if input_state.mouse_in_window():
                     xy = input_state.mouse_pos()
@@ -136,6 +149,9 @@ class Menu:
 
     def keep_drawing_world_underneath(self):
         return False
+
+    def get_camera_center_point_on_screen(self):
+        return None
 
     def absorbs_key_inputs(self):
         return False
@@ -984,6 +1000,26 @@ class InGameUiState(Menu):
 
     def keep_drawing_world_underneath(self):
         return True
+
+    def get_camera_center_point_on_screen(self):
+        """
+            Returns the point (x, y) on screen where the camera center should be drawn. This position will
+            vary depending on the state of the UI. For example, when the inventory is open, the world will
+            be pushed to the right so that the player's visibily is restricted evenly between the left and right.
+        """
+
+        screen_w, screen_h = gs.get_instance().screen_size
+        if self.inventory_panel is not None:
+            inv_w = self.inventory_panel.get_rect()[2]
+        else:
+            inv_w = 0
+
+        hb_height = HealthBarPanel.SIZE[1]
+
+        cx = inv_w + (screen_w - inv_w) // 2
+        cy = (screen_h - hb_height) // 2
+
+        return (cx, cy)
 
     def _get_entity_at_world_coords(self, world, world_pos, cond=None):
         hover_rad = 32

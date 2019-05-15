@@ -78,7 +78,7 @@ class WorldView:
             return None
 
     def _update_onscreen_tile_bundles(self):
-        px, py = gs.get_instance().get_world_camera()
+        px, py = gs.get_instance().get_actual_camera_xy()
         pw, ph = gs.get_instance().get_world_camera_size()
         grid_rect = [px // self.world.cellsize(), py // self.world.cellsize(),
                      pw // self.world.cellsize() + 3, ph // self.world.cellsize() + 3]
@@ -127,7 +127,7 @@ class WorldView:
         self._onscreen_geo_bundles.clear()
 
     def update_all(self, input_state):
-        cam_center = gs.get_instance().get_world_camera(center=True)
+        cam_center = gs.get_instance().get_camera_center_in_world()
 
         new_onscreens = set()
         for e in self.world.visible_entities(cam_center):
@@ -155,11 +155,11 @@ class WorldView:
             min_speed = 10
             max_speed = 20
             if dist > 200 or dist <= min_speed:
-                gs.get_instance().set_world_camera_center(*p.center())
+                gs.get_instance().set_camera_center_in_world(*p.center())
             else:
                 speed = min_speed + (max_speed - min_speed) * math.sqrt(dist / 200)
                 move_xy = Utils.set_length(Utils.sub(p.center(), cam_center), speed)
                 new_pos = Utils.add(cam_center, move_xy)
-                gs.get_instance().set_world_camera_center(*Utils.round(new_pos))
+                gs.get_instance().set_camera_center_in_world(*Utils.round(new_pos))
 
         self._update_onscreen_tile_bundles()

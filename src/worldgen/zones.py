@@ -272,7 +272,7 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=
 
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)
-        gs.get_instance().set_world_camera_center(*p.center())
+        gs.get_instance().set_camera_center_in_world(*p.center())
 
     return w
 

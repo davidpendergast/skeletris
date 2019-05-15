@@ -83,6 +83,9 @@ class InventoryPanel:
         
         self._build_images(sc, text_sc)
 
+    def get_rect(self):
+        return self.total_rect
+
     def _build_title_img(self, text, rect, scale):
         res = TextImage(rect[0], 0, text, self.layer, scale=scale, color=self.title_colors)
         new_y = rect[1] + (rect[3] - res.line_height()) // 2
