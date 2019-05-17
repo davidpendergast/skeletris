@@ -675,6 +675,7 @@ class ActorEntity(Entity):
         self._perturb_color_duration = duration
         self._perturb_color_ticks = 0
 
+
     def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
@@ -1091,8 +1092,7 @@ class ItemEntity(PickupEntity):
         return False
 
 
-class \
-        DoorEntity(Entity):
+class DoorEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
         Entity.__init__(self, grid_x*64, grid_y*64, 64, 64)
@@ -1226,21 +1226,11 @@ class SaveStationEntity(Entity):
 class ExitEntity(Entity):
 
     def __init__(self, grid_x, grid_y, next_zone_id):
-        Entity.__init__(self, grid_x * 64, grid_y * 64, 64, 2)
+        Entity.__init__(self, grid_x * 64, (grid_y - 1) * 64, 64, 64)
 
         self.next_zone_id = next_zone_id
         self.count = 0
         self.open_duration = 60
-        self.radius = 48
-
-        self._was_interacted_with = False
-
-        try:
-            # TODO - zone info should be more accessible...
-            import src.worldgen.zones as zones
-            self.hover_text = zones.get_zone_name(next_zone_id)
-        except ValueError:
-            self.hover_text = "Unknown"
 
     def get_sprite(self, anim_tick):
         if self.count == 0:
@@ -1261,17 +1251,16 @@ class ExitEntity(Entity):
         return spriteref.normal_door_opening
 
     def sprite_offset(self, sprite, scale):
-        return (0, -sprite.height() * scale)
+        return (0, 64 - sprite.height() * scale)
 
     def visible_in_darkness(self):
-        return False
+        return True
 
     def update_images(self, anim_tick):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
         sprite = self.get_sprite(anim_tick)
-
         offs = self.sprite_offset(sprite, 4)
 
         x = self.x() + offs[0]
@@ -1284,63 +1273,60 @@ class ExitEntity(Entity):
     def is_exit(self):
         return True
 
-    def is_open(self):
-        return self.count >= self.open_duration
-
-    def set_open(self, val):
-        if val:
-            self.count = self.open_duration
-        else:
-            self.count = 0
-
     def update(self, world, input_state):
-
         if not gs.get_instance().world_updates_paused():
             if self.count < self.open_duration:
                 player = world.get_player()
+
                 if player is not None:
-                    p_center = player.center()
-                    if Utils.dist(p_center, self.center()) <= self.radius:
+                    p_pos = world.to_grid_coords(*player.center())
+                    my_pos = world.to_grid_coords(*self.center())
+
+                    if p_pos[0] == my_pos[0] and p_pos[1] - 1 == my_pos[1]:
                         self.count += 1
                     else:
                         self.count -= 2
                     self.count = Utils.bound(self.count, 0, self.open_duration)
-            elif self._was_interacted_with:
-                    gs.get_instance().event_queue().add(self.make_new_zone_event())
 
         self.update_images(gs.get_instance().anim_tick)
 
     def make_new_zone_event(self):
-        # TODO - maybe better if exits already know their current zones
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self):
-        return self.is_open()
+        return True
 
     def interact(self, world):
-        self._was_interacted_with = True
+        new_zone_evt = self.make_new_zone_event()
+        if new_zone_evt is not None:
+            gs.get_instance().event_queue().add(new_zone_evt)
+        else:
+            dia = Dialog("This path doesn't lead anywhere...")
+            gs.get_instance().dialog_manager().set_dialog(dia)
 
     def interact_text(self):
-        return self.hover_text
+        return None
 
 
 class ReturnExitEntity(ExitEntity):
 
     def __init__(self, grid_x, grid_y, next_zone_id):
         ExitEntity.__init__(self, grid_x, grid_y, next_zone_id)
-        self.set_y(self.y() + 62)
-        self.open_duration = 15
+        self.set_y((grid_y + 1) * 64)
 
     def make_new_zone_event(self):
-        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id(),
-                                   transfer_type=events.NewZoneEvent.RETURNING)
+        if self.next_zone_id is not None:
+            return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id(),
+                                       transfer_type=events.NewZoneEvent.RETURNING)
+        else:
+            return None
 
     def get_sprite(self, anim_tick):
         sprites = spriteref.return_door_smoke
         return sprites[anim_tick % len(sprites)]
 
     def sprite_offset(self, sprite, scale):
-        return (0, -62)
+        return (0, -64)
 
 
 class BossExitEntity(ExitEntity):

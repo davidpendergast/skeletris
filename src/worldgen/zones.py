@@ -67,6 +67,9 @@ def init_zones():
     for i in range(0, n_generated_zones-1):
         _ZONE_TRANSITIONS[generated_zone_id(i)] = [generated_zone_id(i+1)]
 
+    # final zone just loops back to itself
+    _ZONE_TRANSITIONS[generated_zone_id(n_generated_zones-1)] = [generated_zone_id(n_generated_zones-1)]
+
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
     _test_zone_sanity()
@@ -85,10 +88,6 @@ def _test_zone_sanity():
         for z2 in _ZONE_TRANSITIONS[z1]:
             if z2 not in _ALL_ZONES:
                 raise ValueError("unrecognized id: {}".format(z2))
-            if z2 in return_ids:
-                raise ValueError("zone {} has multiple return zones: {}, {}".format(z2, z1, return_ids[z2]))
-            else:
-                return_ids[z2] = z1
 
 
 def get_return_zone(zone_id):
