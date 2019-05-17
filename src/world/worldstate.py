@@ -435,22 +435,17 @@ class World:
                 self._onscreen_entities.remove(e)
 
         if not gs.get_instance().world_updates_paused() and not an_actor_is_acting:
-            # process the actors that have waited longest first
-            actors_to_process.sort(key=lambda a: a.get_actor_state().last_turn_tick())
+            # process the actors by player, then by those have waited longest
+            actors_to_process.sort(key=lambda a: 0 if a.is_player() else a.get_actor_state().last_turn_tick())
 
             for actor in actors_to_process:
                 a_state = actor.get_actor_state()
-                if a_state.energy() < a_state.max_energy():
-                    a_state.set_energy(a_state.energy() + a_state.speed())
-                    a_state.update_last_turn_tick()
-                else:
-                    not_visible = not actor.is_visible_in_world(self)
-
-                    # TODO - this should return a list of actions, in order of preference
+                if a_state.energy() >= a_state.max_energy():
                     action = actor.request_next_action(self, input_state)
 
                     if action.is_fake_player_wait_action():
-                        action.pre_start(self)  # just to make the player turn
+                        action.pre_start(self)     # just to make the player turn
+                        an_actor_is_acting = True  # in case the player isn't.. visible?
                     else:
                         a_state.update_last_turn_tick()
                         a_state.set_energy(0)
@@ -462,6 +457,7 @@ class World:
                         else:
                             raise ValueError("{} received impossible action: {}".format(actor, action))
 
+                    not_visible = not actor.is_visible_in_world(self)
                     action_pos = action.get_position()
                     if not_visible and (action_pos is None or not self.get_visible(*action_pos)):
                         # this actor is hidden by darkness, need to instantly update them
@@ -470,7 +466,15 @@ class World:
                         # in darkness, basically telling the player they're there
                         actor.update_action(self, force_finalize=True)
                     else:
+                        an_actor_is_acting = True
                         break
+
+            if not an_actor_is_acting:
+                for actor in actors_to_process:
+                    a_state = actor.get_actor_state()
+                    if a_state.energy() < a_state.max_energy():
+                        a_state.set_energy(min(a_state.max_energy(), a_state.energy() + a_state.speed()))
+
         new_lighting = self.get_light_sources(onscreen=False)
 
         if old_lighting != new_lighting:

@@ -181,11 +181,7 @@ class Entity(Updateable):
         return None
 
     def get_depth(self):
-        # TODO - just noticed this, WHAT THE HELL??
-        """
-            returns: value in [4, 5]
-        """
-        return 5 - max(0, min(1, (self.y() + self.h()) / 100000))  
+        return -self.get_render_center()[1]
     
     def is_player(self):
         return False
@@ -559,9 +555,8 @@ class ActorEntity(Entity):
 
     def cleanup(self):
         super().cleanup()
-        render_eng = RenderEngine.get_instance()
-        render_eng.remove(self._img)
-        render_eng.remove(self._shadow)
+        for bun in self.all_bundles():
+            RenderEngine.get_instance().remove(bun)
 
     def get_actor_state(self):
         return self.actor_state
@@ -679,9 +674,6 @@ class ActorEntity(Entity):
         self._perturb_color[2] = new_color[2]
         self._perturb_color_duration = duration
         self._perturb_color_ticks = 0
-
-    def get_depth(self):
-        return super().get_depth() + self.get_perturbed_xy()[1]
 
     def update_images(self):
         if self._img is None:
@@ -845,37 +837,54 @@ class Enemy(ActorEntity):
         self.set_y(y)
         self.state = state
         self.sprites = sprites
-        self._healthbar_img = None
+        self._bar_imgs = []
 
-    def _update_healthbar_img(self, world):
-        health_ratio = Utils.bound(self.get_actor_state().hp() / self.get_actor_state().max_hp(), 0.0, 1.0)
-        should_display = health_ratio < 1.0 and self.is_visible_in_world(world)
+    def _update_bar_imgs(self, bars):
+        """bars: list of (float: percent, tuple: color)"""
 
-        if should_display and self._healthbar_img is None:
-            self._healthbar_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+        while len(self._bar_imgs) > len(bars):
+            bar_img = self._bar_imgs.pop()
+            RenderEngine.get_instance().remove(bar_img)
 
-        if self._healthbar_img is not None:
-            if should_display:
-                n = len(spriteref.progress_spinner)
-                y = self.y() - self.get_sprite().height()
-                hp_sprite = spriteref.progress_spinner[int(min(0.99, health_ratio) * n)]
-                hp_x = self.x() - (hp_sprite.width() * self._healthbar_img.scale() - self.w()) // 2
-                hp_y = y - hp_sprite.height() - 4 * self._healthbar_img.scale()
-                self._healthbar_img = self._healthbar_img.update(new_model=hp_sprite, new_x=hp_x, new_y=hp_y,
-                                                                 new_depth=self.center()[1], new_color=(1.0, 0.25, 0.25))
-            else:
-                RenderEngine.get_instance().remove(self._healthbar_img)
-                self._healthbar_img = None
+        while len(self._bar_imgs) < len(bars):
+            self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2))
+
+        cx = self.get_render_center()[0]
+        cy = self.get_render_center()[1] - self.get_sprite().height()
+
+        for i in range(0, len(bars)):
+            pcnt, color = bars[i]
+            pcnt = Utils.bound(pcnt, 0.0, 1.0)
+
+            n = len(spriteref.progress_spinner)
+            bar_sprite = spriteref.progress_spinner[int(min(0.99, pcnt) * n)]
+
+            bar_img = self._bar_imgs[i]
+
+            bar_x = cx - (0.5 * bar_img.scale() * bar_sprite.width())
+            bar_y = cy - bar_img.scale() * (bar_sprite.height() - 1) * (len(bars) - i) - 16
+
+            self._bar_imgs[i] = bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=bar_y, new_color=color,
+                                               new_depth=self.get_depth())
 
     def all_bundles(self, extras=[]):
         for bun in super().all_bundles(extras=extras):
             yield bun
-        if self._healthbar_img is not None:
-            yield self._healthbar_img
+        for bar_img in self._bar_imgs:
+            yield bar_img
         
     def update(self, world, input_state):
         super().update(world, input_state)
-        self._update_healthbar_img(world)
+
+        bars = []
+        a_state = self.get_actor_state()
+        if a_state.hp() < a_state.max_hp():
+            bars.append((a_state.hp() / a_state.max_hp(), (1, 0, 0)))
+
+        energy_pcnt = a_state.energy() / a_state.max_energy()
+        bars.append((energy_pcnt, (1, 1, 0)))
+
+        self._update_bar_imgs(bars)
         
     def is_enemy(self):
         return True
@@ -1082,7 +1091,8 @@ class ItemEntity(PickupEntity):
         return False
 
 
-class DoorEntity(Entity):
+class \
+        DoorEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
         Entity.__init__(self, grid_x*64, grid_y*64, 64, 64)

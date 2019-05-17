@@ -58,6 +58,7 @@
  - varying text colors in single TextImage
  - level generation
     - reduce "size" of rooms
+        - actually this may be OK
     - chest loot generation
     - doors to move between zones
     - decoration entities

@@ -199,7 +199,10 @@ class EnemyFactory:
         inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine
-        return gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
+        a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
+        a_state.set_energy(0 if random.random() < 0.5 else 4)
+
+        return a_state
 
     @staticmethod
     def gen_enemy(template, level):
