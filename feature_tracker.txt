@@ -4,12 +4,15 @@
  - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
  - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
     - also can have rooms that border out-of-bounds with no walls in between
+    - npcs can block path
     - actually a lot of wonkiness here
  - single pixel player jiggle when walking vertically (sometimes)
  - player is always drawn overtop chests
  - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
         ValueError: tile is None at (6, 36)
  - "target selector" entities remain onscreen after player has died
+ - able to attack through walls
+ - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
         
  ~NEED TO WORK THIS OUT BEFORE CONTINUING~
 
@@ -50,12 +53,12 @@
     - mouse cursor stuff
  - choosing actions through UI
     - mappable actions to 1-6
+    - skipping turn while self-targeting = doing the action
     - attacking with items
         - via right-clicking the equipped item
  - tooltips
     - on enemies
     - on all UI items (re-implementing swing in pygame part X/?)
- - varying text colors in single TextImage
  - level generation
     - reduce "size" of rooms
         - actually this may be OK
@@ -73,7 +76,7 @@
  
  
 [future features]
-
+ - name generation for items (possibly not even needed)
  - design and implement interesting stats
  - npcs / dialog
  - one boss fight 

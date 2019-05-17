@@ -492,6 +492,29 @@ class HealthBarPanel:
                         yield bun
 
 
+class TextBuilder:
+    def __init__(self):
+        self._text = ""
+        self._custom_colors = {}
+
+    def add(self, text, color=None):
+        if color is not None:
+            for i in range(0, len(text)):
+                self._custom_colors[len(self._text) + i] = color
+        self._text += text
+
+        return self
+
+    def add_line(self, text, color=None):
+        self.add(text + "\n", color=color)
+
+    def text(self):
+        return self._text
+
+    def custom_colors(self):
+        return self._custom_colors
+
+
 class TextImage:
 
     INVISIBLE_CHAR = "`"

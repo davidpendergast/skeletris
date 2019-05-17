@@ -46,17 +46,22 @@ ITEM_NAME_END = {
 }
  
 STAT_DESCRIPTIONS = {
-    StatType.ATT: "+{} ATT",
-    StatType.DEF: "+{} DEF",
-    StatType.VIT: "+{} VIT",
-}    
+    StatType.ATT: "+{} to All Attacks",
+    StatType.DEF: "+{} Defense",
+    StatType.VIT: "+{} Vitality",
+    StatType.SPEED: "+{} Speed",
+    StatType.LIGHT_LEVEL: "+{} Light Level",
+    StatType.UNARMED_ATT: "+{} to Unarmed Attacks"
+}
 
 STAT_COLORS = collections.defaultdict(lambda: colors.LIGHT_GRAY)
 STAT_COLORS.update({
-        StatType.ATT: (1, 0.65, 0.65),
-        StatType.DEF: (0.65, 0.65, 1),
-        StatType.VIT: (0.65, 1, 0.65),
-        StatType.SPEED: (1, 1, 0.65)
+        StatType.ATT: colors.RED,
+        StatType.LOCAL_ATT: colors.RED,
+        StatType.UNARMED_ATT: colors.RED,
+        StatType.DEF: colors.BLUE,
+        StatType.VIT: colors.GREEN,
+        StatType.SPEED: colors.YELLOW
 })
 
 
@@ -84,6 +89,9 @@ class ItemStat:
     def color(self):
         return STAT_COLORS[self.stat_type]
 
+    def is_hidden(self):
+        return self.stat_type not in STAT_DESCRIPTIONS
+
     def to_json(self):
         return [self.stat_type, self.value]
 
@@ -97,11 +105,11 @@ class ItemStat:
         return ItemStat(stat_type, value)
 
 
-class ItemTags(Enum):
+class ItemTags:
     EQUIPMENT = "Equipment"
     WEAPON = "Weapon"
     CONSUMABLE = "Consumable"
-    STORY = "Story"
+    STORY = "Quest Item"
 
 
 class ItemType:
@@ -124,6 +132,8 @@ _ALL_TYPES = []
 
 
 def _new_type(name, tags):
+    if not isinstance(tags, tuple):
+        raise ValueError("tags needs to be a tuple: {}".format(tags))
     res = ItemType(name, tags)
     _ALL_TYPES.append(res)
     return res
@@ -135,9 +145,9 @@ class ItemTypes:
     def all_types():
         return list(_ALL_TYPES)
 
-    STAT_CUBE_5 = _new_type("Small Trinket", (ItemTags.EQUIPMENT))
-    STAT_CUBE_6 = _new_type("Medium Relic", (ItemTags.EQUIPMENT))
-    STAT_CUBE_7 = _new_type("Large Artifact", (ItemTags.EQUIPMENT)),
+    STAT_CUBE_5 = _new_type("Small Trinket", tuple([ItemTags.EQUIPMENT]))
+    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]))
+    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT])),
 
     SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
     SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
@@ -148,7 +158,7 @@ class ItemTypes:
     BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
     WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
 
-    POTION = _new_type("Potion", (ItemTags.CONSUMABLE))
+    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE]))
 
 
 class Item(StatProvider):
@@ -173,6 +183,9 @@ class Item(StatProvider):
 
     def __hash__(self):
         return hash(self.uuid)
+
+    def get_title(self):
+        return self.name
 
     def get_type(self):
         return self.item_type
@@ -422,31 +435,31 @@ class ItemFactory:
         elif item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
-            return SpriteItem("Light of Truth", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+            return SpriteItem("Sword of Truth", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
                               spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
-            return SpriteItem("Pain Rope", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+            return SpriteItem("Whip of Pain", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
-            return SpriteItem("Quick Iron", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+            return SpriteItem("Dagger of Quickness", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_BLOCK]
-            return SpriteItem("Fortress of Mending", item_type, level, cubes, [ItemStat(StatType.DEF, 3)],
+            return SpriteItem("Shield of Mending", item_type, level, cubes, [ItemStat(StatType.DEF, 3)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
-            return SpriteItem("Justice Beacon", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+            return SpriteItem("Spear of Justice", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
                               spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Stick of Mystery", item_type, level, cubes, [],
+            return SpriteItem("Wand of Mystery", item_type, level, cubes, [],
                               spriteref.Items.wand_small, spriteref.Items.wand_big)
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
@@ -456,7 +469,7 @@ class ItemFactory:
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]
-            return SpriteItem("Hatchet of Striking", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 5)],
+            return SpriteItem("Axe of Striking", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 5)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
         return None
@@ -507,9 +520,13 @@ class StatCubesItemFactory:
 
         cubes = CubeUtils.gen_cubes(n_cubes)
 
-        name = StatCubesItemFactory.get_name(
-                list(map(lambda x: x.stat_type, core_stats)),
-                list(map(lambda x: x.stat_type, non_core_stats)))
+        # TODO - should probably overhaul item naming
+        if len(cubes) <= 5:
+            name = ItemTypes.STAT_CUBE_5.get_name()
+        elif len(cubes) == 6:
+            name = ItemTypes.STAT_CUBE_6.get_name()
+        else:
+            name = ItemTypes.STAT_CUBE_7.get_name()
         
         stats = core_stats + non_core_stats
 

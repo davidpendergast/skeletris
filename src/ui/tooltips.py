@@ -1,9 +1,10 @@
 from src.game import spriteref as spriteref
 import src.items.item as item
 from src.renderengine.img import ImageBundle
-from src.ui.ui import TextImage, ItemImage
+from src.ui.ui import TextImage, ItemImage, TextBuilder
 from src.game.stats import StatType
 import src.game.enemies as enemies
+import src.utils.colors as colors
 
 
 class TooltipFactory:
@@ -12,16 +13,36 @@ class TooltipFactory:
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, item.Item):
             target_item = obj
-            text = [
-                str(target_item.name),
-                "Level {} ".format(target_item.get_level()) + str(target_item.get_type().get_name())
-            ]
-            for stat in target_item.all_stats():
-                text.append(str(stat))
-            for action in target_item.all_actions():
-                # TODO - action color
-                text.append(str(action.get_name()))
-            return TextOnlyTooltip(text, target=target_item, xy=xy, layer=layer)
+
+            text_builder = TextBuilder()
+            text_builder.add(str(target_item.get_title()), color=target_item.get_title_color())
+
+            plus_att = target_item.stat_value(StatType.LOCAL_ATT)
+            if plus_att != 0:
+                op = " (+" if plus_att > 0 else "-"
+                text_builder.add_line(op + str(plus_att) + ")", color=item.STAT_COLORS[StatType.LOCAL_ATT])
+            else:
+                text_builder.add_line("")
+
+            all_tags = [t for t in target_item.get_type().get_tags()]
+            if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:
+                # no reason to display "weapon" AND "equipment"~
+                all_tags.remove(item.ItemTags.EQUIPMENT)
+            if len(all_tags) > 0:
+                tag_str = ", ".join([str(t) for t in all_tags])
+                text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
+
+            all_stats = [x for x in target_item.all_stats()]
+            added_newline = False
+            for stat in all_stats:
+                if not stat.is_hidden():
+                    if not added_newline:
+                        text_builder.add_line("")
+                        added_newline = True
+                    text_builder.add_line(str(stat), color=stat.color())
+
+            return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                                   target=target_item, xy=xy, layer=layer)
         else:
             return None
 
@@ -179,13 +200,16 @@ class TextOnlyTooltip(Tooltip):
 
     TEXT_SCALE = 1
 
-    def __init__(self, text_lines, target=None, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def __init__(self, text, target=None, xy=(0, 0), custom_colors={}, layer=spriteref.UI_TOOLTIP_LAYER):
         Tooltip.__init__(self, xy=xy, target=target, layer=layer)
         self.bg_sprite = spriteref.UI.tooltip_bg
-        self.text_lines = text_lines
+
+        self.text = text
+        self.custom_colors = custom_colors
+
         self._rect = [xy[0], xy[1], 0, 0]
 
-        self._all_text_images = []
+        self._text_image = None
         self._bg_image = None
 
         self._build_images()
@@ -199,25 +223,26 @@ class TextOnlyTooltip(Tooltip):
 
         width = 0
 
-        for text in self.text_lines:
-            text_img = TextImage(x, y, text, self.layer, scale=TextOnlyTooltip.TEXT_SCALE)
-            y += text_img.size()[1]
-            width = max(width, text_img.size()[0])
-            self._all_text_images.append(text_img)
+        self._text_image = TextImage(x, y, self.text, self.layer,
+                                     custom_colors=self.custom_colors,
+                                     scale=TextOnlyTooltip.TEXT_SCALE)
 
-        self._rect = [self.xy[0], self.xy[1], width, y - self.xy[1]]
+        self._rect = [self.xy[0], self.xy[1],
+                      self._text_image.size()[0],
+                      self._text_image.size()[1]]
 
         if self._rect[2] > 0 and self._rect[3] > 0:
             ratio = (int(0.5 + self._rect[2] / self.bg_sprite.width()),
                      int(0.5 + self._rect[3] / self.bg_sprite.height()))
+
             self._bg_image = ImageBundle(self.bg_sprite, self.xy[0], self.xy[1], layer=self.layer,
                                          scale=1, ratio=ratio)
 
     def all_bundles(self):
         if self._bg_image is not None:
             yield self._bg_image
-        for text_img in self._all_text_images:
-            for bun in text_img.all_bundles():
+        if self._text_image is not None:
+            for bun in self._text_image.all_bundles():
                 yield bun
 
 
