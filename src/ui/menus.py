@@ -358,7 +358,7 @@ class OptionsMenu(Menu):
     def cursor_style_at(self, xy):
         for i in range(0, self.get_num_options()):
             if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], xy):
-                return pygame.cursors.diamond
+                return spriteref.UI.Cursors.hand_cursor
         return super().cursor_style_at(xy)
 
 

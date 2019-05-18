@@ -136,6 +136,46 @@ class UI:
         return UI.health_bars_with_length[round(pcnt_full * 256)]
 
 
+    class Cursors:
+
+        arrow_cursor_sprite = None
+        hand_cursor_sprite = None
+
+        arrow_cursor = None
+        hand_cursor = None
+
+        @staticmethod
+        def init_cursors(sheet):
+            UI.Cursors.arrow_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.arrow_cursor_sprite.rect(), sheet)
+            print("INFO: arrow_cursor={}".format(UI.Cursors.arrow_cursor))
+
+            UI.Cursors.hand_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.hand_cursor_sprite.rect(), sheet, hotspot=(5, 3))
+            print("INFO: hand_cursor={}".format(UI.Cursors.hand_cursor))
+
+        @staticmethod
+        def sprite_to_cursor(cursor_rect, sheet, hotspot=(0, 0)):
+            lines = []
+            width = 8 * (cursor_rect[2] // 8)
+            height = 8 * (cursor_rect[3] // 8)
+            for y in range(0, height):
+                lines.append("")
+                for x in range(0, width):
+                    if x < cursor_rect[2] and y < cursor_rect[3]:
+                        pos = (cursor_rect[0] + x, cursor_rect[1] + y)
+                        c = sheet.get_at(pos)
+                        if c[3] == 0:
+                            lines[-1] = lines[-1] + " "
+                        elif c[0] == 0:
+                            lines[-1] = lines[-1] + "X"
+                        else:
+                            lines[-1] = lines[-1] + "."
+                    else:
+                        lines[-1] = lines[-1] + " "
+
+            and_and_xors = pygame.cursors.compile(lines, black="X", white=".", xor="o")
+            return ((width, height), hotspot, and_and_xors[0], and_and_xors[1])
+
+
 class Bosses:
 
     cave_horror_idle = []
@@ -623,6 +663,11 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.status_bar_action_border = make(0, 252, 28, 28, shift=start_pos)
 
     UI.locked_door_panel = make(272, 0, 96, 112, shift=start_pos)
+
+    UI.Cursors.arrow_cursor_sprite = make(24, 312, 24, 24, shift=start_pos)
+    UI.Cursors.hand_cursor_sprite = make(48, 336, 16, 16, shift=start_pos)
+
+    UI.Cursors.init_cursors(sheet)
 
 
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
