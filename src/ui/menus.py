@@ -80,7 +80,7 @@ class MenuManager:
 
                 if input_state.mouse_in_window():
                     xy = input_state.mouse_pos()
-                    cursor = self.get_active_menu().cursor_style_at(xy)
+                    cursor = self.get_active_menu().cursor_style_at(world, xy)
                 else:
                     cursor = None
                 if cursor is None:
@@ -169,7 +169,7 @@ class Menu:
             bundles = panel.all_bundles()
             RenderEngine.get_instance().clear_bundles(bundles)
 
-    def cursor_style_at(self, xy):
+    def cursor_style_at(self, world, xy):
         return pygame.cursors.arrow
 
 
@@ -355,11 +355,8 @@ class OptionsMenu(Menu):
                     for bun in opt.all_bundles():
                         yield bun
 
-    def cursor_style_at(self, xy):
-        for i in range(0, self.get_num_options()):
-            if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], xy):
-                return spriteref.UI.Cursors.hand_cursor
-        return super().cursor_style_at(xy)
+    def cursor_style_at(self, world, xy):
+        return super().cursor_style_at(world, xy)
 
 
 TITLE_CANDIDATES = [
@@ -994,6 +991,8 @@ class InGameUiState(Menu):
         self.item_on_cursor_offs = [0, 0]
         self.item_on_cursor_image = None
 
+        self.current_cursor_override = None
+
     def get_song(self):
         # zones specify their songs
         return music.Songs.CONTINUE_CURRENT
@@ -1021,9 +1020,11 @@ class InGameUiState(Menu):
 
         return (cx, cy)
 
-    def _get_entity_at_world_coords(self, world, world_pos, cond=None):
+    def _get_entity_at_world_coords(self, world, world_pos, visible_only=True, cond=None):
         hover_rad = 32
         hover_over = world.entities_in_circle(world_pos, hover_rad)
+        if visible_only:
+            hover_over = list(filter(lambda ent: ent.is_visible_in_world(world), hover_over))
         if cond is not None:
             hover_over = list(filter(cond, hover_over))
         if len(hover_over) > 0:
@@ -1056,29 +1057,58 @@ class InGameUiState(Menu):
                 for bun in self.top_right_info_panel.all_bundles():
                     render_eng.update(bun)
 
-    def _update_tooltip(self, world, input_state):
-        needs_update = False
-        obj_to_display = None
-        screen_pos = input_state.mouse_pos()
-
-        if input_state.mouse_in_window() and gs.get_instance().player_state().held_item is None:
-            if self.in_inventory_panel(screen_pos):
-                grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
+    def _get_obj_at_screen_pos(self, world, xy):
+        """returns: Item, ItemEntity, EnemyEntity, Entity, or None"""
+        if xy is None:
+            return None
+        else:
+            if self.in_inventory_panel(xy):
+                grid_n_cell = self.get_clicked_inventory_grid_and_cell(xy)
                 if grid_n_cell is not None:
                     grid, cell = grid_n_cell
-                    obj_to_display = grid.item_at_position(cell)
+                    return grid.item_at_position(cell)
             else:
-                world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
-                item_entity = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_item())
+                world_pos = gs.get_instance().screen_to_world_coords(xy)
+                item_entity = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_item())
                 if item_entity is not None:
-                    obj_to_display = item_entity.get_item()
-                else:
-                    enemy_entity = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_enemy())
-                    if enemy_entity is not None:
-                        obj_to_display = enemy_entity.state
+                    return item_entity
+
+                enemy_entity = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_enemy())
+                if enemy_entity is not None:
+                    return enemy_entity
+
+                return self._get_entity_at_world_coords(world, world_pos)
+
+    def cursor_style_at(self, world, xy):
+        if self.item_on_cursor_image is not None:
+            return None
+        else:
+            obj_at_xy = self._get_obj_at_screen_pos(world, xy)
+            if obj_at_xy is None:
+                return super().cursor_style_at(world, xy)
+
+            if isinstance(obj_at_xy, item_module.Item):
+                return spriteref.UI.Cursors.hand_cursor
+
+            import src.world.entities as entities
+            if isinstance(obj_at_xy, entities.ItemEntity):
+                return spriteref.UI.Cursors.hand_cursor
+
+            return super().cursor_style_at(world, xy)
+
+    def _update_tooltip(self, world, input_state):
+        screen_pos = input_state.mouse_pos() if input_state.mouse_in_window() else None
+
+        # when you're holding an item, we show the info in the top right, so there's
+        # no need for a tooltip.
+        if self.item_on_cursor_image is None:
+            obj_to_display = self._get_obj_at_screen_pos(world, screen_pos)
+        else:
+            obj_to_display = None
 
         render_eng = RenderEngine.get_instance()
 
+        needs_update = False
         if obj_to_display is not None:
             current_tooltip = self.get_active_tooltip()
             if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
@@ -1247,7 +1277,7 @@ class InGameUiState(Menu):
             else:  # we clicked in world
                 world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
                 if ps.held_item is None:
-                    clicked_item = self._get_entity_at_world_coords(world, world_pos, lambda x: x.is_item())
+                    clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_item())
                     if clicked_item is not None:
                         world.remove(clicked_item)
                         ps.held_item = clicked_item.get_item()

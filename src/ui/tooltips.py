@@ -1,5 +1,6 @@
 from src.game import spriteref as spriteref
 import src.items.item as item
+import src.world.entities as entities
 from src.renderengine.img import ImageBundle
 from src.ui.ui import TextImage, ItemImage, TextBuilder
 from src.game.stats import StatType
@@ -11,6 +12,9 @@ class TooltipFactory:
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        if isinstance(obj, entities.ItemEntity):
+            obj = obj.get_item()
+
         if isinstance(obj, item.Item):
             target_item = obj
 
