@@ -51,7 +51,7 @@ class EnemyTemplate:
 class FlappumTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Flappum", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Cave Crawler", spriteref.medium_shadow)
 
     def get_sprites(self):
         return spriteref.enemy_flappum_all

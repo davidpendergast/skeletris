@@ -11,44 +11,79 @@ import src.utils.colors as colors
 class TooltipFactory:
 
     @staticmethod
+    def build_item_tooltip(target_item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        text_builder = TextBuilder()
+        text_builder.add(str(target_item.get_title()), color=target_item.get_title_color())
+
+        plus_att = target_item.stat_value(StatType.LOCAL_ATT)
+        if plus_att != 0:
+            op = " (+" if plus_att > 0 else "-"
+            text_builder.add_line(op + str(plus_att) + ")", color=item.STAT_COLORS[StatType.LOCAL_ATT])
+        else:
+            text_builder.add_line("")
+
+        all_tags = [t for t in target_item.get_type().get_tags()]
+        if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:
+            # no reason to display "weapon" AND "equipment"~
+            all_tags.remove(item.ItemTags.EQUIPMENT)
+        if len(all_tags) > 0:
+            tag_str = ", ".join([str(t) for t in all_tags])
+            text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
+
+        all_stats = [x for x in target_item.all_stats()]
+        added_newline = False
+        for stat in all_stats:
+            if not stat.is_hidden():
+                if not added_newline:
+                    text_builder.add_line("")
+                    added_newline = True
+                text_builder.add_line(str(stat), color=stat.color())
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=target_item, xy=xy, layer=layer)
+
+    @staticmethod
+    def build_enemy_tooltip(target_enemy, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        text_builder = TextBuilder()
+        e_state = target_enemy.get_actor_state()
+
+        text_builder.add(e_state.name())
+        text_builder.add_line(" (Hostile)", color=colors.RED)
+        text_builder.add_line("Enemy", color=colors.LIGHT_GRAY)
+
+        text_builder.add_line("")
+        att_val = e_state.stat_value(StatType.ATT) + e_state.stat_value(StatType.UNARMED_ATT)
+        text_builder.add_line("Attack: {}".format(att_val), color=colors.RED)
+        text_builder.add_line("Defense: {}".format(e_state.stat_value(StatType.DEF)), color=colors.BLUE)
+        # text_builder.add_line("Max Health: {}".format(e_state.stat_value(StatType.VIT)), color=colors.GREEN)
+        text_builder.add_line("Speed: {}".format(e_state.stat_value(StatType.SPEED)), color=colors.YELLOW)
+        text_builder.add_line("Health: {}/{}".format(e_state.hp(), e_state.max_hp()), color=colors.GREEN)
+        # text_builder.add_line("Energy: {}/{}".format(e_state.energy(), e_state.max_energy()), colors.YELLOW)
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=target_enemy, xy=xy, layer=layer)
+
+    @staticmethod
+    def build_chest_tooltip(target_chest, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        pass
+
+    @staticmethod
+    def build_npc_tooltip(target_npc, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        pass
+
+    @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, entities.ItemEntity):
             obj = obj.get_item()
 
         if isinstance(obj, item.Item):
-            target_item = obj
-
-            text_builder = TextBuilder()
-            text_builder.add(str(target_item.get_title()), color=target_item.get_title_color())
-
-            plus_att = target_item.stat_value(StatType.LOCAL_ATT)
-            if plus_att != 0:
-                op = " (+" if plus_att > 0 else "-"
-                text_builder.add_line(op + str(plus_att) + ")", color=item.STAT_COLORS[StatType.LOCAL_ATT])
-            else:
-                text_builder.add_line("")
-
-            all_tags = [t for t in target_item.get_type().get_tags()]
-            if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:
-                # no reason to display "weapon" AND "equipment"~
-                all_tags.remove(item.ItemTags.EQUIPMENT)
-            if len(all_tags) > 0:
-                tag_str = ", ".join([str(t) for t in all_tags])
-                text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
-
-            all_stats = [x for x in target_item.all_stats()]
-            added_newline = False
-            for stat in all_stats:
-                if not stat.is_hidden():
-                    if not added_newline:
-                        text_builder.add_line("")
-                        added_newline = True
-                    text_builder.add_line(str(stat), color=stat.color())
-
-            return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                                   target=target_item, xy=xy, layer=layer)
-        else:
-            return None
+            return TooltipFactory.build_item_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, entities.Enemy):
+            return TooltipFactory.build_enemy_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, entities.NpcEntity):
+            return TooltipFactory.build_npc_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, entities.ChestEntity):
+            return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
 
 
 class Tooltip:
