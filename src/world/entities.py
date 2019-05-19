@@ -775,9 +775,17 @@ class Player(ActorEntity):
                 self._targeting_animation_entities.clear()
         else:
             my_pos = world.to_grid_coords(*self.center())
-            positions = action_prov.get_targets(pos=my_pos)
+            target_positions = action_prov.get_targets(pos=my_pos)
 
-            positions = [p for p in positions if not world.is_solid(*p)]
+            positions = []
+            for p in target_positions:
+                if world.is_solid(*p):
+                    continue
+                elif Utils.dist_manhattan(p, my_pos) > 1:
+                    between_cells = Utils.cells_between(my_pos, p, include_endpoints=False)
+                    if any(map(lambda c: world.is_solid(*c), between_cells)):
+                        continue
+                positions.append(p)
 
             color = gs.get_instance().get_targeting_action_color()
 

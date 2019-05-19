@@ -123,6 +123,38 @@ class Utils:
         return res
 
     @staticmethod
+    def cells_between(p1, p2, include_endpoints=True):
+        if p1 == p2:
+            return [tuple(p1)] if include_endpoints else []
+
+        start = [p1[0] + 0.5, p1[1] + 0.5]
+        end = [p2[0] + 0.5, p2[1] + 0.5]
+
+        xy = [start[0], start[1]]
+        step_dist = 0.1
+        step_vec = Utils.set_length(Utils.sub(end, start), step_dist)
+
+        res = []
+        for i in range(0, int(Utils.dist(start, end) // step_dist)):
+            xy[0] = xy[0] + step_vec[0]
+            xy[1] = xy[1] + step_vec[1]
+            cur_cell = (int(xy[0]), int(xy[1]))
+            if len(res) > 0 and res[-1] == cur_cell:
+                continue
+            else:
+                if cur_cell == p1 or cur_cell == p2:
+                    if include_endpoints:
+                        res.append(cur_cell)
+                else:
+                    res.append(cur_cell)
+
+        return res
+
+
+
+
+
+    @staticmethod
     def stringify_key(keycode):
         if keycode == pygame.K_LEFT:
             return "←"

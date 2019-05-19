@@ -393,17 +393,29 @@ class AttackAction(Action):
             if not actor.get_actor_state().inventory().is_equipped(self.item):
                 return False
 
-        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        attack_range = [n for n in Utils.neighbors(pos[0], pos[1])]
+        actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+
+        attack_range = None
         if self.item is not None:
             for action_prov in self.item.all_actions():
                 if action_prov.get_type() == ActionType.ATTACK:
                     # TODO - indicative of bad organization that we're going *back into* the action provider
                     # TODO - to figure out the attack range... but gotta go fast..
-                    attack_range = action_prov.get_targets(pos=pos)
+                    attack_range = action_prov.get_targets(pos=actor_pos)
+
+        if attack_range is None:
+            attack_range = [n for n in Utils.neighbors(*actor_pos)]
 
         if self.position not in attack_range:
             return False
+
+        if world.is_solid(*self.position):
+            return False
+
+        for cell in Utils.cells_between(actor_pos, self.position, include_endpoints=False):
+            # can't be attacking through walls and such
+            if world.is_solid(cell[0], cell[1]):
+                return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         if target is None or target.get_actor_state().alignment == actor.get_actor_state().alignment:
