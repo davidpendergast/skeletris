@@ -57,7 +57,6 @@
     - attacking with items
         - via right-clicking the equipped item
  - tooltips
-    - on enemies
     - on all UI items (re-implementing swing in pygame part X/?)
  - level generation
     - reduce "size" of rooms

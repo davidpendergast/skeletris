@@ -6,6 +6,7 @@ from src.ui.ui import TextImage, ItemImage, TextBuilder
 from src.game.stats import StatType
 import src.game.enemies as enemies
 import src.utils.colors as colors
+import src.game.globalstate as gs
 
 
 class TooltipFactory:
@@ -47,9 +48,8 @@ class TooltipFactory:
         text_builder = TextBuilder()
         e_state = target_enemy.get_actor_state()
 
-        text_builder.add(e_state.name())
-        text_builder.add_line(" (Hostile)", color=colors.RED)
-        text_builder.add_line("Enemy", color=colors.LIGHT_GRAY)
+        text_builder.add_line(e_state.name())
+        text_builder.add_line("Hostile", color=colors.LIGHT_GRAY)
 
         text_builder.add_line("")
         att_val = e_state.stat_value(StatType.ATT) + e_state.stat_value(StatType.UNARMED_ATT)
@@ -65,11 +65,25 @@ class TooltipFactory:
 
     @staticmethod
     def build_chest_tooltip(target_chest, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
-        pass
+        text_builder = TextBuilder()
+        text_builder.add("Chest")
+        if not target_chest.is_open():
+            text_builder.add(" (Level {})".format(gs.get_instance().get_zone_level()), color=colors.LIGHT_GRAY)
+        else:
+            text_builder.add_line(" (Empty)", color=colors.LIGHT_GRAY)
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=target_chest, xy=xy, layer=layer)
 
     @staticmethod
     def build_npc_tooltip(target_npc, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
-        pass
+        text_builder = TextBuilder()
+
+        text_builder.add_line(target_npc.get_npc_template().name)
+        text_builder.add_line("Friendly", color=colors.LIGHT_GRAY)
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=target_npc, xy=xy, layer=layer)
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
@@ -84,6 +98,8 @@ class TooltipFactory:
             return TooltipFactory.build_npc_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, entities.ChestEntity):
             return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
+        else:
+            return None
 
 
 class Tooltip:
