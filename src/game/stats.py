@@ -1,35 +1,82 @@
 import math
 
-from enum import Enum
+import src.utils.colors as colors
 
 
-class StatType(str, Enum):
-    ATT = "ATT",                    # +ATT to *all* attacks
-    DEF = "DEF",
-    VIT = "VIT",
-    SPEED = "SPEED"
+class StatType:
 
-    LOCAL_ATT = "LOCAL_ATT"         # +ATT with *this* item
-    UNARMED_ATT = "UNARMED_ATT"     # +ATT with no item
-    MIN_LIGHT_LEVEL = "MIN_LIGHT_LEVEL"
-    LIGHT_LEVEL = "LIGHT_LEVEL"
+    def __init__(self, stat_id, color=colors.LIGHT_GRAY, desc=None, local_desc=None):
+        self._stat_id = stat_id
+        self._color = color
+        self._desc = desc
+        self._local_desc = local_desc
+
+    def get_color(self):
+        return self._color
+
+    def get_id(self):
+        return self._stat_id
+
+    def __repr__(self):
+        return str(self.get_id())
+
+    def is_hidden(self, local=False):
+        if local:
+            return self._local_desc is None
+        else:
+            return self._desc is None
+
+    def get_description(self, value, local=False):
+        if not local:
+            if self._desc is None:
+                return "{}: {}".format(self.get_id(), value)
+            else:
+                return self._desc.format(value)
+        else:
+            if self._local_desc is None:
+                return "{}: {} (local)".format(self.get_id(), value)
+            else:
+                return self._local_desc.format(value)
+
+    def __eq__(self, other):
+        if isinstance(other, StatType):
+            return self.get_id() == other.get_id()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.get_id())
+
+
+class StatTypes:
+    ATT = StatType("ATT", color=colors.RED, desc="+{} to All Attacks")
+    DEF = StatType("DEF", color=colors.BLUE, desc="+{} Defense")
+    VIT = StatType("VIT", color=colors.GREEN, desc="+{} Vitality")
+    SPEED = StatType("SPEED", color=colors.YELLOW, desc="+{} Speed")
+
+    UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
+    MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
+    LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level")
+
+    ENERGY_DRAIN = StatType("ENERGY_DRAIN", desc="+{} Energy Drain on Hit",
+                            local_desc="Drains +{} Energy on Hit")
 
 
 class StatProvider:
 
-    def stat_value(self, stat_type):
+    def stat_value(self, stat_type, local=False):
         return 0
 
 
 def default_player_stats():
     return BasicStatLookup({
-        StatType.ATT: 0,
-        StatType.VIT: 8,
-        StatType.DEF: 1,
-        StatType.UNARMED_ATT: 2,
-        StatType.LIGHT_LEVEL: 4,
-        StatType.MIN_LIGHT_LEVEL: 2,
-        StatType.SPEED: 4
+        StatTypes.ATT: 0,
+        StatTypes.VIT: 8,
+        StatTypes.DEF: 1,
+        StatTypes.UNARMED_ATT: 2,
+        StatTypes.LIGHT_LEVEL: 4,
+        StatTypes.MIN_LIGHT_LEVEL: 2,
+        StatTypes.SPEED: 4
     })
 
 
@@ -38,7 +85,7 @@ class BasicStatLookup(StatProvider):
     def __init__(self, lookup_dict):
         self.lookup = lookup_dict
 
-    def stat_value(self, stat_type):
+    def stat_value(self, stat_type, local=False):
         if stat_type in self.lookup:
             return self.lookup[stat_type]
         else:
@@ -86,9 +133,9 @@ LIFE_LEECH_RANGE = (_exp_map(64, 1, 2), _exp_map(64, 2, 4))
 
 class ItemStatRanges:
     RANGES = {
-        StatType.ATT: PRIMARY_RANGES,
-        StatType.DEF: PRIMARY_RANGES,
-        StatType.VIT: PRIMARY_RANGES,
+        StatTypes.ATT: PRIMARY_RANGES,
+        StatTypes.DEF: PRIMARY_RANGES,
+        StatTypes.VIT: PRIMARY_RANGES,
     }
 
     @staticmethod

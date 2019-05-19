@@ -3,7 +3,7 @@ from src.utils.util import Utils
 
 import src.game.globalstate as gs
 import src.game.spriteref as spriteref
-from src.game.stats import StatType
+from src.game.stats import StatTypes
 import src.utils.colors as colors
 from src.game.inputs import InputState
 
@@ -50,19 +50,19 @@ class ActorState:
                 if action_provider.is_mappable() and not action_provider.needs_to_be_equipped:
                     yield ItemActionProvider(item, action_provider)
 
-    def stat_value(self, stat_type):
+    def stat_value(self, stat_type, local=False):
         res = 0
         for provider in self.all_stat_providers():
-            res += provider.stat_value(stat_type)
+            res += provider.stat_value(stat_type, local=local)
         return res
 
-    def att_value_with_item(self, item):
-        res = self.stat_value(StatType.ATT)
-        if item is None:
-           res += self.stat_value(StatType.UNARMED_ATT)
-        else:
-            res += item.stat_value(StatType.LOCAL_ATT)
-        return Utils.bound(res, 0, None)
+    def stat_value_with_item(self, stat_type, item):
+        res = self.stat_value(stat_type)
+        if item is None and stat_type == StatTypes.ATT:
+            res += self.stat_value(StatTypes.UNARMED_ATT)
+        elif item is not None:
+            res += item.stat_value(stat_type, local=True)
+        return res
 
     def hp(self):
         return self.current_hp
@@ -80,7 +80,7 @@ class ActorState:
         return self.current_energy
 
     def speed(self):
-        raw_val = self.stat_value(StatType.SPEED)
+        raw_val = self.stat_value(StatTypes.SPEED)
         return Utils.bound(raw_val, 1, self.max_energy())
 
     def max_energy(self):
@@ -99,12 +99,12 @@ class ActorState:
         self._last_turn_tick = gs.get_instance().tick_counter
 
     def max_hp(self):
-        raw_value = self.stat_value(StatType.VIT)
+        raw_value = self.stat_value(StatTypes.VIT)
         return Utils.bound(raw_value, 1, 999)
 
     def light_level(self):
-        min_level = self.stat_value(StatType.MIN_LIGHT_LEVEL)
-        cur_level = self.stat_value(StatType.LIGHT_LEVEL)
+        min_level = self.stat_value(StatTypes.MIN_LIGHT_LEVEL)
+        cur_level = self.stat_value(StatTypes.LIGHT_LEVEL)
 
         return Utils.bound(max(min_level, cur_level), 0, 16)
 
@@ -429,8 +429,8 @@ class AttackAction(Action):
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         t_state = target.get_actor_state()
 
-        t_def = t_state.stat_value(StatType.DEF)
-        a_att = self.actor_entity.get_actor_state().att_value_with_item(self.item)
+        t_def = t_state.stat_value(StatTypes.DEF)
+        a_att = self.actor_entity.get_actor_state().stat_value_with_item(StatTypes.ATT, self.item)
 
         # explanation:
         #   attacker rolls a D6 for each ATT value they have.
@@ -465,6 +465,11 @@ class AttackAction(Action):
                 world.show_floating_text("-{}".format(damage), AttackAction.R_TEXT_COLOR, 3, target)
                 target.perturb_color(AttackAction.R_TEXT_COLOR, 25)
                 target.perturb(20, 18)
+
+                a_state = self.actor_entity.get_actor_state()
+                e_drain = a_state.stat_value_with_item(StatTypes.ENERGY_DRAIN, self.item)
+                if e_drain != 0:
+                    t_state.set_energy(t_state.energy() - e_drain)
 
     def start(self, world):
         self._determine_attack_result(world)

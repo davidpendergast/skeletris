@@ -3,7 +3,7 @@ import random
 import src.game.spriteref as spriteref
 from src.world.entities import Enemy
 from src.game.droprates import EnemyRates
-from src.game.stats import StatType
+from src.game.stats import StatTypes
 import src.game.stats as stats
 from src.game.loot import LootFactory
 from src.utils.util import Utils
@@ -40,11 +40,11 @@ class EnemyTemplate:
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatType.VIT: 3,
-            StatType.SPEED: 2,
-            StatType.ATT: 0,
-            StatType.UNARMED_ATT: 1,
-            StatType.DEF: 1
+            StatTypes.VIT: 3,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 1,
+            StatTypes.DEF: 1
         })
 
 

@@ -9,6 +9,7 @@
         ValueError: tile is None at (6, 36)
  - "target selector" entities remain onscreen after player has died
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
+ - sometimes enemies will alternate turns with you even when their speed is two...
         
  ~NEED TO WORK THIS OUT BEFORE CONTINUING~
 

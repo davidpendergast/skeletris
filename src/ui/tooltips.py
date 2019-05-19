@@ -3,7 +3,7 @@ import src.items.item as item
 import src.world.entities as entities
 from src.renderengine.img import ImageBundle
 from src.ui.ui import TextImage, ItemImage, TextBuilder
-from src.game.stats import StatType
+from src.game.stats import StatTypes
 import src.game.enemies as enemies
 import src.utils.colors as colors
 import src.game.globalstate as gs
@@ -16,10 +16,10 @@ class TooltipFactory:
         text_builder = TextBuilder()
         text_builder.add(str(target_item.get_title()), color=target_item.get_title_color())
 
-        plus_att = target_item.stat_value(StatType.LOCAL_ATT)
+        plus_att = target_item.stat_value(StatTypes.ATT, local=True)
         if plus_att != 0:
             op = " (+" if plus_att > 0 else "-"
-            text_builder.add_line(op + str(plus_att) + ")", color=item.STAT_COLORS[StatType.LOCAL_ATT])
+            text_builder.add_line(op + str(plus_att) + ")", color=StatTypes.ATT.get_color())
         else:
             text_builder.add_line("")
 
@@ -52,13 +52,11 @@ class TooltipFactory:
         text_builder.add_line("Hostile", color=colors.LIGHT_GRAY)
 
         text_builder.add_line("")
-        att_val = e_state.stat_value(StatType.ATT) + e_state.stat_value(StatType.UNARMED_ATT)
-        text_builder.add_line("Attack: {}".format(att_val), color=colors.RED)
-        text_builder.add_line("Defense: {}".format(e_state.stat_value(StatType.DEF)), color=colors.BLUE)
-        # text_builder.add_line("Max Health: {}".format(e_state.stat_value(StatType.VIT)), color=colors.GREEN)
-        text_builder.add_line("Speed: {}".format(e_state.stat_value(StatType.SPEED)), color=colors.YELLOW)
-        text_builder.add_line("Health: {}/{}".format(e_state.hp(), e_state.max_hp()), color=colors.GREEN)
-        # text_builder.add_line("Energy: {}/{}".format(e_state.energy(), e_state.max_energy()), colors.YELLOW)
+        att_val = e_state.stat_value(StatTypes.ATT) + e_state.stat_value(StatTypes.UNARMED_ATT)
+        text_builder.add_line("Attack: {}".format(att_val), color=StatTypes.ATT.get_color())
+        text_builder.add_line("Defense: {}".format(e_state.stat_value(StatTypes.DEF)), color=StatTypes.DEF.get_color())
+        text_builder.add_line("Speed: {}".format(e_state.stat_value(StatTypes.SPEED)), color=StatTypes.SPEED.get_color())
+        text_builder.add_line("Health: {}/{}".format(e_state.hp(), e_state.max_hp()), color=StatTypes.VIT.get_color())
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=target_enemy, xy=xy, layer=layer)
@@ -67,9 +65,7 @@ class TooltipFactory:
     def build_chest_tooltip(target_chest, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
         text_builder.add("Chest")
-        if not target_chest.is_open():
-            text_builder.add(" (Level {})".format(gs.get_instance().get_zone_level()), color=colors.LIGHT_GRAY)
-        else:
+        if target_chest.is_open():
             text_builder.add_line(" (Empty)", color=colors.LIGHT_GRAY)
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
@@ -220,35 +216,6 @@ class ItemInfoTooltip(TitleImageAndStatsTooltip):
 
     def get_target(self):
         return self.item
-
-
-class EnemyInfoTooltip(TitleImageAndStatsTooltip):
-
-    def __init__(self, enemy_state, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
-        self.e_state = enemy_state
-        stat_map = enemy_state.get_base_stats()
-        stats = []
-        for stat_type in stat_map:
-            if not isinstance(stat_type, StatType):
-                continue
-            base_val = enemies.TRUE_BASE_STATS[stat_type] if stat_type in enemies.TRUE_BASE_STATS else 0
-            stat_val = stat_map[stat_type] - base_val
-
-            if stat_val != 0:
-                stats.append(item.ItemStat(stat_type, stat_val))
-
-        TitleImageAndStatsTooltip.__init__(self, enemy_state.name(), enemy_state.level(), stats, xy=xy, layer=layer)
-
-    def get_target(self):
-        return self.e_state
-
-    def get_special_image_bundles(self, rect, sc):
-        bun = ImageBundle.new_bundle(self.layer, scale=sc)
-        sprite = self.e_state.template.get_sprites()[0]
-        color = self.e_state.base_color()
-        x = rect[0] + rect[2] // 2 - sc * sprite.width() // 2
-        y = rect[1] + rect[3] // 2 - sc * sprite.height() // 2
-        return [bun.update(new_x=x, new_y=y, new_color=color, new_model=sprite)]
 
 
 class TextOnlyTooltip(Tooltip):

@@ -1,108 +1,68 @@
 import random
 import uuid
-import collections
-from enum import Enum
 
-from src.game.stats import StatType, StatProvider, ItemStatRanges
+from src.game.stats import StatTypes, StatProvider, ItemStatRanges
 from src.utils.util import Utils
 import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
 import src.utils.colors as colors
 
-CORE_STATS = [StatType.ATT, StatType.DEF, StatType.VIT]
+CORE_STATS = [StatTypes.ATT, StatTypes.DEF, StatTypes.VIT]
 
 NON_CORE_STATS = []
 
 ITEM_CORE_NAME = {
     (): "Vessel",
-    tuple([StatType.ATT]): "Cube",
-    tuple([StatType.DEF]): "Tetra",
-    tuple([StatType.VIT]): "Quad",
-    (StatType.ATT, StatType.ATT): "Cubes",
-    (StatType.ATT, StatType.DEF): "Cuboid",
-    (StatType.ATT, StatType.VIT): "Cubit",
-    (StatType.DEF, StatType.ATT): "Tetrit",
-    (StatType.DEF, StatType.DEF): "Tetras",
-    (StatType.DEF, StatType.VIT): "Tetrit",
-    (StatType.VIT, StatType.ATT): "Quadcube",
-    (StatType.VIT, StatType.DEF): "Quadroid",
-    (StatType.VIT, StatType.VIT): "Quads"
+    tuple([StatTypes.ATT]): "Cube",
+    tuple([StatTypes.DEF]): "Tetra",
+    tuple([StatTypes.VIT]): "Quad",
+    (StatTypes.ATT, StatTypes.ATT): "Cubes",
+    (StatTypes.ATT, StatTypes.DEF): "Cuboid",
+    (StatTypes.ATT, StatTypes.VIT): "Cubit",
+    (StatTypes.DEF, StatTypes.ATT): "Tetrit",
+    (StatTypes.DEF, StatTypes.DEF): "Tetras",
+    (StatTypes.DEF, StatTypes.VIT): "Tetrit",
+    (StatTypes.VIT, StatTypes.ATT): "Quadcube",
+    (StatTypes.VIT, StatTypes.DEF): "Quadroid",
+    (StatTypes.VIT, StatTypes.VIT): "Quads"
 }
-     
-ITEM_NAME_END = {
-#    StatType.ATTACK_RADIUS: "{} of Envy",
-#    StatType.ATTACK_SPEED: "Haste {}",
-#    StatType.ATTACK_DAMAGE: "{} of Fury",
-#    StatType.MOVEMENT_SPEED: "Pride {}",
-#    StatType.DODGE: "Hiding {}",
-#    StatType.ACCURACY: "Truth {}",
-#    StatType.LIFE_REGEN: "Growth {}",
-#    StatType.LIFE_ON_HIT: "{} of Feed",
-#    StatType.LIFE_LEECH: "{} of Lust",
-#    StatType.MAX_HEALTH: "Gluttony {}",
-#    StatType.POTION_HEALING: "Renewal {}",
-#    StatType.POTION_COOLDOWN: "Wetness {}"
-}
- 
-STAT_DESCRIPTIONS = {
-    StatType.ATT: "+{} to All Attacks",
-    StatType.DEF: "+{} Defense",
-    StatType.VIT: "+{} Vitality",
-    StatType.SPEED: "+{} Speed",
-    StatType.LIGHT_LEVEL: "+{} Light Level",
-    StatType.UNARMED_ATT: "+{} to Unarmed Attacks"
-}
-
-STAT_COLORS = collections.defaultdict(lambda: colors.LIGHT_GRAY)
-STAT_COLORS.update({
-        StatType.ATT: colors.RED,
-        StatType.LOCAL_ATT: colors.RED,
-        StatType.UNARMED_ATT: colors.RED,
-        StatType.DEF: colors.BLUE,
-        StatType.VIT: colors.GREEN,
-        StatType.SPEED: colors.YELLOW
-})
 
 
 class ItemStat:
+
     """Stat that is attached to an item"""
-    def __init__(self, stat_type, value):
+    def __init__(self, stat_type, value, local=False):
         self.stat_type = stat_type
         self.value = value
+        self.local = local
 
     def __repr__(self):
-        if self.stat_type in STAT_DESCRIPTIONS:
-            return STAT_DESCRIPTIONS[self.stat_type].format(self.value)
-        else:
-            return "{}: {}".format(self.stat_type, self.value)
+        return self.stat_type.get_description(self.value, local=self.local)
 
     def __eq__(self, other):
         try:
-            return self.stat_type == other.stat_type and self.value == other.value
+            return (self.stat_type == other.stat_type and
+                    self.value == other.value and
+                    self.local == other.local)
         except ValueError:
             return False
 
     def __hash__(self):
-        return hash((self.stat_type, self.value))
+        return hash((self.stat_type, self.value, self.local))
             
     def color(self):
-        return STAT_COLORS[self.stat_type]
+        return self.stat_type.get_color()
 
     def is_hidden(self):
-        return self.stat_type not in STAT_DESCRIPTIONS
+        return self.stat_type.is_hidden(local=self.local)
 
     def to_json(self):
         return [self.stat_type, self.value]
 
     @staticmethod
     def from_json(blob):
-        """
-        blob: list of [str, int]
-        """
-        stat_type = StatType(blob[0])
-        value = int(blob[1])
-        return ItemStat(stat_type, value)
+        pass
 
 
 class ItemTags:
@@ -214,10 +174,10 @@ class Item(StatProvider):
     def h(self):
         return max([c[1] for c in self.cubes]) + 1
 
-    def stat_value(self, stat_type):
+    def stat_value(self, stat_type, local=False):
         res = 0
         for stat in self.all_stats():
-            if stat.stat_type == stat_type:
+            if stat.stat_type == stat_type and stat.local == local:
                 res += stat.value
         return res
 
@@ -276,7 +236,7 @@ class SpriteItem(Item):
         else:
             new_cubes = CubeUtils.rotate_cubes(self.cubes)
             new_rotation = (self.sprite_rotation() + 1) % 4
-            
+
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
                               can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions)
@@ -434,27 +394,33 @@ class ItemFactory:
         elif item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
-            return SpriteItem("Sword of Truth", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+            return SpriteItem("Sword of Truth", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
-            return SpriteItem("Whip of Pain", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+            return SpriteItem("Whip of Sapping", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 3, local=True),
+                               ItemStat(StatTypes.ENERGY_DRAIN, 1, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
-            return SpriteItem("Dagger of Quickness", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+            return SpriteItem("Dagger of Quickness", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_BLOCK]
-            return SpriteItem("Shield of Mending", item_type, level, cubes, [ItemStat(StatType.DEF, 3)],
+            return SpriteItem("Shield of Mending", item_type, level, cubes,
+                              [ItemStat(StatTypes.DEF, 3)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
-            return SpriteItem("Spear of Justice", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 4)],
+            return SpriteItem("Spear of Justice", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
@@ -463,12 +429,14 @@ class ItemFactory:
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
-            return SpriteItem("Bow of Speed", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 3)],
+            return SpriteItem("Bow of Speed", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]
-            return SpriteItem("Axe of Striking", item_type, level, cubes, [ItemStat(StatType.LOCAL_ATT, 5)],
+            return SpriteItem("Axe of Striking", item_type, level, cubes,
+                              [ItemStat(StatTypes.ATT, 5, local=True)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
         return None
@@ -534,11 +502,11 @@ class StatCubesItemFactory:
             rand1 = 0.5 + random.random() * 0.5
             rand2 = 0.5 + random.random() * 0.5
             max_core = max(core_stats, key=lambda x: x.value)
-            if max_core.stat_type is StatType.ATT:
+            if max_core.stat_type is StatTypes.ATT:
                 color = (1, rand1, rand2)
-            elif max_core.stat_type is StatType.VIT:
+            elif max_core.stat_type is StatTypes.VIT:
                 color = (rand1, 1, rand2)
-            elif max_core.stat_type is StatType.DEF:
+            elif max_core.stat_type is StatTypes.DEF:
                 color = (rand1, rand2, 1)
 
         cube_art = {}

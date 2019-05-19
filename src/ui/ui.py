@@ -5,7 +5,7 @@ from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.items.item as item_module
 from src.utils.util import Utils
-from src.game.stats import StatType
+from src.game.stats import StatTypes
 import src.game.globalstate as gs
 import src.utils.colors as colors
 from src.renderengine.engine import RenderEngine
@@ -103,11 +103,11 @@ class InventoryPanel:
         self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect, text_sc)
 
         self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=text_sc, depth=FG_DEPTH)
-        self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.ATT], depth=FG_DEPTH)
-        self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.DEF], depth=FG_DEPTH)
-        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.VIT], depth=FG_DEPTH)
-        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=item_module.STAT_COLORS[src.game.stats.StatType.SPEED], depth=FG_DEPTH)
-        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=item_module.STAT_COLORS[None], depth=FG_DEPTH)
+        self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
+        self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH)
+        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH)
+        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH)
+        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH)
 
         self.update_stats_imgs()
 
@@ -128,27 +128,27 @@ class InventoryPanel:
             render_eng.update(self.lvl_text)
         s_xy[1] += self.lvl_text.line_height()
 
-        att_value = (self.player_state.stat_value(StatType.ATT) +
-                     self.player_state.stat_value(StatType.UNARMED_ATT))
+        att_value = (self.player_state.stat_value(StatTypes.ATT) +
+                     self.player_state.stat_value(StatTypes.UNARMED_ATT))
         att_str = "ATT:{}".format(att_value)
         if att_str != self.att_text.get_text():
             self.att_text = self.att_text.update(new_text=att_str, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.att_text)
         s_xy[1] += self.att_text.line_height()
 
-        def_str = "DEF:{}".format(self.player_state.stat_value(StatType.DEF))
+        def_str = "DEF:{}".format(self.player_state.stat_value(StatTypes.DEF))
         if def_str != self.def_text.get_text():
             self.def_text = self.def_text.update(new_text=def_str, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.def_text)
         s_xy[1] += self.def_text.line_height()
 
-        vit_str = "VIT:{}".format(self.player_state.stat_value(StatType.VIT))
+        vit_str = "VIT:{}".format(self.player_state.stat_value(StatTypes.VIT))
         if vit_str != self.vit_text.get_text():
             self.vit_text = self.vit_text.update(new_text=vit_str, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.vit_text)
         s_xy[1] += self.vit_text.line_height()
 
-        spd_str = "SPD:{}".format(self.player_state.stat_value(StatType.SPEED))
+        spd_str = "SPD:{}".format(self.player_state.stat_value(StatTypes.SPEED))
         if spd_str != self.spd_text.get_text():
             self.spd_text = self.spd_text.update(new_text=spd_str, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.spd_text)
