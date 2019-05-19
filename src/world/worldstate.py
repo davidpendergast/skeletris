@@ -293,14 +293,35 @@ class World:
             grid_x = src[0]
             grid_y = src[1]
             max_dist = src[2]
-            for x in range(grid_x - max_dist, grid_x + max_dist + 1):
-                for y in range(grid_y - max_dist, grid_y + max_dist + 1):
-                    xy_dist = Utils.dist((x, y), (grid_x, grid_y))
-                    if xy_dist <= max_dist:
-                        mult = Utils.bound((max_dist / 6) ** (2 / 3), 0, 1)
-                        level = mult * (1 - (xy_dist / max_dist)**1.5)
-                        if level > self.get_lighting(x, y):
-                            self._set_lighting(x, y, level)
+
+            processed = set()
+            q = [(grid_x, grid_y)]
+            processed.add(q[0])
+            rect = [grid_x - max_dist,
+                    grid_y - max_dist,
+                    2 * max_dist + 1,
+                    2 * max_dist + 1]
+
+            while len(q) > 0:
+                x, y = q.pop()
+
+                # it's sometimes expected to have light sources embedded inside solid blocks
+                # (like when the player is walking through a door that's opening...)
+                if (x, y) != (grid_x, grid_y) and self.is_solid(x, y):
+                    continue
+
+                xy_dist = Utils.dist((x, y), (grid_x, grid_y))
+                if xy_dist <= max_dist:
+                    mult = Utils.bound((max_dist / 6) ** (2 / 3), 0, 1)
+                    level = mult * (1 - (xy_dist / max_dist) ** 1.5)
+                    if level > self.get_lighting(x, y):
+                        self._set_lighting(x, y, level)
+
+                    for n in Utils.neighbors(x, y):
+                        if n not in processed:
+                            if rect[0] <= n[0] < rect[0] + rect[2] and rect[1] <= n[1] < rect[1] + rect[3]:
+                                processed.add(n)
+                                q.append(n)
 
     def set_bg_color(self, color):
         self._bg_color = color
