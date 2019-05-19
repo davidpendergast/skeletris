@@ -1096,8 +1096,9 @@ class InGameUiState(Menu):
                 return spriteref.UI.Cursors.hand_cursor
 
             import src.world.entities as entities
-            if isinstance(obj_at_xy, entities.ItemEntity):
-                return spriteref.UI.Cursors.hand_cursor
+            if isinstance(obj_at_xy, entities.PickupEntity):
+                if obj_at_xy.can_pickup(world, world.get_player()):
+                    return spriteref.UI.Cursors.hand_cursor
 
             return super().cursor_style_at(world, xy)
 
@@ -1283,16 +1284,17 @@ class InGameUiState(Menu):
 
             else:  # we clicked in world
                 world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
+                player = world.get_player()
                 if ps.held_item is None:
-                    clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_item())
+                    can_pickup = lambda x: x.is_item() and x.can_pickup(world, player)
+                    clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=can_pickup)
                     if clicked_item is not None:
                         world.remove(clicked_item)
                         ps.held_item = clicked_item.get_item()
                         create_image = True
                 else:
-                    p = world.get_player()
-                    if p is not None:
-                        p_center = p.center()  # drop position
+                    if player is not None:
+                        p_center = player.center()  # drop position
                         drop_dir = Utils.sub(world_pos, p_center)
 
                         item = ps.held_item

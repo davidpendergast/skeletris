@@ -1053,29 +1053,13 @@ class PickupEntity(Entity):
 
                 self.move(*self.vel, world=world, and_search=True)
 
-            # lol, this is weird but w/evs
-            pickup_polling = 5
-            if random.random() < 1 / pickup_polling:
-                p = world.get_player()
-                if p is not None and Utils.dist(p.center(), self.center()) <= self.pickup_radius:
-                    self.time_touched += pickup_polling
-                else:
-                    self.time_touched = 0
-
         self.update_images(gs.get_instance().anim_tick)
-
-        if not gs.get_instance().world_updates_paused() and self.can_pickup():
-            self.on_pickup(world)
-            world.remove(self)
-
-    def on_pickup(self, world):
-        pass
 
     def is_pickup(self):
         return True
 
-    def can_pickup(self):
-        return self.time_touched >= self.pickup_delay
+    def can_pickup(self, world, actor):
+        return True
 
 
 class ItemEntity(PickupEntity):
@@ -1093,11 +1077,16 @@ class ItemEntity(PickupEntity):
     def is_item(self):
         return True
 
-    def can_pickup(self):
-        return False
+    def can_pickup(self, world, actor):
+        if actor is None:
+            return False
+        if not self.is_visible_in_world(world):
+            return False
 
-    def is_interactable(self):
-        return False
+        my_pos = world.to_grid_coords(self.center()[0], self.center()[1])
+        a_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+
+        return abs(my_pos[0] - a_pos[0]) <= 1 and abs(my_pos[1] - a_pos[1]) <= 1
 
 
 class DoorEntity(Entity):

@@ -276,8 +276,7 @@ class SpriteItem(Item):
         else:
             new_cubes = CubeUtils.rotate_cubes(self.cubes)
             new_rotation = (self.sprite_rotation() + 1) % 4
-            print("rotating {} to {}".format(self, new_rotation))
-
+            
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
                               can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions)
