@@ -361,13 +361,13 @@ class PopupPanel:
     def size(self):
         return (self.rect[2], self.rect[3])
 
-    def update(self, world, input_state):
+    def update(self, world):
         pass
 
-    def should_destroy(self, world, input_state):
+    def should_destroy(self, world):
         return False
 
-    def prepare_to_destroy(self, world, input_state):
+    def prepare_to_destroy(self, world):
         pass
 
     def all_bundles(self):
@@ -458,7 +458,7 @@ class HealthBarPanel:
 
                 self._action_imgs[i] = tuple(cur_img)
 
-    def update(self, world, input_state):
+    def update(self, world):
         p_state = gs.get_instance().player_state()
         new_dmg, new_healing = 0, 0
 

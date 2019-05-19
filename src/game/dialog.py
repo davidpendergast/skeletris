@@ -4,6 +4,7 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.events as events
 import src.game.sound_effects as sound_effects
+from src.game.inputs import InputState
 
 import src.game.globalstate as gs
 
@@ -155,7 +156,7 @@ class DialogManager:
 
         self._active_dialog = dialog
 
-    def update(self, world, input_state):
+    def update(self, world):
         if self.is_active():
             dialog = self._active_dialog
             if dialog.is_cutscene():
@@ -163,10 +164,10 @@ class DialogManager:
                 if cutscene.is_finished():
                     self.set_dialog(cutscene.get_next())
                 else:
-                    cutscene.update(world, input_state)
+                    cutscene.update(world)
             else:
                 all_keys = [k for k in gs.get_instance().settings().all_in_game_keys()]
-                if dialog.scroll_pos > 0 and input_state.was_pressed(all_keys):
+                if dialog.scroll_pos > 0 and InputState.get_instance().was_pressed(all_keys):
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next())
                     else:
@@ -198,6 +199,7 @@ class DialogManager:
                     num_options = len(dialog.get_options())
                     if dialog.is_done_scrolling() and num_options > 1:
                         cur_option = dialog.get_selected_opt_idx()
+                        input_state = InputState.get_instance()
                         if input_state.was_pressed(gs.get_instance().settings().left_key()):
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
                         if input_state.was_pressed(gs.get_instance().settings().right_key()):
@@ -216,17 +218,18 @@ class Cutscene(Dialog):
         self._action_idx = 0
         self.scroll_pos = len(self.text)
 
-    def update(self, world, input_state):
+    def update(self, world):
         if self.is_finished():
             return
         else:
+            input_state = InputState.get_instance()
             current_action = self.action_list[self._action_idx]
             force_finish = current_action.is_skippable() and input_state.was_pressed(gs.get_instance().settings().enter_key())
             if current_action.is_finished() or force_finish:
-                current_action.finalize(world, input_state)
+                current_action.finalize(world)
                 self._action_idx += 1
             else:
-                current_action.update(world, input_state)
+                current_action.update(world)
 
     def is_finished(self):
         return self._action_idx >= len(self.action_list)
@@ -246,13 +249,13 @@ class CutSceneAction:
     def is_finished(self):
         return True
 
-    def update(self, world, input_state):
+    def update(self, world):
         pass
 
     def is_skippable(self):
         return True
 
-    def finalize(self, world, input_state):
+    def finalize(self, world):
         pass
 
 
@@ -266,7 +269,7 @@ class PauseCutSceneAction(CutSceneAction):
     def is_finished(self):
         return self.tick_count >= self.duration
 
-    def update(self, world, input_state):
+    def update(self, world):
         self.tick_count += 1
 
 
@@ -282,7 +285,7 @@ class NpcWalkCutSceneAction(CutSceneAction):
     def is_finished(self):
         return self.finished
 
-    def finalize(self, world, input_state):
+    def finalize(self, world):
         npc_entity = world.get_npc(self.npc_id)
         target_pos = ((self.target_cell[0] + 0.5) * world.cellsize(),
                       (self.target_cell[1] + 0.5) * world.cellsize())
@@ -290,7 +293,7 @@ class NpcWalkCutSceneAction(CutSceneAction):
         if npc_entity is not None:
             npc_entity.set_center(*target_pos)
 
-    def update(self, world, input_state):
+    def update(self, world):
         npc_entity = world.get_npc(self.npc_id)
 
         if npc_entity is None:
@@ -320,10 +323,10 @@ class CustomCutsceneAction(CutSceneAction):
     def is_finished(self):
         return True
 
-    def update(self, world, input_state):
+    def update(self, world):
         pass
 
-    def finalize(self, world, input_state):
+    def finalize(self, world):
         pass
 
     def __str__(self):

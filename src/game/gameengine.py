@@ -5,6 +5,7 @@ import src.game.globalstate as gs
 import src.game.spriteref as spriteref
 from src.game.stats import StatType
 import src.utils.colors as colors
+from src.game.inputs import InputState
 
 import random
 
@@ -129,15 +130,16 @@ class ActorState:
 
 class ActorController:
 
-    def get_next_action(self, actor, world, input_state):
+    def get_next_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         return SkipTurnAction(actor, position=pos)
 
 
 class PlayerController(ActorController):
 
-    def get_next_action(self, actor, world, input_state):
+    def get_next_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        input_state = InputState.get_instance()
 
         dx = 0
         dy = 0
@@ -185,7 +187,7 @@ class PlayerController(ActorController):
 
 class EnemyController(ActorController):
 
-    def get_next_action(self, actor, world, input_state):
+    def get_next_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
 
         neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]

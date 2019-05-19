@@ -147,7 +147,7 @@ class Entity(Updateable):
         self._last_vel = (dx, dy)
         return True
         
-    def update(self, world, input_state):
+    def update(self, world):
         pass
 
     def alive(self):
@@ -376,7 +376,7 @@ class AnimationEntity(Entity):
         def get_progress(self):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
 
-        def update(self, world, input_state):
+        def update(self, world):
             # these keep updating when game is paused
             if self.tick_count >= self.duration and self.on_finish_mode == AnimationEntity.DELETE_ON_FINISH:
                 world.remove(self)
@@ -476,7 +476,7 @@ class FloatingTextEntity(Entity):
 
         self.text_img.update(new_x=x, new_y=y)
 
-    def update(self, world, input_state):
+    def update(self, world):
         # these keep updating even when updates are paused
         if self.tick_count >= self.duration:
             world.remove(self)
@@ -564,8 +564,8 @@ class ActorEntity(Entity):
     def get_controller(self):
         return self.actor_controller
 
-    def request_next_action(self, world, input_state):
-        return self.get_controller().get_next_action(self, world, input_state)
+    def request_next_action(self, world):
+        return self.get_controller().get_next_action(self, world)
 
     def is_actor(self):
         return True
@@ -631,8 +631,8 @@ class ActorEntity(Entity):
                 prog = Utils.bound(self.executing_action_ticks / self.executing_action_duration, 0.0, 1.0)
                 self.executing_action.animate_in_world(prog, world)
 
-    def update(self, world, input_state):
-        Entity.update(self, world, input_state)
+    def update(self, world):
+        Entity.update(self, world)
         if not gs.get_instance().world_updates_paused():
             if self.is_performing_action():
                 self.update_action(world)
@@ -806,13 +806,13 @@ class Player(ActorEntity):
     def visible_in_darkness(self):
         return True
             
-    def update(self, world, input_state):
-        ActorEntity.update(self, world, input_state)
+    def update(self, world):
+        ActorEntity.update(self, world)
         self.update_held_item_image()
         self.update_targeting_entities(world)
 
-    def request_next_action(self, world, input_state):
-        return ActorEntity.request_next_action(self, world, input_state)
+    def request_next_action(self, world):
+        return ActorEntity.request_next_action(self, world)
         
     def is_player(self):
         return True
@@ -882,8 +882,8 @@ class Enemy(ActorEntity):
         for bar_img in self._bar_imgs:
             yield bar_img
         
-    def update(self, world, input_state):
-        super().update(world, input_state)
+    def update(self, world):
+        super().update(world)
 
         bars = []
         a_state = self.get_actor_state()
@@ -941,7 +941,7 @@ class ChestEntity(Entity):
     def is_open(self):
         return self._is_open
             
-    def update(self, world, input_state):
+    def update(self, world):
         self.update_images(gs.get_instance().anim_tick)
 
     def is_interactable(self):
@@ -1037,7 +1037,7 @@ class PickupEntity(Entity):
             else:
                 return (0, 0)
 
-    def update(self, world, input_state):
+    def update(self, world):
         if not gs.get_instance().world_updates_paused():
             vel_before = Utils.mag(self.vel)
 
@@ -1152,7 +1152,7 @@ class DoorEntity(Entity):
     def _get_sprites(self, is_horz):
         return spriteref.door_h if is_horz else spriteref.door_v
 
-    def update(self, world, input_state):
+    def update(self, world):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
 
@@ -1194,7 +1194,7 @@ class SaveStationEntity(Entity):
         if self._shadow is not None:
             self._shadow = self._shadow.update(new_x=x)
 
-    def update(self, world, input_state):
+    def update(self, world):
         self.update_images(gs.get_instance().anim_tick)
 
     def is_save_station(self):
@@ -1281,7 +1281,7 @@ class ExitEntity(Entity):
     def is_exit(self):
         return True
 
-    def update(self, world, input_state):
+    def update(self, world):
         if not gs.get_instance().world_updates_paused():
             if self.count < self.open_duration:
                 player = world.get_player()
@@ -1362,7 +1362,7 @@ class DecorationEntity(Entity):
         self._sprites = Utils.listify(sprite)
         self._scale = scale
 
-    def update(self, world, input_state):
+    def update(self, world):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
@@ -1455,7 +1455,7 @@ class NpcEntity(Entity):
 
         Entity.update_images(self, 0)  # just updating shadow
 
-    def update(self, world, input_state):
+    def update(self, world):
         p = world.get_player()
         if p is not None:
             p_x = p.center()[0]
@@ -1491,7 +1491,7 @@ class TriggerBox(Entity):
         self.ignore_updates_paused = ignore_updates_paused
         self.box_id = box_id
 
-    def update(self, world, input_state):
+    def update(self, world):
         if gs.get_instance().world_updates_paused() and not self.ignore_updates_paused:
             return
 
@@ -1500,29 +1500,29 @@ class TriggerBox(Entity):
         if self.player_inside != inside:
             if inside:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_enter_event(self.box_id))
-                self.player_entered(p, world, input_state)
+                self.player_entered(p, world)
             else:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_exit_event(self.box_id))
-                self.player_left(p, world, input_state)
+                self.player_left(p, world)
             self.player_inside = inside
             self.player_in_range_count = 0
 
         if self.player_inside:
             if not self.no_more_firings and self.player_in_range_count == self.delay:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self.box_id))
-                self.fire_action(p, world, input_state)
+                self.fire_action(p, world)
                 if self.just_once:
                     self.no_more_firings = True
 
             self.player_in_range_count += 1
 
-    def player_entered(self, player, world, input_state, render_action):
+    def player_entered(self, player, world, render_action):
         pass
 
-    def fire_action(self, player, world, input_state, render_action):
+    def fire_action(self, player, world, render_action):
         pass
 
-    def player_left(self, player, world, input_state, render_action):
+    def player_left(self, player, world, render_action):
         pass
 
 
@@ -1533,7 +1533,7 @@ class DialogTriggerBox(TriggerBox):
                             ignore_updates_paused=ignore_updates_paused, box_id=box_id)
         self.dialog = dialog
 
-    def fire_action(self, player, world, input_state, render_action):
+    def fire_action(self, player, world, render_action):
         gs.get_instance().dialog_manager().set_dialog(self.dialog)
 
 
@@ -1545,11 +1545,11 @@ class MessageTriggerBox(TriggerBox):
         self.text = text
         self._hover_text = None
 
-    def fire_action(self, player, world, input_state, render_action):
+    def fire_action(self, player, world, render_action):
         self._hover_text = HoverTextEntity(self.text, player, offset=(0, -90), bounds=self.rect)
         world.add(self._hover_text)
 
-    def player_left(self, player, world, input_state, render_action):
+    def player_left(self, player, world, render_action):
         self._hover_text = None
 
 
@@ -1600,7 +1600,7 @@ class HoverTextEntity(Entity):
 
         return changed
 
-    def update(self, world, input_state):
+    def update(self, world):
         if self._dirty:
             if self._text_img is not None:
                 render_eng = RenderEngine.get_instance()

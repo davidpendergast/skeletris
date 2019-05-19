@@ -1,17 +1,14 @@
 
 [bugs]
 
- - enemy health bars floating in "darkness" aren't displayed even when enemy is in non-darkness
  - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
     - also can have rooms that border out-of-bounds with no walls in between
     - npcs can block path
     - actually a lot of wonkiness here
  - single pixel player jiggle when walking vertically (sometimes)
- - player is always drawn overtop chests
  - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
         ValueError: tile is None at (6, 36)
  - "target selector" entities remain onscreen after player has died
- - able to attack through walls
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
         
  ~NEED TO WORK THIS OUT BEFORE CONTINUING~

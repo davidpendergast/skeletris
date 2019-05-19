@@ -1,6 +1,21 @@
 
 class InputState:
 
+    _INSTANCE = None
+
+    @staticmethod
+    def create_instance():
+        if InputState._INSTANCE is None:
+            InputState._INSTANCE = InputState()
+        return InputState._INSTANCE
+
+    @staticmethod
+    def get_instance():
+        if InputState._INSTANCE is not None:
+            return InputState._INSTANCE
+        else:
+            raise ValueError("cannot get InputState instance before creation")
+
     def __init__(self):
         self._pressed_this_frame = {}  # keycode -> num times
         self._pressed_last_frame = {}  # keycode -> num times

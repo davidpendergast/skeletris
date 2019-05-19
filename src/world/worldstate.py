@@ -414,7 +414,7 @@ class World:
             e._alive = True
         self._ents_to_add.clear()
 
-    def update_all(self, input_state):
+    def update_all(self):
         old_lighting = self._cached_light_sources
 
         self.flush_new_entity_additions()
@@ -440,7 +440,7 @@ class World:
             near_player = player is not None and Utils.dist(e.center(), player.center()) <= 600
 
             if on_camera or near_player:
-                e.update(self, input_state)
+                e.update(self)
                 self._onscreen_entities.add(e)
 
                 if not gs.get_instance().world_updates_paused():
@@ -462,7 +462,7 @@ class World:
             for actor in actors_to_process:
                 a_state = actor.get_actor_state()
                 if a_state.energy() >= a_state.max_energy():
-                    action = actor.request_next_action(self, input_state)
+                    action = actor.request_next_action(self)
 
                     if action.is_fake_player_wait_action():
                         action.pre_start(self)     # just to make the player turn

@@ -370,7 +370,7 @@ class GlobalState:
         cam = self.get_actual_camera_xy()
         return (cam[0] + point[0], cam[1] + point[1])
         
-    def update(self, world, input_state):
+    def update(self, world):
         self.event_queue().flip()
         if world is not None:
             for e in self.event_queue().all_events():

@@ -126,7 +126,7 @@ class WorldView:
         self._geo_bundle_lookup.clear()
         self._onscreen_geo_bundles.clear()
 
-    def update_all(self, input_state):
+    def update_all(self):
         cam_center = gs.get_instance().get_camera_center_in_world()
 
         new_onscreens = set()

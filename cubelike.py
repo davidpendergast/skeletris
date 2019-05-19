@@ -5,7 +5,7 @@ import pygame
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.globalstate as gs
-import src.game.inputs as inputs
+from src.game.inputs import InputState
 import src.ui.menus as menus
 from src.renderengine.engine import RenderEngine
 import src.game.debug as debug
@@ -93,7 +93,7 @@ def run():
             "ui_tooltips", 25,
             False, COLOR)
 
-    input_state = inputs.InputState()
+    InputState.create_instance()
 
     gs.create_new(menus.StartMenu())
 
@@ -106,7 +106,7 @@ def run():
     running = True
 
     while running:
-        gs.get_instance().update(world, input_state)
+        gs.get_instance().update(world)
 
         for event in gs.get_instance().event_queue().all_events():
             if event.get_type() == events.EventType.NEW_ZONE:
@@ -122,7 +122,7 @@ def run():
 
                 # kind of a hack to prevent the world from flashing for a frame before the cinematic starts
                 if len(gs.get_instance().get_cinematics_queue()) > 0:
-                    gs.get_instance().menu_manager().update(world, input_state)
+                    gs.get_instance().menu_manager().update(world)
 
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
@@ -144,6 +144,7 @@ def run():
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
+        input_state = InputState.get_instance()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -178,7 +179,7 @@ def run():
             world_view = WorldView(world)
 
             if len(gs.get_instance().get_cinematics_queue()) > 0:
-                gs.get_instance().menu_manager().update(world, input_state)
+                gs.get_instance().menu_manager().update(world)
                 world_active = False
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
@@ -214,10 +215,10 @@ def run():
         if world_active:
             render_eng.set_clear_color(*world.get_bg_color())
 
-            world.update_all(input_state)
-            world_view.update_all(input_state)
+            world.update_all()
+            world_view.update_all()
 
-            gs.get_instance().dialog_manager().update(world, input_state)
+            gs.get_instance().dialog_manager().update(world)
 
             shake = gs.get_instance().get_screenshake()
             camera = gs.get_instance().get_actual_camera_xy()
@@ -227,7 +228,7 @@ def run():
         elif world is not None:
             world_view.cleanup_active_bundles()
 
-        gs.get_instance().menu_manager().update(world, input_state)
+        gs.get_instance().menu_manager().update(world)
 
         render_eng.render_layers()
 
