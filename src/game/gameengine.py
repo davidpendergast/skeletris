@@ -305,7 +305,7 @@ class MoveToAction(Action):
                    int(world.cellsize() * (self.position[1] + 0.5)))
 
         new_pos = Utils.linear_interp(self.start_pos, end_pos, progress)
-        self.actor_entity.move_to(new_pos[0], new_pos[1])
+        self.actor_entity.move_to(round(new_pos[0]), round(new_pos[1]))
 
     def finalize(self, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),

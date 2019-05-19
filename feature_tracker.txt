@@ -5,7 +5,6 @@
     - also can have rooms that border out-of-bounds with no walls in between
     - npcs can block path
     - actually a lot of wonkiness here
- - single pixel player jiggle when walking vertically (sometimes)
  - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
         ValueError: tile is None at (6, 36)
  - "target selector" entities remain onscreen after player has died
