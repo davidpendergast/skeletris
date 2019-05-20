@@ -391,6 +391,15 @@ class ZoneBuilder:
             world.add(entities.NpcEntity(x, y, template, on_interact))
         elif tile_type == worldgen2.TileType.STRAY_ITEM:
             pass
+        elif tile_type == worldgen2.TileType.DECORATION:
+            dec_sprite = random.choice(spriteref.large_decs + spriteref.smol_decs)
+            dec_ent = entities.DecorationEntity.wall_decoration([dec_sprite], x, y)
+            dec_ent.set_interact_dialog(dialog.Dialog("It seems to be a decoration of some kind."))
+            world.add(dec_ent)
+        elif tile_type == worldgen2.TileType.SIGN:
+            sign_ent = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, x, y)
+            sign_ent.set_interact_dialog(dialog.PlayerDialog("It says: \"This sign rocks!\""))
+            world.add(sign_ent)
 
     @staticmethod
     def _tile_grid_to_world(level, t_grid):
@@ -573,8 +582,7 @@ class DesolateCaveZone(Zone):
                 gs.get_instance().add_trigger(listener)
                 mushroom_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_switches,
                                                                             pos[0], pos[1],
-                                                                            interact_dialog=unlock_dialog,
-                                                                            hover_text="activate")
+                                                                            interact_dialog=unlock_dialog)
             else:
                 if i == (hidden_switch_idx + 1) % len(sp_mushrooms):
                     text = "there's nothing interesting here. it's just a large cluster of mushrooms."
@@ -598,7 +606,7 @@ class DesolateCaveZone(Zone):
                 d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
 
                 sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                                 interact_dialog=d, hover_text=hover_text)
+                                                                 interact_dialog=d)
                 w.add(sign)
 
         wasd_message_pos = bp.player_spawn
@@ -796,7 +804,7 @@ class TombTownZone(Zone):
                 d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
 
                 sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                                 interact_dialog=d, hover_text=hover_text)
+                                                                 interact_dialog=d)
                 w.add(sign)
             elif key == TombTownZone.MUSHROOMS:
                 for pos in unknowns[key]:

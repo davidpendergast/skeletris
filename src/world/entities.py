@@ -1337,27 +1337,30 @@ class BossExitEntity(ExitEntity):
 
 class DecorationEntity(Entity):
 
-    def __init__(self, sprite, x_center, y_bottom, scale=2, draw_offset=(0, 0), hover_text="inspect",
-                 interact_dialog=None):
+    def __init__(self, sprite, grid_x, grid_y, scale=2, draw_offset=(0, 0), interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
         """
-        Entity.__init__(self, x_center, y_bottom, 1, 0)
+        Entity.__init__(self, int((grid_x + 0.5) * 64), int((grid_y + 0.5) * 64), 1, 0)
 
         self._interact_dialog = interact_dialog
-        self._hover_text = hover_text
         self._draw_offset = draw_offset
         self._sprites = Utils.listify(sprite)
         self._scale = scale
+
+    def get_render_center(self):
+        if self._img is None:
+            return super().center()
+        return (self.x() + self._draw_offset[0], self.y() + self._draw_offset[1])
 
     def update(self, world):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
         sprite = self._sprites[gs.get_instance().anim_tick // 2 % len(self._sprites)]
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2 + self._draw_offset[0]
-        y = self.y() - (sprite.height() * self._img.scale() - self.h()) + self._draw_offset[1]
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
         depth = self.get_depth()
 
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
@@ -1368,23 +1371,23 @@ class DecorationEntity(Entity):
         if self._img is not None:
             yield self._img
 
+    def set_interact_dialog(self, dialog):
+        self._interact_dialog = dialog
+
     @staticmethod
-    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None, hover_text="inspect"):
+    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
         """
         sprites = Utils.listify(sprites)
-        h = sprites[0].height() * scale
         CELLSIZE = 64  # this better never change~
-        offset = (0, 8 * scale)
-        x_center = (grid_x + 0.5) * CELLSIZE
-        y_bottom = (grid_y) * CELLSIZE
-        return DecorationEntity(sprites, x_center, y_bottom, scale=scale, draw_offset=offset,
-                                interact_dialog=interact_dialog, hover_text=hover_text)
+        offset = (0, 8 * scale + CELLSIZE // 2)
+        return DecorationEntity(sprites, grid_x, grid_y - 1, scale=scale, draw_offset=offset,
+                                interact_dialog=interact_dialog)
 
     @staticmethod
-    def sign_decoration(grid_x, grid_y, dialog_text, hover_text):
+    def sign_decoration(grid_x, grid_y, dialog_text):
         sprite = spriteref.standalone_sign_decoration
         CELLSIZE = 64  # this better never change~
         scale = 2
@@ -1393,7 +1396,19 @@ class DecorationEntity(Entity):
         offset = (0, -(sprite.height() - 1) * scale)
 
         return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset,
-                                interact_dialog=PlayerDialog(dialog_text), hover_text=hover_text)
+                                interact_dialog=PlayerDialog(dialog_text))
+
+    def is_visible_in_world(self, world):
+        grid_xy = world.to_grid_coords(*self.get_render_center())
+        if world.get_hidden(grid_xy[0], grid_xy[1]):
+            return False
+        elif self.visible_in_darkness():
+            return True
+        else:
+            return world.get_visible(grid_xy[0], grid_xy[1])
+
+    def visible_in_darkness(self):
+        return False
 
     def is_interactable(self):
         return self._interact_dialog is not None
@@ -1401,9 +1416,6 @@ class DecorationEntity(Entity):
     def interact(self, world):
         if self._interact_dialog is not None:
             gs.get_instance().dialog_manager().set_dialog(self._interact_dialog)
-
-    def interact_text(self):
-        return self._hover_text
 
 
 class NpcEntity(Entity):

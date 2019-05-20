@@ -305,17 +305,17 @@ class World:
             while len(q) > 0:
                 x, y = q.pop()
 
-                # it's sometimes expected to have light sources embedded inside solid blocks
-                # (like when the player is walking through a door that's opening...)
-                if (x, y) != (grid_x, grid_y) and self.is_solid(x, y):
-                    continue
-
                 xy_dist = Utils.dist((x, y), (grid_x, grid_y))
                 if xy_dist <= max_dist:
                     mult = Utils.bound((max_dist / 6) ** (2 / 3), 0, 1)
                     level = mult * (1 - (xy_dist / max_dist) ** 1.5)
                     if level > self.get_lighting(x, y):
                         self._set_lighting(x, y, level)
+
+                    # it's sometimes expected to have light sources embedded inside solid blocks
+                    # (like when the player is walking through a door that's opening...)
+                    if (x, y) != (grid_x, grid_y) and self.is_solid(x, y):
+                        continue
 
                     for n in Utils.neighbors(x, y):
                         if n not in processed:

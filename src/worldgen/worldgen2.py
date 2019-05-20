@@ -17,7 +17,8 @@ class TileType:
     CHEST = "c"
     NPC = "n"
     STRAY_ITEM = "i"
-    SPECIAL = "s"
+    SIGN = "s"
+    DECORATION = "d"
 
 
 def color_char(c):
@@ -774,7 +775,8 @@ class FeatureUtils:
                 "c": TileType.CHEST,
                 "i": TileType.STRAY_ITEM,
                 "n": TileType.NPC,
-                "s": TileType.SPECIAL}
+                "s": TileType.SIGN,
+                "d": TileType.DECORATION}
 
     @staticmethod
     def convert_char(c):
@@ -821,6 +823,14 @@ class Features:
                          FeatureUtils.convert(["-"]),
                          FeatureUtils.convert(["i"]))
 
+    DECORATION = Feature("decoration",
+                         FeatureUtils.convert(["W", "-"]),
+                         FeatureUtils.convert(["W", "d"]), can_rotate=False)
+
+    SIGN = Feature("sign",
+                              FeatureUtils.convert(["W", "-"]),
+                              FeatureUtils.convert(["W", "s"]), can_rotate=False)
+
     QUEST_NPC = Feature("quest_npc",
                         FeatureUtils.convert(["W", "-"]),
                         FeatureUtils.convert(["W", "n"]), can_rotate=True)
@@ -831,7 +841,9 @@ class Features:
                               Features.CHEST,
                               Features.QUEST_NPC,
                               Features.LARGE_MONSTER,
-                              Features.STRAY_ITEM
+                              # Features.STRAY_ITEM,
+                              Features.DECORATION,
+                              Features.SIGN
                               ])
 
 
