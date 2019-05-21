@@ -765,7 +765,8 @@ class Player(ActorEntity):
                                                              new_rotation=sprite_rot,
                                                              new_x=draw_x, new_y=draw_y,
                                                              new_color=held_item.color,
-                                                             new_scale=scale)
+                                                             new_scale=scale,
+                                                             new_depth=self.get_depth())
 
     # TODO - this really shouldn't be inside Player..
     def update_targeting_entities(self, world):
