@@ -164,6 +164,7 @@ class GlobalState:
         self._camera_center_in_world = (0, 0)
         self._camera_center_on_screen = (self.screen_size[0] // 2, self.screen_size[1] // 2)
         self._player_state = None
+        self._player_controller = None
 
         self._story_state = story_state
 
@@ -265,8 +266,9 @@ class GlobalState:
         else:
             return self.current_zone.ZONE_ID
         
-    def set_player_state(self, state):
+    def set_player_state(self, state, controller):
         self._player_state = state
+        self._player_controller = controller
 
     def add_screenshake(self, strength, duration, falloff=3, freq=6):
         """
@@ -295,6 +297,9 @@ class GlobalState:
         
     def player_state(self):
         return self._player_state
+
+    def player_controller(self):
+        return self._player_controller
 
     def get_mapped_action(self, idx):
         all_actions = list(self.player_state().get_all_mappable_action_providers())
@@ -421,8 +426,9 @@ def create_new(menu, from_pw=None):
     import src.game.gameengine as gameengine
     import src.game.stats as stats
     player_state = gameengine.ActorState("player", 5, stats.default_player_stats(), inventory_state, 0)
+    player_controller = gameengine.PlayerController()
 
-    new_instance.set_player_state(player_state)
+    new_instance.set_player_state(player_state, player_controller)
 
     loaded_from_pw = False
 

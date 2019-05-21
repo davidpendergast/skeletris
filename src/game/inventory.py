@@ -86,6 +86,14 @@ class InventoryState:
         self.equip_grid = ItemGrid((5, 5))
         self.inv_grid = ItemGrid((self.cols, self.rows))
 
+        self._dirty = True
+
+    def is_dirty(self):
+        return self._dirty
+
+    def set_clean(self):
+        self._dirty = False
+
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
@@ -98,11 +106,26 @@ class InventoryState:
     def is_in_inventory(self, item):
         return self.inv_grid.get_pos(item) is not None
 
+    def __contains__(self, item):
+        return self.is_equipped(item) or self.is_in_inventory(item)
+
+    def remove(self, item):
+        if self.equip_grid.remove(item) or self.inv_grid.remove(item):
+            self._dirty = True
+            return True
+        return False
+
     def add_to_inv(self, item, pos=(0, 0)):
-        return self.inv_grid.place(item, pos)
+        if self.inv_grid.place(item, pos):
+            self._dirty = True
+            return True
+        return False
 
     def add_to_equipment(self, item, pos=(0, 0)):
-        return self.equip_grid.place(item, pos)
+        if self.equip_grid.place(item, pos):
+            self._dirty = True
+            return True
+        return False
 
     def all_items(self):
         res = []
@@ -111,13 +134,6 @@ class InventoryState:
         for i in self.all_inv_items():
             res.append(i)
         return res
-
-    def to_json(self):
-        return {}
-
-    @staticmethod
-    def from_json(json_blob):
-        return InventoryState()
 
 
 class FakeInventoryState(InventoryState):
@@ -138,6 +154,12 @@ class FakeInventoryState(InventoryState):
 
     def add_to_inv(self, item, pos=(0, 0)):
         self.inv_items.append(item)
+
+    def is_equipped(self, item):
+        return item in self.equipped_items
+
+    def is_in_inventory(self, item):
+        return item in self.inv_items
 
 
 

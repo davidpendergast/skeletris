@@ -498,10 +498,8 @@ class FloatingTextEntity(Entity):
 
 class ActorEntity(Entity):
 
-    def __init__(self, idle_sprites, actor_state, actor_controller):
+    def __init__(self, idle_sprites):
         Entity.__init__(self, 0, 0, 24, 24)
-        self.actor_state = actor_state
-        self.actor_controller = actor_controller
 
         self.executing_action = None
         self.executing_action_duration = 1
@@ -531,14 +529,14 @@ class ActorEntity(Entity):
         return self._shadow_sprite
 
     def get_light_level(self):
-        return self.actor_state.light_level()
+        return self.get_actor_state().light_level()
 
     def get_visually_held_item(self):
         if self.executing_action is not None:
             if self.executing_action.get_item() is not None:
                 return self.executing_action.get_item()
 
-        return self.actor_state.held_item
+        return self.get_actor_state().held_item
 
     def set_vel(self, vel):
         """this doesn't move the actor or anything. just sets self._last_vel to whatever"""
@@ -559,10 +557,10 @@ class ActorEntity(Entity):
             RenderEngine.get_instance().remove(bun)
 
     def get_actor_state(self):
-        return self.actor_state
+        pass
 
     def get_controller(self):
-        return self.actor_controller
+        pass
 
     def request_next_action(self, world):
         return self.get_controller().get_next_action(self, world)
@@ -675,7 +673,6 @@ class ActorEntity(Entity):
         self._perturb_color_duration = duration
         self._perturb_color_ticks = 0
 
-
     def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
@@ -697,14 +694,19 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
-        from src.game.gameengine import PlayerController
-        ActorEntity.__init__(self, spriteref.player_idle_all, gs.get_instance().player_state(), PlayerController())
+        ActorEntity.__init__(self, spriteref.player_idle_all)
         self.set_x(x)
         self.set_y(y)
 
         self._held_item_img = None
 
         self._targeting_animation_entities = []
+
+    def get_actor_state(self):
+        return gs.get_instance().player_state()
+
+    def get_controller(self):
+        return gs.get_instance().player_controller()
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
@@ -723,7 +725,7 @@ class Player(ActorEntity):
         if action_prov is not None and action_prov.get_item() is not None:
            return action_prov.get_item()
 
-        return self.actor_state.held_item
+        return self.get_actor_state().held_item
 
     def perturb(self, max_offset, duration):
         shake_pts = gs.get_instance().add_screenshake(max_offset, duration, falloff=3, freq=4)
@@ -840,13 +842,21 @@ class Player(ActorEntity):
 class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites):
+        ActorEntity.__init__(self, sprites)
+        self._enemy_state = state
         from src.game.gameengine import EnemyController  # TODO fix project structure
-        ActorEntity.__init__(self, sprites, state, EnemyController())
+        self._enemy_controller = EnemyController()
         self.set_x(x)
         self.set_y(y)
         self.state = state
         self.sprites = sprites
         self._bar_imgs = []
+
+    def get_actor_state(self):
+        return self._enemy_state
+
+    def get_controller(self):
+        return self._enemy_controller
 
     def _update_bar_imgs(self, bars):
         """bars: list of (float: percent, tuple: color)"""

@@ -165,6 +165,12 @@ class Item(StatProvider):
     def can_rotate(self):
         return self._can_rotate
 
+    def can_consume(self):
+        return self.get_type().has_tag(ItemTags.CONSUMABLE)
+
+    def consume(self, actor, world):
+        pass
+
     def rotate(self):
         return self
 
@@ -462,17 +468,6 @@ class StatCubesItemFactory:
             choices.remove(choice)
 
         return res
-
-    @staticmethod
-    def get_name(core_types, non_core_types):
-        if len(core_types) > 2:
-            core_types = core_types[:2]
-        name = ITEM_CORE_NAME[tuple(core_types)]
-        
-        if len(non_core_types) > 0:
-            name = ITEM_NAME_END[non_core_types[0]].format(name)
-            
-        return name
 
     @staticmethod
     def gen_item(level, n_cubes=None):

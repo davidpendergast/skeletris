@@ -998,6 +998,8 @@ class InGameUiState(Menu):
 
         self.current_cursor_override = None
 
+        self.action_requests_this_frame = []
+
     def get_song(self):
         # zones specify their songs
         return music.Songs.CONTINUE_CURRENT
@@ -1164,7 +1166,10 @@ class InGameUiState(Menu):
                 self.inventory_panel = None
 
         if self.inventory_panel is not None:
-            self.inventory_panel.update_stats_imgs()
+            if self.inventory_panel.state.is_dirty():
+                self.rebuild_inventory()
+            else:
+                self.inventory_panel.update_stats_imgs()
 
     def _update_health_bar_panel(self, world):
         if self.health_bar_panel is None:
@@ -1303,6 +1308,23 @@ class InGameUiState(Menu):
                         world.add_item_as_entity(item, p_center, direction=drop_dir)
                         destroy_image = True
 
+        elif input_state.mouse_was_pressed(button=3):
+            print("pressed MB 3")
+            screen_pos = input_state.mouse_pos()
+
+            if ps.held_item is None and self.in_inventory_panel(screen_pos):
+                clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
+                if clicked_grid_n_cell is not None:
+                    grid = clicked_grid_n_cell[0]
+                    cell = clicked_grid_n_cell[1]
+                    clicked_item = grid.item_at_position(cell)
+                    print("MB3'd item={}".format(clicked_item))
+                    player = world.get_player()  # TODO - this is a horribly awkward place for this..
+                    if clicked_item is not None and player is not None:
+                        import src.game.gameengine as gameengine
+                        consume_aciton = gameengine.ConsumeItemAction(player, clicked_item)
+                        self.action_requests_this_frame.append(consume_aciton)
+
         if input_state.was_pressed(gs.get_instance().settings().rotate_cw_key()):
             if ps.held_item is not None and ps.held_item.can_rotate():
                 ps.held_item = ps.held_item.rotate()
@@ -1315,7 +1337,7 @@ class InGameUiState(Menu):
 
         if create_image:
             size = ItemImage.calc_size(ps.held_item, 2)
-            self.item_on_cursor_image = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2)
+            self.item_on_cursor_image = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
             self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
             render_eng = RenderEngine.get_instance()
             for bun in self.item_on_cursor_image.all_bundles():
@@ -1367,6 +1389,62 @@ class InGameUiState(Menu):
 
         elif input_state.was_pressed(gs.get_instance().settings().exit_key()):
             gs.get_instance().menu_manager().set_active_menu(PauseMenu())
+
+        p = world.get_player()
+        if p is not None and not gs.get_instance().world_updates_paused():
+            self.send_player_action_requests(p, world)
+
+        self.action_requests_this_frame.clear()
+
+    def send_player_action_requests(self, player, world):
+        pos = world.to_grid_coords(player.center()[0], player.center()[1])
+        input_state = InputState.get_instance()
+        import src.game.gameengine as gameengine
+
+        dx = 0
+        dy = 0
+        if input_state.is_held(gs.get_instance().settings().left_key()):
+            dx -= 1
+        elif input_state.is_held(gs.get_instance().settings().up_key()):
+            dy -= 1
+        elif input_state.is_held(gs.get_instance().settings().right_key()):
+            dx += 1
+        elif input_state.is_held(gs.get_instance().settings().down_key()):
+            dy += 1
+
+        target_pos = None
+        if dx != 0:
+            target_pos = (pos[0] + dx, pos[1])
+        elif dy != 0:
+            target_pos = (pos[0], pos[1] + dy)
+
+        res_list = []
+
+        for action in self.action_requests_this_frame:
+            print("requesting special UI action: {}".format(action))
+            res_list.append(action)
+
+        action_prov = gs.get_instance().get_targeting_action_provider()
+        if action_prov is not None:
+            action_targets = action_prov.get_targets(pos=pos)
+            if target_pos is not None:
+                for i in range(0, 5):
+                    extended_target_pos = (target_pos[0] + dx * i, target_pos[1] + dy * i)
+                    if extended_target_pos in action_targets:
+                        res_list.append(action_prov.get_action(player, position=extended_target_pos))
+
+        if target_pos is not None:
+            res_list.append(gameengine.AttackAction(player, None, target_pos))
+            res_list.append(gameengine.OpenDoorAction(player, target_pos))
+            res_list.append(gameengine.InteractAction(player, target_pos))
+            res_list.append(gameengine.MoveToAction(player, target_pos))
+
+        if input_state.is_held(gs.get_instance().settings().enter_key()):
+            res_list.append(gameengine.SkipTurnAction(player, position=pos))
+
+        res_list.append(gameengine.PlayerWaitAction(player, position=target_pos))
+
+        gs.get_instance().player_controller().set_requests(res_list)
 
     def cleanup(self):
         Menu.cleanup(self)

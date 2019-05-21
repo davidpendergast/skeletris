@@ -5,6 +5,7 @@ import src.game.globalstate as gs
 import src.game.spriteref as spriteref
 from src.game.stats import StatTypes
 import src.utils.colors as colors
+import src.game.dialog as dialog
 from src.game.inputs import InputState
 
 import random
@@ -137,52 +138,29 @@ class ActorController:
 
 class PlayerController(ActorController):
 
+    INPUT_BUFFER = 5  # how old requests can be before expiring
+
+    def __init__(self):
+        self.current_requests_tick = 0
+        self.current_requests = []
+
+    def set_requests(self, actions):
+        self.current_requests_tick = gs.get_instance().tick_counter
+        self.current_requests = actions
+
     def get_next_action(self, actor, world):
-        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        input_state = InputState.get_instance()
+        current_tick = gs.get_instance().tick_counter
+        if current_tick - self.current_requests_tick <= PlayerController.INPUT_BUFFER:
+            for action in self.current_requests:
+                if action.get_actor() != actor:
+                    raise ValueError("PlayerController received an action for a different actor?" +
+                          " action={}, actor={}".format(action, action.get_actor()))
+                elif action.is_possible(world):
+                    return action
+        else:
+            self.current_requests.clear()
 
-        dx = 0
-        dy = 0
-        if input_state.is_held(gs.get_instance().settings().left_key()):
-            dx -= 1
-        elif input_state.is_held(gs.get_instance().settings().up_key()):
-            dy -= 1
-        elif input_state.is_held(gs.get_instance().settings().right_key()):
-            dx += 1
-        elif input_state.is_held(gs.get_instance().settings().down_key()):
-            dy += 1
-
-        target_pos = None
-        if dx != 0:
-            target_pos = (pos[0] + dx, pos[1])
-        elif dy != 0:
-            target_pos = (pos[0], pos[1] + dy)
-
-        res_list = []
-
-        action_prov = gs.get_instance().get_targeting_action_provider()
-        if action_prov is not None:
-            action_targets = action_prov.get_targets(pos=pos)
-            if target_pos is not None:
-                for i in range(0, 5):
-                    extended_target_pos = (target_pos[0] + dx*i, target_pos[1] + dy*i)
-                    if extended_target_pos in action_targets:
-                        res_list.append(action_prov.get_action(actor, position=extended_target_pos))
-
-        if target_pos is not None:
-            res_list.append(AttackAction(actor, None, target_pos))
-            res_list.append(OpenDoorAction(actor, target_pos))
-            res_list.append(InteractAction(actor, target_pos))
-            res_list.append(MoveToAction(actor, target_pos))
-
-        if input_state.is_held(gs.get_instance().settings().enter_key()):
-            res_list.append(SkipTurnAction(actor, position=pos))
-
-        for action in res_list:
-            if action.is_possible(world):
-                return action
-
-        return PlayerWaitAction(actor, position=target_pos)
+        return PlayerWaitAction(actor)
 
 
 class EnemyController(ActorController):
@@ -315,28 +293,33 @@ class MoveToAction(Action):
 
 class ConsumeItemAction(Action):
 
-    def __init__(self, actor, item, position):
-        Action.__init__(self, actor, position=position, item=item)
+    def __init__(self, actor, item):
+        Action.__init__(self, ActionType.CONSUME_ITEM, 20, actor, item=item)
 
     def is_possible(self, world):
-        pix_pos = self.actor_entity.center()
-        pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
-
-        if Utils.dist_manhattan(self.position, pos) != 0:
+        if self.item is None or not self.item.can_consume():
             return False
 
-        # TODO need to ensure actor has item in equip/inv
+        a_state = self.actor_entity.get_actor_state()
+        if self.item not in a_state.inventory():
+            return False
+
         return True
 
     def start(self, world):
-        pass
+        a_state = self.actor_entity.get_actor_state()
+        removed = a_state.inventory().remove(self.item)
+        if not removed:
+            print("WARN: failed to remove consumable?: {}".format(self.item))
 
     def animate_in_world(self, progress, world):
         pass
 
     def finalize(self, world):
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
-        # TODO - need to destroy item, apply status
+        self.item.consume(self.actor_entity, world)
+        dia = dialog.PlayerDialog("Did I really just drink that?")
+        gs.get_instance().dialog_manager().set_dialog(dia)
 
 
 class OpenDoorAction(MoveToAction):

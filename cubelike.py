@@ -4,26 +4,14 @@ import pygame
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
-import src.game.globalstate as gs
-from src.game.inputs import InputState
-import src.ui.menus as menus
-from src.renderengine.engine import RenderEngine
+
+print("INFO: launching Cubelike...")
+print("INFO: running pygame version: " + pygame.version.ver)
+
 import src.game.debug as debug
-import src.game.cinematics as cinematics
-import src.worldgen.zones as zones
-import src.game.settings as settings
-import src.game.readme_writer as readme_writer
-import src.utils.profiling as profiling
-import src.game.events as events
-import src.game.sound_effects as sound_effects
-from src.world.worldview import WorldView
-
-
-print("launching Cubelike...")
-print("running pygame version: " + pygame.version.ver)
-
 if debug.IS_DEV:
     print("generating readme...")
+    import src.game.readme_writer as readme_writer
     readme_writer.write_readme(Utils.resource_path("readme_template.txt"),
                                Utils.resource_path("README.md"),
                                Utils.resource_path("gifs"))
@@ -39,11 +27,12 @@ def run():
     pygame.init()
 
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
-    
+
     pygame.display.set_caption("Cubelike")
-    
+
     pygame.display.set_mode(SCREEN_SIZE, mods)
 
+    from src.renderengine.engine import RenderEngine
     render_eng = RenderEngine.create_instance()
     render_eng.init(*SCREEN_SIZE)
 
@@ -55,6 +44,8 @@ def run():
     font_img = pygame.image.load(Utils.resource_path("assets/font.png"))
 
     img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img)
+
+    import src.game.cinematics as cinematics
     cinematics.init_cinematics()
 
     window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
@@ -93,11 +84,20 @@ def run():
             "ui_tooltips", 25,
             False, COLOR)
 
+    from src.game.inputs import InputState
     InputState.create_instance()
 
+    import src.game.globalstate as gs
+    import src.ui.menus as menus
     gs.create_new(menus.StartMenu())
 
+    import src.worldgen.zones as zones
     zones.init_zones()
+
+    import src.game.settings as settings
+    import src.game.events as events
+    import src.game.sound_effects as sound_effects
+    from src.world.worldview import WorldView
         
     world = None
     world_view = None
@@ -184,6 +184,7 @@ def run():
 
         if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
+            import src.utils.profiling as profiling
             profiling.get_instance().toggle()
 
         if input_state.was_pressed(pygame.K_F4):

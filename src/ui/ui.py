@@ -17,12 +17,13 @@ FG_DEPTH = 5
 
 class ItemGridImage:
 
-    def __init__(self, x, y, grid, layer, scale):
+    def __init__(self, x, y, grid, layer, scale, depth):
         self.x = x
         self.y = y
         self.grid = grid
         self.layer = layer
         self.scale = scale
+        self.depth = depth
         
         self.item_images = []
         
@@ -34,7 +35,7 @@ class ItemGridImage:
             pos = self.grid.get_pos(item)
             x_pos = self.x + pos[0] * cellsize[0] * self.scale
             y_pos = self.y + pos[1] * cellsize[1] * self.scale
-            self.item_images.append(ItemImage(x_pos, y_pos, item, self.layer, self.scale))
+            self.item_images.append(ItemImage(x_pos, y_pos, item, self.layer, self.scale, self.depth))
         
     def all_bundles(self):
         for item_img in self.item_images:
@@ -57,19 +58,19 @@ class InventoryPanel:
         self.eq_title_text = None
         self.inv_title_text = None
 
-        sc = 2
-        text_sc = 1
+        self.sc = 2
+        self.text_sc = 1
         
         self.total_rect = [0, 0,
-                           spriteref.UI.inv_panel_top.width() * sc,
-                           (128 + 16 * self.state.rows) * sc]
+                           spriteref.UI.inv_panel_top.width() * self.sc,
+                           (128 + 16 * self.state.rows) * self.sc]
 
-        self.equip_grid_rect = [8*sc, 16*sc, 80*sc, 80*sc]
-        self.inv_grid_rect = [8*sc, 112*sc, 144*sc, 16*self.state.rows*sc]
-        self.stats_rect = [96*sc, 16*sc, 56*sc, 80*sc]
+        self.equip_grid_rect = [8*self.sc, 16*self.sc, 80*self.sc, 80*self.sc]
+        self.inv_grid_rect = [8*self.sc, 112*self.sc, 144*self.sc, 16*self.state.rows*self.sc]
+        self.stats_rect = [96*self.sc, 16*self.sc, 56*self.sc, 80*self.sc]
 
-        self.eq_title_rect = [8*sc, 0*sc + 4, 80*sc, 16*sc - 4]
-        self.inv_title_rect = [8*sc, 96*sc + 4, 80*sc, 16*sc - 4]
+        self.eq_title_rect = [8*self.sc, 0*self.sc + 4, 80*self.sc, 16*self.sc - 4]
+        self.inv_title_rect = [8*self.sc, 96*self.sc + 4, 80*self.sc, 16*self.sc - 4]
 
         self.lvl_text = None
         self.att_text = None
@@ -81,41 +82,58 @@ class InventoryPanel:
         self.equip_img = None
         self.inv_img = None
         
-        self._build_images(sc, text_sc)
+        self._build_images()
+        self.state.set_clean()
 
     def get_rect(self):
         return self.total_rect
 
-    def _build_title_img(self, text, rect, scale):
-        res = TextImage(rect[0], 0, text, self.layer, scale=scale, color=self.title_colors)
+    def _build_title_img(self, text, rect):
+        res = TextImage(rect[0], 0, text, self.layer, scale=self.text_sc, color=self.title_colors)
         new_y = rect[1] + (rect[3] - res.line_height()) // 2
         return res.update(new_y=new_y)
         
-    def _build_images(self, sc, text_sc):
-        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=sc, depth=BG_DEPTH)
+    def _build_images(self):
+        self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
         for i in range(0, self.state.rows - 1):
-            y = (128 + i*16)*sc
-            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=sc, depth=BG_DEPTH))
-        y = (128 + self.state.rows*16 - 16)*sc
-        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=sc, depth=BG_DEPTH)
+            y = (128 + i*16)*self.sc
+            self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH))
+        y = (128 + self.state.rows*16 - 16)*self.sc
+        self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
         
-        self.inv_title_text = self._build_title_img("Inventory", self.inv_title_rect, text_sc)
-        self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect, text_sc)
+        self.inv_title_text = self._build_title_img("Inventory", self.inv_title_rect)
+        self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect)
 
-        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=text_sc, depth=FG_DEPTH)
-        self.att_text = TextImage(0, 0, "att", self.layer, scale=text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
-        self.def_text = TextImage(0, 0, "def", self.layer, scale=text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH)
-        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH)
-        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH)
-        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH)
+        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH)
+        self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
+        self.def_text = TextImage(0, 0, "def", self.layer, scale=self.text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH)
+        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=self.text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH)
+        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=self.text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH)
+        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=self.text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH)
 
         self.update_stats_imgs()
+        self.update_item_grid_imgs()
 
-        e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
-        self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, sc)
+    def update_item_grid_imgs(self):
+        if self.state.is_dirty():
+            if self.equip_img is not None:
+                for bun in self.equip_img.all_bundles():
+                    RenderEngine.get_instance().remove(bun)
+                self.equip_img = None
+            if self.inv_img is not None:
+                for bun in self.inv_img.all_bundles():
+                    RenderEngine.get_instance().remove(bun)
+                self.inv_img = None
 
-        inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
-        self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, sc)
+        if self.equip_img is None:
+            e_xy = (self.equip_grid_rect[0], self.equip_grid_rect[1])
+            self.equip_img = ItemGridImage(*e_xy, self.state.equip_grid, self.layer, self.sc, FG_DEPTH)
+
+        if self.inv_img is None:
+            inv_xy = (self.inv_grid_rect[0], self.inv_grid_rect[1])
+            self.inv_img = ItemGridImage(*inv_xy, self.state.inv_grid, self.layer, self.sc, FG_DEPTH)
+
+        self.state.set_clean()
 
     def update_stats_imgs(self):
         s_xy = [self.stats_rect[0], self.stats_rect[1]]
@@ -689,11 +707,12 @@ class TextImage:
 
 class ItemImage:
 
-    def __init__(self, x, y, item, layer, scale):
+    def __init__(self, x, y, item, layer, scale, depth):
         self.x = x
         self.y = y
         self.item = item
         self.scale = scale
+        self.depth = depth
         self._bundles = []
         self.layer = layer
 
@@ -707,11 +726,11 @@ class ItemImage:
                 sprite = spriteref.Items.piece_bigs[art]
                 xpos = self.x + sprite.width()*self.scale*cube[0]
                 ypos = self.y + sprite.height()*self.scale*cube[1]
-                img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color)
+                img = ImageBundle(sprite, xpos, ypos, layer=self.layer, scale=self.scale, color=self.item.color, depth=self.depth)
                 self._bundles.append(img)
         elif isinstance(self.item, item_module.SpriteItem):
             sprite = self.item.big_sprite()
-            img = ImageBundle(sprite, self.x, self.y, layer=self.layer, rotation=self.item.sprite_rotation(), scale=self.scale, color=self.item.color)
+            img = ImageBundle(sprite, self.x, self.y, layer=self.layer, rotation=self.item.sprite_rotation(), scale=self.scale, depth=self.depth, color=self.item.color)
             self._bundles.append(img)
 
     def all_bundles(self):

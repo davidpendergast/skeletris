@@ -40,6 +40,11 @@ class TooltipFactory:
                     added_newline = True
                 text_builder.add_line(str(stat), color=stat.color())
 
+        in_inv = target_item in gs.get_instance().player_state().inventory()
+        if in_inv and target_item.can_consume():
+            text_builder.add_line("")
+            text_builder.add_line("(Right-Click to Consume)")
+
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=target_item, xy=xy, layer=layer)
 
