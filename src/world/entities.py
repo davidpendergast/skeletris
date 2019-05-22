@@ -407,25 +407,6 @@ class AnimationEntity(Entity):
             self.tick_count += 1
 
 
-class TargetingSelector(AnimationEntity):
-
-    def __init__(self, grid_x, grid_y, color):
-        AnimationEntity.__init__(self, grid_x*64, grid_y*64, spriteref.UI.world_cursors, 30, spriteref.ENTITY_LAYER,
-                                 w=64, h=64, scale=4)
-
-        self.on_finish_mode = AnimationEntity.LOOP_ON_FINISH
-        self.set_color(color)
-        self.set_x_centered(False)
-        self.set_y_centered(False)
-
-    def visible_in_darkness(self):
-        return True
-
-    def set_grid_xy(self, grid_x, grid_y):
-        self.set_x(grid_x * 64)
-        self.set_y(grid_y * 64)
-
-
 class AttackCircleArt(AnimationEntity):
 
     def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
@@ -700,7 +681,7 @@ class Player(ActorEntity):
 
         self._held_item_img = None
 
-        self._targeting_animation_entities = []
+        self._targeting_animation_imgs = []
 
     def get_actor_state(self):
         return gs.get_instance().player_state()
@@ -768,14 +749,13 @@ class Player(ActorEntity):
                                                              new_scale=scale,
                                                              new_depth=self.get_depth())
 
-    # TODO - this really shouldn't be inside Player..
     def update_targeting_entities(self, world):
         action_prov = gs.get_instance().get_targeting_action_provider()
         if action_prov is None:
-            if len(self._targeting_animation_entities) > 0:
-                for ent in self._targeting_animation_entities:
-                    world.remove(ent)
-                self._targeting_animation_entities.clear()
+            if len(self._targeting_animation_imgs) > 0:
+                for t_img in self._targeting_animation_imgs:
+                    RenderEngine.get_instance().remove(t_img)
+                self._targeting_animation_imgs.clear()
         else:
             my_pos = world.to_grid_coords(*self.center())
             target_positions = action_prov.get_targets(pos=my_pos)
@@ -792,19 +772,20 @@ class Player(ActorEntity):
 
             color = gs.get_instance().get_targeting_action_color()
 
-            while len(self._targeting_animation_entities) > len(positions):
-                ent = self._targeting_animation_entities.pop()
-                world.remove(ent)
-            while len(positions) > len(self._targeting_animation_entities):
-                ent = TargetingSelector(0, 0, color)
-                self._targeting_animation_entities.append(ent)
-                world.add(ent, gridcell=my_pos)
+            while len(self._targeting_animation_imgs) > len(positions):
+                t_img = self._targeting_animation_imgs.pop()
+                RenderEngine.get_instance().remove(t_img)
 
+            while len(positions) > len(self._targeting_animation_imgs):
+                t_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=4, depth=float("inf"))
+                self._targeting_animation_imgs.append(t_img)
+
+            sprite = spriteref.UI.world_cursors[(gs.get_instance().anim_tick // 2) % len(spriteref.UI.world_cursors)]
             for i in range(0, len(positions)):
-                pos = positions[i]
-                ent = self._targeting_animation_entities[i]
-                ent.set_grid_xy(pos[0], pos[1])
-                ent.set_color(color)
+                x = positions[i][0] * world.cellsize()
+                y = positions[i][1] * world.cellsize()
+                t_img = self._targeting_animation_imgs[i].update(new_model=sprite, new_x=x, new_y=y, new_color=color)
+                self._targeting_animation_imgs[i] = t_img
 
     def visible_in_darkness(self):
         return True
@@ -838,6 +819,8 @@ class Player(ActorEntity):
             yield b
         if self._held_item_img is not None:
             yield self._held_item_img
+        for b in self._targeting_animation_imgs:
+            yield b
  
  
 class Enemy(ActorEntity):
@@ -1302,7 +1285,7 @@ class ExitEntity(Entity):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self):
-        return True
+        return self.count >= self.open_duration
 
     def interact(self, world):
         new_zone_evt = self.make_new_zone_event()

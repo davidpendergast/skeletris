@@ -153,9 +153,9 @@ class PlayerController(ActorController):
         if current_tick - self.current_requests_tick <= PlayerController.INPUT_BUFFER:
             for action in self.current_requests:
                 if action.get_actor() != actor:
-                    raise ValueError("PlayerController received an action for a different actor?" +
-                          " action={}, actor={}".format(action, action.get_actor()))
+                    continue  # this is probably an old action (from the previous world)
                 elif action.is_possible(world):
+                    self.current_requests.clear()
                     return action
         else:
             self.current_requests.clear()
