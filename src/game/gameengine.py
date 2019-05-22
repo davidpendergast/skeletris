@@ -670,7 +670,7 @@ class ItemActions:
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, _cardinal_1)
     SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, _cardinal_1 + _cardinal_2)
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, _cardinal_1)
-    SHIELD_BLOCK = AttackItemActionProvider("Protect", spriteref.Items.shield_icon, [(0, 0)], color=colors.BLUE)
+    SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, _cardinal_1)
     DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, _cardinal_1)
     BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, _cardinal_2 + _cardinal_3)
     AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, _cardinal_1)

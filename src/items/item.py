@@ -418,9 +418,10 @@ class ItemFactory:
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
-            actions = [ItemActions.SHIELD_BLOCK]
+            actions = [ItemActions.SHIELD_ATTACK]
             return SpriteItem("Shield of Mending", item_type, level, cubes,
-                              [ItemStat(StatTypes.DEF, 3)],
+                              [ItemStat(StatTypes.ATT, 2, local=True),
+                               ItemStat(StatTypes.DEF, 3)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
