@@ -1090,18 +1090,24 @@ class InGameUiState(Menu):
             return None
         else:
             obj_at_xy = self._get_obj_at_screen_pos(world, xy)
-            if obj_at_xy is None:
-                return super().cursor_style_at(world, xy)
-
-            if isinstance(obj_at_xy, item_module.Item):
-                return spriteref.UI.Cursors.hand_cursor
-
-            import src.world.entities as entities
-            if isinstance(obj_at_xy, entities.PickupEntity):
-                if obj_at_xy.can_pickup(world, world.get_player()):
+            if obj_at_xy is not None:
+                if isinstance(obj_at_xy, item_module.Item):
                     return spriteref.UI.Cursors.hand_cursor
 
+                import src.world.entities as entities
+                if isinstance(obj_at_xy, entities.PickupEntity):
+                    if obj_at_xy.can_pickup(world, world.get_player()):
+                        return spriteref.UI.Cursors.hand_cursor
+
+            for image in self._top_level_interactable_imgs():
+                if image.contains_point(*xy):
+                    return image.get_cursor_at(*xy)
+
             return super().cursor_style_at(world, xy)
+
+    def _top_level_interactable_imgs(self):
+        if self.health_bar_panel is not None:
+            yield self.health_bar_panel
 
     def _update_tooltip(self, world):
         input_state = InputState.get_instance()
@@ -1114,20 +1120,29 @@ class InGameUiState(Menu):
         else:
             obj_to_display = None
 
-        render_eng = RenderEngine.get_instance()
+        if obj_to_display is None and screen_pos is not None:
+            for ui_img in self._top_level_interactable_imgs():
+                if ui_img.contains_point(*screen_pos):
+                    tt_target = ui_img.get_tooltip_target_at(*screen_pos)
+                    if tt_target is not None:
+                        obj_to_display = tt_target
+                        break
 
         needs_update = False
+        current_tooltip = self.get_active_tooltip()
+
         if obj_to_display is not None:
-            current_tooltip = self.get_active_tooltip()
             if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
                 new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
                 self.set_active_tooltip(new_tooltip)
                 needs_update = True
 
+        current_tooltip = self.get_active_tooltip()
+
+        render_eng = RenderEngine.get_instance()
+        if current_tooltip is not None:
             offs = (-screen_pos[0], -screen_pos[1] - 24)
             render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
-
-        current_tooltip = self.get_active_tooltip()
 
         if needs_update and current_tooltip is not None:
             for bun in current_tooltip.all_bundles():
@@ -1136,7 +1151,7 @@ class InGameUiState(Menu):
         if not gs.get_instance().player_state().is_alive() or obj_to_display is None:
             self.set_active_tooltip(None)
 
-    def _update_dialog_panel(self, world):
+    def _update_dialog_panel(self):
         should_destroy = (self.dialog_panel is not None and (not gs.get_instance().dialog_manager().is_active() or
                           self.dialog_panel.get_dialog() is not gs.get_instance().dialog_manager().get_dialog()))
 
@@ -1152,7 +1167,7 @@ class InGameUiState(Menu):
         if self.dialog_panel is not None:
             self.dialog_panel.update()
 
-    def _update_inventory_panel(self, world):
+    def _update_inventory_panel(self):
         if not gs.get_instance().player_state().is_alive():
             if self.inventory_panel is not None:
                 self._destroy_panel(self.inventory_panel)
@@ -1346,9 +1361,20 @@ class InGameUiState(Menu):
         self._update_item_on_cursor(world)
         self._update_tooltip(world)
         self._update_top_right_info_panel(world)
-        self._update_inventory_panel(world)
+        self._update_inventory_panel()
 
         input_state = InputState.get_instance()
+
+        if gs.get_instance().player_state().held_item is None:
+            screen_pos = input_state.mouse_pos()
+            if screen_pos is not None:
+                button1 = input_state.mouse_was_pressed(button=1)
+                button3 = input_state.mouse_was_pressed(button=3)
+                if button1 or button3:
+                    button = 1 if button1 else 3
+                    for image in self._top_level_interactable_imgs():
+                        if image.contains_point(*screen_pos) and image.on_click(*screen_pos, button=button):
+                            break
 
         for i in range(0, 6):
             cur_targeting_action = gs.get_instance().get_targeting_action_provider()
@@ -1360,7 +1386,7 @@ class InGameUiState(Menu):
                     gs.get_instance().set_targeting_action_provider(new_targeting_action)
 
         self._update_health_bar_panel()
-        self._update_dialog_panel(world)
+        self._update_dialog_panel()
 
         if len(gs.get_instance().get_cinematics_queue()) > 0:
             gs.get_instance().menu_manager().set_active_menu(CinematicMenu())

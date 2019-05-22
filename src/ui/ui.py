@@ -51,22 +51,42 @@ class InteractableImage:
 
     def on_click(self, x, y, button=1):
         """returns: True if click was absorbed, False otherwise"""
-        return True
+        for c in self.all_child_imgs():
+            if c.contains_point(x, y):
+                if c.on_click(x, y):
+                    return True
+        return False
 
-    def get_tooltip(self, x, y):
+    def get_cursor_at(self, x, y):
+        for c in self.all_child_imgs():
+            if c.contains_point(x, y):
+                return c.get_cursor_at(x, y)
+        return spriteref.UI.Cursors.arrow_cursor
+
+    def get_tooltip_target_at(self, x, y):
+        for c in self.all_child_imgs():
+            if c.contains_point(x, y):
+                target = c.get_tooltip_target_at(x, y)
+                if target is not None:
+                    return target
         return None
 
     def is_dirty(self):
         return True
 
-    def update_images(self):
-        pass
+    def all_child_imgs(self):
+        """yields all the sub-InteractableImages of this one"""
+        return []
 
-    def update(self, world):
-        pass
+    def update_images(self):
+        for c in self.all_child_imgs():
+            if c.is_dirty():
+                c.update_images()
 
     def all_bundles(self):
-        pass
+        for c in self.all_child_imgs():
+            for bun in c.all_bundles():
+                yield bun
         
 
 class InventoryPanel:
@@ -416,8 +436,8 @@ class MappedActionImage(InteractableImage):
             return True
         return False
 
-    def get_tooltip(self, x, y):
-        return None
+    def get_tooltip_target_at(self, x, y):
+        return self.action_prov
 
     def is_dirty(self):
         return True
@@ -465,8 +485,11 @@ class HealthBarPanel(InteractableImage):
         self._action_imgs = [None] * 6  # list of MappedActionImages
 
     def contains_point(self, x, y):
-        return (self._rect[0] <= x < self._rect[0] + self._rect[2] and
-                self._rect[1] <= y < self._rect[1] + self._rect[3])
+        if super().contains_point(x, y):
+            return True
+        else:
+            return (self._rect[0] <= x < self._rect[0] + self._rect[2] and
+                    self._rect[1] <= y < self._rect[1] + self._rect[3])
 
     def update_images(self):
         render_eng = RenderEngine.get_instance()
@@ -492,6 +515,8 @@ class HealthBarPanel(InteractableImage):
 
         x = gs.get_instance().screen_size[0] // 2 - self._top_img.width() // 2
         y = gs.get_instance().screen_size[1] - self._top_img.height()
+
+        self._rect = [x, y, self._top_img.width(), self._top_img.height()]
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
         bar_w = spriteref.UI.health_bar_full.width() * 2
@@ -538,20 +563,23 @@ class HealthBarPanel(InteractableImage):
             if self._action_imgs[i].is_dirty():
                 self._action_imgs[i].update_images()
 
+    def all_child_imgs(self):
+        for i in self._action_imgs:
+            if i is not None:
+                yield i
+
     def is_dirty(self):
         return True
 
     def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
         if self._bar_img is not None:
             yield self._bar_img
         if self._top_img is not None:
             yield self._top_img
         for floating_bar in self._floating_bars:
             yield floating_bar[0]
-        for mapped_action_img in self._action_imgs:
-            if mapped_action_img is not None:
-                for bun in mapped_action_img.all_bundles():
-                    yield bun
 
 
 class TextBuilder:

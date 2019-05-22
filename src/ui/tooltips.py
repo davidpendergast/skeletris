@@ -5,6 +5,7 @@ from src.renderengine.img import ImageBundle
 from src.ui.ui import TextImage, ItemImage, TextBuilder
 from src.game.stats import StatTypes
 import src.game.enemies as enemies
+import src.game.gameengine as gameengine
 import src.utils.colors as colors
 import src.game.globalstate as gs
 
@@ -87,6 +88,14 @@ class TooltipFactory:
                                target=target_npc, xy=xy, layer=layer)
 
     @staticmethod
+    def build_action_provider_tooltip(action_prov, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        text_builder = TextBuilder()
+        text_builder.add_line("TESTING")
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=action_prov, xy=xy, layer=layer)
+
+    @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         if isinstance(obj, entities.ItemEntity):
             obj = obj.get_item()
@@ -99,8 +108,11 @@ class TooltipFactory:
             return TooltipFactory.build_npc_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, entities.ChestEntity):
             return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, gameengine.ActionProvider):
+            return TooltipFactory.build_action_provider_tooltip(obj, xy=xy, layer=layer)
         else:
             return None
+
 
 
 class Tooltip:
