@@ -40,7 +40,33 @@ class ItemGridImage:
     def all_bundles(self):
         for item_img in self.item_images:
             for bun in item_img.all_bundles():
-                yield bun   
+                yield bun
+
+
+class InteractableImage:
+    """Piece of UI that can be 'interacted with' using the mouse."""
+
+    def contains_point(self, x, y):
+        return False
+
+    def on_click(self, x, y, button=1):
+        """returns: True if click was absorbed, False otherwise"""
+        return True
+
+    def get_tooltip(self, x, y):
+        return None
+
+    def is_dirty(self):
+        return True
+
+    def update_images(self):
+        pass
+
+    def update(self, world):
+        pass
+
+    def all_bundles(self):
+        pass
         
 
 class InventoryPanel:
@@ -363,36 +389,66 @@ class DialogPanel:
                 yield bun
 
 
-class PopupPanel:
+class MappedActionImage(InteractableImage):
 
-    def __init__(self, w, h):
-        self.rect = [0, 0, w, h]
+    def __init__(self, action_prov, rect):
+        self.action_prov = action_prov
+        self.rect = rect
 
-    def set_xy(self, x, y):
-        """Note that this gets set by MenuState every frame"""
-        self.rect[0] = x
-        self.rect[1] = y
+        self._border_img = None
+        self._icon_img = None
 
-    def get_rect(self):
-        return self.rect
+    def contains_point(self, x, y):
+        if self.action_prov is None:
+            return False
+        else:
+            return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
+                    self.rect[1] <= y < self.rect[1] + self.rect[3])
 
-    def size(self):
-        return (self.rect[2], self.rect[3])
-
-    def update(self, world):
-        pass
-
-    def should_destroy(self, world):
+    def on_click(self, x, y, button=1):
+        """returns: True if click was absorbed, False otherwise"""
+        if self.action_prov is not None:
+            targeting_action = gs.get_instance().get_targeting_action_provider()
+            if self.action_prov == targeting_action:
+                gs.get_instance().set_targeting_action_provider(None)
+            else:
+                gs.get_instance().set_targeting_action_provider(self.action_prov)
+            return True
         return False
 
-    def prepare_to_destroy(self, world):
-        pass
+    def get_tooltip(self, x, y):
+        return None
+
+    def is_dirty(self):
+        return True
+
+    def update_images(self):
+        if self.action_prov is None:
+            RenderEngine.get_instance().remove(self._border_img)
+            RenderEngine.get_instance().remove(self._icon_img)
+            self._border_img = None
+            self._icon_img = None
+        else:
+            targeting_action = gs.get_instance().get_targeting_action_provider()
+            color = gs.get_instance().get_targeting_action_color() if self.action_prov == targeting_action else (1, 1, 1)
+
+            if self._icon_img is None:
+                self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4, depth=FG_DEPTH)
+            self._icon_img = self._icon_img.update(new_model=self.action_prov.get_icon(), new_color=color,
+                                                   new_x=self.rect[0] + 8, new_y=self.rect[1] + 8)
+            if self._border_img is None:
+                self._border_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
+            self._border_img = self._border_img.update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
+                                                       new_x=self.rect[0], new_y=self.rect[1])
 
     def all_bundles(self):
-        pass
+        if self._border_img is not None:
+            yield self._border_img
+        if self._icon_img is not None:
+            yield self._icon_img
 
 
-class HealthBarPanel:
+class HealthBarPanel(InteractableImage):
 
     SIZE = (400 * 2, 53 * 2)
 
@@ -401,13 +457,33 @@ class HealthBarPanel:
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
 
+        self._rect = [0, 0, 0, 0]
+
         self._float_dur = 30
         self._float_height = 30
 
-        # (icon_sprite, border)
-        self._action_imgs = [(None, None)] * 6
+        self._action_imgs = [None] * 6  # list of MappedActionImages
 
-    def update_images(self, cur_hp, max_hp, new_damage, new_healing):
+    def contains_point(self, x, y):
+        return (self._rect[0] <= x < self._rect[0] + self._rect[2] and
+                self._rect[1] <= y < self._rect[1] + self._rect[3])
+
+    def update_images(self):
+        render_eng = RenderEngine.get_instance()
+        if len(self._floating_bars) > 0:
+            new_bars = []
+            for fb in self._floating_bars:
+                if fb[1] >= self._float_dur:
+                    render_eng.remove(fb[0])
+                else:
+                    new_bars.append([fb[0], fb[1] + 1])
+            self._floating_bars = new_bars
+
+        p_state = gs.get_instance().player_state()
+        cur_hp = p_state.hp()
+        max_hp = p_state.max_hp()
+        new_damage = 0
+
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
                                         layer=spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH)
@@ -447,54 +523,23 @@ class HealthBarPanel:
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
-        render_eng = RenderEngine.get_instance()
-
-        targeting_action = gs.get_instance().get_targeting_action_provider()
-
         x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
         y_start = y + 19 * 2
         for i in range(0, 6):
             action_prov = gs.get_instance().get_mapped_action(i)
-            if action_prov is None:
-                for img in self._action_imgs[i]:
-                    render_eng.remove(img)
-                self._action_imgs[i] = (None, None)
+            rect = [x_start[i], y_start, 28*2, 28*2]
+
+            if self._action_imgs[i] is None:
+                self._action_imgs[i] = MappedActionImage(action_prov, rect)
             else:
-                cur_img = [img for img in self._action_imgs[i]]
-                color = gs.get_instance().get_targeting_action_color() if action_prov == targeting_action else (1, 1, 1)
+                self._action_imgs[i].action_prov = action_prov
+                self._action_imgs[i].rect = rect
 
-                # icon image
-                if cur_img[0] is None:
-                    cur_img[0] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4, depth=FG_DEPTH)
-                cur_img[0] = cur_img[0].update(new_model=action_prov.get_icon(), new_color=color,
-                                               new_x=x_start[i] + 8, new_y=y_start + 8)
-                # border image
-                if cur_img[1] is None:
-                    cur_img[1] = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
-                cur_img[1] = cur_img[1].update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
-                                               new_x=x_start[i], new_y=y_start)
+            if self._action_imgs[i].is_dirty():
+                self._action_imgs[i].update_images()
 
-                self._action_imgs[i] = tuple(cur_img)
-
-    def update(self, world):
-        p_state = gs.get_instance().player_state()
-        new_dmg, new_healing = 0, 0
-
-        render_eng = RenderEngine.get_instance()
-
-        if len(self._floating_bars) > 0:
-            new_bars = []
-            for fb in self._floating_bars:
-                if fb[1] >= self._float_dur:
-                    render_eng.remove(fb[0])
-                else:
-                    new_bars.append([fb[0], fb[1] + 1])
-            self._floating_bars = new_bars
-
-        self.update_images(p_state.hp(), p_state.max_hp(), new_dmg, new_healing)
-
-        for bun in self.all_bundles():
-            render_eng.update(bun)
+    def is_dirty(self):
+        return True
 
     def all_bundles(self):
         if self._bar_img is not None:
@@ -503,11 +548,10 @@ class HealthBarPanel:
             yield self._top_img
         for floating_bar in self._floating_bars:
             yield floating_bar[0]
-        for img_tuple in self._action_imgs:
-            for img in img_tuple:
-                if img is not None:
-                    for bun in img.all_bundles():
-                        yield bun
+        for mapped_action_img in self._action_imgs:
+            if mapped_action_img is not None:
+                for bun in mapped_action_img.all_bundles():
+                    yield bun
 
 
 class TextBuilder:

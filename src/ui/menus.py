@@ -990,7 +990,6 @@ class InGameUiState(Menu):
         self.inventory_panel = None
         self.health_bar_panel = None
         self.dialog_panel = None
-        self.world_ui_panel = None          # for things like locked door UIs
         self.top_right_info_panel = None
 
         self.item_on_cursor_offs = [0, 0]
@@ -1171,34 +1170,14 @@ class InGameUiState(Menu):
             else:
                 self.inventory_panel.update_stats_imgs()
 
-    def _update_health_bar_panel(self, world):
+    def _update_health_bar_panel(self):
         if self.health_bar_panel is None:
             self.health_bar_panel = HealthBarPanel()
-        self.health_bar_panel.update(world)
 
-    def _update_world_ui_panel(self, world):
-        if self.world_ui_panel is not None:
-            inv_rect = self.get_inventory_rect()
-            if inv_rect is None:
-                center = (gs.get_instance().screen_size[0] // 2, gs.get_instance().screen_size[1] // 2)
-            else:
-                center = (inv_rect[2] + (gs.get_instance().screen_size[0] - inv_rect[2]) // 2, gs.get_instance().screen_size[1] // 2)
-            size = self.world_ui_panel.size()
-            self.world_ui_panel.set_xy(center[0] - size[0] // 2, center[1] - size[1] // 2)
-
-            self.world_ui_panel.update(world)
-            if self.world_ui_panel.should_destroy(world):
-                self.world_ui_panel.prepare_to_destroy(world)
-                render_eng = RenderEngine.get_instance()
-                for bun in self.world_ui_panel.all_bundles():
-                    render_eng.remove(bun)
-
-    def showing_popup_panel(self):
-        return self.world_ui_panel is not None
-
-    def add_popup_panel(self, panel):
-        """panel: PopupPanel"""
-        self.world_ui_panel = panel
+        if self.health_bar_panel.is_dirty():
+            self.health_bar_panel.update_images()
+            for bun in self.health_bar_panel.all_bundles():
+                RenderEngine.get_instance().update(bun)
 
     def in_inventory_panel(self, screen_pos):
         rect = self.get_inventory_rect()
@@ -1380,9 +1359,8 @@ class InGameUiState(Menu):
                 else:
                     gs.get_instance().set_targeting_action_provider(new_targeting_action)
 
-        self._update_health_bar_panel(world)
+        self._update_health_bar_panel()
         self._update_dialog_panel(world)
-        self._update_world_ui_panel(world)
 
         if len(gs.get_instance().get_cinematics_queue()) > 0:
             gs.get_instance().menu_manager().set_active_menu(CinematicMenu())
@@ -1450,7 +1428,6 @@ class InGameUiState(Menu):
         Menu.cleanup(self)
         self.inventory_panel = None
         self.item_on_cursor_image = None
-        self.world_ui_panel = None
         self.top_right_info_panel = None
 
     def all_bundles(self):
@@ -1464,9 +1441,6 @@ class InGameUiState(Menu):
                 yield bun
         if self.top_right_info_panel is not None:
             for bun in self.top_right_info_panel.all_bundles():
-                yield bun
-        if self.world_ui_panel is not None:
-            for bun in self.world_ui_panel.all_bundles():
                 yield bun
         if self.item_on_cursor_image is not None:
             for bun in self.item_on_cursor_image.all_bundles():

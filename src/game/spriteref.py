@@ -92,7 +92,7 @@ class Items:
     potion_icon = None
     dagger_icon = None
     shield_icon = None
-    magic_icon =None
+    magic_icon = None
 
 
 class UI:
