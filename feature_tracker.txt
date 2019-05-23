@@ -9,6 +9,7 @@
         ValueError: tile is None at (6, 36)
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - sometimes enemies will alternate turns with you even when their speed is two...
+ - (intentionally) removed ability to consume items via right-click
         
  ~NEED TO WORK THIS OUT BEFORE CONTINUING~
 

@@ -6,6 +6,8 @@ class ItemGrid:
     def __init__(self, size):
         self.size = size
         self.items = collections.OrderedDict()  # item -> pos: (int: x, int: y)
+
+        self._dirty = False
     
     def can_place(self, item, pos):
         if item in self.items:
@@ -20,10 +22,17 @@ class ItemGrid:
                 return False
                 
         return True
+
+    def is_dirty(self):
+        return self._dirty
+
+    def set_clean(self):
+        self._dirty = False
         
     def place(self, item, pos):
         if self.can_place(item, pos):
             self.items[item] = pos
+            self._dirty = True
             return True
         return False
             
@@ -52,6 +61,7 @@ class ItemGrid:
     def remove(self, item):
         if item in self.items:
             del self.items[item]
+            self._dirty = True
             return True
         return False
         
@@ -86,13 +96,12 @@ class InventoryState:
         self.equip_grid = ItemGrid((5, 5))
         self.inv_grid = ItemGrid((self.cols, self.rows))
 
-        self._dirty = True
-
     def is_dirty(self):
-        return self._dirty
+        return self.equip_grid.is_dirty() or self.inv_grid.is_dirty()
 
     def set_clean(self):
-        self._dirty = False
+        self.equip_grid.set_clean()
+        self.inv_grid.set_clean()
 
     def all_equipped_items(self):
         return self.equip_grid.all_items()
@@ -111,19 +120,16 @@ class InventoryState:
 
     def remove(self, item):
         if self.equip_grid.remove(item) or self.inv_grid.remove(item):
-            self._dirty = True
             return True
         return False
 
     def add_to_inv(self, item, pos=(0, 0)):
         if self.inv_grid.place(item, pos):
-            self._dirty = True
             return True
         return False
 
     def add_to_equipment(self, item, pos=(0, 0)):
         if self.equip_grid.place(item, pos):
-            self._dirty = True
             return True
         return False
 

@@ -146,7 +146,8 @@ class UI:
 
         @staticmethod
         def init_cursors(sheet):
-            UI.Cursors.arrow_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.arrow_cursor_sprite.rect(), sheet)
+            UI.Cursors.arrow_cursor = pygame.cursors.arrow  # it just looks better, sorry
+            # UI.Cursors.arrow_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.arrow_cursor_sprite.rect(), sheet)
             print("INFO: arrow_cursor={}".format(UI.Cursors.arrow_cursor))
 
             UI.Cursors.hand_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.hand_cursor_sprite.rect(), sheet, hotspot=(5, 3))

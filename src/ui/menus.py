@@ -992,8 +992,7 @@ class InGameUiState(Menu):
         self.dialog_panel = None
         self.top_right_info_panel = None
 
-        self.item_on_cursor_offs = [0, 0]
-        self.item_on_cursor_image = None
+        self.item_on_cursor_info = None  # tuple (item, ItemImage, offset)
 
         self.current_cursor_override = None
 
@@ -1069,9 +1068,8 @@ class InGameUiState(Menu):
             return None
         else:
             if self.in_inventory_panel(xy):
-                grid_n_cell = self.get_clicked_inventory_grid_and_cell(xy)
-                if grid_n_cell is not None:
-                    grid, cell = grid_n_cell
+                grid, cell = self.inventory_panel.get_grid_and_cell_at_pos(*xy)
+                if grid is not None and cell is not None:
                     return grid.item_at_position(cell)
             else:
                 world_pos = gs.get_instance().screen_to_world_coords(xy)
@@ -1086,9 +1084,13 @@ class InGameUiState(Menu):
                 return self._get_entity_at_world_coords(world, world_pos)
 
     def cursor_style_at(self, world, xy):
-        if self.item_on_cursor_image is not None:
+        if self.item_on_cursor_info is not None:
             return None
         else:
+            for image in self._top_level_interactable_imgs():
+                if image.contains_point(*xy):
+                    return image.get_cursor_at(*xy)
+
             obj_at_xy = self._get_obj_at_screen_pos(world, xy)
             if obj_at_xy is not None:
                 if isinstance(obj_at_xy, item_module.Item):
@@ -1099,57 +1101,58 @@ class InGameUiState(Menu):
                     if obj_at_xy.can_pickup(world, world.get_player()):
                         return spriteref.UI.Cursors.hand_cursor
 
-            for image in self._top_level_interactable_imgs():
-                if image.contains_point(*xy):
-                    return image.get_cursor_at(*xy)
-
             return super().cursor_style_at(world, xy)
 
     def _top_level_interactable_imgs(self):
         if self.health_bar_panel is not None:
             yield self.health_bar_panel
+        if self.inventory_panel is not None:
+            yield self.inventory_panel
 
     def _update_tooltip(self, world):
         input_state = InputState.get_instance()
         screen_pos = input_state.mouse_pos() if input_state.mouse_in_window() else None
 
-        # when you're holding an item, we show the info in the top right, so there's
-        # no need for a tooltip.
-        if self.item_on_cursor_image is None:
-            obj_to_display = self._get_obj_at_screen_pos(world, screen_pos)
-        else:
+        if screen_pos is None:
             obj_to_display = None
+        else:
+            # when you're holding an item, we show the info in the top right, so there's
+            # no need for a tooltip.
+            if self.item_on_cursor_info is None:
+                obj_to_display = self._get_obj_at_screen_pos(world, screen_pos)
+            else:
+                obj_to_display = None
 
-        if obj_to_display is None and screen_pos is not None:
-            for ui_img in self._top_level_interactable_imgs():
-                if ui_img.contains_point(*screen_pos):
-                    tt_target = ui_img.get_tooltip_target_at(*screen_pos)
-                    if tt_target is not None:
-                        obj_to_display = tt_target
-                        break
+            if self.item_on_cursor_info is None and obj_to_display is None and screen_pos is not None:
+                for ui_img in self._top_level_interactable_imgs():
+                    if ui_img.contains_point(*screen_pos):
+                        tt_target = ui_img.get_tooltip_target_at(*screen_pos)
+                        if tt_target is not None:
+                            obj_to_display = tt_target
+                            break
 
-        needs_update = False
-        current_tooltip = self.get_active_tooltip()
-
-        if obj_to_display is not None:
-            if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
-                new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
-                self.set_active_tooltip(new_tooltip)
-                needs_update = True
-
-        current_tooltip = self.get_active_tooltip()
-
-        render_eng = RenderEngine.get_instance()
-        if current_tooltip is not None:
-            offs = (-screen_pos[0], -screen_pos[1] - 24)
-            render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
-
-        if needs_update and current_tooltip is not None:
-            for bun in current_tooltip.all_bundles():
-                render_eng.update(bun)
-
-        if not gs.get_instance().player_state().is_alive() or obj_to_display is None:
+        if obj_to_display is None:
             self.set_active_tooltip(None)
+        else:
+            needs_update = False
+            current_tooltip = self.get_active_tooltip()
+
+            if obj_to_display is not None:
+                if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
+                    new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
+                    self.set_active_tooltip(new_tooltip)
+                    needs_update = True
+
+            current_tooltip = self.get_active_tooltip()
+
+            render_eng = RenderEngine.get_instance()
+            if current_tooltip is not None:
+                offs = (-screen_pos[0], -screen_pos[1] - 24)
+                render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
+
+            if needs_update and current_tooltip is not None:
+                for bun in current_tooltip.all_bundles():
+                    render_eng.update(bun)
 
     def _update_dialog_panel(self):
         should_destroy = (self.dialog_panel is not None and (not gs.get_instance().dialog_manager().is_active() or
@@ -1172,6 +1175,7 @@ class InGameUiState(Menu):
             if self.inventory_panel is not None:
                 self._destroy_panel(self.inventory_panel)
                 self.inventory_panel = None
+
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().inventory_key()):
             if self.inventory_panel is None:
                 self.rebuild_inventory()
@@ -1181,6 +1185,7 @@ class InGameUiState(Menu):
 
         if self.inventory_panel is not None:
             if self.inventory_panel.state.is_dirty():
+                print("rebuilding inventory")
                 self.rebuild_inventory()
             else:
                 self.inventory_panel.update_stats_imgs()
@@ -1207,144 +1212,77 @@ class InGameUiState(Menu):
         else:
             return self.inventory_panel.total_rect
 
-    def get_clicked_inventory_grid_and_cell(self, screen_pos):
-        pos_in_panel = (screen_pos[0] - self.inventory_panel.total_rect[0],
-                screen_pos[1] - self.inventory_panel.total_rect[1])
+    def handle_click_in_world(self, world, x, y, button=1):
+        screen_pos = (x, y)
+        world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
 
-        eq_rect = self.inventory_panel.equip_grid_rect
-        if Utils.rect_contains(eq_rect, pos_in_panel):
-            grid = self.inventory_panel.state.equip_grid
-            x = int((pos_in_panel[0] - eq_rect[0])/eq_rect[2]*grid.size[0])
-            y = int((pos_in_panel[1] - eq_rect[1])/eq_rect[3]*grid.size[1])
-            return (grid, (x, y))
+        player = world.get_player()
+        ps = gs.get_instance().player_state()
 
-        inv_rect = self.inventory_panel.inv_grid_rect
-        if Utils.rect_contains(inv_rect, pos_in_panel):
-            grid = self.inventory_panel.state.inv_grid
-            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.size[0])
-            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.size[1])
-            return (grid, (x, y))
+        print("handling click in world")
 
-        return None
+        if button != 1:
+            return
 
-    def _update_item_on_cursor(self, world):
+        if ps.held_item is None:
+            can_pickup = lambda i: i.is_item() and i.can_pickup(world, player)
+            clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=can_pickup)
+            if clicked_item is not None:
+                world.remove(clicked_item)
+                ps.held_item = clicked_item.get_item()
+        else:
+            print("dropping item..?")
+            if player is not None:
+                p_center = player.center()  # drop position
+                drop_dir = Utils.sub(world_pos, p_center)
+
+                item = ps.held_item
+                ps.held_item = None
+
+                world.add_item_as_entity(item, p_center, direction=drop_dir)
+
+    def _update_item_on_cursor_info(self):
         destroy_image = False
         create_image = False
-        rebuild_inventory = False
 
         ps = gs.get_instance().player_state()
-        input_state = InputState.get_instance()
 
-        if not input_state.mouse_in_window():
+        if not InputState.get_instance().mouse_in_window():
             destroy_image = True
 
-        elif ps.held_item is not None and self.item_on_cursor_image is None:
+        elif ps.held_item is not None and self.item_on_cursor_info is None:
             create_image = True
-
-        elif ps.held_item is None and self.item_on_cursor_image is not None:
+        elif ps.held_item is None and self.item_on_cursor_info is not None:
             destroy_image = True
+        elif (ps.held_item is not None and self.item_on_cursor_info is not None
+              and ps.held_item != self.item_on_cursor_info[0]):
+                destroy_image = True
+                create_image = True
 
-        elif input_state.mouse_was_pressed():
-            screen_pos = input_state.mouse_pos()
-
-            if self.in_inventory_panel(screen_pos):
-                if ps.held_item is not None:
-                    # when holding an item, gotta offset the click to the top left corner
-                    grid_click_pos = Utils.add(screen_pos, self.item_on_cursor_offs)
-                    grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
-                else:
-                    grid_click_pos = screen_pos
-
-                clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(grid_click_pos)
-                if clicked_grid_n_cell is not None:
-                    grid = clicked_grid_n_cell[0]
-                    cell = clicked_grid_n_cell[1]
-                    if ps.held_item is not None:
-                        if grid.can_place(ps.held_item, cell):
-                            grid.place(ps.held_item, cell)
-                            ps.held_item = None
-                            destroy_image = True
-                            rebuild_inventory = True
-                        else:
-                            replaced_with = grid.try_to_replace(ps.held_item, cell)
-                            if replaced_with is not None:
-                                ps.held_item = replaced_with
-
-                                destroy_image = True
-                                create_image = True
-                                rebuild_inventory = True
-                    else:
-                        clicked_item = grid.item_at_position(cell)
-                        if clicked_item is not None:
-                            grid.remove(clicked_item)
-                            gs.get_instance().player_state().held_item = clicked_item
-                            create_image = True
-                            rebuild_inventory = True
-
-            else:  # we clicked in world
-                world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
-                player = world.get_player()
-                if ps.held_item is None:
-                    can_pickup = lambda x: x.is_item() and x.can_pickup(world, player)
-                    clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=can_pickup)
-                    if clicked_item is not None:
-                        world.remove(clicked_item)
-                        ps.held_item = clicked_item.get_item()
-                        create_image = True
-                else:
-                    if player is not None:
-                        p_center = player.center()  # drop position
-                        drop_dir = Utils.sub(world_pos, p_center)
-
-                        item = ps.held_item
-                        ps.held_item = None
-
-                        world.add_item_as_entity(item, p_center, direction=drop_dir)
-                        destroy_image = True
-
-        elif input_state.mouse_was_pressed(button=3):
-            print("pressed MB 3")
-            screen_pos = input_state.mouse_pos()
-
-            if ps.held_item is None and self.in_inventory_panel(screen_pos):
-                clicked_grid_n_cell = self.get_clicked_inventory_grid_and_cell(screen_pos)
-                if clicked_grid_n_cell is not None:
-                    grid = clicked_grid_n_cell[0]
-                    cell = clicked_grid_n_cell[1]
-                    clicked_item = grid.item_at_position(cell)
-                    print("MB3'd item={}".format(clicked_item))
-                    player = world.get_player()  # TODO - this is a horribly awkward place for this..
-                    if clicked_item is not None and player is not None:
-                        import src.game.gameengine as gameengine
-                        consume_aciton = gameengine.ConsumeItemAction(player, clicked_item)
-                        self.action_requests_this_frame.append(consume_aciton)
-
-        if input_state.was_pressed(gs.get_instance().settings().rotate_cw_key()):
+        if InputState.get_instance().was_pressed(gs.get_instance().settings().rotate_cw_key()):
             if ps.held_item is not None and ps.held_item.can_rotate():
                 ps.held_item = ps.held_item.rotate()
                 create_image = True
                 destroy_image = True
 
-        if destroy_image:
-            self._destroy_panel(self.item_on_cursor_image)
-            self.item_on_cursor_image = None
+        if destroy_image and self.item_on_cursor_info is not None:
+            self._destroy_panel(self.item_on_cursor_info[1])
+            self.item_on_cursor_info = None
 
         if create_image:
             size = ItemImage.calc_size(ps.held_item, 2)
-            self.item_on_cursor_image = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
-            self.item_on_cursor_offs = (-size[0] // 2, -size[1] // 2)
+            item_img = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
+            item_offs = (-size[0] // 2, -size[1] // 2)
+            self.item_on_cursor_info = (ps.held_item, item_img, item_offs)
             render_eng = RenderEngine.get_instance()
-            for bun in self.item_on_cursor_image.all_bundles():
+            for bun in self.item_on_cursor_info[1].all_bundles():
                 render_eng.update(bun)
 
-        if rebuild_inventory:
-            self.rebuild_inventory()
-
-        if self.item_on_cursor_image is not None:
-            screen_pos = input_state.mouse_pos()
+        if self.item_on_cursor_info is not None:
+            screen_pos = InputState.get_instance().mouse_pos()
             if screen_pos is not None:
-                x_offs = -screen_pos[0] - self.item_on_cursor_offs[0]
-                y_offs = -screen_pos[1] - self.item_on_cursor_offs[1]
+                x_offs = -screen_pos[0] - self.item_on_cursor_info[2][0]
+                y_offs = -screen_pos[1] - self.item_on_cursor_info[2][1]
                 RenderEngine.get_instance().set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
 
     def rebuild_inventory(self):
@@ -1358,23 +1296,30 @@ class InGameUiState(Menu):
             render_eng.update(bun)
 
     def update(self, world):
-        self._update_item_on_cursor(world)
+        input_state = InputState.get_instance()
+        screen_pos = input_state.mouse_pos()
+
+        if screen_pos is not None:
+            button1 = input_state.mouse_was_pressed(button=1)
+            button3 = input_state.mouse_was_pressed(button=3)
+            if button1 or button3:
+                button = 1 if button1 else 3
+
+                absorbed_click = False
+                for image in self._top_level_interactable_imgs():
+                    if image.contains_point(*screen_pos):
+                        absorbed_click = image.on_click(*screen_pos, button=button)
+                    if absorbed_click:
+                        break
+
+                if not absorbed_click:
+                    # do click in world then
+                    self.handle_click_in_world(world, screen_pos[0], screen_pos[1], button=button)
+
+        self._update_item_on_cursor_info()
         self._update_tooltip(world)
         self._update_top_right_info_panel(world)
         self._update_inventory_panel()
-
-        input_state = InputState.get_instance()
-
-        if gs.get_instance().player_state().held_item is None:
-            screen_pos = input_state.mouse_pos()
-            if screen_pos is not None:
-                button1 = input_state.mouse_was_pressed(button=1)
-                button3 = input_state.mouse_was_pressed(button=3)
-                if button1 or button3:
-                    button = 1 if button1 else 3
-                    for image in self._top_level_interactable_imgs():
-                        if image.contains_point(*screen_pos) and image.on_click(*screen_pos, button=button):
-                            break
 
         for i in range(0, 6):
             cur_targeting_action = gs.get_instance().get_targeting_action_provider()
@@ -1453,7 +1398,7 @@ class InGameUiState(Menu):
     def cleanup(self):
         Menu.cleanup(self)
         self.inventory_panel = None
-        self.item_on_cursor_image = None
+        self.item_on_cursor_info = None
         self.top_right_info_panel = None
 
     def all_bundles(self):
@@ -1468,8 +1413,8 @@ class InGameUiState(Menu):
         if self.top_right_info_panel is not None:
             for bun in self.top_right_info_panel.all_bundles():
                 yield bun
-        if self.item_on_cursor_image is not None:
-            for bun in self.item_on_cursor_image.all_bundles():
+        if self.item_on_cursor_info is not None:
+            for bun in self.item_on_cursor_info[1].all_bundles():
                 yield bun
         if self.dialog_panel is not None:
             for bun in self.dialog_panel.all_bundles():

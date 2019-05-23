@@ -89,7 +89,7 @@ class InteractableImage:
                 yield bun
         
 
-class InventoryPanel:
+class InventoryPanel(InteractableImage):
 
     def __init__(self):
         self.player_state = gs.get_instance().player_state()
@@ -133,6 +133,33 @@ class InventoryPanel:
 
     def get_rect(self):
         return self.total_rect
+
+    def get_grid_and_cell_at_pos(self, x, y):
+        pos_in_panel = (x - self.total_rect[0],
+                        y - self.total_rect[1])
+
+        eq_rect = self.equip_grid_rect
+        if Utils.rect_contains(eq_rect, pos_in_panel):
+            grid = self.state.equip_grid
+            x = int((pos_in_panel[0] - eq_rect[0])/eq_rect[2]*grid.size[0])
+            y = int((pos_in_panel[1] - eq_rect[1])/eq_rect[3]*grid.size[1])
+            return (grid, (x, y))
+
+        inv_rect = self.inv_grid_rect
+        if Utils.rect_contains(inv_rect, pos_in_panel):
+            grid = self.state.inv_grid
+            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.size[0])
+            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.size[1])
+            return (grid, (x, y))
+
+        return (None, None)
+
+    def get_item_at_pos(self, x, y):
+        grid, cell = self.get_grid_and_cell_at_pos(x, y)
+        if grid is None or cell is None:
+            return None
+        else:
+            return grid.item_at_position(cell)
 
     def _build_title_img(self, text, rect):
         res = TextImage(rect[0], 0, text, self.layer, scale=self.text_sc, color=self.title_colors)
@@ -238,6 +265,79 @@ class InventoryPanel:
         for bun in self.hp_text.all_bundles():
             yield bun
 
+    def contains_point(self, x, y):
+        r = self.get_rect()
+        return r[0] <= x < r[0] + r[2] and r[1] <= y < r[1] + r[3]
+
+    def on_click(self, x, y, button=1):
+        """returns: True if click was absorbed, False otherwise"""
+        if super().on_click(x, y, button=button):
+            return True
+
+        ps = gs.get_instance().player_state()
+        screen_pos = (x, y)
+
+        if button == 1:
+            if ps.held_item is not None:
+                # when holding an item, gotta offset the click to the top left corner
+                item_size = ItemImage.calc_size(ps.held_item, 2)
+                grid_click_pos = Utils.add(screen_pos, (-item_size[0] // 2, -item_size[1] // 2))
+                grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
+            else:
+                grid_click_pos = screen_pos
+
+            grid, cell = self.get_grid_and_cell_at_pos(*grid_click_pos)
+
+            if grid is not None and cell is not None:
+                if ps.held_item is not None:
+                    if grid.can_place(ps.held_item, cell):
+                        grid.place(ps.held_item, cell)
+                        ps.held_item = None
+                    else:
+                        replaced_with = grid.try_to_replace(ps.held_item, cell)
+                        if replaced_with is not None:
+                            ps.held_item = replaced_with
+                else:
+                    clicked_item = grid.item_at_position(cell)
+                    if clicked_item is not None:
+                        grid.remove(clicked_item)
+                        gs.get_instance().player_state().held_item = clicked_item
+
+        elif button == 3:
+            if ps.held_item is None:
+                clicked_item = self.get_item_at_pos(x, y)
+                print("MB3'd item: {}".format(clicked_item))
+
+                # TODO - need a way to send this through gs...
+                # import src.game.gameengine as gameengine
+                # consume_aciton = gameengine.ConsumeItemAction(player, clicked_item)
+                # self.action_requests_this_frame.append(consume_aciton)
+
+        return True  # need to prevent clicks from falling through to world
+
+    def get_cursor_at(self, x, y):
+        if self.get_item_at_pos(x, y) is not None:
+            return spriteref.UI.Cursors.hand_cursor
+        else:
+            return super().get_cursor_at(x, y)
+
+    def get_tooltip_target_at(self, x, y):
+        if self.get_item_at_pos(x, y) is not None:
+            return self.get_item_at_pos(x, y)
+        else:
+            return super().get_cursor_at(x, y)
+
+    def is_dirty(self):
+        return True
+
+    def all_child_imgs(self):
+        """yields all the sub-InteractableImages of this one"""
+        return []
+
+    def update_images(self):
+        super().update_images()
+        self.update_stats_imgs()
+
     def all_bundles(self):
         yield self.top_img
         for img in self.mid_imgs:
@@ -252,6 +352,8 @@ class InventoryPanel:
         for bun in self.equip_img.all_bundles():
             yield bun 
         for bun in self.inv_img.all_bundles():
+            yield bun
+        for bun in super().all_bundles():
             yield bun
 
 
