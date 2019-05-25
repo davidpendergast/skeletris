@@ -1,10 +1,8 @@
 
 [bugs]
 
- - possible for spawn to be disconnected from rest of dungeon, see enclosed_spawn.png
-    - also can have rooms that border out-of-bounds with no walls in between
-    - npcs can block path
-    - actually a lot of wonkiness here
+ - can have rooms that border out-of-bounds with no walls in between
+ - npcs can block path
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - sometimes enemies will alternate turns with you even when their speed is two...
     - i think?? anyways it feels really wonky

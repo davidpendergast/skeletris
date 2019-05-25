@@ -453,6 +453,9 @@ class ZoneBuilder:
 
                     t_grid.set_tile(x, y, tile)
 
+        print(t_grid)
+        print(path)
+
         worldgen2.TileGridBuilder.clean_up_dangly_bits(t_grid)
         worldgen2.TileGridBuilder.clean_up_doors(t_grid)
         worldgen2.TileGridBuilder.add_walls(t_grid)

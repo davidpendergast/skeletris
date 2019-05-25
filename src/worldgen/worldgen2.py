@@ -393,13 +393,18 @@ class RectUtils:
                 yield (x, y)
 
     @staticmethod
-    def coords_around_rect(rect):
-        for x in range(rect[0]-1, rect[0] + rect[2] + 1):
-            yield (x, rect[1]-1)
+    def coords_around_rect(rect, include_corners=False):
+        for x in range(rect[0], rect[0] + rect[2]):
+            yield (x, rect[1] - 1)
             yield (x, rect[1] + rect[3])
         for y in range(rect[1], rect[1] + rect[3]):
             yield (rect[0] - 1, y)
             yield (rect[0] + rect[2], y)
+        if include_corners:
+            yield (rect[0] - 1, rect[1] - 1)
+            yield (rect[0] + rect[2], rect[1] - 1)
+            yield (rect[0] - 1, rect[1] + rect[3])
+            yield (rect[0] + rect[2], rect[1] + rect[3])
 
     @staticmethod
     def rect_containing(xy_coords):
