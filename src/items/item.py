@@ -57,6 +57,15 @@ class ItemStat:
     def is_hidden(self):
         return self.stat_type.is_hidden(local=self.local)
 
+    def is_local(self):
+        return self.local
+
+    def get_type(self):
+        return self.stat_type
+
+    def get_value(self):
+        return self.value
+
     def to_json(self):
         return [self.stat_type, self.value]
 

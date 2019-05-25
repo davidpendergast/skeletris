@@ -90,7 +90,20 @@ class TooltipFactory:
     @staticmethod
     def build_action_provider_tooltip(action_prov, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
-        text_builder.add_line("TESTING")
+        text_builder.add(action_prov.get_name(), color=action_prov.get_color())
+
+        if action_prov.get_type() == gameengine.ActionType.ATTACK:
+            ps = gs.get_instance().player_state()
+            att_value = ps.stat_value_with_item(StatTypes.ATT, action_prov.get_item())
+            if att_value > 0:
+                text_builder.add(" (+{})".format(att_value), color=StatTypes.ATT.get_color())
+
+        text_builder.add_line("")
+
+        if action_prov.get_item() is not None:
+            for item_stat in action_prov.get_item().all_stats():
+                if not item_stat.is_hidden() and item_stat.is_local():
+                    text_builder.add_line(str(item_stat), color=item_stat.color())
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=action_prov, xy=xy, layer=layer)
@@ -110,6 +123,8 @@ class TooltipFactory:
             return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, gameengine.ActionProvider):
             return TooltipFactory.build_action_provider_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, TextBuilder):
+            return TextOnlyTooltip(obj.text(), custom_colors=obj.custom_colors(), target=obj, xy=xy, layer=layer)
         else:
             return None
 

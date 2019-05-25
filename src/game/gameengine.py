@@ -6,7 +6,6 @@ import src.game.spriteref as spriteref
 from src.game.stats import StatTypes
 import src.utils.colors as colors
 import src.game.dialog as dialog
-from src.game.inputs import InputState
 
 import random
 
@@ -138,22 +137,42 @@ class ActorController:
 
 class PlayerController(ActorController):
 
+    HIGHEST_PRIORITY = 0
+    BASE_PRIORITY = 1
+    LOWEST_PRIORITY = 3
+
     INPUT_BUFFER = 5  # how old requests can be before expiring
 
     def __init__(self):
         self.current_requests_tick = 0
-        self.current_requests = []
+        self.current_requests = []  # list of (int: priority, Action: action)
 
-    def set_requests(self, actions):
-        self.current_requests_tick = gs.get_instance().tick_counter
-        self.current_requests = actions
+    def add_requests(self, actions, priority=1):
+        cur_tick = gs.get_instance().tick_counter
+        if cur_tick != self.current_requests_tick:
+            self.current_requests.clear()
+            self.current_requests_tick = cur_tick
+
+        actions = Utils.listify(actions)
+        for a in actions:
+            self.current_requests.append((priority, a))
+
+        # note this relies on python's sort being stable, which I think it always should be?
+        self.current_requests.sort(key=lambda v: v[0])
+
+    def set_requests(self, actions, priority=1):
+        self.add_requests(actions, priority=priority)
 
     def get_next_action(self, actor, world):
         current_tick = gs.get_instance().tick_counter
         if current_tick - self.current_requests_tick <= PlayerController.INPUT_BUFFER:
-            for action in self.current_requests:
+            for (prio, action) in self.current_requests:
+                if action.get_actor() is None:
+                    # TODO sometimes UI-triggered actions don't have access to the world/player
+                    # TODO so they just pass None as a placeholder...
+                    action.actor_entity = world.get_player()
                 if action.get_actor() != actor:
-                    continue  # this is probably an old action (from the previous world)
+                    continue  # probably an old player action from the previous world..
                 elif action.is_possible(world):
                     self.current_requests.clear()
                     return action

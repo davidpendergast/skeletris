@@ -306,12 +306,11 @@ class InventoryPanel(InteractableImage):
         elif button == 3:
             if ps.held_item is None:
                 clicked_item = self.get_item_at_pos(x, y)
-                print("MB3'd item: {}".format(clicked_item))
-
-                # TODO - need a way to send this through gs...
-                # import src.game.gameengine as gameengine
-                # consume_aciton = gameengine.ConsumeItemAction(player, clicked_item)
-                # self.action_requests_this_frame.append(consume_aciton)
+                if clicked_item is not None:
+                    import src.game.gameengine as gameengine
+                    consume_aciton = gameengine.ConsumeItemAction(None, clicked_item)
+                    pc = gs.get_instance().player_controller()
+                    pc.add_requests(consume_aciton, priority=pc.HIGHEST_PRIORITY)
 
         return True  # need to prevent clicks from falling through to world
 
@@ -538,6 +537,10 @@ class MappedActionImage(InteractableImage):
             return True
         return False
 
+    def get_cursor_at(self, x, y):
+        # return spriteref.UI.Cursors.hand_cursor
+        return super().get_cursor_at(x, y)
+
     def get_tooltip_target_at(self, x, y):
         return self.action_prov
 
@@ -580,6 +583,7 @@ class HealthBarPanel(InteractableImage):
         self._floating_bars = []  # list of [img, duration]
 
         self._rect = [0, 0, 0, 0]
+        self._bar_rect = [0, 0, 0, 0]
 
         self._float_dur = 30
         self._float_height = 30
@@ -590,8 +594,16 @@ class HealthBarPanel(InteractableImage):
         if super().contains_point(x, y):
             return True
         else:
-            return (self._rect[0] <= x < self._rect[0] + self._rect[2] and
-                    self._rect[1] <= y < self._rect[1] + self._rect[3])
+            return Utils.rect_contains(self._rect, (x, y)) or Utils.rect_contains(self._bar_rect, (x, y))
+
+    def get_tooltip_target_at(self, x, y):
+        if Utils.rect_contains(self._bar_rect, (x, y)):
+            ps = gs.get_instance().player_state()
+            target = TextBuilder()
+            target.add_line("HP: {}/{}".format(ps.hp(), ps.max_hp()), color=colors.LIGHT_GRAY)
+            return target
+        else:
+            return super().get_tooltip_target_at(x, y)
 
     def update_images(self):
         render_eng = RenderEngine.get_instance()
@@ -623,6 +635,8 @@ class HealthBarPanel(InteractableImage):
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
         bar_w = spriteref.UI.health_bar_full.width() * 2
         bar_x = gs.get_instance().screen_size[0] // 2 - bar_w // 2
+
+        self._bar_rect = [bar_x, y, bar_w, 16 * 2]
 
         if new_damage > 0:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
@@ -705,6 +719,15 @@ class TextBuilder:
 
     def custom_colors(self):
         return self._custom_colors
+
+    def __eq__(self, other):
+        if isinstance(other, TextBuilder):
+            return self.text() == other.text() and self.custom_colors() == other.custom_colors()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash((self.text(), self.custom_colors()))
 
 
 class TextImage:

@@ -996,8 +996,6 @@ class InGameUiState(Menu):
 
         self.current_cursor_override = None
 
-        self.action_requests_this_frame = []
-
     def get_song(self):
         # zones specify their songs
         return music.Songs.CONTINUE_CURRENT
@@ -1343,8 +1341,6 @@ class InGameUiState(Menu):
         if p is not None and not gs.get_instance().world_updates_paused():
             self.send_player_action_requests(p, world)
 
-        self.action_requests_this_frame.clear()
-
     def send_player_action_requests(self, player, world):
         pos = world.to_grid_coords(player.center()[0], player.center()[1])
         input_state = InputState.get_instance()
@@ -1369,10 +1365,6 @@ class InGameUiState(Menu):
 
         res_list = []
 
-        for action in self.action_requests_this_frame:
-            print("requesting special UI action: {}".format(action))
-            res_list.append(action)
-
         action_prov = gs.get_instance().get_targeting_action_provider()
         if action_prov is not None:
             action_targets = action_prov.get_targets(pos=pos)
@@ -1391,9 +1383,10 @@ class InGameUiState(Menu):
         if input_state.is_held(gs.get_instance().settings().enter_key()):
             res_list.append(gameengine.SkipTurnAction(player, position=pos))
 
-        res_list.append(gameengine.PlayerWaitAction(player, position=target_pos))
+        pc = gs.get_instance().player_controller()
 
-        gs.get_instance().player_controller().set_requests(res_list)
+        pc.set_requests(res_list)
+        pc.add_requests(gameengine.PlayerWaitAction(player, position=target_pos), pc.LOWEST_PRIORITY)
 
     def cleanup(self):
         Menu.cleanup(self)
