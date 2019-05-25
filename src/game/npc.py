@@ -15,6 +15,7 @@ class NpcID(Enum):
     MARY_SKELLY = "MARY_SKELLY"
     BEANSKULL = "BEANSKULL"
     GLORPLE = "GLORPLE"
+    MACHINE = "MACHINE"
 
 
 class NpcTemplate:
@@ -29,10 +30,10 @@ class NpcTemplate:
 
 TEMPLATES = {
     NpcID.MARY_SKELLY: NpcTemplate(NpcID.MARY_SKELLY, "Mary Skelly", sr.mary_skelly_all, sr.mary_skelly_faces),
-    NpcID.MAYOR: NpcTemplate(NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
-                             shadow_sprite=sr.large_shadow),
+    NpcID.MAYOR: NpcTemplate(NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces, shadow_sprite=sr.large_shadow),
     NpcID.BEANSKULL: NpcTemplate(NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces),
-    NpcID.GLORPLE: NpcTemplate(NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces)
+    NpcID.GLORPLE: NpcTemplate(NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces),
+    NpcID.MACHINE: NpcTemplate(NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces)
 }
 
 

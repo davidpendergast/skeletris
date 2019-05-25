@@ -719,6 +719,8 @@ class Feature(Tileish):
                 feat_val = self.get(feat_x, feat_y)
                 if feat_val == "?":
                     continue
+                elif not tilish.is_valid(x + feat_x, y + feat_y):
+                    return False
                 elif feat_val != tilish.get(x + feat_x, y + feat_y):
                     return False
         return True
@@ -758,11 +760,11 @@ class FeatureUtils:
 
     @staticmethod
     def write_into(feature, tile_grid, x, y):
-        # print("placing feature {} at ({}, {})".format(feature.feat_id, x, y))
         for feat_x in range(0, feature.w()):
             for feat_y in range(0, feature.h()):
                 feat_val = feature.get_place_val(feat_x, feat_y)
-                if feat_val != "?":
+                cur_val = tile_grid.get(x + feat_x, y + feat_y)
+                if feat_val != "?" and cur_val != feat_val:
                     tile_grid.set(x + feat_x, y + feat_y, feat_val)
 
     CHAR_MAP = {"W": TileType.WALL,
@@ -992,11 +994,6 @@ if __name__ == "__main__":
                     empty_rooms.extend(rooms)
 
                 t_grid.set_tile(x, y, tile)
-                print(t_grid)
-                time.sleep(0.5)
-
-    print(t_grid)
-    time.sleep(0.5)
 
     TileGridBuilder.clean_up_dangly_bits(t_grid)
     TileGridBuilder.clean_up_doors(t_grid)

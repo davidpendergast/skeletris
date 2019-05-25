@@ -5,71 +5,35 @@
     - also can have rooms that border out-of-bounds with no walls in between
     - npcs can block path
     - actually a lot of wonkiness here
- - File "/home/david/Coding/python/cubelike/src/worldgen/worldgen2.py", line 291, in set
-        ValueError: tile is None at (6, 36)
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - sometimes enemies will alternate turns with you even when their speed is two...
+    - i think?? anyways it feels really wonky
  - (intentionally) removed ability to consume items via right-click
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
- - tooltips aren't constrained to screen (make them leave window bounds??)
+ - tooltips aren't constrained to screen (heavyweight tooltips?? pygame pls)
  - can pickup items/mess with inv while perfoming other actions
  - should clear player controller when a new world is spawned
-        
- ~NEED TO WORK THIS OUT BEFORE CONTINUING~
-
-[action-use design]
- - at any point in time, actors have a set of 'available actions'
-    - these include basic actions (like moving, interacting, skipping)
-        as well as actions granted by items and other effects.
- - some actions have dedicated hotkeys (like moving = WASD)
- - some actions are 'mappable' meaning they can be bound to keys 1-6
- - actions granted by items can be activated by right clicking the item and 
-        selecting the action from a dropdown list.
-        
- - hotbar
-    - by default, only mapped action is UNARMED_ATTACK=1
-    - when you obtain/equip an item with mappable actions, those actions will
-        fill any empty hotbar slots. when you unequip, they become vacant again.
-        this is considered a "soft mapping". 
-    - you can also right-click a hotbar slot and select an available mappable 
-        action to map to that slot (or unmap it). this is a "hard mapping".
-    - soft mappings can be auto-overridden, and hard mappings can't.
-    - slot 1 is the "auto-attack slot". when you move into an enemy, if there's 
-        an attack in slot one, it is automatically used on the enemy. 
-    
-    - pressing a hotkey
-        - if the action doesn't require targeting, or there is only one valid
-            target, the action is used instantly.
-        - if the action requires targeting, targeting mode activates
-            [targeting mode]
-                ~todo~
- 
+ - dialog & inventory fight to render on top of each other (dialog should win)
+       
  
 [current features]
 
- - using consumable items
- - using mouse to request actions (this may not even be necessary)
-    - right click menu on things
-    - mouse cursor stuff
- - choosing actions through UI
-    - mappable actions to 1-6
-    - skipping turn while self-targeting = doing the action
-    - attacking with items
-        - via right-clicking the equipped item
  - level generation
     - reduce "size" of rooms
         - actually this may be OK
     - chest loot generation
-    - doors to move between zones
-    - decoration entities
+    - description text for each decoration
  - make sure death menu sequence still works
     - it does not 
  - remove remaining cruft from cubelike 1.0
     - password page
     - save machine
-    - other strange entities?
+        - should just be a normal NPC
  - choose name for game
  - enemy generation
+ - animation for skipping turn
+ - animation for consuming item
+ - throwing items
  
  
 [future features]
