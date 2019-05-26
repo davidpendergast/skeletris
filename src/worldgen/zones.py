@@ -20,6 +20,8 @@ _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
+NUM_GENERATED_ZONES = 64
+
 BLACK = (0, 0, 0)
 DARK_GREY = (92, 92, 92)
 
@@ -30,6 +32,10 @@ def first_zone_id():
 
 def first_zone():
     return get_zone(_FIRST_ZONE_ID)
+
+
+def n_generated_zones():
+    return NUM_GENERATED_ZONES
 
 
 def all_zone_ids():
@@ -51,12 +57,11 @@ def init_zones():
         zone_instance.zone_id = zone_cls.ZONE_ID
         make(zone_instance)
 
-    n_generated_zones = 256
-    for i in range(0, n_generated_zones):
+    for i in range(0, NUM_GENERATED_ZONES):
         _ALL_ZONES[generated_zone_id(i)] = ZoneBuilder.build_me_a_zone(i)
 
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = generated_zone_id(1)
+    _FIRST_ZONE_ID = generated_zone_id(0)
 
     _ZONE_TRANSITIONS.clear()
     _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
@@ -64,11 +69,11 @@ def init_zones():
     _ZONE_TRANSITIONS[DesolateCaveZone3.ZONE_ID] = [FrogLairZone.ZONE_ID]
     _ZONE_TRANSITIONS[FrogLairZone.ZONE_ID] = [TombTownZone.ZONE_ID]
 
-    for i in range(0, n_generated_zones-1):
+    for i in range(0, NUM_GENERATED_ZONES-1):
         _ZONE_TRANSITIONS[generated_zone_id(i)] = [generated_zone_id(i+1)]
 
     # final zone just loops back to itself
-    _ZONE_TRANSITIONS[generated_zone_id(n_generated_zones-1)] = [generated_zone_id(n_generated_zones-1)]
+    _ZONE_TRANSITIONS[generated_zone_id(NUM_GENERATED_ZONES - 1)] = [generated_zone_id(NUM_GENERATED_ZONES - 1)]
 
     _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
 
@@ -383,7 +388,8 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.ENTRANCE:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
-            world.add(entities.ExitEntity(x, y, generated_zone_id(level + 1)))
+            next_zone_id = generated_zone_id(min(n_generated_zones(), level + 1))
+            world.add(entities.ExitEntity(x, y, next_zone_id))
         elif tile_type == worldgen2.TileType.NPC:
             npc_id = random.choice(list(npc.TEMPLATES.keys()))
             template = npc.TEMPLATES[npc_id]

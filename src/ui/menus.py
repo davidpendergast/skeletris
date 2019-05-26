@@ -15,6 +15,7 @@ import src.utils.passwordgen as passwordgen
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState
+import src.utils.colors as colors
 
 
 class MenuManager:
@@ -201,11 +202,17 @@ class OptionsMenu(Menu):
     def get_title_color(self):
         return (1, 1, 1)
 
+    def get_enabled(self, idx):
+        return True
+
     def get_option_color(self, idx):
-        if idx == self._selection:
-            return (1, 0, 0)
+        if self.get_enabled(idx):
+            if idx == self._selection:
+                return (1, 0, 0)
+            else:
+                return colors.WHITE
         else:
-            return (1, 1, 1)
+            return colors.DARK_GRAY
 
     def get_option_text(self, idx):
         return self.options_text[idx]
@@ -267,7 +274,7 @@ class OptionsMenu(Menu):
             self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
 
     def set_selected(self, idx):
-        if idx != self._selection:
+        if idx != self._selection and self.get_enabled(idx):
             sound_effects.play_sound(sound_effects.Effects.CLICK)
             self._selection = idx
 
@@ -277,24 +284,32 @@ class OptionsMenu(Menu):
             self.esc_pressed()
         else:
             new_selection = self._selection
+            dy = 0
             up_pressed = input_state.was_pressed(gs.get_instance().settings().menu_up_key())
             if not self.absorbs_key_inputs():
                 up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
-
             if up_pressed:
-                new_selection = (self._selection - 1) % self.get_num_options()
+                dy -= 1
 
             down_pressed = input_state.was_pressed(gs.get_instance().settings().menu_down_key())
             if not self.absorbs_key_inputs():
                 down_pressed = down_pressed or input_state.was_pressed(gs.get_instance().settings().down_key())
-
             if down_pressed:
-                new_selection = (self._selection + 1) % self.get_num_options()
+                dy += 1
+
+            if dy != 0:
+                for i in range(1, self.get_num_options() + 1):
+                    new_selection = (self._selection + i*dy) % self.get_num_options()
+                    if self.get_enabled(new_selection):
+                        break
 
             self.set_selected(new_selection)
 
             if input_state.was_pressed(gs.get_instance().settings().enter_key()):
-                self.option_activated(self._selection)
+                if self.get_enabled(self._selection):
+                    self.option_activated(self._selection)
+                else:
+                    pass  # TODO - play a bu-bum sound effect
 
             if self._option_rects is None:
                 return
@@ -314,7 +329,10 @@ class OptionsMenu(Menu):
                         # give click priority to the thing that's selected
                         bigger_rect = Utils.rect_expand(selected_rect, 15, 15, 15, 15)
                         if Utils.rect_contains(bigger_rect, pos):
-                            self.option_activated(self._selection)
+                            if self.get_enabled(self._selection):
+                                self.option_activated(self._selection)
+                            else:
+                                pass  # TODO sound effect
                             clicked_option = self._selection
 
                     if clicked_option is None:
@@ -325,7 +343,10 @@ class OptionsMenu(Menu):
                                 break
 
                     if clicked_option is not None:
-                        self.option_activated(clicked_option)
+                        if self.get_enabled(clicked_option):
+                            self.option_activated(self._selection)
+                        else:
+                            pass  # TODO sound effect
 
     def update(self, world):
         self.build_title_img()
@@ -912,10 +933,12 @@ class DeathOptionMenu(OptionsMenu):
 class DebugMenu(OptionsMenu):
 
     ZONE_JUMP = 0
-    EXIT_OPT = 1
+    GENNED_ZONE_JUMP = 1
+    EXIT_OPT = 2
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "debug menu", ["zone select", "back"])
+        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "debug menu",
+                             ["hand-built zones", "generated zones", "back"])
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
@@ -923,7 +946,9 @@ class DebugMenu(OptionsMenu):
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == DebugMenu.ZONE_JUMP:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, True))
+        elif idx == DebugMenu.GENNED_ZONE_JUMP:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, False))
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
 
@@ -931,51 +956,60 @@ class DebugMenu(OptionsMenu):
 class DebugZoneSelectMenu(OptionsMenu):
     ZONES_PER_PAGE = 8
 
-    def __init__(self, page):
-        import src.worldgen.zones as zones
+    def __init__(self, page, hand_built):
 
         self.page = page
-        all_zones = zones.all_zone_ids()
-        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
+        self.hand_built = hand_built
+
+        all_zones = self._zones_to_show()
         start_idx = DebugZoneSelectMenu.ZONES_PER_PAGE * page
-        first_page = (page == 0)
+        self.first_page = (page == 0)
 
         if start_idx >= len(all_zones):
             # hmm..
             self.opts = []
-            last_page = True
+            self.last_page = True
         elif start_idx + DebugZoneSelectMenu.ZONES_PER_PAGE < len(all_zones):
             self.opts = all_zones[start_idx:start_idx + DebugZoneSelectMenu.ZONES_PER_PAGE]
-            last_page = False
+            self.last_page = False
         else:
             self.opts = all_zones[start_idx:]
-            last_page = True
+            self.last_page = True
 
-        if not first_page:
-            self.opts.append("next page")
-            self.next_page_idx = len(self.opts) - 1
-        else:
-            self.next_page_idx = None
+        self.opts.append("next page")
+        self.next_page_idx = len(self.opts) - 1
 
-        if not last_page:
-            self.opts.append("prev page")
-            self.prev_page_idx = len(self.opts) - 1
-        else:
-            self.prev_page_idx = None
+        self.opts.append("prev page")
+        self.prev_page_idx = len(self.opts) - 1
 
         self.opts.append("back")
         self.back_idx = len(self.opts) - 1
 
         OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "zone select", self.opts)
 
+    def _zones_to_show(self):
+        import src.worldgen.zones as zones
+        all_zones = [z for z in zones.all_zone_ids() if ("generated" in z) != self.hand_built]
+        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
+
+        return all_zones
+
+    def get_enabled(self, idx):
+        if idx == self.prev_page_idx and self.first_page:
+            return False
+        elif idx == self.next_page_idx and self.last_page:
+            return False
+        else:
+            return True
+
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == self.back_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugMenu())
         elif idx == self.next_page_idx:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1, self.hand_built))
         elif idx == self.prev_page_idx:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1, self.hand_built))
         elif 0 <= idx < len(self.opts):
             selected_opt = self.opts[idx]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))

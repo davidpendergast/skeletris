@@ -36,7 +36,7 @@ class EnemyTemplate:
         return self._name
 
     def get_level_range(self):
-        return (0, 64)
+        return range(0, 64)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -56,6 +56,9 @@ class FlappumTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_flappum_all
 
+    def get_level_range(self):
+        return (0, 3)
+
 
 class TrillaTemplate(EnemyTemplate):
 
@@ -64,9 +67,6 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
-
-    def drops_loot(self):
-        return False
 
 
 class TrilliteTemplate(EnemyTemplate):
