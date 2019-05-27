@@ -374,6 +374,7 @@ def get_floor_lighting(val):
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
+sleeping_zees = [make(160 + i*16, 448, 16, 16) for i in range(0, 6)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
 
 _cached_text = set()

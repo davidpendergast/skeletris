@@ -24,7 +24,8 @@ class ActorState:
 
         self.current_hp = self.max_hp()
         self.current_energy = 0
-        self._last_energized_tick = 0.0
+
+        self._ready_to_act = False
 
         self.alignment = alignment  # what "team" the actor is on.
 
@@ -83,20 +84,34 @@ class ActorState:
         raw_val = self.stat_value(StatTypes.SPEED)
         return Utils.bound(raw_val, 1, self.max_energy())
 
+    def set_ready_to_act(self, val):
+        self._ready_to_act = val
+
+    def ready_to_act(self):
+        return self._ready_to_act
+
+    def activations_after_n_rounds(self, n):
+        e = self.energy()
+        res = 0
+        for i in range(0, n):
+            e += self.speed()
+            if e >= self.max_energy():
+                res += 1
+                e = e % self.max_energy()
+        return res
+
+    def turns_until_next_activation(self):
+        missing_energy = self.max_energy() - self.energy()
+        return round(missing_energy / self.speed() + 0.49999)
+
     def max_energy(self):
         return 8
 
     def is_alive(self):
         return self.current_hp > 0
 
-    def last_energized_tick(self):
-        return self._last_energized_tick
-
     def set_energy(self, val):
         self.current_energy = Utils.bound(val, 0, self.max_energy())
-
-    def update_last_energized_tick(self, fudge=0.0):
-        self._last_energized_tick = gs.get_instance().tick_counter + fudge
 
     def max_hp(self):
         raw_value = self.stat_value(StatTypes.VIT)

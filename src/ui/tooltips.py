@@ -64,6 +64,11 @@ class TooltipFactory:
         text_builder.add_line("Speed: {}".format(e_state.stat_value(StatTypes.SPEED)), color=StatTypes.SPEED.get_color())
         text_builder.add_line("Health: {}/{}".format(e_state.hp(), e_state.max_hp()), color=StatTypes.VIT.get_color())
 
+        # debug stuff, probably
+        text_builder.add_line("Energy: {}/{}".format(e_state.energy(), e_state.max_energy()), color=colors.LIGHT_GRAY)
+        if e_state.ready_to_act():
+            text_builder.add_line("Ready to Act", color=colors.LIGHT_GRAY)
+
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=target_enemy, xy=xy, layer=layer)
 

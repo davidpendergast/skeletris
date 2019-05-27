@@ -14,6 +14,7 @@ from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
+import src.utils.colors as colors
 
 ENTITY_UID_COUNTER = 0
 
@@ -35,6 +36,12 @@ class Entity(Updateable):
         self._shadow = None  # shadow image: ImageBundle
         self._last_vel = (0, 0)
         self._alive = False  # World sets this upon adding/removing the entity
+
+    def __str__(self):
+        typename = type(self).__name__
+        c_x = self.center()[0] // 64
+        c_y = self.center()[1] // 64
+        return "{}{}({}, {})".format(typename, self.get_uid(), c_x, c_y)
         
     def x(self):
         return self.rect[0]
@@ -160,23 +167,19 @@ class Entity(Updateable):
             render_eng.remove(bundle)
 
     def update_images(self, anim_tick):
-        if self._shadow is None and self.get_shadow_sprite() is not None:
-            self._shadow = img.ImageBundle(self.get_shadow_sprite(), 0, 0, layer=spriteref.SHADOW_LAYER,
-                                           scale=2, depth=-1)
-        
-        if self._shadow is not None:    
-            sh_model = self.get_shadow_sprite()
-            if sh_model is None:
-                # TODO no way to del shadows
-                return
-            
-            sh_scale = self._shadow.scale()
-            self_x = self.get_render_center()[0] - self.w() // 2
-            self_y = self.get_render_center()[1] - self.h() // 2
-            sh_x = self_x - (sh_model.width() * sh_scale - self.w()) // 2
-            sh_y = self_y + self.h() - (sh_model.height() * sh_scale // 2)
-            self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y)
-    
+        sh_model = self.get_shadow_sprite()
+        if sh_model is not None:
+            if self._shadow is None:
+                self._shadow = img.ImageBundle.new_bundle(spriteref.SHADOW_LAYER)
+            sh_scale = 2
+            sh_x = self.get_render_center()[0] - (sh_model.width() * sh_scale) // 2
+            sh_y = self.get_render_center()[1] - (sh_model.height() * sh_scale) // 2
+            self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y, new_scale=sh_scale)
+        else:
+            if self._shadow is None:
+                RenderEngine.get_instance().remove(self._shadow)
+                self._shadow = None
+
     def get_shadow_sprite(self):
         return None
 
@@ -584,7 +587,7 @@ class ActorEntity(Entity):
     def get_render_center(self):
         """returns: the center point (x, y) of where the actor should be drawn."""
         x = self.center()[0] + self.get_draw_offset()[0] + self.get_perturbed_xy()[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + self.get_perturbed_xy()[1]
+        y = self.center()[1] + self.get_draw_offset()[1] + self.get_perturbed_xy()[1] + 12
         return (round(x), round(y))
 
     def get_perturbed_color(self):
@@ -660,8 +663,8 @@ class ActorEntity(Entity):
 
         sprite = self.get_sprite()
 
-        x = self.get_render_center()[0] - self.w() // 2 - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.get_render_center()[1] - self.h() // 2 - (sprite.height() * self._img.scale() - self.h())
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
 
         depth = self.get_depth()
         xflip = self.is_facing_right()
@@ -727,6 +730,7 @@ class Player(ActorEntity):
             x_center = self.get_render_center()[0]
             y_center = self.get_render_center()[1]
 
+            my_height = self.get_sprite().height() * scale
             item_sprite = held_item.get_entity_sprite()
             sprite_rot = held_item.sprite_rotation()
             sprite_w = item_sprite.width() if sprite_rot % 2 == 0 else item_sprite.height()
@@ -741,7 +745,7 @@ class Player(ActorEntity):
                 bobs = (0, 1, 2, 1)  # these numbers are solely dependant on how the sprites are drawn..
                 bob_offset = bobs[(gs.get_instance().anim_tick // 2) % 4]
 
-            draw_y = y_center - scale * (26 + sprite_h - bob_offset)
+            draw_y = y_center - my_height - scale * (1 + sprite_h - bob_offset)
             self._held_item_img = self._held_item_img.update(new_model=item_sprite,
                                                              new_rotation=sprite_rot,
                                                              new_x=draw_x, new_y=draw_y,
@@ -836,6 +840,10 @@ class Enemy(ActorEntity):
         self.sprites = sprites
         self._bar_imgs = []
 
+        # floating z's above enemy while waiting for player
+        self._zee_img_idx_offset = 0
+        self._zee_img = None
+
     def get_actor_state(self):
         return self._enemy_state
 
@@ -853,7 +861,7 @@ class Enemy(ActorEntity):
             self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2))
 
         cx = self.get_render_center()[0]
-        cy = self.get_render_center()[1] - self.get_sprite().height()
+        cy = self.get_render_center()[1] - self.get_sprite().height() * 2
 
         for i in range(0, len(bars)):
             pcnt, color = bars[i]
@@ -865,16 +873,44 @@ class Enemy(ActorEntity):
             bar_img = self._bar_imgs[i]
 
             bar_x = cx - (0.5 * bar_img.scale() * bar_sprite.width())
-            bar_y = cy - bar_img.scale() * (bar_sprite.height() - 1) * (len(bars) - i) - 16
+            bar_y = cy - bar_img.scale() * (bar_sprite.height() - 1) * (len(bars) - i)
 
-            self._bar_imgs[i] = bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=bar_y, new_color=color,
+            self._bar_imgs[i] = bar_img.update(new_model=bar_sprite,
+                                               new_x=bar_x,
+                                               new_y=bar_y,
+                                               new_color=color,
                                                new_depth=self.get_depth())
+
+    def _update_z_img(self, should_show):
+        if not should_show or self._img is None:
+            if self._zee_img is not None:
+                RenderEngine.get_instance().remove(self._zee_img)
+                self._zee_img = None
+        else:
+            anim_tick = gs.get_instance().anim_tick
+            if self._zee_img is None:
+                # want the z's to start on the first frame of the animation
+                self._zee_img_idx_offset = (-anim_tick) % len(spriteref.sleeping_zees)
+                self._zee_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER)
+
+            z_idx = (self._zee_img_idx_offset + anim_tick) % len(spriteref.sleeping_zees)
+            sprite = spriteref.sleeping_zees[z_idx]
+            cx = self.get_render_center()[0]
+            y_bottom = self.get_render_center()[1] - self.get_sprite().height() * self._img.scale() // 2
+            scale = 2
+            self._zee_img = self._zee_img.update(new_model=sprite,
+                                                 new_x=cx - (sprite.width() * scale) // 2,
+                                                 new_y=y_bottom - sprite.height() * scale,
+                                                 new_scale=scale,
+                                                 new_depth=self.get_depth())
 
     def all_bundles(self, extras=[]):
         for bun in super().all_bundles(extras=extras):
             yield bun
         for bar_img in self._bar_imgs:
             yield bar_img
+        if self._zee_img is not None:
+            yield self._zee_img
         
     def update(self, world):
         super().update(world)
@@ -884,10 +920,21 @@ class Enemy(ActorEntity):
         if a_state.hp() < a_state.max_hp():
             bars.append((a_state.hp() / a_state.max_hp(), (1, 0, 0)))
 
-        energy_pcnt = a_state.energy() / a_state.max_energy()
-        bars.append((energy_pcnt, (1, 1, 0)))
-
         self._update_bar_imgs(bars)
+
+        # figuring out whether we're "asleep" or not
+        ps = gs.get_instance().player_state()
+        es = self.get_actor_state()
+
+        show_zees = False
+
+        if not self.is_performing_action() and not es.ready_to_act() and ps.ready_to_act():
+            my_turns_til_act = es.turns_until_next_activation()
+            p_turns_til_next_act = ps.turns_until_next_activation()
+
+            show_zees = my_turns_til_act >= p_turns_til_next_act
+
+        self._update_z_img(show_zees)
         
     def is_enemy(self):
         return True
@@ -919,10 +966,10 @@ class ChestEntity(Entity):
             model = spriteref.chest_closed
 
         if self._img is None:
-            self._img = img.ImageBundle(spriteref.chest_closed, 0, 0, layer=spriteref.ENTITY_LAYER)
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER)
 
-        x = self.x() + self.w() // 2 - (model.width() * self._img.scale()) // 2
-        y = self.y() - (model.height() * self._img.scale() - self.h())
+        x = self.get_render_center()[0] - (model.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (model.height() * self._img.scale())
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
         
@@ -1008,11 +1055,11 @@ class PickupEntity(Entity):
 
         offs = self.get_sprite_offset()
 
-        spr_w = cur_sprite.width() if self.sprite_rotation % 2 == 0 else cur_sprite.height()
-        spr_h = cur_sprite.height() if self.sprite_rotation % 2 == 0 else cur_sprite.width()
+        spr_w = 2 * cur_sprite.width() if self.sprite_rotation % 2 == 0 else 2 * cur_sprite.height()
+        spr_h = 2 * cur_sprite.height() if self.sprite_rotation % 2 == 0 else 2 * cur_sprite.width()
 
-        x = self.x() - (spr_w * self._img.scale() - self.w()) // 2 + offs[0]
-        y = self.y() - (spr_h * self._img.scale() - self.h()) + (2 - bounce) + offs[1]
+        x = self.get_render_center()[0] - spr_w // 2 + offs[0]
+        y = self.get_render_center()[1] - spr_h + (2 - bounce) + offs[1]
         depth = self.get_depth()
 
         self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),

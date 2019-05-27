@@ -11,6 +11,7 @@
  - can pickup items/mess with inv while perfoming other actions
  - should clear player controller when a new world is spawned
  - dialog & inventory fight to render on top of each other (dialog should win)
+ - can still spawn in a detached room (see bad_spawn.png)
        
  
 [current features]
@@ -22,6 +23,7 @@
     - description text for each decoration
  - make sure death menu sequence still works
     - it does not 
+    - hotbar should hide
  - remove remaining cruft from cubelike 1.0
     - password page
     - save machine

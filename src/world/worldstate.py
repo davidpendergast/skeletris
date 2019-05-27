@@ -457,44 +457,47 @@ class World:
 
         if not gs.get_instance().world_updates_paused() and not an_actor_is_acting:
 
-            actors_to_process.sort(key=lambda a: a.get_actor_state().last_energized_tick())
+            actors_to_process.sort(key=lambda a: -1 if a.is_player() else a.get_uid())
+            actors_ready_to_act = [a for a in actors_to_process if a.get_actor_state().ready_to_act()]
 
-            while not an_actor_is_acting and len(actors_to_process) > 0:
+            while len(actors_ready_to_act) == 0 and len(actors_to_process) > 0:
                 for i in range(0, len(actors_to_process)):
                     actor = actors_to_process[i]
-                    fudge = i / len(actors_to_process)
                     a_state = actor.get_actor_state()
-                    if a_state.energy() + a_state.speed() < a_state.max_energy():
-                        a_state.set_energy(a_state.energy() + a_state.speed())
-                        a_state.update_last_energized_tick(fudge=fudge)
+
+                    if a_state.energy() + a_state.speed() >= a_state.max_energy():
+                        a_state.set_ready_to_act(True)
+                        actors_ready_to_act.append(actor)
+
+                    a_state.set_energy((a_state.energy() + a_state.speed()) % a_state.max_energy())
+
+            for actor in actors_ready_to_act:
+                a_state = actor.get_actor_state()
+                action = actor.request_next_action(self)
+
+                if action.is_fake_player_wait_action():
+                    action.pre_start(self)  # just to make the player turn
+                    break
+                else:
+                    a_state.set_ready_to_act(False)
+
+                    if action.is_possible(self):
+                        dur_modifier = a_state.turn_duration_modifier()
+                        dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
+                        actor.set_action(action, dur)
                     else:
-                        an_actor_is_acting = True
-                        action = actor.request_next_action(self)
+                        raise ValueError("{} received impossible action: {}".format(actor, action))
 
-                        if action.is_fake_player_wait_action():
-                            action.pre_start(self)     # just to make the player turn
-                            break
-                        else:
-                            a_state.update_last_energized_tick(fudge=fudge)
-                            a_state.set_energy((a_state.energy() + a_state.speed()) % a_state.max_energy())
-
-                            if action.is_possible(self):
-                                dur_modifier = a_state.turn_duration_modifier()
-                                dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
-                                actor.set_action(action, dur)
-                            else:
-                                raise ValueError("{} received impossible action: {}".format(actor, action))
-
-                        not_visible = not actor.is_visible_in_world(self)
-                        action_pos = action.get_position()
-                        if not_visible and (action_pos is None or not self.get_visible(*action_pos)):
-                            # this actor is hidden by darkness, need to instantly update them
-                            # and importantly, keep updating other actors on the same tick.
-                            # otherwise the game will pause for several ticks when enemies are
-                            # in darkness, basically telling the player they're there
-                            actor.update_action(self, force_finalize=True)
-                        else:
-                            break
+                not_visible = not actor.is_visible_in_world(self)
+                action_pos = action.get_position()
+                if not_visible and (action_pos is None or not self.get_visible(*action_pos)):
+                    # this actor is hidden by darkness, need to instantly update them
+                    # and importantly, keep updating other actors on the same tick.
+                    # otherwise the game will pause for several ticks when enemies are
+                    # in darkness, basically telling the player they're there
+                    actor.update_action(self, force_finalize=True)
+                else:
+                    break
 
         new_lighting = self.get_light_sources(onscreen=False)
 

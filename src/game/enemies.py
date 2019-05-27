@@ -106,6 +106,15 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(10, 16)
 
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 2,
+            StatTypes.SPEED: 3,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 1
+        })
+
 
 class MuncherTemplate(EnemyTemplate):
 
@@ -131,6 +140,15 @@ class CycloiTemplate(EnemyTemplate):
 
     def get_level_range(self):
         return range(6, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 10,
+            StatTypes.SPEED: 6,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 6,
+            StatTypes.DEF: 2
+        })
 
 
 # TODO these suck, consider deleting
