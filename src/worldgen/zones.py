@@ -20,7 +20,7 @@ _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
-NUM_GENERATED_ZONES = 64
+NUM_GENERATED_ZONES = 16
 
 BLACK = (0, 0, 0)
 DARK_GREY = (92, 92, 92)
@@ -381,7 +381,7 @@ class ZoneBuilder:
             # TODO - we probably want to generate the loot here
             world.add(entities.ChestEntity(x, y))
         elif tile_type == worldgen2.TileType.MONSTER:
-            e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FLAPPUM, level)
+            e = enemies.EnemyFactory.gen_enemy(None, level)
             world.add(e, gridcell=(x, y))
         elif tile_type == worldgen2.TileType.DOOR:
             world.add(entities.DoorEntity(x, y))

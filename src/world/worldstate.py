@@ -457,23 +457,26 @@ class World:
 
         if not gs.get_instance().world_updates_paused() and not an_actor_is_acting:
 
-            actors_to_process.sort(key=lambda a: a.get_actor_state().last_turn_tick())
+            actors_to_process.sort(key=lambda a: a.get_actor_state().last_energized_tick())
 
             while not an_actor_is_acting and len(actors_to_process) > 0:
-                for actor in actors_to_process:
+                for i in range(0, len(actors_to_process)):
+                    actor = actors_to_process[i]
+                    fudge = i / len(actors_to_process)
                     a_state = actor.get_actor_state()
-                    if a_state.energy() < a_state.max_energy():
-                        a_state.set_energy(min(a_state.max_energy(), a_state.energy() + a_state.speed()))
-                        a_state.update_last_turn_tick()
+                    if a_state.energy() + a_state.speed() < a_state.max_energy():
+                        a_state.set_energy(a_state.energy() + a_state.speed())
+                        a_state.update_last_energized_tick(fudge=fudge)
                     else:
                         an_actor_is_acting = True
                         action = actor.request_next_action(self)
 
                         if action.is_fake_player_wait_action():
                             action.pre_start(self)     # just to make the player turn
+                            break
                         else:
-                            a_state.update_last_turn_tick()
-                            a_state.set_energy(0)
+                            a_state.update_last_energized_tick(fudge=fudge)
+                            a_state.set_energy((a_state.energy() + a_state.speed()) % a_state.max_energy())
 
                             if action.is_possible(self):
                                 dur_modifier = a_state.turn_duration_modifier()

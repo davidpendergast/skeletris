@@ -11,15 +11,6 @@ import src.game.inventory as inventory
 import src.items.item as item
 
 
-NUM_EXTRA_STATS_RANGE = [
-    stats._exp_map(64, 1, 3),
-    stats._exp_map(64, 2, 7)
-]
-
-STATS_MULTIPLIER_RANGE = [stats._exp_map(64, 1, 3, integral=False),
-                          stats._exp_map(64, 1.5, 6, integral=False)]
-
-
 class EnemyTemplate:
 
     def __init__(self, name, shadow_sprite):
@@ -57,36 +48,63 @@ class FlappumTemplate(EnemyTemplate):
         return spriteref.enemy_flappum_all
 
     def get_level_range(self):
-        return (0, 3)
+        return range(0, 4)
 
 
 class TrillaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Trilla", spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Masked Adult", spriteref.large_shadow)
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 6,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 2,
+            StatTypes.UNARMED_ATT: 0,
+            StatTypes.DEF: 1
+        })
+
+    def get_level_range(self):
+        return range(6, 16)
 
 
 class TrilliteTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Trillite", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Masked Child", spriteref.medium_shadow)
 
     def get_sprites(self):
         return spriteref.enemy_small_trilla_all
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 2,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 1,
+            StatTypes.DEF: 1
+        })
+
+    def get_level_range(self):
+        return range(0, 6)
 
 
 class SmallMuncherTemplate(EnemyTemplate):
 
     def __init__(self, alt=False):
         self._is_alt = alt
-        name = "Dark Muncher" if alt else "Muncher"
+        name = "Dark Muncher" if alt else "Small Muncher"
         EnemyTemplate.__init__(self, name, spriteref.medium_shadow)
 
     def get_sprites(self):
         return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
+
+    def get_level_range(self):
+        return range(10, 16)
 
 
 class MuncherTemplate(EnemyTemplate):
@@ -99,16 +117,23 @@ class MuncherTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
 
+    def get_level_range(self):
+        return range(10, 16)
+
 
 class CycloiTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cycloi", spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Cyclops", spriteref.large_shadow)
 
     def get_sprites(self):
         return spriteref.enemy_cyclops_all
 
+    def get_level_range(self):
+        return range(6, 16)
 
+
+# TODO these suck, consider deleting
 class DicelTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -116,6 +141,9 @@ class DicelTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_dicel_all
+
+    def get_level_range(self):
+        return ()
 
 
 class FallenTemplate(EnemyTemplate):
@@ -126,7 +154,11 @@ class FallenTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_the_fallen_all
 
+    def get_level_range(self):
+        return range(14, 16)
 
+
+# TODO - these also suck really bad
 class FungoiTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -134,6 +166,9 @@ class FungoiTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_fungoi_all
+
+    def get_level_range(self):
+        return ()
 
 
 class FrogBoss(EnemyTemplate):
@@ -147,6 +182,9 @@ class FrogBoss(EnemyTemplate):
 
     def get_base_stats(self):
         return EnemyTemplate.get_base_stats(self)
+
+    def get_level_range(self):
+        return ()
 
 
 TEMPLATE_TRILLA = TrillaTemplate()
@@ -164,12 +202,13 @@ TEMPLATE_FUNGOI = FungoiTemplate()
 TEMPLATE_FROG_BOSS = FrogBoss()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
-                        TEMPLATE_MUNCHER_SMALL_ALT,
+                        TEMPLATE_MUNCHER,
                         TEMPLATE_DICEL,
                         TEMPLATE_THE_FALLEN,
                         TEMPLATE_CYCLOI,
                         TEMPLATE_FLAPPUM,
-                        TEMPLATE_TRILLA]
+                        TEMPLATE_TRILLA,
+                        TEMPLATE_TRILLITE]
 
 EASY_CAVE_ENEMIES = [TEMPLATE_FLAPPUM]
 HARDER_CAVE_ENEMIES = EASY_CAVE_ENEMIES + [TEMPLATE_MUNCHER_SMALL]
@@ -182,10 +221,14 @@ def get_rand_template_for_level(level, rand_val):
     choices = []
     for template in RAND_SPAWN_TEMPLATES:
         lvl_range = template.get_level_range()
-        if lvl_range[0] <= level <= lvl_range[1]:
+        if level in lvl_range:
             choices.append(template)
 
-    return choices[int(rand_val * len(choices))]
+    if len(choices) == 0:
+        print("WARN: no enemy templates for level: {}".format(level))
+        return TEMPLATE_FLAPPUM
+    else:
+        return choices[int(rand_val * len(choices))]
 
 
 class EnemyFactory:

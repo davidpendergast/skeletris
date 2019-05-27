@@ -24,7 +24,7 @@ class ActorState:
 
         self.current_hp = self.max_hp()
         self.current_energy = 0
-        self._last_turn_tick = 0  # used to determine energization order
+        self._last_energized_tick = 0.0
 
         self.alignment = alignment  # what "team" the actor is on.
 
@@ -89,14 +89,14 @@ class ActorState:
     def is_alive(self):
         return self.current_hp > 0
 
-    def last_turn_tick(self):
-        return self._last_turn_tick
+    def last_energized_tick(self):
+        return self._last_energized_tick
 
     def set_energy(self, val):
         self.current_energy = Utils.bound(val, 0, self.max_energy())
 
-    def update_last_turn_tick(self):
-        self._last_turn_tick = gs.get_instance().tick_counter
+    def update_last_energized_tick(self, fudge=0.0):
+        self._last_energized_tick = gs.get_instance().tick_counter + fudge
 
     def max_hp(self):
         raw_value = self.stat_value(StatTypes.VIT)

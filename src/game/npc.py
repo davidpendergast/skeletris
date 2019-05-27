@@ -33,7 +33,7 @@ TEMPLATES = {
     NpcID.MAYOR: NpcTemplate(NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces, shadow_sprite=sr.large_shadow),
     NpcID.BEANSKULL: NpcTemplate(NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces),
     NpcID.GLORPLE: NpcTemplate(NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces),
-    NpcID.MACHINE: NpcTemplate(NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces)
+    NpcID.MACHINE: NpcTemplate(NpcID.MACHINE, "Discouragement Machine", sr.save_stations, sr.save_station_faces)
 }
 
 
@@ -43,16 +43,23 @@ def get_sprites(npc_id):
 
 def get_sample_dialog(npc_id):
     sprites = TEMPLATES[npc_id].talking_sprites
-    options = [
-        [
-            dialog.NpcDialog("I hope you find a lot of stuff down here! That's what adventurers do, right? They look for stuff? ..to wear?", sprites),
-            dialog.NpcDialog("I usually just go to the store, but to each their own!", sprites),
-        ], [
-            dialog.NpcDialog("Hi! I don't have anything important to say, but it's a pleasure to meet you.", sprites)
-        ], [
-            dialog.NpcDialog("You're doing a great job so far!", sprites)
+    if npc_id == NpcID.MACHINE:
+        options = [
+            [
+                dialog.NpcDialog("Are you expecting to beat the game with that gear? Just curious.", sprites),
+            ]
         ]
-    ]
+    else:
+        options = [
+            [
+                dialog.NpcDialog("I hope you find a lot of stuff down here! That's what adventurers do, right? They look for stuff? ..to wear?", sprites),
+                dialog.NpcDialog("I usually just go to the store, but to each their own!", sprites),
+            ], [
+                dialog.NpcDialog("Hi! I don't have anything important to say, but it's a pleasure to meet you.", sprites)
+            ], [
+                dialog.NpcDialog("You're doing a great job so far!", sprites)
+            ]
+        ]
 
     return dialog.Dialog.link_em_up(random.choice(options))
 
