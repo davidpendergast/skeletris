@@ -584,10 +584,16 @@ class ActorEntity(Entity):
     def set_draw_offset(self, dx, dy):
         self._draw_offset = (dx, dy)
 
-    def get_render_center(self):
+    def get_render_center(self, ignore_perturbs=False):
         """returns: the center point (x, y) of where the actor should be drawn."""
-        x = self.center()[0] + self.get_draw_offset()[0] + self.get_perturbed_xy()[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + self.get_perturbed_xy()[1] + 12
+
+        x = self.center()[0] + self.get_draw_offset()[0]
+        y = self.center()[1] + self.get_draw_offset()[1] + 12
+
+        if not ignore_perturbs:
+            x += self.get_perturbed_xy()[0]
+            y += self.get_perturbed_xy()[1]
+
         return (round(x), round(y))
 
     def get_perturbed_color(self):
@@ -860,8 +866,8 @@ class Enemy(ActorEntity):
         while len(self._bar_imgs) < len(bars):
             self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2))
 
-        cx = self.get_render_center()[0]
-        cy = self.get_render_center()[1] - self.get_sprite().height() * 2
+        cx = self.get_render_center(ignore_perturbs=True)[0]
+        cy = self.get_render_center(ignore_perturbs=True)[1] + 4
 
         for i in range(0, len(bars)):
             pcnt, color = bars[i]
@@ -873,7 +879,7 @@ class Enemy(ActorEntity):
             bar_img = self._bar_imgs[i]
 
             bar_x = cx - (0.5 * bar_img.scale() * bar_sprite.width())
-            bar_y = cy - bar_img.scale() * (bar_sprite.height() - 1) * (len(bars) - i)
+            bar_y = cy + bar_img.scale() * (bar_sprite.height() - 1) * i
 
             self._bar_imgs[i] = bar_img.update(new_model=bar_sprite,
                                                new_x=bar_x,
@@ -1488,8 +1494,8 @@ class NpcEntity(Entity):
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         sprite = self.get_sprite()
-        x = self.x() - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.y() - (sprite.height() * self._img.scale() - self.h())
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale() - self.w()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale() - self.h())
         depth = self.get_depth()
         xflip = self.facing_right
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
