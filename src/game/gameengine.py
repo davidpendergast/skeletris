@@ -352,8 +352,6 @@ class ConsumeItemAction(Action):
     def finalize(self, world):
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
         self.item.consume(self.actor_entity, world)
-        dia = dialog.PlayerDialog("Did I really just drink that?")
-        gs.get_instance().dialog_manager().set_dialog(dia)
 
 
 class OpenDoorAction(MoveToAction):
@@ -397,9 +395,6 @@ class OpenDoorAction(MoveToAction):
 
 
 class AttackAction(Action):
-    R_TEXT_COLOR = (0.65, 0.1, 0.1)
-    G_TEXT_COLOR = (0.2, 0.85, 0.2)
-    B_TEXT_COLOR = (0.1, 0.1, 0.65)
 
     def __init__(self, actor, item, position):
         Action.__init__(self, ActionType.ATTACK, 24, actor, item=item, position=position)
@@ -476,11 +471,11 @@ class AttackAction(Action):
             target = self._results[1]
             t_state = target.get_actor_state()
             if damage <= 0:
-                world.show_floating_text("miss", AttackAction.B_TEXT_COLOR, 3, target)
+                world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, target)
             else:
                 t_state.set_hp(t_state.hp() - damage)
-                world.show_floating_text("-{}".format(damage), AttackAction.R_TEXT_COLOR, 3, target)
-                target.perturb_color(AttackAction.R_TEXT_COLOR, 25)
+                world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, target)
+                target.perturb_color(colors.R_TEXT_COLOR, 25)
                 target.perturb(20, 18)
 
                 a_state = self.actor_entity.get_actor_state()

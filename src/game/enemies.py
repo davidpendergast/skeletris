@@ -9,6 +9,7 @@ from src.game.loot import LootFactory
 from src.utils.util import Utils
 import src.game.inventory as inventory
 import src.items.item as item
+import src.items.itemgen as itemgen
 
 
 class EnemyTemplate:
@@ -256,7 +257,7 @@ class EnemyFactory:
         inv = inventory.FakeInventoryState()
 
         item_type = random.choice(item.ItemTypes.all_types())
-        loot_item = item.ItemFactory.gen_item(level, item_type)
+        loot_item = itemgen.ItemFactory.gen_item(level, item_type)
         inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine

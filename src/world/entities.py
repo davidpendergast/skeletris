@@ -923,7 +923,7 @@ class Enemy(ActorEntity):
 
         bars = []
         a_state = self.get_actor_state()
-        if a_state.hp() < a_state.max_hp():
+        if 0 < a_state.hp() < a_state.max_hp():
             bars.append((a_state.hp() / a_state.max_hp(), (1, 0, 0)))
 
         self._update_bar_imgs(bars)
@@ -1208,6 +1208,7 @@ class SensorDoorEntity(DoorEntity):
 
 
 class SaveStationEntity(Entity):
+    # TODO this isn't used, delete?
 
     def __init__(self, grid_x, grid_y):
         Entity.__init__(self, grid_x * 64 + 16, grid_y * 64, 32, 8)
@@ -1486,6 +1487,10 @@ class NpcEntity(Entity):
         sprites = self.get_npc_template().world_sprites
         return sprites[(anim_tick // 4) % len(sprites)]
 
+    def get_render_center(self):
+        xy = super().get_render_center()
+        return (xy[0], xy[1] + 12)
+
     def visible_in_darkness(self):
         return False
 
@@ -1494,8 +1499,8 @@ class NpcEntity(Entity):
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
         sprite = self.get_sprite()
-        x = self.get_render_center()[0] - (sprite.width() * self._img.scale() - self.w()) // 2
-        y = self.get_render_center()[1] - (sprite.height() * self._img.scale() - self.h())
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
         depth = self.get_depth()
         xflip = self.facing_right
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,

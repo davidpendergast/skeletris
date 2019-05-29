@@ -1,6 +1,7 @@
 import random
 
-from src.items.item import ItemFactory, ItemType, ItemTypes
+from src.items.item import ItemType, ItemTypes
+from src.items.itemgen import ItemFactory, StatCubesItemFactory
 from src.game.droprates import EnemyDroprate, ChestDroprate
 
 
