@@ -1179,7 +1179,11 @@ class InGameUiState(Menu):
 
             render_eng = RenderEngine.get_instance()
             if current_tooltip is not None:
-                offs = (-screen_pos[0], -screen_pos[1] - 24)
+                tt_width = current_tooltip.get_rect()[2]
+                tt_height = current_tooltip.get_rect()[3]
+                tt_x = min(screen_pos[0], gs.get_instance().screen_size[0] - tt_width)
+                tt_y = min(screen_pos[1] + 24, gs.get_instance().screen_size[1] - tt_height)
+                offs = (-tt_x, -tt_y)
                 render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
 
             if needs_update and current_tooltip is not None:

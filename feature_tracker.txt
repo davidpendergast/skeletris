@@ -4,9 +4,8 @@
  - can have rooms that border out-of-bounds with no walls in between
  - npcs can block path
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
- - sometimes enemies will alternate turns with you even when their speed is two...
-    - i think?? anyways it feels really wonky
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
+    - fine? adds character
  - tooltips aren't constrained to screen (heavyweight tooltips?? pygame pls)
  - can pickup items/mess with inv while perfoming other actions
  - should clear player controller when a new world is spawned
