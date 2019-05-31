@@ -6,12 +6,14 @@
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - fine? adds character
- - tooltips aren't constrained to screen (heavyweight tooltips?? pygame pls)
  - can pickup items/mess with inv while perfoming other actions
  - should clear player controller when a new world is spawned
  - dialog & inventory fight to render on top of each other (dialog should win)
  - can still spawn in a detached room (see bad_spawn.png)
-       
+ - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that position when it becomes unhidden
+ - pressing an arrow key while dialog is showing will hide dialog AND perform the action   
+    - it should just hide
+ - when hit from above, you turn to face right
  
 [current features]
 
@@ -20,32 +22,27 @@
         - actually this may be OK
     - chest loot generation
     - description text for each decoration
- - make sure death menu sequence still works
-    - it does not 
-    - hotbar should hide
  - remove remaining cruft from cubelike 1.0
     - password page
-    - save machine
-        - should just be a normal NPC
  - choose name for game
  - enemy generation
  - animation for skipping turn
- - animation for consuming item
  - throwing items
  
  
 [future features]
- - name generation for items (possibly not even needed)
  - design and implement interesting stats
  - npcs / dialog
  - one boss fight 
  - magic system
  - quest system
  - status effects
+    - really need these for potions
  
  
 [~dream features~]
  - see notes app on phone
  - many boss fights
  - animated text in TextImages ~wavy language~
+ - farming
 

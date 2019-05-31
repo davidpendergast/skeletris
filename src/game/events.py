@@ -8,24 +8,38 @@ class EventQueue:
     def __init__(self):
         self.events = []
         self._type_lookup = {}  # EventType -> list(Event)
-        self.next_events = []
 
-    def add(self, event):
-        self.next_events.append(event)
+        self.next_events = {}  # int: delay -> list(Event)
+
+    def add(self, event, delay=0):
+        if delay not in self.next_events:
+            self.next_events[delay] = []
+
+        self.next_events[delay].append(event)
 
     def flip(self):
         self.events.clear()
         self._type_lookup.clear()
 
-        tmp = self.events
-        self.events = self.next_events
+        if 0 in self.next_events:
+            self.events = self.next_events[0]
+            del self.next_events[0]
 
         for e in self.events:
             if e.get_type() not in self._type_lookup:
                 self._type_lookup[e.get_type()] = []
             self._type_lookup[e.get_type()].append(e)
 
-        self.next_events = tmp
+        all_delays = list(delay for delay in self.next_events)
+        all_delays.sort()
+
+        for delay in all_delays:
+            new_delay = max(0, delay - 1)
+            if new_delay not in self.next_events:
+                self.next_events[new_delay] = []
+
+            self.next_events[new_delay].extend(self.next_events[delay])
+            del self.next_events[delay]
 
     def all_events_with_type(self, single_type):
         if single_type in self._type_lookup:
@@ -224,7 +238,8 @@ class NewGameEvent(Event):
 class PlayerDiedEvent(Event):
 
     def __init__(self):
-        Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")
+        Event.__init__(self, EventType.PLAYER_DIED, None,
+                       description="player died")
 
 
 class EnemyDiedEvent(Event):

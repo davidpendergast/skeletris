@@ -307,8 +307,8 @@ class AnimationEntity(Entity):
         FREEZE_ON_FINISH = 2
         DELETE_ON_FINISH = 3
 
-        def __init__(self, x, y, sprites, duration, layer_id, w=8, h=8, scale=2):
-            Entity.__init__(self, x, y, w, h)
+        def __init__(self, cx, cy, sprites, duration, layer_id, scale=2):
+            Entity.__init__(self, cx - 2, cy - 2, 4, 4)
             self.duration = duration
             self.tick_count = 0
             self.sprites = sprites
@@ -317,7 +317,6 @@ class AnimationEntity(Entity):
             self._img = None
             self.xflipped = False
             self.sprite_offset = (0, 0)
-            self.centered = [True, True]
             self.on_finish_mode = AnimationEntity.DELETE_ON_FINISH
             self._color = (1, 1, 1)
 
@@ -339,12 +338,6 @@ class AnimationEntity(Entity):
         def set_sprite_offset(self, offs):
             self.sprite_offset = offs
 
-        def set_x_centered(self, val):
-            self.centered[0] = val
-
-        def set_y_centered(self, val):
-            self.centered[1] = val
-
         def set_color(self, color):
             self._color = color
 
@@ -355,26 +348,33 @@ class AnimationEntity(Entity):
             idx = int(self.get_progress() * len(self.sprites))
             return self.sprites[idx]
 
+        def visible_in_darkness(self):
+            return False
+
         def update_attributes(self):
             pass
 
         def _update_images(self):
             sprite = self.get_current_sprite()
 
-            x = self.x() + self.sprite_offset[0]
-            y = self.y() + self.sprite_offset[1]
+            if sprite is None:
+                if self._img is not None:
+                    RenderEngine.get_instance().remove(self._img)
+                    self._img = None
+                return
+            else:
+                cx = self.get_render_center()[0]
+                cy = self.get_render_center()[1]
 
-            if self.centered[0]:
-                x -= (sprite.width() * 2 - self.w()) // 2
-            if self.centered[1]:
-                y -= (sprite.height() * 2 - self.h()) // 2
+                x = cx - (sprite.width() * self.scale) // 2 + self.sprite_offset[0]
+                y = cy - (sprite.height() * self.scale) + self.sprite_offset[1]
 
-            if self._img is None:
-                self._img = img.ImageBundle(sprite, x, y, layer=self.layer_id, scale=self.scale, depth=0)
+                if self._img is None:
+                    self._img = img.ImageBundle.new_bundle(self.layer_id)
 
-            self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
-                                         new_xflip=self.xflipped, new_depth=self.get_depth(),
-                                         new_color=self._color)
+                self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                             new_xflip=self.xflipped, new_depth=self.get_depth(),
+                                             new_color=self._color, new_scale=self.scale)
 
         def get_progress(self):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
@@ -414,7 +414,7 @@ class AttackCircleArt(AnimationEntity):
 
     def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
         sprites = spriteref.get_attack_circles(radius * 2 // 2)
-        AnimationEntity.__init__(self, cx - 4, cy - 4, sprites, duration, spriteref.SHADOW_LAYER)
+        AnimationEntity.__init__(self, cx, cy, sprites, duration, spriteref.SHADOW_LAYER)
         self._start_color = color
         self._end_color = color_end
 
@@ -425,6 +425,34 @@ class AttackCircleArt(AnimationEntity):
         else:
             color = self._start_color
         self.set_color(color)
+
+
+class PlayerCorpseAnimation(AnimationEntity):
+
+    def __init__(self, cx, cy, duration):
+        AnimationEntity.__init__(self, cx, cy, spriteref.player_death_seq, duration, spriteref.ENTITY_LAYER)
+
+    def is_interactable(self):
+        # XXX just to make it so enemies can't step on you
+        return True
+
+    def visible_in_darkness(self):
+        return False
+
+
+class LightEmitterAnimation(AnimationEntity):
+
+    def __init__(self, cx, cy, duration, start_light_level, end_light_level):
+        AnimationEntity.__init__(self, cx, cy, [], duration, spriteref.ENTITY_LAYER)
+        self.start_light = start_light_level
+        self.end_light = end_light_level
+
+    def get_current_sprite(self):
+        return None
+
+    def get_light_level(self):
+        l_range = self.end_light - self.start_light
+        return int(self.start_light + self.get_progress() * l_range)
 
 
 class FloatingTextEntity(Entity):
@@ -534,6 +562,17 @@ class ActorEntity(Entity):
 
     def visible_in_darkness(self):
         return False
+
+    def handle_death(self, world):
+        pos = self.get_render_center(ignore_perturbs=True)
+        for item in self.get_actor_state().inventory().all_items():
+            world.add_item_as_entity(item, pos, direction=None)
+
+        splosion = AnimationEntity(pos[0], pos[1], spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
+        splosion.set_color((0, 0, 0))
+        world.add(splosion)
+
+        world.remove(self)
 
     def cleanup(self):
         super().cleanup()
@@ -810,6 +849,20 @@ class Player(ActorEntity):
         
     def is_player(self):
         return True
+
+    def handle_death(self, world):
+        pos = self.get_render_center(ignore_perturbs=True)
+
+        corpse_anim = PlayerCorpseAnimation(pos[0], pos[1], 32)
+        corpse_anim.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
+        corpse_anim.set_xflipped(self.is_facing_right())
+        world.add(corpse_anim)
+
+        light_emitter = LightEmitterAnimation(pos[0], pos[1], 90, self.get_light_level(), 0)
+        world.add(light_emitter)
+
+        gs.get_instance().event_queue().add(events.PlayerDiedEvent(), delay=240)
+        world.remove(self)
 
     def is_facing_right(self):
         # player sprites are drawn reverse of everyone else (._.)

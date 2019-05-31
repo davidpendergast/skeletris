@@ -445,7 +445,7 @@ class World:
 
                 if not gs.get_instance().world_updates_paused():
                     if e.is_actor() and not e.get_actor_state().is_alive():
-                        e.get_actor_state().handle_death(self, e)
+                        e.handle_death(self)
 
                     elif e.is_actor() and near_player:
                         actors_to_process.append(e)

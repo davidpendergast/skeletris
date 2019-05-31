@@ -868,7 +868,6 @@ class DeathMenu(OptionsMenu):
     """Displays some flavor text, then becomes a death option menu"""
 
     ALL_FLAVOR = [
-        "you'll do better next time!",
         "epic run!",
         "ouch!"
     ]
@@ -912,11 +911,11 @@ class DeathMenu(OptionsMenu):
 
 class DeathOptionMenu(OptionsMenu):
 
-    CONTINUE = 0
+    RETRY = 0
     EXIT_OPT = 1
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["continue", "quit"])
+        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["retry", "quit"])
 
     def get_song(self):
         return None
@@ -925,9 +924,8 @@ class DeathOptionMenu(OptionsMenu):
         OptionsMenu.option_activated(self, idx)
         if idx == DeathOptionMenu.EXIT_OPT:
             gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
-        elif idx == DeathOptionMenu.CONTINUE:
-            last_pw = gs.get_instance().settings().get(settings.LAST_PASSWORD)
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True, from_pw=last_pw))
+        elif idx == DeathOptionMenu.RETRY:
+            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
 
 
 class DebugMenu(OptionsMenu):
@@ -1227,13 +1225,19 @@ class InGameUiState(Menu):
                 self.inventory_panel.update_stats_imgs()
 
     def _update_health_bar_panel(self):
-        if self.health_bar_panel is None:
-            self.health_bar_panel = HealthBarPanel()
+        if not gs.get_instance().player_state().is_alive():
+            if self.health_bar_panel is not None:
+                self._destroy_panel(self.health_bar_panel)
+                self.health_bar_panel = None
 
-        if self.health_bar_panel.is_dirty():
-            self.health_bar_panel.update_images()
-            for bun in self.health_bar_panel.all_bundles():
-                RenderEngine.get_instance().update(bun)
+        else:
+            if self.health_bar_panel is None:
+                self.health_bar_panel = HealthBarPanel()
+
+            if self.health_bar_panel.is_dirty():
+                self.health_bar_panel.update_images()
+                for bun in self.health_bar_panel.all_bundles():
+                    RenderEngine.get_instance().update(bun)
 
     def in_inventory_panel(self, screen_pos):
         rect = self.get_inventory_rect()

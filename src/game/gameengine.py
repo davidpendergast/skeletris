@@ -129,19 +129,6 @@ class ActorState:
     def name(self):
         return self.name_
 
-    def handle_death(self, world, actor_entity):
-        pos = actor_entity.center()
-        for item in self.inventory().all_items():
-            world.add_item_as_entity(item, pos, direction=None)
-
-        from src.world.entities import AnimationEntity
-
-        splosion = AnimationEntity(pos[0], pos[1] - 24, spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
-        splosion.set_color((0, 0, 0))
-        world.add(splosion)
-
-        world.remove(actor_entity)
-
 
 class ActorController:
 
