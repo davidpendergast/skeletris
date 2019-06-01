@@ -137,6 +137,7 @@ class DialogManager:
         }
         self.last_scroll_time = 0
         self.noise_freq = 6
+        self.did_interact_this_tick = False
 
     def is_active(self):
         return self._active_dialog is not None
@@ -145,7 +146,6 @@ class DialogManager:
         return self._active_dialog
 
     def set_dialog(self, dialog):
-        print("INFO: setting dialog to" + str(dialog))
         if self._active_dialog is not None:
             opt_idx = self._active_dialog.get_selected_opt_idx()
             uid = self._active_dialog.get_uid()
@@ -155,6 +155,10 @@ class DialogManager:
             dialog.reset()
 
         self._active_dialog = dialog
+
+    def interact(self):
+        if self.is_active():
+            self.did_interact_this_tick = True
 
     def update(self, world):
         if self.is_active():
@@ -166,8 +170,7 @@ class DialogManager:
                 else:
                     cutscene.update(world)
             else:
-                all_keys = [k for k in gs.get_instance().settings().all_in_game_keys()]
-                if dialog.scroll_pos > 0 and InputState.get_instance().was_pressed(all_keys):
+                if dialog.scroll_pos > 0 and self.did_interact_this_tick:
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next())
                     else:
@@ -208,6 +211,8 @@ class DialogManager:
                             dialog.set_selected_opt_idx((cur_option - 1) % num_options)
                         if input_state.was_pressed(gs.get_instance().settings().down_key()):
                             dialog.set_selected_opt_idx((cur_option + 1) % num_options)
+
+        self.did_interact_this_tick = False
 
 
 class Cutscene(Dialog):

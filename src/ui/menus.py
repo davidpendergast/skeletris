@@ -1134,6 +1134,8 @@ class InGameUiState(Menu):
             return super().cursor_style_at(world, xy)
 
     def _top_level_interactable_imgs(self):
+        if self.dialog_panel is not None:
+            yield self.dialog_panel
         if self.health_bar_panel is not None:
             yield self.health_bar_panel
         if self.inventory_panel is not None:
@@ -1142,24 +1144,20 @@ class InGameUiState(Menu):
     def _update_tooltip(self, world):
         input_state = InputState.get_instance()
         screen_pos = input_state.mouse_pos() if input_state.mouse_in_window() else None
+        obj_to_display = None
 
-        if screen_pos is None:
-            obj_to_display = None
-        else:
-            # when you're holding an item, we show the info in the top right, so there's
-            # no need for a tooltip.
-            if self.item_on_cursor_info is None:
+        if screen_pos is not None and self.item_on_cursor_info is None:
+            cursor_in_world = True
+            for ui_img in self._top_level_interactable_imgs():
+                if ui_img.contains_point(*screen_pos):
+                    cursor_in_world = False
+                    tt_target = ui_img.get_tooltip_target_at(*screen_pos)
+                    if tt_target is not None:
+                        obj_to_display = tt_target
+                        break
+
+            if cursor_in_world:
                 obj_to_display = self._get_obj_at_screen_pos(world, screen_pos)
-            else:
-                obj_to_display = None
-
-            if self.item_on_cursor_info is None and obj_to_display is None and screen_pos is not None:
-                for ui_img in self._top_level_interactable_imgs():
-                    if ui_img.contains_point(*screen_pos):
-                        tt_target = ui_img.get_tooltip_target_at(*screen_pos)
-                        if tt_target is not None:
-                            obj_to_display = tt_target
-                            break
 
         if obj_to_display is None:
             self.set_active_tooltip(None)
@@ -1361,6 +1359,8 @@ class InGameUiState(Menu):
         self._update_top_right_info_panel(world)
         self._update_inventory_panel()
 
+        # these inputs are allowed to bleed through world_updates_paused because they're
+        # sorta "meta-inputs" (i.e. they don't affect the world).
         for i in range(0, 6):
             cur_targeting_action = gs.get_instance().get_targeting_action_provider()
             if input_state.was_pressed(gs.get_instance().settings().action_key(i)):
@@ -1382,6 +1382,18 @@ class InGameUiState(Menu):
         p = world.get_player()
         if p is not None and not gs.get_instance().world_updates_paused():
             self.send_player_action_requests(p, world)
+
+        # processing dialog last so that it'll block other things from getting inputs this frame
+        # (because gs.world_updates_paused will get flipped to false when we interact).
+        if gs.get_instance().dialog_manager().is_active():
+            keys = [k for k in gs.get_instance().settings().all_dialog_dismiss_keys()]
+            pushed_dismiss_key = False
+            for k in keys:
+                if input_state.was_pressed(k):
+                    pushed_dismiss_key = True
+                    break
+            if pushed_dismiss_key:
+                gs.get_instance().dialog_manager().interact()
 
     def send_player_action_requests(self, player, world):
         pos = world.to_grid_coords(player.center()[0], player.center()[1])

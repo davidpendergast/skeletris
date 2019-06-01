@@ -7,13 +7,14 @@
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - fine? adds character
  - can pickup items/mess with inv while perfoming other actions
- - should clear player controller when a new world is spawned
- - dialog & inventory fight to render on top of each other (dialog should win)
+    - this is kinda hard to fix, unfortunately
+ - should clear player controller when a new world is created
  - can still spawn in a detached room (see bad_spawn.png)
  - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that position when it becomes unhidden
  - pressing an arrow key while dialog is showing will hide dialog AND perform the action   
     - it should just hide
  - when hit from above, you turn to face right
+ - pickup entities bob down a little too far, below their own shadows
  
 [current features]
 

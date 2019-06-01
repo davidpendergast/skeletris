@@ -140,6 +140,11 @@ class Settings:
         for k in self.right_key():
             yield k
 
+    def all_dialog_dismiss_keys(self):
+        for k in self.all_direction_keys():
+            yield k
+        yield self.enter_key()
+
     def num_mapped_actions(self):
         return len(KEY_MAPPED_ACTIONS)
 

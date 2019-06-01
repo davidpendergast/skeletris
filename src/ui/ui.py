@@ -14,6 +14,9 @@ from src.renderengine.engine import RenderEngine
 BG_DEPTH = 10
 FG_DEPTH = 5
 
+BG_DEPTH_SUPER = 1
+FG_DEPTH_SUPER = 0
+
 
 class ItemGridImage:
 
@@ -356,32 +359,51 @@ class InventoryPanel(InteractableImage):
             yield bun
 
 
-class DialogPanel:
+class DialogPanel(InteractableImage):
 
     BORDER_SIZE = 8, 8
-    TEXT_SCALE= 1
+    TEXT_SCALE = 1
     SIZE = (256 * 2 - 16 * 2, 48 * 2 - 16)
 
     def __init__(self, dialog):
         self._dialog = dialog
         self._border_imgs = []
         self._speaker_img = None
-        self._text_displaying = ""
         self._option_selected = None
         self._text_img = None
         self._bg_imgs = []
+        self._rect = [0, 0, 0, 0]
+
+        self._text_displaying = ""
+        self._cur_sprite = None
+        self._sprite_on_left_side = True
+
+        self._dirty = True
 
     def get_dialog(self):
         return self._dialog
 
-    def update_images(self, text, sprite, left_side):
+    def _calc_rect(self):
+        return [
+            gs.get_instance().screen_size[0] // 2 - DialogPanel.SIZE[0] // 2,
+            gs.get_instance().screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1],
+            DialogPanel.SIZE[0],
+            DialogPanel.SIZE[1]
+        ]
+
+    def update_images(self):
         """
             returns: True if needs a full render engine update, else False
         """
         needs_update = False
 
-        x = gs.get_instance().screen_size[0] // 2 - DialogPanel.SIZE[0] // 2
-        y = gs.get_instance().screen_size[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]
+        text = self._text_displaying
+        sprite = self._cur_sprite
+        left_side = self._sprite_on_left_side
+
+        x = self._rect[0]
+        y = self._rect[1]
+
         lay = spriteref.UI_0_LAYER
 
         if len(self._border_imgs) == 0:
@@ -390,15 +412,20 @@ class DialogPanel:
             border_sprites = spriteref.UI.text_panel_edges
 
             for i in range(0, DialogPanel.SIZE[0] // bw):
-                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh, layer=lay, scale=2, depth=BG_DEPTH)
+                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh,
+                                       layer=lay, scale=2, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(top_bord)
             for i in range(0, DialogPanel.SIZE[1] // bh):
-                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i, layer=lay, scale=2, depth=BG_DEPTH)
+                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i,
+                                     layer=lay, scale=2, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(l_bord)
-                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,  layer=lay, scale=2, depth=BG_DEPTH)
+                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,
+                                     layer=lay, scale=2, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(r_bord)
-            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh, layer=lay, scale=2, depth=BG_DEPTH))
-            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh, layer=lay, scale=2, depth=BG_DEPTH))
+            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh,
+                                                 layer=lay, scale=2, depth=BG_DEPTH_SUPER))
+            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh,
+                                                 layer=lay, scale=2, depth=BG_DEPTH_SUPER))
             needs_update = True
 
         if len(self._bg_imgs) == 0:
@@ -409,7 +436,8 @@ class DialogPanel:
             bg_h *= sc
             for x1 in range(0, DialogPanel.SIZE[0] // bg_w):
                 for y1 in range(0, DialogPanel.SIZE[1] // bg_h):
-                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h, layer=lay, scale=sc, depth=BG_DEPTH))
+                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h,
+                                                     layer=lay, scale=sc, depth=BG_DEPTH_SUPER))
             needs_update = True
 
         text_buffer = 6, 6
@@ -425,7 +453,7 @@ class DialogPanel:
                     x_pos = x + sprite_buffer[0]
                 else:
                     x_pos = x + DialogPanel.SIZE[0] - sprite.width() * 2 - sprite_buffer[0]
-                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2, depth=FG_DEPTH)
+                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2, depth=FG_DEPTH_SUPER)
             self._speaker_img = self._speaker_img.update(new_model=sprite)
 
             if left_side:
@@ -452,10 +480,11 @@ class DialogPanel:
                 except ValueError:
                     print("ERROR: option \"{}\" missing from dialog \"{}\"".format(opt_text, wrapped_text))
 
-            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay, scale=DialogPanel.TEXT_SCALE,
+            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay,
+                                       scale=DialogPanel.TEXT_SCALE,
                                        y_kerning=3,
                                        custom_colors=custom_colors,
-                                       depth=FG_DEPTH)
+                                       depth=FG_DEPTH_SUPER)
             needs_update = True
 
         return needs_update
@@ -463,12 +492,20 @@ class DialogPanel:
     def update(self):
         do_text_rebuild = False
 
+        cur_rect = self._rect
+        new_rect = self._calc_rect()
+
+        if cur_rect != new_rect:
+            do_text_rebuild = True
+            self._rect = new_rect
+
         new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
         if self._text_displaying != new_text and self._text_img is not None:
             do_text_rebuild = True
 
         self._text_displaying = new_text
 
+        # TODO - just get rid of options in dialog probably
         option_idx = None
         if len(self._dialog.get_options()) > 0 and self._dialog.is_done_scrolling():
             option_idx = self._dialog.get_selected_opt_idx()
@@ -484,19 +521,36 @@ class DialogPanel:
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
 
-        if do_text_rebuild:
+        if do_text_rebuild and self._text_img is not None:
             for bun in self._text_img.all_bundles():
                 render_eng.remove(bun)
             self._text_img = None
 
-        full_update = self.update_images(self._text_displaying, new_sprite,
-                                         self._dialog.get_sprite_side())
+        self._cur_sprite = new_sprite
+        self._sprite_on_left_side = self._dialog.get_sprite_side()
+
+        full_update = self.update_images()
 
         if full_update:
             for bun in self.all_bundles():
                 render_eng.update(bun)
         elif self._speaker_img is not None:
             render_eng.update(self._speaker_img)
+
+    def contains_point(self, x, y):
+        return Utils.rect_contains(self._rect, (x, y))
+
+    def on_click(self, x, y, button=1):
+        if button == 1:
+            gs.get_instance().dialog_manager().interact()
+        return True
+
+    def get_tooltip_target_at(self, x, y):
+        # we gotta block things underneath the panel from making their own tooltips on top
+        return TextBuilder()
+
+    def is_dirty(self):
+        return True
 
     def all_bundles(self):
         for bg in self._bg_imgs:
@@ -508,6 +562,8 @@ class DialogPanel:
         if self._text_img is not None:
             for bun in self._text_img.all_bundles():
                 yield bun
+        for bun in super().all_bundles():
+            yield bun
 
 
 class MappedActionImage(InteractableImage):
