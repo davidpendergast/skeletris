@@ -203,6 +203,7 @@ class GlobalState:
         self._event_triggers[trigger.event_type].append(trigger)
 
     def prepare_for_new_zone(self, zone):
+        self.player_controller().clear_requests()
         self.clear_triggers(events.EventListenerScope.ZONE)
 
         self.current_zone = zone

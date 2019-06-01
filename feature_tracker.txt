@@ -8,6 +8,10 @@
     - fine? adds character
  - can pickup items/mess with inv while perfoming other actions
     - this is kinda hard to fix, unfortunately
+    - it has some gameplay consequences too, like the player can instantly swap 
+        between gear between attacking / defending.
+    - i think for now, we probably just need to leave it, hard to fix without 
+        hurting UX during normal play.
  - should clear player controller when a new world is created
  - can still spawn in a detached room (see bad_spawn.png)
  - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that position when it becomes unhidden
@@ -39,6 +43,7 @@
  - quest system
  - status effects
     - really need these for potions
+    - ideally ALL potions would work solely via applying status effects
  
  
 [~dream features~]

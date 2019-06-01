@@ -149,6 +149,9 @@ class PlayerController(ActorController):
         self.current_requests_tick = 0
         self.current_requests = []  # list of (int: priority, Action: action)
 
+    def clear_requests(self):
+        self.current_requests.clear()
+
     def add_requests(self, actions, priority=1):
         cur_tick = gs.get_instance().tick_counter
         if cur_tick != self.current_requests_tick:
@@ -171,10 +174,11 @@ class PlayerController(ActorController):
             for (prio, action) in self.current_requests:
                 if action.get_actor() is None:
                     # TODO sometimes UI-triggered actions don't have access to the world/player
-                    # TODO so they just pass None as a placeholder...
+                    # TODO so they just pass None as a placeholder... it's fine..
                     action.actor_entity = world.get_player()
                 if action.get_actor() != actor:
-                    continue  # probably an old player action from the previous world..
+                    print("WARN: player controller given an action for a different actor: {}".format(action.get_actor()))
+                    continue
                 elif action.is_possible(world):
                     self.current_requests.clear()
                     return action
