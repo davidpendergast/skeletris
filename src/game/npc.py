@@ -37,6 +37,10 @@ TEMPLATES = {
 }
 
 
+def get_template(npc_id):
+    return TEMPLATES[npc_id]
+
+
 def get_sprites(npc_id):
     return TEMPLATES[npc_id].talking_sprites
 

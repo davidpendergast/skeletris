@@ -1,37 +1,41 @@
 
 [bugs]
 
- - can have rooms that border out-of-bounds with no walls in between
- - npcs can block path
  - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - fine? adds character
  - can pickup items/mess with inv while perfoming other actions
-    - this is kinda hard to fix, unfortunately
+    - this is kinda hard to fix
     - it has some gameplay consequences too, like the player can instantly swap 
         between gear between attacking / defending.
     - i think for now, we probably just need to leave it, hard to fix without 
         hurting UX during normal play.
- - should clear player controller when a new world is created
- - can still spawn in a detached room (see bad_spawn.png)
- - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that position when it becomes unhidden
- - pressing an arrow key while dialog is showing will hide dialog AND perform the action   
-    - it should just hide
  - when hit from above, you turn to face right
  - pickup entities bob down a little too far, below their own shadows
+ - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
+    - probably a graphics card issue honestly
+    
+ - world gen issues:
+     - can have rooms that border out-of-bounds with no walls in between 
+        - haven't seen this in a while, maybe fixed
+     - npcs can block path
+     - can still spawn in a detached room (see bad_spawn.png)
+
+ - fullscreen issues:
+    - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that 
+        position when it becomes unhidden
+    - lots of issues with full-screen on windows (on dk's jank-ass machine anyways)
  
 [current features]
 
  - level generation
-    - reduce "size" of rooms
-        - actually this may be OK
     - chest loot generation
     - description text for each decoration
  - remove remaining cruft from cubelike 1.0
     - password page
  - choose name for game
  - enemy generation
- - animation for skipping turn
+ - animation or some indicator for skipping turn
  - throwing items
  
  

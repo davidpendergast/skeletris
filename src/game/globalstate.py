@@ -46,10 +46,6 @@ class SaveDataBlob:
         self.inventory_positions = inventory_positions
 
     @staticmethod
-    def filepath_for_password(password):
-        return os.path.join("save_data", "saved_games", password + ".json")
-
-    @staticmethod
     def get_current_passwords_from_disk():
         res = []
         try:
@@ -250,7 +246,6 @@ class GlobalState:
 
         res = save_blob.save_to_disk(password)
         if res:
-            self.settings().set(settings.LAST_PASSWORD, password)
             self.save_settings_to_disk()
 
         return (res, password)
@@ -458,12 +453,6 @@ def create_new(menu, from_pw=None):
 
             if save_data.zone_id in zones._ALL_ZONES:
                 new_instance.initial_zone_id = save_data.zone_id
-
-    if loaded_from_pw:
-        new_instance.settings().set(settings.LAST_PASSWORD, from_pw)
-    elif menu.get_type() != menus.MenuManager.START_MENU:
-        # if we're just going to the start menu we don't want to wipe the pref.
-        new_instance.settings().set(settings.LAST_PASSWORD, None)
 
     set_instance(new_instance)
 

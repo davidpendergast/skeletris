@@ -2,8 +2,9 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, LockedDoorEntity, SaveStationEntity, SensorDoorEntity, \
-    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity
+from src.world.entities import Player, ExitEntity, LockedDoorEntity, SensorDoorEntity, \
+    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, NpcEntity
+import src.game.npc as npc
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -286,7 +287,9 @@ class WorldBlueprint:
                 print("WARN: Zone has no defined enemy types. Skipping enemy spawn at {}".format(spawn_pos))
 
         if self.save_station is not None:
-            save_entity = SaveStationEntity(*self.save_station)
+            on_interact = lambda ent, world: None
+            save_entity = NpcEntity(self.save_station[0], self.save_station[1],
+                                    npc.get_template(npc.NpcID.MACHINE), on_interact)
             w.add(save_entity)
 
         for chest_pos in self.chest_spawns:

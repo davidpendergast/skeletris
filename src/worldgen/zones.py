@@ -767,11 +767,11 @@ class CaveHorrorZone(Zone):
         #tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle,
         #                                       60, spriteref.ENTITY_LAYER, w=64*5, h=8)
         #tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
-        #tree_sprite.set_x_centered(False)
-        #tree_sprite.set_y_centered(False)
-        #tree_sprite.set_x(64 * tree_loc[0] - 64)
-        #tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
-        #w.add(tree_sprite)
+        tree_sprite.set_x_centered(False)
+        tree_sprite.set_y_centered(False)
+        tree_sprite.set_x(64 * tree_loc[0] - 64)
+        tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
+        w.add(tree_sprite)
 
         fight_end_loc = unknowns[self._fight_end_door][0]
 

@@ -1260,67 +1260,6 @@ class SensorDoorEntity(DoorEntity):
     pass
 
 
-class SaveStationEntity(Entity):
-    # TODO this isn't used, delete?
-
-    def __init__(self, grid_x, grid_y):
-        Entity.__init__(self, grid_x * 64 + 16, grid_y * 64, 32, 8)
-
-    def get_shadow_sprite(self):
-        return spriteref.chest_shadow
-
-    def update_images(self, anim_tick):
-        Entity.update_images(self, anim_tick)  # update shadow
-
-        if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
-
-        sprite = spriteref.save_stations[(anim_tick // 3) % len(spriteref.save_stations)]
-
-        x = self.x()
-        y = self.y() - sprite.height() * 2 + 8
-        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
-
-        if self._shadow is not None:
-            self._shadow = self._shadow.update(new_x=x)
-
-    def update(self, world):
-        self.update_images(gs.get_instance().anim_tick)
-
-    def is_save_station(self):
-        return True
-
-    def visible_in_darkness(self):
-        return False
-
-    def is_interactable(self):
-        return True
-
-    def interact_text(self):
-        return "save station"
-
-    def interact(self, world):
-        question = NpcDialog("save game?\n\n" +
-                             "{yes} {no}", spriteref.save_station_faces)
-
-        def _do_save(event, w):
-            if event.get_option_idx() == 0:
-                result, pw = gs.get_instance().save_game_to_disk()
-                if result:
-                    dialog = NpcDialog("game saved with password: {}".format(pw), spriteref.save_station_faces)
-                    gs.get_instance().dialog_manager().set_dialog(dialog)
-                else:
-                    gs.get_instance().dialog_manager().set_dialog(Dialog("failed to save.", spriteref.save_station_faces))
-
-            # gs.get_instance().player_state().do_full_heal()
-            # gs.get_instance().player_state().remove_all_statuses()
-
-        e_listener = question.build_listener(_do_save, single_use=True)
-
-        gs.get_instance().add_trigger(e_listener)
-        gs.get_instance().dialog_manager().set_dialog(question)
-
-
 class ExitEntity(Entity):
 
     def __init__(self, grid_x, grid_y, next_zone_id):
