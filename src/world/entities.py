@@ -518,7 +518,7 @@ class ActorEntity(Entity):
         self.executing_action_ticks = 0
 
         self.idle_sprites = Utils.listify(idle_sprites)
-        self.facing_right = random.random() > 0.5
+        self._facing_right = random.random() > 0.5
         self.base_color = (1, 1, 1)
 
         self._img = None
@@ -665,9 +665,9 @@ class ActorEntity(Entity):
                 self.update_action(world)
 
             if self.get_vel()[0] < -1.5:
-                self.facing_right = False
+                self.set_facing_right(False)
             elif self.get_vel()[0] > 1.5:
-                self.facing_right = True
+                self.set_facing_right(True)
 
             if self.is_moving():
                 self._was_moving = 0
@@ -683,10 +683,13 @@ class ActorEntity(Entity):
         return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
 
     def set_facing_right(self, facing_right):
-        self.facing_right = facing_right
+        self._facing_right = facing_right
 
-    def is_facing_right(self):
-        return self.facing_right
+    def facing_right(self):
+        return self._facing_right
+
+    def should_xflip(self):
+        return self.facing_right()
 
     def set_color(self, color=(1.0, 1.0, 1.0)):
         self.base_color = color
@@ -712,7 +715,7 @@ class ActorEntity(Entity):
         y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
 
         depth = self.get_depth()
-        xflip = self.is_facing_right()
+        xflip = self.should_xflip()
         color = self.get_perturbed_color()
         self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip)
@@ -781,7 +784,7 @@ class Player(ActorEntity):
             sprite_w = item_sprite.width() if sprite_rot % 2 == 0 else item_sprite.height()
             sprite_h = item_sprite.height() if sprite_rot % 2 == 0 else item_sprite.width()
 
-            draw_x = x_center - scale * (int(sprite_w / 2) + (1 if self.is_facing_right() else -1))
+            draw_x = x_center - scale * (int(sprite_w / 2) + (1 if self.should_xflip() else -1))
 
             if not self.is_moving():
                 bobs = (0, 1)
@@ -855,7 +858,7 @@ class Player(ActorEntity):
 
         corpse_anim = PlayerCorpseAnimation(pos[0], pos[1], 32)
         corpse_anim.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
-        corpse_anim.set_xflipped(self.is_facing_right())
+        corpse_anim.set_xflipped(self.should_xflip())
         world.add(corpse_anim)
 
         light_emitter = LightEmitterAnimation(pos[0], pos[1], 90, self.get_light_level(), 0)
@@ -864,14 +867,8 @@ class Player(ActorEntity):
         gs.get_instance().event_queue().add(events.PlayerDiedEvent(), delay=240)
         world.remove(self)
 
-    def is_facing_right(self):
-        # player sprites are drawn reverse of everyone else (._.)
-        return not super().is_facing_right()
-
-    def set_facing_right(self, facing_right):
-        # i don't wanna flip the sprites >:(
-        # they look better reversed
-        super().set_facing_right(not facing_right)
+    def should_xflip(self):
+        return not self.facing_right()
 
     def valid_to_stand_on(self, world, x, y):
         return (Entity.valid_to_stand_on(self, world, x, y) and
@@ -1465,7 +1462,7 @@ class NpcEntity(Entity):
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
         self.npc_template = npc_template
         self.color = color
-        self.facing_right = True
+        self._facing_right = True
         self.on_interact = on_interact
 
     def get_shadow_sprite(self):
@@ -1494,7 +1491,7 @@ class NpcEntity(Entity):
         x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
         y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
         depth = self.get_depth()
-        xflip = self.facing_right
+        xflip = self._facing_right
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip, new_color=self.color)
 
@@ -1505,9 +1502,9 @@ class NpcEntity(Entity):
         if p is not None:
             p_x = p.center()[0]
             if p_x < self.center()[0] - 32:
-                self.facing_right = False
+                self._facing_right = False
             elif p_x > self.center()[0] + 32:
-                self.facing_right = True
+                self._facing_right = True
 
         self.update_images()
 

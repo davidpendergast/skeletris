@@ -10,7 +10,6 @@
         between gear between attacking / defending.
     - i think for now, we probably just need to leave it, hard to fix without 
         hurting UX during normal play.
- - when hit from above, you turn to face right
  - pickup entities bob down a little too far, below their own shadows
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly

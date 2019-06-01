@@ -509,18 +509,17 @@ class AttackAction(Action):
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
 
-        face_dir = Utils.sub(self._results[1].center(), self.actor_entity.center())
-        if face_dir[0] < -world.cellsize() // 2:
-            self.actor_entity.facing_right = False
-        elif face_dir[0] > world.cellsize() // 2:
-            self.actor_entity.facing_right = True
+        attack_vec = Utils.sub(self._results[1].center(), self.actor_entity.center())
 
-        # make victim face attacker iff attack landed
-        if self._results[0] > 0:
-            if face_dir[0] < world.cellsize() // 2:
-                self._results[1].facing_right = True
-            elif face_dir[0] > world.cellsize() // 2:
-                self._results[1].facing_right = False
+        if attack_vec[0] < -world.cellsize() // 2:
+            self.actor_entity.set_facing_right(False)
+            if self._results[0] > 0:
+                self._results[1].set_facing_right(True)
+
+        elif attack_vec[0] > world.cellsize() // 2:
+            self.actor_entity.set_facing_right(True)
+            if self._results[0] > 0:
+                self._results[1].set_facing_right(False)
 
 
 class SkipTurnAction(Action):
