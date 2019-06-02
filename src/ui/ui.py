@@ -629,6 +629,42 @@ class MappedActionImage(InteractableImage):
             yield self._icon_img
 
 
+class StatusEffectImage(InteractableImage):
+
+    def __init__(self, status_effect, rect):
+        self.status_effect = status_effect
+        self.rect = rect
+
+        self._icon_img = None
+
+    def contains_point(self, x, y):
+        return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
+                self.rect[1] <= y < self.rect[1] + self.rect[3])
+
+    def on_click(self, x, y, button=1):
+        """returns: True if click was absorbed, False otherwise"""
+        return False
+
+    def get_tooltip_target_at(self, x, y):
+        return self.status_effect
+
+    def is_dirty(self):
+        return True
+
+    def update_images(self):
+        color = self.status_effect.get_color()
+        color = gs.get_instance().get_pulsing_color(color)
+
+        if self._icon_img is None:
+            self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
+        self._icon_img = self._icon_img.update(new_model=self.status_effect.get_icon(), new_color=color,
+                                               new_x=self.rect[0], new_y=self.rect[1])
+
+    def all_bundles(self):
+        if self._icon_img is not None:
+            yield self._icon_img
+
+
 class HealthBarPanel(InteractableImage):
 
     SIZE = (400 * 2, 53 * 2)
@@ -646,6 +682,8 @@ class HealthBarPanel(InteractableImage):
 
         self._action_imgs = [None] * 6  # list of MappedActionImages
 
+        self._status_imgs = []  # list of StatusEffectImages
+
         #self._turn_count_img = None
         #self._time_img = None
 
@@ -653,7 +691,14 @@ class HealthBarPanel(InteractableImage):
         if super().contains_point(x, y):
             return True
         else:
-            return Utils.rect_contains(self._rect, (x, y)) or Utils.rect_contains(self._bar_rect, (x, y))
+            if Utils.rect_contains(self._rect, (x, y)) or Utils.rect_contains(self._bar_rect, (x, y)):
+                return True
+
+            for status_img in self._status_imgs:
+                if status_img.contains_point(x, y):
+                    return True
+
+            return False
 
     def get_tooltip_target_at(self, x, y):
         if Utils.rect_contains(self._bar_rect, (x, y)):
@@ -663,6 +708,45 @@ class HealthBarPanel(InteractableImage):
             return target
         else:
             return super().get_tooltip_target_at(x, y)
+
+    def _update_action_icons(self):
+        x_starts = [self._rect[0] + 87 * 2 + i * 40 * 2 for i in range(0, 3)] + \
+                   [self._rect[0] + 205 * 2 + i * 40 * 2 for i in range(0, 3)]
+        y_start = self._rect[1] + 19 * 2
+        for i in range(0, 6):
+            action_prov = gs.get_instance().get_mapped_action(i)
+            rect = [x_starts[i], y_start, 28 * 2, 28 * 2]
+
+            if self._action_imgs[i] is None:
+                self._action_imgs[i] = MappedActionImage(action_prov, rect)
+            else:
+                self._action_imgs[i].action_prov = action_prov
+                self._action_imgs[i].rect = rect
+
+            if self._action_imgs[i].is_dirty():
+                self._action_imgs[i].update_images()
+
+    def _update_status_effect_icons(self):
+        x_start = self._rect[0] + self._rect[2] - 71 * 2
+        x_starts = [x_start + i*18 for i in range(0, 4)]
+        y_start = self._rect[1] + self._rect[3] - 61 * 2
+
+        effects = gs.get_instance().player_state().all_status_effects()
+
+        while len(effects) < len(self._status_imgs):
+            to_del = self._status_imgs.pop()
+            for bun in to_del.all_bundles():
+                RenderEngine.get_instance().remove(bun)
+
+        for i in range(0, len(effects)):
+            r = [x_starts[i % 4], y_start - 18 * 2 * (i // 4), 32, 32]
+            if i >= len(self._status_imgs):
+                self._status_imgs.append(StatusEffectImage(effects[i], r))
+            else:
+                cur_img = self._status_imgs[i]
+                cur_img.status_effect = effects[i]
+                cur_img.rect = r
+                cur_img.update_images()
 
     def update_images(self):
         render_eng = RenderEngine.get_instance()
@@ -723,20 +807,8 @@ class HealthBarPanel(InteractableImage):
 
         self._bar_img = self._bar_img.update(new_model=bar_sprite, new_x=bar_x, new_y=y, new_color=color)
 
-        x_start = [x + 87 * 2 + i*40*2 for i in range(0, 3)] + [x + 205*2 + i*40*2 for i in range(0, 3)]
-        y_start = y + 19 * 2
-        for i in range(0, 6):
-            action_prov = gs.get_instance().get_mapped_action(i)
-            rect = [x_start[i], y_start, 28*2, 28*2]
-
-            if self._action_imgs[i] is None:
-                self._action_imgs[i] = MappedActionImage(action_prov, rect)
-            else:
-                self._action_imgs[i].action_prov = action_prov
-                self._action_imgs[i].rect = rect
-
-            if self._action_imgs[i].is_dirty():
-                self._action_imgs[i].update_images()
+        self._update_action_icons()
+        self._update_status_effect_icons()
 
         #time_info_x = self._rect[0] + 8 * 2
         #time_info_y = self._rect[1] + 16 * 2
@@ -769,6 +841,8 @@ class HealthBarPanel(InteractableImage):
         for i in self._action_imgs:
             if i is not None:
                 yield i
+        for i in self._status_imgs:
+            yield i
 
     def is_dirty(self):
         return True

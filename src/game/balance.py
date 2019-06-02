@@ -1,28 +1,10 @@
 
+STATUS_NIGHT_VISION_VAL = 2
+STATUS_EFFECT_PLUS_DEFENSE_VAL = 3
 
-_INSTANCE = None
+POTION_SMALL_HEAL_VAL = 3
+POTION_MED_HEAL_VAL = 8
+POTION_HEAL_DURATION = 3
 
-
-class ItemGenConsts:
-
-    def __init__(self):
-        pass
-
-
-class BalanceConsts:
-    """All the constants that control difficulty / RNG in the game"""
-
-    @staticmethod
-    def create_instance(bal=None):
-        if bal is not None:
-            _INSTANCE = bal
-        else:
-            _INSTANCE = BalanceConsts()
-
-    @staticmethod
-    def get_instance():
-        return _INSTANCE
-
-    def __init__(self):
-        self.itemgen = ItemGenConsts()
-        self.enemygen = EnemyGenConsts()
+POTION_POIS_VAL = 2
+POTION_POIS_DURATION = 4

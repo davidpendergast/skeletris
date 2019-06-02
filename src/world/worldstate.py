@@ -480,7 +480,6 @@ class World:
                     break
                 else:
                     a_state.set_ready_to_act(False)
-                    a_state.increment_status_effects()
 
                     if action.is_possible(self):
                         dur_modifier = a_state.turn_duration_modifier()

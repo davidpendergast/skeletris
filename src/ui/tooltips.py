@@ -8,6 +8,7 @@ import src.game.enemies as enemies
 import src.game.gameengine as gameengine
 import src.utils.colors as colors
 import src.game.globalstate as gs
+import src.game.statuseffects as statuseffects
 
 
 class TooltipFactory:
@@ -32,7 +33,7 @@ class TooltipFactory:
             tag_str = ", ".join([str(t) for t in all_tags])
             text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
 
-        all_stats = [x for x in target_item.all_stats()]
+        all_stats = [x for x in target_item.all_applied_stats()]
         added_newline = False
         for stat in all_stats:
             if not stat.is_hidden():
@@ -106,12 +107,31 @@ class TooltipFactory:
         text_builder.add_line("")
 
         if action_prov.get_item() is not None:
-            for item_stat in action_prov.get_item().all_stats():
+            for item_stat in action_prov.get_item().all_applied_stats():
                 if not item_stat.is_hidden() and item_stat.is_local():
                     text_builder.add_line(str(item_stat), color=item_stat.color())
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=action_prov, xy=xy, layer=layer)
+
+    @staticmethod
+    def build_status_effect_tooltip(effect, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        text_builder = TextBuilder()
+        text_builder.add_line(effect.get_name())
+
+        # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
+        # also TODO, this number won't update until you regen the tooltip
+        turns_remaining = gs.get_instance().player_state().get_turns_remaining(effect)
+
+        for applied_stat in effect.all_applied_stats():
+            if not applied_stat.is_hidden():
+                text_builder.add_line(str(applied_stat), color=applied_stat.color())
+
+        text_builder.add_line("")
+        text_builder.add_line("({} turns remaining)".format(turns_remaining), color=colors.LIGHT_GRAY)
+
+        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
+                               target=effect, xy=xy, layer=layer)
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
@@ -128,6 +148,8 @@ class TooltipFactory:
             return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, gameengine.ActionProvider):
             return TooltipFactory.build_action_provider_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, statuseffects.StatusEffect):
+            return TooltipFactory.build_status_effect_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, TextBuilder):
             return TextOnlyTooltip(obj.text(), custom_colors=obj.custom_colors(), target=obj, xy=xy, layer=layer)
         else:

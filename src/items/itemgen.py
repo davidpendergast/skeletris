@@ -1,7 +1,7 @@
 import random
 import math
 
-from src.items.item import ItemTypes, SpriteItem, StatCubesItem, ItemStat
+from src.items.item import ItemTypes, SpriteItem, StatCubesItem, AppliedStat
 from src.game.stats import StatTypes, StatType, StatProvider
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -9,6 +9,9 @@ from src.items.cubeutils import CubeUtils
 import src.utils.colors as colors
 import src.game.dialog as dialog
 import src.game.globalstate as gs
+import src.game.statuseffects as statuseffects
+import src.game.balance as balance
+import src.game.debug as debug
 
 
 CORE_STATS = [StatTypes.ATT, StatTypes.DEF, StatTypes.VIT]
@@ -36,34 +39,33 @@ class ItemFactory:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
             return SpriteItem("Sword of Truth", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 4, local=True)],
+                              [AppliedStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
             return SpriteItem("Whip of Sapping", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 3, local=True),
-                               ItemStat(StatTypes.ENERGY_DRAIN, 1, local=True)],
+                              [AppliedStat(StatTypes.ATT, 3, local=True),
+                               AppliedStat(StatTypes.ENERGY_DRAIN, 1, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
             return SpriteItem("Dagger of Quickness", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 3, local=True)],
+                              [AppliedStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_ATTACK]
             return SpriteItem("Shield of Mending", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 2, local=True),
-                               ItemStat(StatTypes.DEF, 3),
-                               ItemStat(StatTypes.PLUS_DEFENSE_ON_HIT, 4, local=True)],
+                              [AppliedStat(StatTypes.ATT, 2, local=True),
+                               AppliedStat(StatTypes.PLUS_DEFENSE_ON_HIT, 4, local=True)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
             return SpriteItem("Spear of Justice", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 4, local=True)],
+                              [AppliedStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
@@ -73,13 +75,13 @@ class ItemFactory:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
             return SpriteItem("Bow of Speed", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 3, local=True)],
+                              [AppliedStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]
             return SpriteItem("Axe of Striking", item_type, level, cubes,
-                              [ItemStat(StatTypes.ATT, 5, local=True)],
+                              [AppliedStat(StatTypes.ATT, 5, local=True)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
         return None
@@ -87,13 +89,12 @@ class ItemFactory:
 
 class PotionTemplate:
 
-    def __init__(self, name, color, dialog_text, min_level=0, hp_change=0, bonus_consume_lambda=None):
+    def __init__(self, name, color, dialog_text, min_level=0, status=None):
         self.name = name
         self.color = color
         self.dialog_text = dialog_text
         self.min_level = min_level
-        self.bonus_consume_lambda = bonus_consume_lambda
-        self.hp_change = hp_change
+        self.status_effect = status
 
     def on_consume(self, actor, world):
         if self.dialog_text is not None:
@@ -101,50 +102,56 @@ class PotionTemplate:
             gs.get_instance().dialog_manager().set_dialog(dia)
         if self.color is not None:
             actor.perturb_color(self.color, 30)
-        if self.bonus_consume_lambda is not None:
-            self.bonus_consume_lambda(actor, world)
-        if self.hp_change is not 0:
-            cur_hp = actor.get_actor_state().hp()
-            actor.get_actor_state().set_hp(cur_hp + self.hp_change)
-            new_hp = actor.get_actor_state().hp()
-            true_diff = new_hp - cur_hp
-            if true_diff > 0:
-                world.show_floating_text("+{}".format(true_diff), colors.G_TEXT_COLOR, 3, actor)
-            elif true_diff < 0:
-                world.show_floating_text("-{}".format(-true_diff), colors.R_TEXT_COLOR, 3, actor)
+        if self.status_effect is not None:
+            actor.get_actor_state().add_status_effect(self.status_effect)
 
 
-HEALING = PotionTemplate("Potion of Healing", colors.GREEN,
-                         "That was refreshing.", hp_change=8, min_level=0)
+HEALING = PotionTemplate("Potion of Healing", colors.GREEN, "That was refreshing.",
+                         min_level=0,
+                         status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
+                                                               balance.POTION_HEAL_DURATION))
 
-MAJOR_HEALING = PotionTemplate("Major Potion of Healing", colors.GREEN,
-                               "That was refreshing!", hp_change=15, min_level=5)
 
-HARMING = PotionTemplate("Potion of Harming", colors.RED,
-                         "Ha, I knew that would happen.", hp_change=-5, min_level=7)
+MAJOR_HEALING = PotionTemplate("Major Potion of Healing", colors.GREEN, "That was refreshing!",
+                               min_level=5,
+                               status=statuseffects.new_regen_effect(balance.POTION_MED_HEAL_VAL,
+                                                                     balance.POTION_HEAL_DURATION))
 
-NULL_POTION = PotionTemplate("Potion of Placebo", colors.WHITE,
-                             "I feel a little better... I think?", hp_change=1, min_level=6)
+HARMING = PotionTemplate("Potion of Harming", colors.RED,  "Ha, I knew that would happen.",
+                         min_level=7,
+                         status=statuseffects.new_poison_effect(balance.POTION_POIS_VAL,
+                                                                balance.POTION_POIS_DURATION))
 
-MAJOR_NULL_POTION = PotionTemplate("Major Potion of Placebo", colors.WHITE,
-                                   "Hm, tastes like antidepressants.", hp_change=-3, min_level=12)
+NULL_POTION = PotionTemplate("Potion of Placebo", colors.WHITE, "I feel a little better... I think?",
+                             min_level=6)
+
+MAJOR_NULL_POTION = PotionTemplate("Major Potion of Placebo", colors.WHITE, "Hm, tastes like antidepressants.",
+                                   min_level=12)
 
 
 class PotionTemplates:
 
     @staticmethod
-    def all_templates(for_level=0):
+    def all_templates(for_level=None):
         all_of_em = [HEALING, MAJOR_HEALING,
                      HARMING,
                      NULL_POTION, MAJOR_NULL_POTION]
-        return [t for t in all_of_em if t.min_level <= for_level]
+        if for_level is None:
+            return all_of_em
+        else:
+            return [t for t in all_of_em if t.min_level <= for_level]
 
 
 class PotionItemFactory:
 
     @staticmethod
     def gen_item(level):
-        templates = [t for t in PotionTemplates.all_templates(for_level=level)]
+        if debug.ignore_level_restrictions_on_drops():
+            templates = [t for t in PotionTemplates.all_templates()]
+            print("templates = {}".format(templates))
+        else:
+            templates = [t for t in PotionTemplates.all_templates(for_level=level)]
+
         if len(templates) == 0:
             template = NULL_POTION
         else:
@@ -205,7 +212,7 @@ class StatCubesItemFactory:
         stat = CORE_STATS[int(random.random() * len(CORE_STATS))]
         low, high = ItemStatRanges.get_range(stat, lvl)
 
-        return ItemStat(stat, random.randint(low, high))
+        return AppliedStat(stat, random.randint(low, high))
 
     @staticmethod
     def gen_non_core_stats(lvl, n, exclude=()):
@@ -214,7 +221,7 @@ class StatCubesItemFactory:
         while len(res) < n and len(choices) > 0:
             choice = choices[int(len(choices) * random.random())]
             low, high = ItemStatRanges.get_range(choice, lvl)
-            res.append(ItemStat(choice, random.randint(low, high)))
+            res.append(AppliedStat(choice, random.randint(low, high)))
             choices.remove(choice)
 
         return res

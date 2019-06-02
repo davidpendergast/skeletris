@@ -15,6 +15,7 @@ import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
+import src.game.stats as stats
 
 ENTITY_UID_COUNTER = 0
 
@@ -654,6 +655,23 @@ class ActorEntity(Entity):
                 self.executing_action = None
                 self.executing_action_duration = 1
                 self.executing_action_ticks = 0
+
+                a_state = self.get_actor_state()
+
+                if a_state.is_alive():
+                    a_state.countdown_status_effects()
+
+                    hp_change = 0
+                    for eff in a_state.all_status_effects():
+                        hp_change += eff.stat_value(stats.StatTypes.HP_REGEN)
+                        hp_change -= eff.stat_value(stats.StatTypes.POISON)
+                    old_hp = a_state.hp()
+                    a_state.set_hp(old_hp + hp_change)
+                    new_hp = a_state.hp()
+                    if new_hp > old_hp:
+                        world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 3, self)
+                    elif new_hp < old_hp:
+                        world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 3, self)
             else:
                 prog = Utils.bound(self.executing_action_ticks / self.executing_action_duration, 0.0, 1.0)
                 self.executing_action.animate_in_world(prog, world)

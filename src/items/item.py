@@ -26,9 +26,9 @@ ITEM_CORE_NAME = {
 }
 
 
-class ItemStat:
+class AppliedStat:
 
-    """Stat that is attached to an item"""
+    """A stat with a value, generally "applied" to something like an item."""
     def __init__(self, stat_type, value, local=False):
         self.stat_type = stat_type
         self.value = value
@@ -202,12 +202,12 @@ class Item(StatProvider):
 
     def stat_value(self, stat_type, local=False):
         res = 0
-        for stat in self.all_stats():
+        for stat in self.all_applied_stats():
             if stat.stat_type == stat_type and stat.local == local:
                 res += stat.value
         return res
 
-    def all_stats(self):
+    def all_applied_stats(self):
         return self.stats
 
     def all_actions(self):
@@ -226,7 +226,7 @@ class Item(StatProvider):
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, color=(1,1,1), title_color=(1, 1, 1), actions=None):
+                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
                       can_rotate=can_rotate, title_color=title_color, actions=actions)
@@ -361,7 +361,7 @@ class StatCubesItem(Item):
 
         stats = []
         for stat_blob in blob["stats"]:
-            stat = ItemStat.from_json(stat_blob)
+            stat = AppliedStat.from_json(stat_blob)
             stats.append(stat)
 
         uuid_str = str(blob["uuid"])

@@ -1,7 +1,9 @@
 from src.game.stats import StatProvider, BasicStatLookup
 from src.game.stats import StatTypes
+from src.items.item import AppliedStat
 import src.utils.colors as colors
 import src.game.spriteref as spriteref
+import src.game.balance as balance
 
 _UNIQUE_KEY = 0
 def _new_unique_key():
@@ -12,19 +14,26 @@ def _new_unique_key():
 
 class StatusEffect(StatProvider):
 
-    def __init__(self, name, duration, color, icon, stat_dict, unique_key=None):
+    def __init__(self, name, duration, color, icon, applied_stats, unique_key=None):
         self.name = name
         self.duration = duration
         self.color = color
         self.icon = icon
-        self.stat_lookup = BasicStatLookup(stat_dict)
+        self.applied_stats = applied_stats
         self.unique_key = unique_key if unique_key is not None else _new_unique_key()
 
     def stat_value(self, stat_type, local=False):
-        return self.stat_lookup.stat_value(stat_type, local=local)
+        res = 0
+        for stat in self.all_applied_stats():
+            if stat.stat_type == stat_type and stat.local == local:
+                res += stat.value
+        return res
 
     def set_stat_value(self, stat_type, val):
         raise ValueError("can't change stat values of a StatusEffect after the fact.")
+
+    def all_applied_stats(self):
+        return self.applied_stats
 
     def get_name(self):
         return self.name
@@ -54,14 +63,24 @@ class StatusEffect(StatProvider):
         return hash(self.unique_key)
 
 
-def new_night_vision_effect(val, duration):
-    stats = {StatTypes.LIGHT_LEVEL: val}
+def new_night_vision_effect(duration):
+    stats = [AppliedStat(StatTypes.LIGHT_LEVEL, balance.STATUS_NIGHT_VISION_VAL)]
     return StatusEffect("Night Vision", duration, colors.WHITE,
                         spriteref.status_eye_icon, stats, unique_key="vision")
 
 
-def new_iron_defenses_effect(duration):
-    stats = {StatTypes.DEF: 3}
-    return StatusEffect("Iron Defenses", duration, colors.BLUE,
+def new_plus_defenses_effect(duration):
+    stats = [AppliedStat(StatTypes.DEF, balance.STATUS_EFFECT_PLUS_DEFENSE_VAL)]
+    return StatusEffect("Increased Defenses", duration, StatTypes.DEF.get_color(),
                         spriteref.status_shield_icon, stats, unique_key="shield_def_bonus")
 
+
+def new_regen_effect(val, duration):
+    stats = [AppliedStat(StatTypes.HP_REGEN, val)]
+    return StatusEffect("Regeneration", duration, StatTypes.HP_REGEN.get_color(),
+                        spriteref.status_sparkles_icon, stats)
+
+def new_poison_effect(val, duration):
+    stats = [AppliedStat(StatTypes.POISON, val)]
+    return StatusEffect("Poisoned", duration, StatTypes.POISON.get_color(),
+                        spriteref.status_drop_icon, stats)

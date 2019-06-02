@@ -21,6 +21,7 @@ class ActorState:
         self.inventory_ = inventory
 
         self.permanent_effects = []
+
         self.status_effects = {}  # StatusEffect -> turns remaining
 
         self.current_hp = self.max_hp()
@@ -144,7 +145,7 @@ class ActorState:
         res.sort(key=lambda s: self.status_effects[s], reverse=True)
         return res
 
-    def increment_status_effects(self):
+    def countdown_status_effects(self):
         all_effects = self.all_status_effects()
         for e in all_effects:
             if self.status_effects[e] <= 0:
@@ -501,12 +502,14 @@ class AttackAction(Action):
 
                 new_status_effects = []
 
-                iron_def_duration = a_state.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, self.item)
-                if iron_def_duration > 0:
-                    new_status_effects.append(statuseffects.new_iron_defenses_effect(iron_def_duration))
+                plus_def_duration = a_state.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, self.item)
+                if plus_def_duration > 0:
+                    new_status_effects.append(statuseffects.new_plus_defenses_effect(plus_def_duration))
 
                 for s in new_status_effects:
                     a_state.add_status_effect(s)
+                    if s.get_color() is not None:
+                        self.actor_entity.perturb_color(s.get_color(), 30)
 
     def start(self, world):
         self._determine_attack_result(world)
