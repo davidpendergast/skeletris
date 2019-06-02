@@ -4,30 +4,24 @@ from src.utils.util import Utils
 class EnemyDroprate:
 
     @staticmethod
-    def item_chances(level, is_rare):
+    def item_chances(level):
         return 2 + int(level / 10)
 
     @staticmethod
-    def rate_per_item(level, is_rare):
-        if is_rare:
-            return 0.25
-        else:
-            return 0.05
+    def rate_per_item(level):
+        return 0.05
 
     @staticmethod
-    def guaranteed_items(level, is_rare):
+    def guaranteed_items(level):
         return 0
 
     @staticmethod
-    def potion_chances(level, is_rare):
-        return 3
+    def potion_chances(level):
+        return 1
 
     @staticmethod
-    def rate_per_potion(level, is_rare):
-        if is_rare:
-            return 0.3
-        else:
-            return 0.1
+    def rate_per_potion(level):
+        return 0.1
 
 
 class ChestDroprate:
@@ -42,7 +36,7 @@ class ChestDroprate:
 
     @staticmethod
     def guaranteed_items(level):
-        return 1
+        return 0
 
 
 class ItemRates:

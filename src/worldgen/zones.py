@@ -628,7 +628,7 @@ class DesolateCaveZone(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return enemies.EASY_CAVE_ENEMIES
+        return [enemies.TEMPLATE_FLAPPUM]
 
 
 class DesolateCaveZone2(Zone):
@@ -648,7 +648,7 @@ class DesolateCaveZone2(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return enemies.EASY_CAVE_ENEMIES
+        return [enemies.TEMPLATE_FLAPPUM]
 
 
 class DesolateCaveZone3(Zone):
@@ -667,7 +667,7 @@ class DesolateCaveZone3(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return enemies.HARDER_CAVE_ENEMIES
+        return [enemies.TEMPLATE_FLAPPUM, enemies.TEMPLATE_MUNCHER_SMALL]
 
 
 class HauntedForestZone1(Zone):
@@ -691,7 +691,7 @@ class HauntedForestZone1(Zone):
         return w
 
     def get_enemies(self):
-        return enemies.FOREST_ENEMIES
+        return [enemies.TEMPLATE_FLAPPUM, enemies.TEMPLATE_MUNCHER_SMALL_ALT, enemies.TEMPLATE_FUNGOI]
 
 
 class FrogLairZone(Zone):
@@ -707,11 +707,11 @@ class FrogLairZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
-        w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
+        # w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
 
         if not gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
             frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
-            frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG_BOSS, self.get_level())
+            frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
             w.add(frog_entity, gridcell=frog_spawn)
 
             def kill_action(_event, _world):

@@ -196,7 +196,7 @@ class World:
     def floor_type_at(self, grid_xy):
         if grid_xy in self._floor_art_overrides:
             return self._floor_art_overrides[grid_xy]
-        elif self.get_geo(*grid_xy) == World.HOLE:
+        elif self.get_geo(grid_xy[0], grid_xy[1]) == World.HOLE:
             return spriteref.FLOOR_HOLE_ID
         else:
             return self._floor_type

@@ -13,6 +13,7 @@
  - pickup entities bob down a little too far, below their own shadows
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
+ - "ValueError: failed to place start anywhere on path"
     
  - world gen issues:
      - can have rooms that border out-of-bounds with no walls in between 

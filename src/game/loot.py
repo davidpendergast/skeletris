@@ -27,13 +27,13 @@ class LootFactory:
         return loot
 
     @staticmethod
-    def gen_loot(level, is_rare):
+    def gen_loot(level):
         """
             returns: list of items
         """
-        n_items = EnemyDroprate.guaranteed_items(level, is_rare)
-        for _ in range(0, EnemyDroprate.item_chances(level, is_rare)):
-            if random.random() < EnemyDroprate.rate_per_item(level, is_rare):
+        n_items = EnemyDroprate.guaranteed_items(level)
+        for _ in range(0, EnemyDroprate.item_chances(level)):
+            if random.random() < EnemyDroprate.rate_per_item(level):
                 n_items += 1
 
         loot = []
@@ -42,9 +42,9 @@ class LootFactory:
         return loot
 
     @staticmethod
-    def gen_num_potions_to_drop(level, is_rare):
+    def gen_num_potions_to_drop(level):
         num = 0
-        for i in range(EnemyDroprate.potion_chances(level, is_rare)):
-            if random.random() < EnemyDroprate.rate_per_potion(level, is_rare):
+        for i in range(EnemyDroprate.potion_chances(level)):
+            if random.random() < EnemyDroprate.rate_per_potion(level):
                 num += 1
         return num

@@ -660,7 +660,13 @@ class CinematicMenu(Menu):
 
             self.cinematic_panel.update(current_image, current_text)
 
-            if self.active_tick_count > 10 and InputState.get_instance().was_pressed(gs.get_instance().settings().interact_key()):
+            pressed_key = False
+            for k in gs.get_instance().settings().all_dialog_dismiss_keys():
+                if InputState.get_instance().was_pressed(k):
+                    pressed_key = True
+                    break
+
+            if self.active_tick_count > 10 and pressed_key:
                 if text_finished_scrolling:
                     self.active_scene = None
                 else:

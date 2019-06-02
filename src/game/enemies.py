@@ -51,6 +51,15 @@ class FlappumTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(0, 4)
 
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 5,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 1,
+            StatTypes.DEF: 2
+        })
+
 
 class TrillaTemplate(EnemyTemplate):
 
@@ -62,11 +71,11 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 6,
+            StatTypes.VIT: 12,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 2,
             StatTypes.UNARMED_ATT: 0,
-            StatTypes.DEF: 1
+            StatTypes.DEF: 4
         })
 
     def get_level_range(self):
@@ -109,11 +118,11 @@ class SmallMuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 2,
-            StatTypes.SPEED: 3,
+            StatTypes.VIT: 8,
+            StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 1
+            StatTypes.DEF: 2
         })
 
 
@@ -129,6 +138,15 @@ class MuncherTemplate(EnemyTemplate):
 
     def get_level_range(self):
         return range(10, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 16,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 8,
+            StatTypes.DEF: 6
+        })
 
 
 class CycloiTemplate(EnemyTemplate):
@@ -162,7 +180,16 @@ class DicelTemplate(EnemyTemplate):
         return spriteref.enemy_dicel_all
 
     def get_level_range(self):
-        return ()
+        return range(4, 7)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 12,
+            StatTypes.SPEED: 8,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 3,
+            StatTypes.DEF: 4
+        })
 
 
 class FallenTemplate(EnemyTemplate):
@@ -174,7 +201,16 @@ class FallenTemplate(EnemyTemplate):
         return spriteref.enemy_the_fallen_all
 
     def get_level_range(self):
-        return range(14, 16)
+        return range(8, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 16,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 4,
+            StatTypes.DEF: 4
+        })
 
 
 # TODO - these also suck really bad
@@ -187,10 +223,19 @@ class FungoiTemplate(EnemyTemplate):
         return spriteref.enemy_fungoi_all
 
     def get_level_range(self):
-        return ()
+        return range(12, 15)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 10,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 4,
+            StatTypes.DEF: 2
+        })
 
 
-class FrogBoss(EnemyTemplate):
+class FrogTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Cave Beast", spriteref.enormous_shadow)
@@ -203,7 +248,16 @@ class FrogBoss(EnemyTemplate):
         return EnemyTemplate.get_base_stats(self)
 
     def get_level_range(self):
-        return ()
+        return range(14, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 30,
+            StatTypes.SPEED: 3,
+            StatTypes.ATT: 2,
+            StatTypes.UNARMED_ATT: 4,
+            StatTypes.DEF: 8
+        })
 
 
 TEMPLATE_TRILLA = TrillaTemplate()
@@ -217,8 +271,7 @@ TEMPLATE_CYCLOI = CycloiTemplate()
 TEMPLATE_DICEL = DicelTemplate()
 TEMPLATE_THE_FALLEN = FallenTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
-
-TEMPLATE_FROG_BOSS = FrogBoss()
+TEMPLATE_FROG = FrogTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
@@ -227,13 +280,9 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_CYCLOI,
                         TEMPLATE_FLAPPUM,
                         TEMPLATE_TRILLA,
-                        TEMPLATE_TRILLITE]
-
-EASY_CAVE_ENEMIES = [TEMPLATE_FLAPPUM]
-HARDER_CAVE_ENEMIES = EASY_CAVE_ENEMIES + [TEMPLATE_MUNCHER_SMALL]
-
-FOREST_ENEMIES = [TEMPLATE_FLAPPUM, TEMPLATE_MUNCHER_SMALL_ALT, TEMPLATE_FUNGOI]
-HARDER_FOREST_ENEMIES = FOREST_ENEMIES + [TEMPLATE_THE_FALLEN]
+                        TEMPLATE_TRILLITE,
+                        TEMPLATE_FROG,
+                        TEMPLATE_FUNGOI]
 
 
 def get_rand_template_for_level(level, rand_val):
