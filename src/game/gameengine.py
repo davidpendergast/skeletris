@@ -266,9 +266,9 @@ class Action:
             pos = self.get_actor().center()
             grid_pos = world.to_grid_coords(*pos)
             if grid_pos[0] < self.get_position()[0]:
-                self.get_actor().set_facing_right(False)
-            elif grid_pos[0] > self.get_position()[0]:
                 self.get_actor().set_facing_right(True)
+            elif grid_pos[0] > self.get_position()[0]:
+                self.get_actor().set_facing_right(False)
 
     def start(self, world):
         pass

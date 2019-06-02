@@ -20,10 +20,14 @@ class LootFactory:
 
         loot = []
         while len(loot) < n_items:
-            item_type = random.choice([e for e in ItemTypes.all_types()])
-            item = ItemFactory.gen_item(level, item_type)
-            if item is not None:
-                loot.append(item)
+            item_type_choices = ItemTypes.all_types(level)
+            if len(item_type_choices) == 0:
+                print("WARN: no valid item types to drop as loot at level: {}".format(level))
+                return []
+            else:
+                item = ItemFactory.gen_item(level, random.choice(item_type_choices))
+                if item is not None:
+                    loot.append(item)
         return loot
 
     @staticmethod

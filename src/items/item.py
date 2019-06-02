@@ -80,9 +80,10 @@ class ItemTags:
 
 class ItemType:
 
-    def __init__(self, name, tags):
+    def __init__(self, name, tags, min_level=0, max_level=float("inf")):
         self.name = name
         self.tags = tags
+        self.level_range = (min_level, max_level)
 
     def get_name(self):
         return self.name
@@ -93,14 +94,20 @@ class ItemType:
     def has_tag(self, tag):
         return tag in self.tags
 
+    def get_level_range(self):
+        return self.level_range
+
+    def __str__(self):
+        return self.name
+
 
 _ALL_TYPES = []
 
 
-def _new_type(name, tags):
+def _new_type(name, tags, min_level=0, max_level=float('inf')):
     if not isinstance(tags, tuple):
         raise ValueError("tags needs to be a tuple: {}".format(tags))
-    res = ItemType(name, tags)
+    res = ItemType(name, tags, min_level=min_level, max_level=max_level)
     _ALL_TYPES.append(res)
     return res
 
@@ -108,21 +115,28 @@ def _new_type(name, tags):
 class ItemTypes:
 
     @staticmethod
-    def all_types():
-        return list(_ALL_TYPES)
+    def all_types(at_level=None):
+        if at_level is None:
+            return list(_ALL_TYPES)
+        else:
+            res = []
+            for t in _ALL_TYPES:
+                if t.get_level_range()[0] <= at_level <= t.get_level_range()[1]:
+                    res.append(t)
+            return res
 
     STAT_CUBE_5 = _new_type("Small Trinket", tuple([ItemTags.EQUIPMENT]))
-    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]))
-    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT])),
+    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]), min_level=7)
+    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT]), min_level=5),
 
-    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3)
+    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
+    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7)
+    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
     DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
+    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9)
+    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9)
+    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7)
 
     POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE]))
 
@@ -198,12 +212,6 @@ class Item(StatProvider):
 
     def all_actions(self):
         return self.item_actions
-
-    def core_stats(self):
-        return [s for s in self.stats if s.stat_type in CORE_STATS]
-
-    def non_core_stats(self):
-        return [s for s in self.stats if s.stat_type not in CORE_STATS]
 
     def get_small_img(self, scale, layer_id, input_img=None):
         pass

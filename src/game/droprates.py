@@ -5,15 +5,15 @@ class EnemyDroprate:
 
     @staticmethod
     def item_chances(level):
-        return 2 + int(level / 10)
+        return 2 + int(level / 7)
 
     @staticmethod
     def rate_per_item(level):
-        return 0.05
+        return 0.33
 
     @staticmethod
     def guaranteed_items(level):
-        return 0
+        return 1
 
     @staticmethod
     def potion_chances(level):
@@ -36,7 +36,7 @@ class ChestDroprate:
 
     @staticmethod
     def guaranteed_items(level):
-        return 0
+        return 1
 
 
 class ItemRates:

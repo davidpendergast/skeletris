@@ -803,10 +803,10 @@ class FeatureUtils:
 
 class Features:
     START = Feature("start",
-                    FeatureUtils.convert(["---",
+                    FeatureUtils.convert(["?-?",
                                           "WWW",
                                           "..."]),
-                    FeatureUtils.convert(["-p-",
+                    FeatureUtils.convert(["?p?",
                                           "WvW",
                                           "WWW"]), can_rotate=False)
 

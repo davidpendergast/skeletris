@@ -305,9 +305,11 @@ class EnemyFactory:
     def get_state(template, level):
         inv = inventory.FakeInventoryState()
 
-        item_type = random.choice(item.ItemTypes.all_types())
-        loot_item = itemgen.ItemFactory.gen_item(level, item_type)
-        inv.add_to_inv(loot_item)
+        item_type_choices = item.ItemTypes.all_types(level)
+        if len(item_type_choices) > 0:
+            item_type = random.choice(item_type_choices)
+            loot_item = itemgen.ItemFactory.gen_item(level, item_type)
+            inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine
         a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
