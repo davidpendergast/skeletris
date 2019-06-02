@@ -9,7 +9,7 @@ print("INFO: launching Cubelike...")
 print("INFO: running pygame version: " + pygame.version.ver)
 
 import src.game.debug as debug
-if debug.IS_DEV:
+if debug.is_dev():
     print("generating readme...")
     import src.game.readme_writer as readme_writer
     readme_writer.write_readme(Utils.resource_path("readme_template.txt"),
@@ -182,7 +182,7 @@ def run():
                 gs.get_instance().menu_manager().update(world)
                 world_active = False
 
-        if debug.DEBUG and input_state.was_pressed(pygame.K_F1):
+        if debug.is_debug() and input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
             import src.utils.profiling as profiling
             profiling.get_instance().toggle()
@@ -195,7 +195,7 @@ def run():
                 pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
             gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
 
-        if debug.DEBUG and world_active and input_state.was_pressed(pygame.K_F6):
+        if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
             print("INFO: opened debug menu")
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
 
@@ -208,7 +208,7 @@ def run():
                 else:
                     gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
 
-        if debug.DEBUG and input_state.was_pressed(pygame.K_x):
+        if debug.is_debug() and input_state.was_pressed(pygame.K_x):
             manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
@@ -235,7 +235,7 @@ def run():
 
         pygame.display.flip()
 
-        if debug.IS_DEV and input_state.is_held(pygame.K_TAB):
+        if debug.is_dev() and input_state.is_held(pygame.K_TAB):
             # if holding tab in dev activate slo-mo
             clock.tick(1)
         else:

@@ -6,6 +6,7 @@ import src.game.spriteref as spriteref
 from src.game.stats import StatTypes
 import src.utils.colors as colors
 import src.game.dialog as dialog
+import src.game.statuseffects as statuseffects
 
 import random
 
@@ -20,7 +21,7 @@ class ActorState:
         self.inventory_ = inventory
 
         self.permanent_effects = []
-        self.status_effects = []
+        self.status_effects = {}  # StatusEffect -> turns remaining
 
         self.current_hp = self.max_hp()
         self.current_energy = 0
@@ -128,6 +129,28 @@ class ActorState:
 
     def name(self):
         return self.name_
+
+    def add_status_effect(self, status_effect):
+        self.status_effects[status_effect] = status_effect.get_duration()
+
+    def get_turns_remaining(self, status_effect):
+        if status_effect not in self.status_effects:
+            return 0
+        else:
+            return self.status_effects[status_effect]
+
+    def all_status_effects(self):
+        res = [s for s in self.status_effects]
+        res.sort(key=lambda s: self.status_effects[s], reverse=True)
+        return res
+
+    def increment_status_effects(self):
+        all_effects = self.all_status_effects()
+        for e in all_effects:
+            if self.status_effects[e] <= 0:
+                del self.status_effects[e]
+            else:
+                self.status_effects[e] = self.status_effects[e] - 1
 
 
 class ActorController:
@@ -469,10 +492,21 @@ class AttackAction(Action):
                 target.perturb_color(colors.R_TEXT_COLOR, 25)
                 target.perturb(20, 18)
 
+                # dealing with all the on-hit effects
                 a_state = self.actor_entity.get_actor_state()
+
                 e_drain = a_state.stat_value_with_item(StatTypes.ENERGY_DRAIN, self.item)
                 if e_drain != 0:
                     t_state.set_energy(t_state.energy() - e_drain)
+
+                new_status_effects = []
+
+                iron_def_duration = a_state.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, self.item)
+                if iron_def_duration > 0:
+                    new_status_effects.append(statuseffects.new_iron_defenses_effect(iron_def_duration))
+
+                for s in new_status_effects:
+                    a_state.add_status_effect(s)
 
     def start(self, world):
         self._determine_attack_result(world)

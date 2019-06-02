@@ -3,6 +3,7 @@ import random
 from src.items.item import ItemType, ItemTypes
 from src.items.itemgen import ItemFactory, StatCubesItemFactory
 from src.game.droprates import EnemyDroprate, ChestDroprate
+import src.game.debug as debug
 
 
 class LootFactory:
@@ -20,7 +21,11 @@ class LootFactory:
 
         loot = []
         while len(loot) < n_items:
-            item_type_choices = ItemTypes.all_types(level)
+            if debug.ignore_level_restrictions_on_chest_drops():
+                item_type_choices = ItemTypes.all_types()
+            else:
+                item_type_choices = ItemTypes.all_types(at_level=level)
+
             if len(item_type_choices) == 0:
                 print("WARN: no valid item types to drop as loot at level: {}".format(level))
                 return []
@@ -28,21 +33,6 @@ class LootFactory:
                 item = ItemFactory.gen_item(level, random.choice(item_type_choices))
                 if item is not None:
                     loot.append(item)
-        return loot
-
-    @staticmethod
-    def gen_loot(level):
-        """
-            returns: list of items
-        """
-        n_items = EnemyDroprate.guaranteed_items(level)
-        for _ in range(0, EnemyDroprate.item_chances(level)):
-            if random.random() < EnemyDroprate.rate_per_item(level):
-                n_items += 1
-
-        loot = []
-        for _ in range(0, n_items):
-            loot.append(StatCubesItemFactory.gen_item(level))
         return loot
 
     @staticmethod

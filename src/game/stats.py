@@ -61,6 +61,9 @@ class StatTypes:
     ENERGY_DRAIN = StatType("ENERGY_DRAIN", desc="+{} Energy Drain on Hit",
                             local_desc="Drains +{} Energy on Hit")
 
+    PLUS_DEFENSE_ON_HIT = StatType("PLUS_DEFENSE_ON_HIT", desc="Iron Defenses for {} turns on Hit",
+                                   local_desc="Iron Defenses for {} turns on Hit")
+
 
 class StatProvider:
 

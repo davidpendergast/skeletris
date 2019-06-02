@@ -347,6 +347,16 @@ spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
+status_eye_icon = make(400, 208, 16, 16)
+status_drop_icon = make(400, 224, 16, 16)
+status_sword_icon = make(400, 240, 16, 16)
+status_shield_icon = make(400, 256, 16, 16)
+
+status_sparkles_icon = make(416, 208, 16, 16)
+status_up_arrow_icon = make(416, 224, 16, 16)
+status_diagonal_lines_icon = make(416, 240, 16, 16)
+status_waves_icon = make(416, 256, 16, 16)
+
 
 def get_item_entity_sprite(cubes):
     if cubes in Items.item_entities:
@@ -463,10 +473,6 @@ floors_hole = [make(608 + i*16, 96, 16, 16) for i in range(0, 8)]
 floors_fancy = [make(608 + i*16, 112, 16, 16) for i in range(0, 8)]
 floors_swamp = [make(608 + i*16, 128, 16, 16) for i in range(0, 8)]
 floors_pit = [make(608 + i*16, 144, 16, 16) for i in range(0, 8)]
-
-floor_busting_open = [make(128 + i*16, 368, 16, 16) for i in range(0, 5)]
-floor_busting_open_player_frames = [make(128 + i*16, 320, 16, 48) for i in range(0, 4)]
-floor_burst_shards = [make(128 + i*16, 384, 16, 16) for i in range(0, 4)]
 
 FLOOR_NORMAL_ID = 0
 FLOOR_QUAD_ID = 1
