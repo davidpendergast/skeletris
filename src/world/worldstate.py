@@ -485,6 +485,9 @@ class World:
                         dur_modifier = a_state.turn_duration_modifier()
                         dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
                         actor.set_action(action, dur)
+
+                        if actor.is_player():
+                            gs.get_instance().turn_counter += 1
                     else:
                         raise ValueError("{} received impossible action: {}".format(actor, action))
 

@@ -149,6 +149,7 @@ class GlobalState:
     
         self.tick_counter = 0
         self.anim_tick = 0
+        self.turn_counter = 0
 
         self.initial_zone_id = initial_zone_id
         self.current_zone = None

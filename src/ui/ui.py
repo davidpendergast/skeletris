@@ -646,6 +646,9 @@ class HealthBarPanel(InteractableImage):
 
         self._action_imgs = [None] * 6  # list of MappedActionImages
 
+        #self._turn_count_img = None
+        #self._time_img = None
+
     def contains_point(self, x, y):
         if super().contains_point(x, y):
             return True
@@ -735,6 +738,33 @@ class HealthBarPanel(InteractableImage):
             if self._action_imgs[i].is_dirty():
                 self._action_imgs[i].update_images()
 
+        #time_info_x = self._rect[0] + 8 * 2
+        #time_info_y = self._rect[1] + 16 * 2
+        #if self._time_img is None:
+        #    self._time_img = TextImage(0, 0, "", spriteref.UI_0_LAYER, colors.LIGHT_GRAY, scale=1)
+        #hours = gs.get_instance().tick_counter // (60 * 60 * 60)
+        #minutes = (gs.get_instance().tick_counter // (60 * 60)) % 60
+        #seconds = (gs.get_instance().tick_counter // 60) % 60
+        #minutes_str = "0"+str(minutes) if minutes < 10 else str(minutes)
+        #seconds_str = "0"+str(seconds) if seconds < 10 else str(seconds)
+        #if hours != 0:
+        #    time_text = "{}:{}:{}".format(hours, minutes_str, seconds_str)
+        #else:
+        #    time_text = "{}:{}".format(minutes_str, seconds_str)
+        #self._time_img.update(new_text=time_text,
+        #                            new_x=time_info_x,
+        #                            new_y=time_info_y,
+        #                            new_depth=FG_DEPTH)
+        #time_info_y += self._time_img.size()[1]
+        #
+        #if self._turn_count_img is None:
+        #    self._turn_count_img = TextImage(0, 0, "", spriteref.UI_0_LAYER, colors.LIGHT_GRAY, scale=1)
+        #turn_text = "Turn: {}".format(gs.get_instance().turn_counter)
+        #self._turn_count_img.update(new_text=turn_text,
+        #                            new_x=time_info_x,
+        #                            new_y=time_info_y,
+        #                            new_depth=FG_DEPTH)
+
     def all_child_imgs(self):
         for i in self._action_imgs:
             if i is not None:
@@ -752,6 +782,10 @@ class HealthBarPanel(InteractableImage):
             yield self._top_img
         for floating_bar in self._floating_bars:
             yield floating_bar[0]
+        #if self._time_img is not None:
+        #    yield self._time_img
+        #if self._turn_count_img is not None:
+        #    yield self._turn_count_img
 
 
 class TextBuilder:

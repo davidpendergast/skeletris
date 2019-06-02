@@ -14,6 +14,8 @@
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
  - "ValueError: failed to place start anywhere on path"
+    - slightly fixed this by making the "start" feature less restrictive
+    - still need logic to re-attempt the generation without crashing
     
  - world gen issues:
      - can have rooms that border out-of-bounds with no walls in between 
@@ -40,6 +42,7 @@
  
  
 [future features]
+
  - design and implement interesting stats
  - npcs / dialog
  - one boss fight 
