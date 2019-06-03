@@ -35,7 +35,12 @@ class AppliedStat:
         self.local = local
 
     def __repr__(self):
-        return self.stat_type.get_description(self.value, local=self.local)
+        res = self.stat_type.get_description(self.value, local=self.local)
+        if "+-" in res:
+            # kinda wonky to handle negative values like this but it should work
+            return res.replace("+-", "-")
+        else:
+            return res
 
     def __eq__(self, other):
         try:
@@ -143,7 +148,8 @@ class ItemTypes:
 
 class Item(StatProvider):
 
-    def __init__(self, name, item_type, level, cubes, stats, actions=None, color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+    def __init__(self, name, item_type, level, cubes, stats, actions=None, consume_effect=None, color=(1, 1, 1),
+                 uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
         self.name = name
         self.level = level
         self.item_type = item_type
@@ -154,6 +160,7 @@ class Item(StatProvider):
         self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
         self._can_rotate = can_rotate
         self.title_color = title_color
+        self.consume_effect = consume_effect
 
     def __eq__(self, other):
         if isinstance(other, Item):
@@ -185,11 +192,12 @@ class Item(StatProvider):
     def can_rotate(self):
         return self._can_rotate
 
+    def get_consume_effect(self):
+        """returns: the status that's applied when the item is consumed or thrown."""
+        return self.consume_effect
+
     def can_consume(self):
         return self.get_type().has_tag(ItemTags.CONSUMABLE)
-
-    def consume(self, actor, world):
-        pass
 
     def rotate(self):
         return self
@@ -226,10 +234,10 @@ class Item(StatProvider):
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None):
+                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None, consume_effect=None):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
-                      can_rotate=can_rotate, title_color=title_color, actions=actions)
+                      can_rotate=can_rotate, title_color=title_color, actions=actions, consume_effect=consume_effect)
 
         self._small_sprite = small_sprite
         self._big_sprite = big_sprite
@@ -259,7 +267,8 @@ class SpriteItem(Item):
 
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
-                              can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions)
+                              can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions,
+                              consume_effect=self.consume_effect)
 
 
 class StatCubesItem(Item):

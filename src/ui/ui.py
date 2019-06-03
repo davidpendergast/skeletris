@@ -646,7 +646,8 @@ class StatusEffectImage(InteractableImage):
         return False
 
     def get_tooltip_target_at(self, x, y):
-        return self.status_effect
+        turns_remaining = gs.get_instance().player_state().get_turns_remaining(self.status_effect)
+        return (self.status_effect, turns_remaining)
 
     def is_dirty(self):
         return True
@@ -728,7 +729,7 @@ class HealthBarPanel(InteractableImage):
 
     def _update_status_effect_icons(self):
         x_start = self._rect[0] + self._rect[2] - 71 * 2
-        x_starts = [x_start + i*18 for i in range(0, 4)]
+        x_starts = [x_start + i*18*2 for i in range(0, 4)]
         y_start = self._rect[1] + self._rect[3] - 61 * 2
 
         effects = gs.get_instance().player_state().all_status_effects()

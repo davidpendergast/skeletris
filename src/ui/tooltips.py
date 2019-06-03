@@ -29,6 +29,7 @@ class TooltipFactory:
         if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:
             # no reason to display "weapon" AND "equipment"~
             all_tags.remove(item.ItemTags.EQUIPMENT)
+
         if len(all_tags) > 0:
             tag_str = ", ".join([str(t) for t in all_tags])
             text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
@@ -43,9 +44,17 @@ class TooltipFactory:
                 text_builder.add_line(str(stat), color=stat.color())
 
         in_inv = target_item in gs.get_instance().player_state().inventory()
-        if in_inv and target_item.can_consume():
+        if target_item.can_consume():
+            consume_effect = target_item.get_consume_effect()
             text_builder.add_line("")
-            text_builder.add_line("(Right-Click to Consume)")
+            if consume_effect is not None:
+                text_builder.add("Gives ")
+                text_builder.add(consume_effect.get_name(), color=consume_effect.get_color())
+                text_builder.add_line(" when consumed.")
+            if in_inv:
+                if consume_effect is not None:
+                    text_builder.add_line("")
+                text_builder.add_line("(Right-Click to Consume)", color=colors.LIGHT_GRAY)
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=target_item, xy=xy, layer=layer)
@@ -115,14 +124,11 @@ class TooltipFactory:
                                target=action_prov, xy=xy, layer=layer)
 
     @staticmethod
-    def build_status_effect_tooltip(effect, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def build_status_effect_tooltip(effect, turns_remaining, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
         text_builder.add_line(effect.get_name())
 
         # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
-        # also TODO, this number won't update until you regen the tooltip
-        turns_remaining = gs.get_instance().player_state().get_turns_remaining(effect)
-
         for applied_stat in effect.all_applied_stats():
             if not applied_stat.is_hidden():
                 text_builder.add_line(str(applied_stat), color=applied_stat.color())
@@ -131,7 +137,7 @@ class TooltipFactory:
         text_builder.add_line("({} turns remaining)".format(turns_remaining), color=colors.LIGHT_GRAY)
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=effect, xy=xy, layer=layer)
+                               target=(effect, turns_remaining), xy=xy, layer=layer)
 
     @staticmethod
     def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
@@ -148,8 +154,8 @@ class TooltipFactory:
             return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
         elif isinstance(obj, gameengine.ActionProvider):
             return TooltipFactory.build_action_provider_tooltip(obj, xy=xy, layer=layer)
-        elif isinstance(obj, statuseffects.StatusEffect):
-            return TooltipFactory.build_status_effect_tooltip(obj, xy=xy, layer=layer)
+        elif isinstance(obj, tuple) and len(obj) == 2 and isinstance(obj[0], statuseffects.StatusEffect):
+            return TooltipFactory.build_status_effect_tooltip(obj[0], obj[1], xy=xy, layer=layer)
         elif isinstance(obj, TextBuilder):
             return TextOnlyTooltip(obj.text(), custom_colors=obj.custom_colors(), target=obj, xy=xy, layer=layer)
         else:

@@ -62,7 +62,7 @@ class StatTypes:
 
     UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
-    LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level")
+    LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level", color=colors.LIGHT_BLUE)
     HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)
     POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)
 

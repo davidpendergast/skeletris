@@ -134,6 +134,11 @@ class ActorState:
     def add_status_effect(self, status_effect):
         self.status_effects[status_effect] = status_effect.get_duration()
 
+        # TODO - the player's actor state should probably know it's the player's actor state.
+        if self == gs.get_instance().player_state() and status_effect.get_player_text() is not None:
+            dia = dialog.PlayerDialog(status_effect.get_player_text())
+            gs.get_instance().dialog_manager().set_dialog(dia)
+
     def get_turns_remaining(self, status_effect):
         if status_effect not in self.status_effects:
             return 0
@@ -148,7 +153,7 @@ class ActorState:
     def countdown_status_effects(self):
         all_effects = self.all_status_effects()
         for e in all_effects:
-            if self.status_effects[e] <= 0:
+            if self.status_effects[e] <= 1:
                 del self.status_effects[e]
             else:
                 self.status_effects[e] = self.status_effects[e] - 1
@@ -366,7 +371,10 @@ class ConsumeItemAction(Action):
 
     def finalize(self, world):
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
-        self.item.consume(self.actor_entity, world)
+        consume_effect = self.item.get_consume_effect()
+        if consume_effect is not None:
+            self.actor_entity.perturb_color(consume_effect.get_color(), 30)
+            self.actor_entity.get_actor_state().add_status_effect(consume_effect)
 
 
 class OpenDoorAction(MoveToAction):

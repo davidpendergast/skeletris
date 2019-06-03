@@ -4,6 +4,8 @@ DARK_GRAY = (0.36, 0.36, 0.36)
 LIGHT_GRAY = (0.85, 0.85, 0.85)
 WHITE = (1, 1, 1)
 
+LIGHT_BLUE = (0.75, 0.75, 1)
+
 RED = (1, 0.65, 0.65)
 GREEN = (0.65, 1, 0.65)
 BLUE = (0.65, 0.65, 1)
@@ -11,6 +13,7 @@ YELLOW = (1, 1, 0.65)
 PURPLE = (1, 0.65, 1)
 
 DARK_GREEN = (0.35, 0.85, 0.35)
+DARK_YELLOW = (0.85, 0.85, 0.35)
 
 # for 'floating text in world'
 R_TEXT_COLOR = (0.65, 0.1, 0.1)

@@ -87,57 +87,62 @@ class ItemFactory:
         return None
 
 
+_ALL_POTION_TEMPLATES = []
+
+
 class PotionTemplate:
 
-    def __init__(self, name, color, dialog_text, min_level=0, status=None):
+    def __init__(self, name, dialog_text, min_level=0, status=None):
         self.name = name
-        self.color = color
         self.dialog_text = dialog_text
         self.min_level = min_level
         self.status_effect = status
 
-    def on_consume(self, actor, world):
-        if self.dialog_text is not None:
-            dia = dialog.PlayerDialog(self.dialog_text)
-            gs.get_instance().dialog_manager().set_dialog(dia)
-        if self.color is not None:
-            actor.perturb_color(self.color, 30)
-        if self.status_effect is not None:
-            actor.get_actor_state().add_status_effect(self.status_effect)
+        _ALL_POTION_TEMPLATES.append(self)
 
 
-HEALING = PotionTemplate("Potion of Healing", colors.GREEN, "That was refreshing.",
+HEALING = PotionTemplate("Potion of Healing", "That was refreshing.",
                          min_level=0,
                          status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
                                                                balance.POTION_HEAL_DURATION))
 
 
-MAJOR_HEALING = PotionTemplate("Major Potion of Healing", colors.GREEN, "That was refreshing!",
+MAJOR_HEALING = PotionTemplate("Potion of Healing II", "That was refreshing!",
                                min_level=5,
                                status=statuseffects.new_regen_effect(balance.POTION_MED_HEAL_VAL,
                                                                      balance.POTION_HEAL_DURATION))
 
-HARMING = PotionTemplate("Potion of Harming", colors.RED,  "Ha, I knew that would happen.",
+HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I drink that?",
                          min_level=7,
                          status=statuseffects.new_poison_effect(balance.POTION_POIS_VAL,
                                                                 balance.POTION_POIS_DURATION))
+SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
+                              min_level=9,
+                              status=statuseffects.new_speed_effect(balance.POTION_SPEED_VAL,
+                                                                    balance.POTION_SPEED_DUR))
 
-NULL_POTION = PotionTemplate("Potion of Placebo", colors.WHITE, "I feel a little better... I think?",
+SLOW_POTION = PotionTemplate("Potion of the Sloth", "I... feel... slow.",
+                             min_level=4,
+                             status=statuseffects.new_slow_effect(balance.POTION_SLOW_VAL,
+                                                                  balance.POTION_SLOW_DUR))
+
+
+NULL_POTION = PotionTemplate("Placebo Potion", "I feel a little better... I think?",
                              min_level=6)
 
-MAJOR_NULL_POTION = PotionTemplate("Major Potion of Placebo", colors.WHITE, "Hm, tastes like antidepressants.",
-                                   min_level=12)
+NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my prescription years ago.",
+                              min_level=3,
+                              status=statuseffects.new_night_vision_effect(balance.POTION_NIGHT_VISION_VAL,
+                                                                           balance.POTION_NIGHT_VISION_DURATION))
 
 
 class PotionTemplates:
 
     @staticmethod
     def all_templates(for_level=None):
-        all_of_em = [HEALING, MAJOR_HEALING,
-                     HARMING,
-                     NULL_POTION, MAJOR_NULL_POTION]
+        all_of_em = _ALL_POTION_TEMPLATES
         if for_level is None:
-            return all_of_em
+            return list(all_of_em)
         else:
             return [t for t in all_of_em if t.min_level <= for_level]
 
@@ -148,7 +153,6 @@ class PotionItemFactory:
     def gen_item(level):
         if debug.ignore_level_restrictions_on_drops():
             templates = [t for t in PotionTemplates.all_templates()]
-            print("templates = {}".format(templates))
         else:
             templates = [t for t in PotionTemplates.all_templates(for_level=level)]
 
@@ -160,11 +164,12 @@ class PotionItemFactory:
         from src.game.gameengine import ItemActions
 
         cubes = [(0, 0)]
+        consume_effect = template.status_effect
+        color = (1, 1, 1) if consume_effect is None else consume_effect.get_color()
         res = SpriteItem(template.name, ItemTypes.POTION, template.min_level, cubes, {},
                           spriteref.Items.potion_small, spriteref.Items.potion_big,
-                          actions=[ItemActions.CONSUME_ITEM], color=template.color)
+                          actions=[ItemActions.CONSUME_ITEM], consume_effect=consume_effect, color=color)
 
-        res.consume = lambda actor, world: template.on_consume(actor, world)
         return res
 
 
