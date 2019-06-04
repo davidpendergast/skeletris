@@ -7,6 +7,7 @@ from src.game.stats import StatTypes
 import src.utils.colors as colors
 import src.game.dialog as dialog
 import src.game.statuseffects as statuseffects
+import src.game.balance as balance
 
 import random
 
@@ -81,6 +82,9 @@ class ActorState:
 
     def energy(self):
         return self.current_energy
+
+    def intelligence(self):
+        return Utils.bound(self.stat_value(StatTypes.INTELLIGENCE), 1, 5)
 
     def speed(self):
         raw_val = self.stat_value(StatTypes.SPEED)
@@ -219,9 +223,11 @@ class PlayerController(ActorController):
 
 class EnemyController(ActorController):
 
-    def get_next_action(self, actor, world):
-        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+    def __init__(self):
+        ActorController.__init__(self)
 
+    def _get_attack_action(self, actor, world):
+        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
         random.shuffle(neighbors)
 
@@ -230,11 +236,42 @@ class EnemyController(ActorController):
             if res.is_possible(world):
                 return res
 
+    def _get_pathing_action(self, actor, world):
+        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        skilled_enough = random.random() < balance.ENEMY_PATHING_SKILL[actor.get_actor_state().intelligence() - 1]
+
+        if not world.get_hidden(*pos) and skilled_enough:
+            p = world.get_player()
+            if p is not None:
+                p_pos = world.to_grid_coords(*p.center())
+                path = world.get_path_between(pos, p_pos, max_length=balance.ENEMY_SMART_PATHING_RANGE,
+                                              cond=lambda xy: (xy == p_pos or xy == pos
+                                                               or not world.is_solid(*xy, including_entities=True)))
+                if path is not None and len(path) >= 2:
+                    res = MoveToAction(actor, path[1])
+                    if res.is_possible(world):
+                        return res
+                    else:
+                        print("WARN: world gave {} an impossible path? {}".format(actor.get_actor_state().name, path))
+
+        # otherwise just fallback to dumb movement
+        neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
+        random.shuffle(neighbors)
         for n in neighbors:
             res = MoveToAction(actor, n)
             if res.is_possible(world):
                 return res
 
+    def get_next_action(self, actor, world):
+        attack_action = self._get_attack_action(actor, world)
+        if attack_action is not None and attack_action.is_possible(world):
+            return attack_action
+
+        pathing_action = self._get_pathing_action(actor, world)
+        if pathing_action is not None and pathing_action.is_possible(world):
+            return pathing_action
+
+        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         return SkipTurnAction(actor, position=pos)
 
 
@@ -320,11 +357,7 @@ class MoveToAction(Action):
 
         if Utils.dist_manhattan(self.position, pos) != 1:
             return False
-        elif world.is_solid(self.position[0], self.position[1]):
-            return False
-        elif world.get_actor_in_cell(self.position[0], self.position[1]) is not None:
-            return False
-        elif world.get_interactable_in_cell(self.position[0], self.position[1]) is not None:
+        elif world.is_solid(self.position[0], self.position[1], including_entities=True):
             return False
 
         return True

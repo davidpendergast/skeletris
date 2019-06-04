@@ -223,11 +223,9 @@ class Entity(Updateable):
     def interact(self, world):
         pass
 
-    def interact_text(self):
-        return None
-
-    def interact_radius(self):
-        return 64
+    def is_solid(self):
+        """returns: whether this entity prevents the movement of Actors."""
+        return self.is_npc() or self.is_actor() or self.is_interactable()
 
     def is_pushable(self):
         return isinstance(self, Pushable)
@@ -1369,9 +1367,6 @@ class ExitEntity(Entity):
         else:
             dia = Dialog("This path doesn't lead anywhere...")
             gs.get_instance().dialog_manager().set_dialog(dia)
-
-    def interact_text(self):
-        return None
 
 
 class ReturnExitEntity(ExitEntity):

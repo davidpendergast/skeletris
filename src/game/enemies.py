@@ -36,7 +36,8 @@ class EnemyTemplate:
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 1
+            StatTypes.DEF: 1,
+            StatTypes.INTELLIGENCE: 1
         })
 
 
@@ -57,7 +58,8 @@ class FlappumTemplate(EnemyTemplate):
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 2
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 2
         })
 
 
@@ -75,7 +77,8 @@ class TrillaTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 2,
             StatTypes.UNARMED_ATT: 0,
-            StatTypes.DEF: 4
+            StatTypes.DEF: 4,
+            StatTypes.INTELLIGENCE: 3
         })
 
     def get_level_range(self):
@@ -96,7 +99,8 @@ class TrilliteTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 1
+            StatTypes.DEF: 1,
+            StatTypes.INTELLIGENCE: 1
         })
 
     def get_level_range(self):
@@ -122,7 +126,8 @@ class SmallMuncherTemplate(EnemyTemplate):
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 2
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 2
         })
 
 
@@ -145,7 +150,8 @@ class MuncherTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 8,
-            StatTypes.DEF: 6
+            StatTypes.DEF: 6,
+            StatTypes.INTELLIGENCE: 3
         })
 
 
@@ -166,7 +172,8 @@ class CycloiTemplate(EnemyTemplate):
             StatTypes.SPEED: 6,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 6,
-            StatTypes.DEF: 2
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 3
         })
 
 
@@ -188,7 +195,8 @@ class DicelTemplate(EnemyTemplate):
             StatTypes.SPEED: 8,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 3,
-            StatTypes.DEF: 4
+            StatTypes.DEF: 4,
+            StatTypes.INTELLIGENCE: 2
         })
 
 
@@ -209,7 +217,8 @@ class FallenTemplate(EnemyTemplate):
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
-            StatTypes.DEF: 4
+            StatTypes.DEF: 4,
+            StatTypes.INTELLIGENCE: 4
         })
 
 
@@ -231,7 +240,8 @@ class FungoiTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
-            StatTypes.DEF: 2
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 2
         })
 
 
@@ -244,9 +254,6 @@ class FrogTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
 
-    def get_base_stats(self):
-        return EnemyTemplate.get_base_stats(self)
-
     def get_level_range(self):
         return range(14, 16)
 
@@ -256,7 +263,8 @@ class FrogTemplate(EnemyTemplate):
             StatTypes.SPEED: 3,
             StatTypes.ATT: 2,
             StatTypes.UNARMED_ATT: 4,
-            StatTypes.DEF: 8
+            StatTypes.DEF: 8,
+            StatTypes.INTELLIGENCE: 5
         })
 
 

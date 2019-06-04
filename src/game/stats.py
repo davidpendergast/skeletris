@@ -66,6 +66,9 @@ class StatTypes:
     HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)
     POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)
 
+    # this is currently only used to control enemy behavior.
+    INTELLIGENCE = StatType("INTELLIGENCE")
+
     ENERGY_DRAIN = StatType("ENERGY_DRAIN", desc="+{} Energy Drain on Hit",
                             local_desc="Drains +{} Energy on Hit")
 
@@ -100,7 +103,8 @@ def default_player_stats():
         StatTypes.UNARMED_ATT: 2,
         StatTypes.LIGHT_LEVEL: 4,
         StatTypes.MIN_LIGHT_LEVEL: 2,
-        StatTypes.SPEED: 4
+        StatTypes.SPEED: 4,
+        StatTypes.INTELLIGENCE: 5  # affects nothing, but there's no reason to be mean
     })
 
 

@@ -618,10 +618,6 @@ class DesolateCaveZone(Zone):
                                                                  interact_dialog=d)
                 w.add(sign)
 
-        wasd_message_pos = bp.player_spawn
-        wasd_message_box = entities.MessageTriggerBox("[WASD] to move", wasd_message_pos, delay=120, just_once=False)
-        # w.add(wasd_message_box)
-
         return w
 
     def get_music_id(self):

@@ -1,4 +1,4 @@
-import math
+import random
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -344,13 +344,20 @@ class World:
                 if self.get_geo(x, y) == World.FLOOR:
                     self.set_hidden(x, y, True, and_fill_adj_floors=False)
 
-    def is_solid_at(self, pixel_x, pixel_y):
-        geo = self.get_geo_at(pixel_x, pixel_y)
-        return geo in World.SOLIDS
+    def is_solid_at(self, pixel_x, pixel_y, including_entities=False):
+        grid_xy = self.to_grid_coords(pixel_x, pixel_y)
+        return self.is_solid(grid_xy[0], grid_xy[1], including_entities=including_entities)
 
-    def is_solid(self, grid_x, grid_y):
+    def is_solid(self, grid_x, grid_y, including_entities=False):
         geo = self.get_geo(grid_x, grid_y)
-        return geo in World.SOLIDS
+        if geo in World.SOLIDS:
+            return True
+
+        if including_entities:
+            if len(self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_solid())) > 0:
+                return True
+
+        return False
 
     def get_actor_in_cell(self, grid_x, grid_y):
         """returns: an ActorEntity, if there's an actor entity in the specified cell"""
@@ -387,6 +394,53 @@ class World:
                 if grid_x == grid_pos[0] and grid_y == grid_pos[1]:
                     res.append(e)
         return res
+
+    def get_path_between(self, p1, p2, max_length=-1, cond=None):
+        if p1 == p2:
+            if cond is None or cond(p1):
+                return [p1]
+            else:
+                return None
+
+        if -1 < max_length < Utils.dist_manhattan(p1, p2):
+            return None
+
+        # it's just djikstra's
+        dists = {p1: 0}     # pos -> dist
+        backrefs = {p1: None}  # pos -> pos
+
+        q = [p1]
+        while len(q) > 0:
+            cur = q.pop(0)  # O(n) but i ~don't~ care
+
+            n_dist = dists[cur] + 1
+            if n_dist > max_length > -1:
+                continue
+
+            neighbors = list(Utils.neighbors(cur[0], cur[1]))
+            random.shuffle(neighbors)
+
+            for n in neighbors:
+                if n in dists:
+                    continue
+                dists[n] = n_dist
+                if self.is_valid(*n) and (cond is None or cond(n)):
+                    backrefs[n] = cur
+                    q.append(n)
+
+            if p2 in backrefs:
+                break
+
+        if p2 in backrefs:
+            res = [p2]  # building the list in reverse
+            temp = backrefs[p2]
+            while temp is not None:
+                res.append(temp)
+                temp = backrefs[temp]
+            res.reverse()
+            return res
+        else:
+            return None
 
     def get_actors(self):
         res = []
