@@ -847,6 +847,7 @@ class InGameUiState(Menu):
 
     def __init__(self):
         Menu.__init__(self, MenuManager.IN_GAME_MENU)
+
         self.inventory_panel = None
         self.health_bar_panel = None
         self.dialog_panel = None
@@ -1032,20 +1033,21 @@ class InGameUiState(Menu):
 
     def _update_inventory_panel(self):
         if not gs.get_instance().player_state().is_alive():
-            if self.inventory_panel is not None:
-                self._destroy_panel(self.inventory_panel)
-                self.inventory_panel = None
+            gs.get_instance().set_inventory_open(False)
 
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().inventory_key()):
-            if self.inventory_panel is None:
-                self.rebuild_inventory()
-            else:
-                self._destroy_panel(self.inventory_panel)
-                self.inventory_panel = None
+            cur_val = gs.get_instance().is_inventory_open()
+            gs.get_instance().set_inventory_open(not cur_val)
+
+        if self.inventory_panel is not None and not gs.get_instance().is_inventory_open():
+            self._destroy_panel(self.inventory_panel)
+            self.inventory_panel = None
+
+        if self.inventory_panel is None and gs.get_instance().is_inventory_open():
+            self.rebuild_inventory()
 
         if self.inventory_panel is not None:
             if self.inventory_panel.state.is_dirty():
-                print("rebuilding inventory")
                 self.rebuild_inventory()
             else:
                 self.inventory_panel.update_stats_imgs()
@@ -1158,6 +1160,7 @@ class InGameUiState(Menu):
                 render_eng.remove(bun)
 
         self.inventory_panel = InventoryPanel()
+        gs.get_instance().set_inventory_open(True)
         for bun in self.inventory_panel.all_bundles():
             render_eng.update(bun)
 
@@ -1272,6 +1275,11 @@ class InGameUiState(Menu):
 
     def cleanup(self):
         Menu.cleanup(self)
+
+        # TODO - not sure whether this feels right.
+        # should the inv always close when you pause or change zones?
+        gs.get_instance().set_inventory_open(False)
+
         self.inventory_panel = None
         self.item_on_cursor_info = None
         self.top_right_info_panel = None

@@ -112,6 +112,11 @@ def run():
             if event.get_type() == events.EventType.NEW_ZONE:
                 print("INFO: new zone {}".format(event.get_next_zone()))
                 render_eng.clear_all_sprites()
+
+                active_menu = gs.get_instance().menu_manager().get_active_menu()
+                if active_menu is not None:
+                    active_menu.cleanup()
+
                 if event.get_transfer_type() == events.NewZoneEvent.RETURNING:
                     spawn_at = event.get_current_zone()
                 else:

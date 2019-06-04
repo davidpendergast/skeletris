@@ -1,7 +1,6 @@
 
 [bugs]
 
- - going to next zone while inventory is open leaves some sprites behind, "LVL: " in particular
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - fine? adds character
  - can pickup items/mess with inv while perfoming other actions
@@ -11,14 +10,12 @@
     - i think for now, we probably just need to leave it, hard to fix without 
         hurting UX during normal play.
  - can't right-click a potion while dialog is active
- - status effect icons overlap wrongly
  - pickup entities bob down a little too far, below their own shadows
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
- - "turns remaining" number on status tooltips doesn't update
     
  - world gen issues:
      - can have rooms that border out-of-bounds with no walls in between 
