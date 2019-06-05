@@ -833,16 +833,13 @@ class Player(ActorEntity):
 
     def update_targeting_entities(self, world):
         action_prov = gs.get_instance().get_targeting_action_provider()
-        if action_prov is None:
-            if len(self._targeting_animation_imgs) > 0:
-                for t_img in self._targeting_animation_imgs:
-                    RenderEngine.get_instance().remove(t_img)
-                self._targeting_animation_imgs.clear()
-        else:
+        positions = []  # list of (x, y, color)
+
+        if action_prov is not None:
             my_pos = world.to_grid_coords(*self.center())
             target_positions = action_prov.get_targets(pos=my_pos)
 
-            positions = []
+            color = gs.get_instance().get_targeting_action_color()
             for p in target_positions:
                 if world.is_solid(*p):
                     continue
@@ -850,24 +847,27 @@ class Player(ActorEntity):
                     between_cells = Utils.cells_between(my_pos, p, include_endpoints=False)
                     if any(map(lambda c: world.is_solid(*c), between_cells)):
                         continue
-                positions.append(p)
+                positions.append((p[0], p[1], color))
 
-            color = gs.get_instance().get_targeting_action_color()
+        mouse_hover = gs.get_instance().mouse_grid_coords_in_world()
+        if mouse_hover is not None:
+            positions.append((mouse_hover[0], mouse_hover[1], colors.WHITE))
 
-            while len(self._targeting_animation_imgs) > len(positions):
-                t_img = self._targeting_animation_imgs.pop()
-                RenderEngine.get_instance().remove(t_img)
+        while len(self._targeting_animation_imgs) > len(positions):
+            t_img = self._targeting_animation_imgs.pop()
+            RenderEngine.get_instance().remove(t_img)
 
-            while len(positions) > len(self._targeting_animation_imgs):
-                t_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=4, depth=float("inf"))
-                self._targeting_animation_imgs.append(t_img)
+        while len(positions) > len(self._targeting_animation_imgs):
+            t_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=4, depth=float("inf"))
+            self._targeting_animation_imgs.append(t_img)
 
-            sprite = spriteref.UI.world_cursors[(gs.get_instance().anim_tick // 2) % len(spriteref.UI.world_cursors)]
-            for i in range(0, len(positions)):
-                x = positions[i][0] * world.cellsize()
-                y = positions[i][1] * world.cellsize()
-                t_img = self._targeting_animation_imgs[i].update(new_model=sprite, new_x=x, new_y=y, new_color=color)
-                self._targeting_animation_imgs[i] = t_img
+        sprite = spriteref.UI.world_cursors[(gs.get_instance().anim_tick // 2) % len(spriteref.UI.world_cursors)]
+        for i in range(0, len(positions)):
+            x = positions[i][0] * world.cellsize()
+            y = positions[i][1] * world.cellsize()
+            color = positions[i][2]
+            t_img = self._targeting_animation_imgs[i].update(new_model=sprite, new_x=x, new_y=y, new_color=color)
+            self._targeting_animation_imgs[i] = t_img
 
     def visible_in_darkness(self):
         return True

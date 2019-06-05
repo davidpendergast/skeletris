@@ -191,9 +191,6 @@ class PlayerController(ActorController):
         # note this relies on python's sort being stable, which I think it always should be?
         self.current_requests.sort(key=lambda v: v[0])
 
-    def set_requests(self, actions, priority=1):
-        self.add_requests(actions, priority=priority)
-
     def get_next_action(self, actor, world):
         current_tick = gs.get_instance().tick_counter
         if current_tick - self.current_requests_tick <= PlayerController.INPUT_BUFFER:

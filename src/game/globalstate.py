@@ -180,6 +180,8 @@ class GlobalState:
         self._mapped_actions = [None for _ in range(0, 6)]
         self._action_to_target = None
 
+        self._mouse_grid_coords_in_world = None
+
     def settings(self):
         return self._settings
 
@@ -222,6 +224,12 @@ class GlobalState:
 
     def world_updates_paused(self):
         return self.menu_manager().pause_world_updates() or self.dialog_manager().is_active()
+
+    def set_mouse_grid_coords_in_world(self, xy):
+        self._mouse_grid_coords_in_world = xy
+
+    def mouse_grid_coords_in_world(self):
+        return self._mouse_grid_coords_in_world
 
     def dialog_manager(self):
         return self._dialog_manager

@@ -33,12 +33,13 @@ class TooltipFactory:
             text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
 
         if item.ItemTags.WEAPON in all_tags:
-            # this relies on the weapons' first action being their attack action
+            # this relies on weapons only having one attack, which is ~currently~ true
             for act in target_item.all_actions():
-                dists = act.get_target_dists()
-                dists_str = ", ".join([str(d) for d in dists])
-                text_builder.add_line("Range: {}".format(dists_str), color=colors.LIGHT_GRAY)
-                break
+                if act.get_type() == gameengine.ActionType.ATTACK:
+                    dists = act.get_target_dists()
+                    dists_str = ", ".join([str(d) for d in dists])
+                    text_builder.add_line("Range: {}".format(dists_str), color=colors.LIGHT_GRAY)
+                    break
 
         added_newline = False
         all_stats = [x for x in target_item.all_applied_stats()]
