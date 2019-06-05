@@ -613,7 +613,7 @@ class ThrowItemAction(Action):
         self._did_animations = False
 
     def is_possible(self, world):
-        if self.item is None:
+        if self.item is None or not self.item.can_throw():
             return False
 
         actor = self.actor_entity
@@ -655,6 +655,11 @@ class ThrowItemAction(Action):
                                          attacker_entity=self.get_actor(), defender_entity=target,
                                          world=world, item_used=self.item)
 
+            consume_effect = self.item.get_consume_effect()
+            if damage >= 0 and consume_effect is not None:
+                target.perturb_color(consume_effect.get_color(), 30)
+                target.get_actor_state().add_status_effect(consume_effect)
+
     def start(self, world):
         a_state = self.actor_entity.get_actor_state()
 
@@ -677,6 +682,11 @@ class ThrowItemAction(Action):
         dummy_attack_state = self.item
 
         dmg_dealt = determine_damage_dealt(dummy_attack_state, t_state, item_used=self.item)
+
+        # although, all that being said, we do want to force damage to be non-zero.
+        # otherwise on-hit effects won't trigger because it'd be a miss.
+        dmg_dealt = max(1, dmg_dealt)
+
         self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
@@ -751,12 +761,12 @@ class PlayerWaitAction(Action):
 
 class ActionProvider:
 
-    def __init__(self, name, action_type, target_positions=None, icon_sprite=None, color=(1, 1, 1),
+    def __init__(self, name, action_type, target_dists=(0,), icon_sprite=None, color=(1, 1, 1),
                  needs_to_be_equipped=False):
         self.name = name
         self.color = color
         self.action_type = action_type
-        self.valid_targets = [(0, 0)] if target_positions is None else target_positions
+        self.target_dists = target_dists
         self.icon_sprite = icon_sprite
         self.needs_to_be_equipped = needs_to_be_equipped
 
@@ -782,8 +792,16 @@ class ActionProvider:
     def get_color(self):
         return self.color
 
+    def get_target_dists(self):
+        return self.target_dists
+
     def get_targets(self, pos=(0, 0)):
-        return [(p[0] + pos[0], p[1] + pos[1]) for p in self.valid_targets]
+        for r in self.target_dists:
+            if r == 0:
+                yield (pos[0], pos[1])
+            else:
+                for n in Utils.neighbors(pos[0], pos[1], dist=r):
+                    yield n
 
     def get_action(self, actor, position=None, item=None):
         return SkipTurnAction()
@@ -824,6 +842,9 @@ class ItemActionProvider(ActionProvider):
     def get_color(self):
         return self.action_provider.get_color()
 
+    def get_target_dists(self):
+        return self.action_provider.get_target_dists()
+
     def get_targets(self, pos=(0, 0)):
         return self.action_provider.get_targets(pos=pos)
 
@@ -844,9 +865,9 @@ class ConsumeItemActionProvider(ActionProvider):
 
 class AttackItemActionProvider(ActionProvider):
 
-    def __init__(self, name, icon, target_range, color=colors.RED):
+    def __init__(self, name, icon, target_dists, color=colors.RED):
         ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
-                                target_positions=target_range, color=color, needs_to_be_equipped=True)
+                                target_dists=target_dists, color=color, needs_to_be_equipped=True)
 
     def is_mappable(self):
         return True
@@ -859,19 +880,15 @@ class AttackItemActionProvider(ActionProvider):
 
 
 class ItemActions:
-    _cardinal_1 = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    _cardinal_2 = [(-2, 0), (2, 0), (0, -2), (0, 2)]
-    _cardinal_3 = [(-3, 0), (3, 0), (0, -3), (0, 3)]
-
     CONSUME_ITEM = ConsumeItemActionProvider()
-    SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, _cardinal_1)
-    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, _cardinal_1 + _cardinal_2)
-    WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, _cardinal_1)
-    SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, _cardinal_1)
-    DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, _cardinal_1)
-    BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, _cardinal_2 + _cardinal_3)
-    AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, _cardinal_1)
-    UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, _cardinal_1)
+    SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
+    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1, 2))
+    WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
+    SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))
+    DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, (1,))
+    BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, (2, 3))
+    AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, (1,))
+    UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
 
 
 

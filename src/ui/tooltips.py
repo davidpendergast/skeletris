@@ -16,26 +16,32 @@ class TooltipFactory:
     @staticmethod
     def build_item_tooltip(target_item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
-        text_builder.add(str(target_item.get_title()), color=target_item.get_title_color())
 
         plus_att = target_item.stat_value(StatTypes.ATT, local=True)
         if plus_att != 0:
-            op = " (+" if plus_att > 0 else "-"
-            text_builder.add_line(op + str(plus_att) + ")", color=StatTypes.ATT.get_color())
-        else:
-            text_builder.add_line("")
+            op = "(+" if plus_att > 0 else "-"
+            text_builder.add(op + str(plus_att) + ") ", color=StatTypes.ATT.get_color())
+
+        text_builder.add_line(str(target_item.get_title()), color=target_item.get_title_color())
 
         all_tags = [t for t in target_item.get_type().get_tags()]
         if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:
-            # no reason to display "weapon" AND "equipment"~
             all_tags.remove(item.ItemTags.EQUIPMENT)
 
         if len(all_tags) > 0:
             tag_str = ", ".join([str(t) for t in all_tags])
             text_builder.add_line(tag_str, color=colors.LIGHT_GRAY)
 
-        all_stats = [x for x in target_item.all_applied_stats()]
+        if item.ItemTags.WEAPON in all_tags:
+            # this relies on the weapons' first action being their attack action
+            for act in target_item.all_actions():
+                dists = act.get_target_dists()
+                dists_str = ", ".join([str(d) for d in dists])
+                text_builder.add_line("Range: {}".format(dists_str), color=colors.LIGHT_GRAY)
+                break
+
         added_newline = False
+        all_stats = [x for x in target_item.all_applied_stats()]
         for stat in all_stats:
             if not stat.is_hidden():
                 if not added_newline:

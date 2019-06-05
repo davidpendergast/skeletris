@@ -81,6 +81,7 @@ class ItemTags:
     WEAPON = "Weapon"
     CONSUMABLE = "Consumable"
     STORY = "Quest Item"
+    THROWABLE = "Throwable"
 
 
 class ItemType:
@@ -135,15 +136,15 @@ class ItemTypes:
     STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT]), min_level=5),
 
     SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3)
-    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
-    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7)
+    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=5)
+    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7)
     WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
-    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON))
-    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9)
+    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE))
+    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9)
     BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9)
     WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7)
 
-    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE]))
+    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]))
 
 
 class Item(StatProvider):
@@ -198,6 +199,9 @@ class Item(StatProvider):
 
     def can_consume(self):
         return self.get_type().has_tag(ItemTags.CONSUMABLE)
+
+    def can_throw(self):
+        return self.get_type().has_tag(ItemTags.THROWABLE)
 
     def rotate(self):
         return self
