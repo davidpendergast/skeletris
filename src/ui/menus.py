@@ -1259,6 +1259,12 @@ class InGameUiState(Menu):
                     if extended_target_pos in action_targets:
                         res_list.append(action_prov.get_action(player, position=extended_target_pos))
 
+        held_item = gs.get_instance().player_state().held_item
+        if target_pos is not None and held_item is not None:
+            for i in range(1, 3):
+                extended_target_pos = (target_pos[0] + dx * i, target_pos[1] + dy * i)
+                res_list.append(gameengine.ThrowItemAction(player, held_item, extended_target_pos))
+
         if target_pos is not None:
             res_list.append(gameengine.AttackAction(player, None, target_pos))
             res_list.append(gameengine.OpenDoorAction(player, target_pos))

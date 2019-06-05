@@ -8,11 +8,12 @@ import src.utils.colors as colors
 import src.game.dialog as dialog
 import src.game.statuseffects as statuseffects
 import src.game.balance as balance
+from src.game.stats import StatProvider
 
 import random
 
 
-class ActorState:
+class ActorState(StatProvider):
 
     def __init__(self, name, level, base_stats, inventory, alignment):
         self.name_ = name
@@ -58,14 +59,6 @@ class ActorState:
         res = 0
         for provider in self.all_stat_providers():
             res += provider.stat_value(stat_type, local=local)
-        return res
-
-    def stat_value_with_item(self, stat_type, item):
-        res = self.stat_value(stat_type)
-        if item is None and stat_type == StatTypes.ATT:
-            res += self.stat_value(StatTypes.UNARMED_ATT)
-        elif item is not None:
-            res += item.stat_value(stat_type, local=True)
         return res
 
     def hp(self):
@@ -450,6 +443,60 @@ class OpenDoorAction(MoveToAction):
         self.actor_entity.set_center(end_pos[0], end_pos[1])
 
 
+def determine_damage_dealt(attacker, defender, item_used=None):
+    t_def = defender.stat_value(StatTypes.DEF)
+    a_att = attacker.stat_value_with_item(StatTypes.ATT, item_used)
+
+    # explanation:
+    #   attacker rolls a D6 for each ATT value they have.
+    #   defender rolls a D4 for each DEF value they have.
+    #   defender uses each of their die to 'block' as many attacker dice as possible.
+    #       a die can only block a die with value less than or equal to it's own.
+    #   the number of unblocked attackers is the amount of damage dealt.
+
+    atts = [random.randint(1, 6) for _ in range(0, a_att)]
+    defs = [random.randint(1, 4) for _ in range(0, t_def)]
+
+    atts.sort()
+    defs.sort()
+
+    while len(atts) > 0 and len(defs) > 0:
+        defender = defs.pop(0)
+        if atts[0] <= defender:
+            atts.pop(0)
+
+    return len(atts)
+
+
+def apply_damage_and_hit_effects(damage, attacker, defender,
+                                 world=None, attacker_entity=None, defender_entity=None, item_used=False):
+    if damage <= 0:
+        if defender_entity is not None and world is not None:
+            world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
+    else:
+        defender.set_hp(defender.hp() - damage)
+
+        if defender_entity is not None and world is not None:
+            world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, defender_entity)
+            defender_entity.perturb_color(colors.R_TEXT_COLOR, 25)
+            defender_entity.perturb(20, 18)
+
+        e_drain = attacker.stat_value_with_item(StatTypes.ENERGY_DRAIN, item_used)
+        if e_drain != 0:
+            defender.set_energy(defender.energy() - e_drain)
+
+        new_status_effects_for_attacker = []
+
+        plus_def_duration = attacker.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, item_used)
+        if plus_def_duration > 0:
+            new_status_effects_for_attacker.append(statuseffects.new_plus_defenses_effect(plus_def_duration))
+
+        for s in new_status_effects_for_attacker:
+            attacker.add_status_effect(s)
+            if attacker_entity is not None and s.get_color() is not None:
+                attacker_entity.perturb_color(s.get_color(), 30)
+
+
 class AttackAction(Action):
 
     def __init__(self, actor, item, position):
@@ -483,8 +530,8 @@ class AttackAction(Action):
             return False
 
         for cell in Utils.cells_between(actor_pos, self.position, include_endpoints=False):
-            # can't be attacking through walls and such
-            if world.is_solid(cell[0], cell[1]):
+            # can't be attacking through walls and actors and such
+            if world.is_solid(cell[0], cell[1], including_entities=True):
                 return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
@@ -493,67 +540,25 @@ class AttackAction(Action):
 
         return True
 
-    def _determine_attack_result(self, world):
-        target = world.get_actor_in_cell(self.position[0], self.position[1])
-        t_state = target.get_actor_state()
-
-        t_def = t_state.stat_value(StatTypes.DEF)
-        a_att = self.actor_entity.get_actor_state().stat_value_with_item(StatTypes.ATT, self.item)
-
-        # explanation:
-        #   attacker rolls a D6 for each ATT value they have.
-        #   defender rolls a D4 for each DEF value they have.
-        #   defender uses each of their die to 'block' as many attacker dice as possible.
-        #       a die can only block a die with value less than or equal to it's own.
-        #   the number of unblocked attackers is the amount of damage dealt.
-
-        atts = [random.randint(1, 6) for _ in range(0, a_att)]
-        defs = [random.randint(1, 4) for _ in range(0, t_def)]
-
-        atts.sort()
-        defs.sort()
-
-        while len(atts) > 0 and len(defs) > 0:
-            defender = defs.pop(0)
-            if atts[0] <= defender:
-                atts.pop(0)
-
-        self._results = (len(atts), target)
-
     def _apply_attack_and_add_animations_if_necessary(self, world):
         if not self._did_animations:
             self._did_animations = True
             damage = self._results[0]
             target = self._results[1]
-            t_state = target.get_actor_state()
-            if damage <= 0:
-                world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, target)
-            else:
-                t_state.set_hp(t_state.hp() - damage)
-                world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, target)
-                target.perturb_color(colors.R_TEXT_COLOR, 25)
-                target.perturb(20, 18)
+            attacker = self.get_actor().get_actor_state()
+            defender = target.get_actor_state()
 
-                # dealing with all the on-hit effects
-                a_state = self.actor_entity.get_actor_state()
-
-                e_drain = a_state.stat_value_with_item(StatTypes.ENERGY_DRAIN, self.item)
-                if e_drain != 0:
-                    t_state.set_energy(t_state.energy() - e_drain)
-
-                new_status_effects = []
-
-                plus_def_duration = a_state.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, self.item)
-                if plus_def_duration > 0:
-                    new_status_effects.append(statuseffects.new_plus_defenses_effect(plus_def_duration))
-
-                for s in new_status_effects:
-                    a_state.add_status_effect(s)
-                    if s.get_color() is not None:
-                        self.actor_entity.perturb_color(s.get_color(), 30)
+            apply_damage_and_hit_effects(damage, attacker, defender,
+                                         attacker_entity=self.get_actor(), defender_entity=target,
+                                         world=world, item_used=self.item)
 
     def start(self, world):
-        self._determine_attack_result(world)
+        target = world.get_actor_in_cell(self.position[0], self.position[1])
+        t_state = target.get_actor_state()
+        a_state = self.get_actor().get_actor_state()
+        dmg_dealt = determine_damage_dealt(a_state, t_state, item_used=self.item)
+
+        self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
         run_at_pct = 0.3
@@ -581,6 +586,101 @@ class AttackAction(Action):
 
         self.actor_entity.set_draw_offset(*new_move_offset)
         self.actor_entity.set_vel(vel)
+
+    def finalize(self, world):
+        self._apply_attack_and_add_animations_if_necessary(world)
+        self.actor_entity.set_draw_offset(0, 0)
+        self.actor_entity.set_vel((0, 0))
+
+        attack_vec = Utils.sub(self._results[1].center(), self.actor_entity.center())
+
+        if attack_vec[0] < -world.cellsize() // 2:
+            self.actor_entity.set_facing_right(False)
+            if self._results[0] > 0:
+                self._results[1].set_facing_right(True)
+
+        elif attack_vec[0] > world.cellsize() // 2:
+            self.actor_entity.set_facing_right(True)
+            if self._results[0] > 0:
+                self._results[1].set_facing_right(False)
+
+
+class ThrowItemAction(Action):
+
+    def __init__(self, actor, item, position):
+        Action.__init__(self, ActionType.THROW_ITEM, 40, actor, item=item, position=position)
+        self._results = None
+        self._did_animations = False
+
+    def is_possible(self, world):
+        if self.item is None:
+            return False
+
+        actor = self.actor_entity
+        a_state = actor.get_actor_state()
+        if not (self.item in a_state.inventory() or a_state.held_item == self.item):
+            return False
+
+        actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+
+        throw_range = [n for n in Utils.neighbors(*actor_pos)] + \
+                      [n for n in Utils.neighbors(*actor_pos, dist=2)]
+
+        if self.position not in throw_range:
+            return False
+
+        if world.is_solid(*self.position):
+            return False
+
+        for cell in Utils.cells_between(actor_pos, self.position, include_endpoints=False):
+            # can't be attacking through walls and actors and such
+            if world.is_solid(cell[0], cell[1], including_entities=True):
+                return False
+
+        target = world.get_actor_in_cell(self.position[0], self.position[1])
+        if target is None or target.get_actor_state().alignment == actor.get_actor_state().alignment:
+            return False
+
+        return True
+
+    def _apply_attack_and_add_animations_if_necessary(self, world):
+        if not self._did_animations:
+            self._did_animations = True
+            damage = self._results[0]
+            target = self._results[1]
+            attacker = self.get_actor().get_actor_state()
+            defender = target.get_actor_state()
+
+            apply_damage_and_hit_effects(damage, attacker, defender,
+                                         attacker_entity=self.get_actor(), defender_entity=target,
+                                         world=world, item_used=self.item)
+
+    def start(self, world):
+        a_state = self.actor_entity.get_actor_state()
+
+        removed = a_state.inventory().remove(self.item)
+        if not removed:
+            if a_state.held_item == self.item:
+                a_state.held_item = None
+                removed = True
+
+        if not removed:
+            print("WARN: failed to remove thrown item? {}".format(self.item))
+
+        target = world.get_actor_in_cell(self.position[0], self.position[1])
+        t_state = target.get_actor_state()
+
+        # here's how a thrown's item damage is calculated:
+        # it's as if the "attacker" is an actor with only the item equipped and nothing else,
+        # attacking the target using the item. so basically it uses the global and local stats
+        # on the thrown item and nothing else to apply damage.
+        dummy_attack_state = self.item
+
+        dmg_dealt = determine_damage_dealt(dummy_attack_state, t_state, item_used=self.item)
+        self._results = (dmg_dealt, target)
+
+    def animate_in_world(self, progress, world):
+        pass
 
     def finalize(self, world):
         self._apply_attack_and_add_animations_if_necessary(world)

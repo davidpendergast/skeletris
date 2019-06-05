@@ -94,6 +94,14 @@ class StatProvider:
             if self.stat_value(s_type, local=local) != 0:
                 yield s_type
 
+    def stat_value_with_item(self, stat_type, item):
+        res = self.stat_value(stat_type)
+        if item is None and stat_type == StatTypes.ATT:
+            res += self.stat_value(StatTypes.UNARMED_ATT)
+        elif item is not None:
+            res += item.stat_value(stat_type, local=True)
+        return res
+
 
 def default_player_stats():
     return BasicStatLookup({
