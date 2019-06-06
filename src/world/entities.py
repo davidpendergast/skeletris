@@ -167,7 +167,7 @@ class Entity(Updateable):
         for bundle in self.all_bundles():
             render_eng.remove(bundle)
 
-    def update_images(self, anim_tick):
+    def update_images(self):
         sh_model = self.get_shadow_sprite()
         if sh_model is not None:
             if self._shadow is None:
@@ -177,7 +177,7 @@ class Entity(Updateable):
             sh_y = self.get_render_center()[1] - (sh_model.height() * sh_scale) // 2
             self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y, new_scale=sh_scale)
         else:
-            if self._shadow is None:
+            if self._shadow is not None:
                 RenderEngine.get_instance().remove(self._shadow)
                 self._shadow = None
 
@@ -248,7 +248,6 @@ class Entity(Updateable):
             yield self._shadow
         if self._img is not None:
             yield self._img
-
         for bun in extras:
             if bun is not None:
                 yield bun
@@ -318,6 +317,8 @@ class AnimationEntity(Entity):
             self.sprite_offset = (0, 0)
             self.on_finish_mode = AnimationEntity.DELETE_ON_FINISH
             self._color = (1, 1, 1)
+            self.shadow_sprite = None
+            self.rotation = 0
 
             self.vel = (0, 0)
             self.fric = 0.90
@@ -340,6 +341,15 @@ class AnimationEntity(Entity):
         def set_color(self, color):
             self._color = color
 
+        def set_shadow_sprite(self, sprite):
+            self.shadow_sprite = sprite
+
+        def set_rotation(self, val):
+            self.rotation = val
+
+        def get_shadow_sprite(self):
+            return self.shadow_sprite
+
         def set_sprites(self, new_sprites):
             self.sprites = new_sprites
 
@@ -353,7 +363,7 @@ class AnimationEntity(Entity):
         def update_attributes(self):
             pass
 
-        def _update_images(self):
+        def update_images(self):
             sprite = self.get_current_sprite()
 
             if sprite is None:
@@ -365,15 +375,20 @@ class AnimationEntity(Entity):
                 cx = self.get_render_center()[0]
                 cy = self.get_render_center()[1]
 
-                x = cx - (sprite.width() * self.scale) // 2 + self.sprite_offset[0]
-                y = cy - (sprite.height() * self.scale) + self.sprite_offset[1]
+                spr_w = sprite.width() * self.scale if self.rotation % 2 == 0 else sprite.height() * self.scale
+                spr_h = sprite.height() * self.scale if self.rotation % 2 == 0 else sprite.width() * self.scale
+
+                x = cx - spr_w // 2 + self.sprite_offset[0]
+                y = cy - spr_h + self.sprite_offset[1]
 
                 if self._img is None:
                     self._img = img.ImageBundle.new_bundle(self.layer_id)
 
                 self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                              new_xflip=self.xflipped, new_depth=self.get_depth(),
-                                             new_color=self._color, new_scale=self.scale)
+                                             new_color=self._color, new_scale=self.scale, new_rotation=self.rotation)
+
+                super().update_images()  # updating shadow
 
         def get_progress(self):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
@@ -405,7 +420,7 @@ class AnimationEntity(Entity):
 
             self.update_attributes()
 
-            self._update_images()
+            self.update_images()
             self.tick_count += 1
 
 
@@ -542,13 +557,6 @@ class ActorEntity(Entity):
     def get_light_level(self):
         return self.get_actor_state().light_level()
 
-    def get_visually_held_item(self):
-        if self.executing_action is not None:
-            if self.executing_action.get_item() is not None:
-                return self.executing_action.get_item()
-
-        return self.get_actor_state().held_item
-
     def set_vel(self, vel):
         """this doesn't move the actor or anything. just sets self._last_vel to whatever"""
         self._last_vel = vel
@@ -598,6 +606,9 @@ class ActorEntity(Entity):
         self.executing_action = action
         self.executing_action_duration = duration
         self.executing_action_ticks = 0
+
+    def set_visually_held_item_override(self, val):
+        pass
 
     def is_performing_action(self):
         return self.executing_action is not None
@@ -750,7 +761,7 @@ class ActorEntity(Entity):
         self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip)
 
-        super().update_images(0)  # get the shadow
+        super().update_images()  # get the shadow
 
 
 class Player(ActorEntity):
@@ -761,6 +772,8 @@ class Player(ActorEntity):
         self.set_y(y)
 
         self._held_item_img = None
+
+        self._visually_held_item_override = None
 
         self._targeting_animation_imgs = []
 
@@ -778,7 +791,21 @@ class Player(ActorEntity):
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
+    def set_visually_held_item_override(self, val):
+        """
+        meant to be used by Actions pretty much exclusively.
+        callers had better eventually unset it too~
+
+        val: None (unset), an Item, or False to indicate no item.
+        """
+        self._visually_held_item_override = val
+
     def get_visually_held_item(self):
+        if self._visually_held_item_override is False:
+            return None
+        elif self._visually_held_item_override is not None:
+            return self._visually_held_item_override
+
         if self.executing_action is not None:
             if self.executing_action.get_item() is not None:
                 return self.executing_action.get_item()
@@ -1027,6 +1054,7 @@ class Enemy(ActorEntity):
         
 
 class ChestEntity(Entity):
+
     def __init__(self, grid_x, grid_y):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
@@ -1045,7 +1073,7 @@ class ChestEntity(Entity):
     def get_depth(self):
         return super().get_depth() + 1  # XXX need these to lose ties, basically
         
-    def update_images(self, anim_tick):
+    def update_images(self):
         if self.is_open():
             model = spriteref.chest_open_1
         else:
@@ -1059,7 +1087,7 @@ class ChestEntity(Entity):
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
         
-        super().update_images(anim_tick)
+        super().update_images()
         sh_x = self._shadow.x()
         sh_y = self._shadow.y()
         sh_s = self._shadow.scale()
@@ -1069,7 +1097,7 @@ class ChestEntity(Entity):
         return self._is_open
             
     def update(self, world):
-        self.update_images(gs.get_instance().anim_tick)
+        self.update_images()
 
     def is_interactable(self):
         return not self.is_open()
@@ -1131,10 +1159,11 @@ class PickupEntity(Entity):
     def get_sprite_offset(self):
         return (0, 0)
 
-    def update_images(self, anim_tick):
+    def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
 
+        anim_tick = gs.get_instance().anim_tick
         bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
 
         cur_sprite = self.get_sprite(anim_tick)
@@ -1151,7 +1180,7 @@ class PickupEntity(Entity):
         self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),
                                      new_model=cur_sprite, new_depth=depth, new_rotation=self.sprite_rotation)
 
-        super().update_images(anim_tick)
+        super().update_images()
 
     def _get_pushes(self, world):
         if not self.vel == (0, 0):
@@ -1180,7 +1209,7 @@ class PickupEntity(Entity):
 
                 self.move(*self.vel, world=world, and_search=True)
 
-        self.update_images(gs.get_instance().anim_tick)
+        self.update_images()
 
     def is_pickup(self):
         return True
@@ -1320,10 +1349,11 @@ class ExitEntity(Entity):
     def visible_in_darkness(self):
         return True
 
-    def update_images(self, anim_tick):
+    def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
+        anim_tick = gs.get_instance().anim_tick
         sprite = self.get_sprite(anim_tick)
         offs = self.sprite_offset(sprite, 4)
 
@@ -1352,7 +1382,7 @@ class ExitEntity(Entity):
                         self.count -= 2
                     self.count = Utils.bound(self.count, 0, self.open_duration)
 
-        self.update_images(gs.get_instance().anim_tick)
+        self.update_images()
 
     def make_new_zone_event(self):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
@@ -1522,7 +1552,7 @@ class NpcEntity(Entity):
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip, new_color=self.color)
 
-        Entity.update_images(self, 0)  # just updating shadow
+        super().update_images()  # just updating shadow
 
     def update(self, world):
         p = world.get_player()

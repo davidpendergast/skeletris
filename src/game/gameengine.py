@@ -371,7 +371,8 @@ class MoveToAction(Action):
 class ConsumeItemAction(Action):
 
     def __init__(self, actor, item):
-        Action.__init__(self, ActionType.CONSUME_ITEM, 20, actor, item=item)
+        Action.__init__(self, ActionType.CONSUME_ITEM, 40, actor, item=item)
+        self._did_anim = False
 
     def is_possible(self, world):
         if self.item is None or not self.item.can_consume():
@@ -390,14 +391,19 @@ class ConsumeItemAction(Action):
             print("WARN: failed to remove consumable?: {}".format(self.item))
 
     def animate_in_world(self, progress, world):
-        pass
+        if progress >= 0.6 and not self._did_anim:
+            self._did_anim = True
+            consume_effect = self.item.get_consume_effect()
+            if consume_effect is not None:
+                self.actor_entity.perturb_color(consume_effect.get_color(), 30)
+                self.actor_entity.set_visually_held_item_override(False)
 
     def finalize(self, world):
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
         consume_effect = self.item.get_consume_effect()
         if consume_effect is not None:
-            self.actor_entity.perturb_color(consume_effect.get_color(), 30)
             self.actor_entity.get_actor_state().add_status_effect(consume_effect)
+        self.actor_entity.set_visually_held_item_override(None)
 
 
 class OpenDoorAction(MoveToAction):
@@ -488,10 +494,11 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         if plus_def_duration > 0:
             new_status_effects_for_attacker.append(statuseffects.new_plus_defenses_effect(plus_def_duration))
 
-        for s in new_status_effects_for_attacker:
-            attacker.add_status_effect(s)
-            if attacker_entity is not None and s.get_color() is not None:
-                attacker_entity.perturb_color(s.get_color(), 30)
+        if attacker_entity is not None:
+            for s in new_status_effects_for_attacker:
+                attacker_entity.get_actor_state().add_status_effect(s)
+                if s.get_color() is not None:
+                    attacker_entity.perturb_color(s.get_color(), 30)
 
 
 class AttackAction(Action):
@@ -609,6 +616,8 @@ class ThrowItemAction(Action):
         self._results = None
         self._did_animations = False
 
+        self._thrown_item_entity = None
+
     def is_possible(self, world):
         if self.item is None or not self.item.can_throw():
             return False
@@ -645,11 +654,11 @@ class ThrowItemAction(Action):
             self._did_animations = True
             damage = self._results[0]
             target = self._results[1]
-            attacker = self.get_actor().get_actor_state()
+            attacker = self.get_item()  # again, pretending the "attacker" is only wearing the item.
             defender = target.get_actor_state()
 
             apply_damage_and_hit_effects(damage, attacker, defender,
-                                         attacker_entity=self.get_actor(), defender_entity=target,
+                                         attacker_entity=None, defender_entity=target,
                                          world=world, item_used=self.item)
 
             consume_effect = self.item.get_consume_effect()
@@ -667,7 +676,7 @@ class ThrowItemAction(Action):
                 removed = True
 
         if not removed:
-            print("WARN: failed to remove thrown item? {}".format(self.item))
+            print("WARN: failed to remove thrown item: {}".format(self.item))
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         t_state = target.get_actor_state()
@@ -687,9 +696,64 @@ class ThrowItemAction(Action):
         self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
-        pass
+        release_time = 0.3
+
+        if progress >= release_time:
+            item_sprite = self.get_item().get_entity_sprite()
+            if item_sprite is None:
+                return  # items should probably have sprites but idk
+
+            # can't be holding the item while it's flying through the air
+            self.actor_entity.set_visually_held_item_override(False)
+
+            start_pos = self.actor_entity.center()
+            end_pos = Utils.mult(Utils.add(self.get_position(), (0.5, 0.5)), world.cellsize())
+
+            if self._thrown_item_entity is None:
+                from src.world.entities import AnimationEntity
+                self._thrown_item_entity = AnimationEntity(start_pos[0], start_pos[1], [item_sprite], 1,
+                                                           spriteref.ENTITY_LAYER, scale=2)
+                self._thrown_item_entity.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
+                self._thrown_item_entity.set_color(self.get_item().get_color())
+                self._thrown_item_entity.set_shadow_sprite(spriteref.small_shadow)
+                world.add(self._thrown_item_entity)
+
+            airtime_prog = (progress - release_time) / (1 - release_time)
+
+            pos = Utils.linear_interp(start_pos, end_pos, airtime_prog)
+            self._thrown_item_entity.move_to(pos[0], pos[1])
+
+            x = airtime_prog
+
+            # heights at x = 0.0, 0.5, and 1.0 respectively
+            y1 = 48  # TODO - start at actor's actual height
+            y2 = 64
+            y3 = 16
+
+            # trust me on this
+            a = 2*y1 - 4*y2 + 2*y3
+            b = -3*y1 + 4*y2 - y3
+            c = y1
+
+            h = a*x*x + b*x + c
+
+            self._thrown_item_entity.set_sprite_offset((0, -h))
+
+            # make it spin through the air
+            rot = (self.get_item().sprite_rotation() + int(airtime_prog * 6)) % 4
+            self._thrown_item_entity.set_rotation(rot)
 
     def finalize(self, world):
+        if self._thrown_item_entity is not None:
+            from src.world.entities import AnimationEntity
+            pos = self._thrown_item_entity.center()
+            splosion = AnimationEntity(pos[0], pos[1], spriteref.explosions, 20, spriteref.ENTITY_LAYER, scale=3)
+            splosion.set_color(self.get_item().get_color())
+            splosion.set_sprite_offset((0, -16))
+
+            world.remove(self._thrown_item_entity)
+            world.add(splosion)
+
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
@@ -705,6 +769,8 @@ class ThrowItemAction(Action):
             self.actor_entity.set_facing_right(True)
             if self._results[0] > 0:
                 self._results[1].set_facing_right(False)
+
+        self.actor_entity.set_visually_held_item_override(None)
 
 
 class SkipTurnAction(Action):

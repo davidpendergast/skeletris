@@ -181,6 +181,9 @@ class Item(StatProvider):
     def get_level(self):
         return self.level
 
+    def get_color(self):
+        return self.color
+
     def get_title_color(self):
         return self.title_color
 

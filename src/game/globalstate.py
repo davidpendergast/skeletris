@@ -226,7 +226,8 @@ class GlobalState:
         return self.menu_manager().pause_world_updates() or self.dialog_manager().is_active()
 
     def set_mouse_grid_coords_in_world(self, xy):
-        self._mouse_grid_coords_in_world = xy
+        pass
+        # self._mouse_grid_coords_in_world = xy
 
     def mouse_grid_coords_in_world(self):
         return self._mouse_grid_coords_in_world
