@@ -192,7 +192,7 @@ class DicelTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 12,
-            StatTypes.SPEED: 8,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 4,
