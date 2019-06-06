@@ -484,11 +484,12 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
             defender_entity.perturb_color(colors.R_TEXT_COLOR, 25)
             defender_entity.perturb(20, 18)
 
-        e_drain = attacker.stat_value_with_item(StatTypes.ENERGY_DRAIN, item_used)
-        if e_drain != 0:
-            defender.set_energy(defender.energy() - e_drain)
-
         new_status_effects_for_attacker = []
+
+        plus_spd_duration = attacker.stat_value_with_item(StatTypes.PLUS_SPEED_ON_HIT, item_used)
+        if plus_spd_duration > 0:
+            new_status_effects_for_attacker.append(statuseffects.new_speed_effect(balance.STATUS_EFFECT_PLUS_SPEED_VAL,
+                                                                                  plus_spd_duration))
 
         plus_def_duration = attacker.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, item_used)
         if plus_def_duration > 0:
@@ -497,6 +498,8 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         if attacker_entity is not None:
             for s in new_status_effects_for_attacker:
                 attacker_entity.get_actor_state().add_status_effect(s)
+
+                # TODO - would probably be cool to pulse multiple colors if you get >1 effects
                 if s.get_color() is not None:
                     attacker_entity.perturb_color(s.get_color(), 30)
 
@@ -701,7 +704,7 @@ class ThrowItemAction(Action):
         if progress >= release_time:
             item_sprite = self.get_item().get_entity_sprite()
             if item_sprite is None:
-                return  # items should probably have sprites but idk
+                return  # items should probably always have sprites but idk
 
             # can't be holding the item while it's flying through the air
             self.actor_entity.set_visually_held_item_override(False)

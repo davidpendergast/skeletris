@@ -69,8 +69,10 @@ class StatTypes:
     # this is currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
 
-    ENERGY_DRAIN = StatType("ENERGY_DRAIN", desc="+{} Energy Drain on Hit",
-                            local_desc="Drains +{} Energy on Hit")
+    PLUS_SPEED_ON_HIT = StatType("SLOWNESS_ON_HIT_1",
+                                 color=colors.YELLOW,
+                                 desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
+                                 local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")
 
     PLUS_DEFENSE_ON_HIT = StatType("PLUS_DEFENSE_ON_HIT",
                                    color=colors.BLUE,

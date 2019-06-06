@@ -46,7 +46,7 @@ class ItemFactory:
             actions = [ItemActions.WHIP_ATTACK]
             return SpriteItem("Whip of Sapping", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True),
-                               AppliedStat(StatTypes.ENERGY_DRAIN, 1, local=True)],
+                               AppliedStat(StatTypes.PLUS_SPEED_ON_HIT, 1, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]

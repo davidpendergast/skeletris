@@ -28,7 +28,6 @@ class World:
 
         # tells the WorldView to update the bundles at these coords
         self._dirty_geo = set()
-        # self._dirty_lighting = set()
 
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
@@ -69,7 +68,6 @@ class World:
             return
         else:
             import src.world.entities as entities
-            import src.items.item as item_module
             if direction is not None:
                 vel = entities.PickupEntity.rand_vel(speed=None, direction=direction)
             else:
@@ -406,7 +404,7 @@ class World:
             return None
 
         # it's just djikstra's
-        dists = {p1: 0}     # pos -> dist
+        dists = {p1: 0}        # pos -> dist
         backrefs = {p1: None}  # pos -> pos
 
         q = [p1]
