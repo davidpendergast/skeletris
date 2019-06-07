@@ -10,47 +10,41 @@
     - i think for now, we probably just need to leave it, hard to fix without 
         hurting UX during normal play.
  - can't right-click a potion while dialog is active
- - pickup entities bob down a little too far, below their own shadows
+ - item entities bob down a little too far, below their own shadows
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
+ - should turn around when you drop an item behind yourself
     
  - world gen issues:
-     - can have rooms that border out-of-bounds with no walls in between 
-        - haven't seen this in a while, maybe fixed
      - npcs can block path
      - can still spawn in a detached room (see bad_spawn.png)
 
  - fullscreen issues:
     - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that 
         position when it becomes unhidden
-    - lots of issues with full-screen on windows (on dk's jank-ass machine anyways)
+    - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
  
 [current features]
-
+ - when you activate or hover over a keymapped attack, it should show the attack range
  - level generation
     - chest loot generation
-    - description text for each decoration
- - remove remaining cruft from cubelike 1.0
-    - password page
  - choose name for game
  - enemy generation
  - animation or some indicator for skipping turn
- - throwing items
+ - some indicator that enemies are still acting
  
  
 [future features]
 
  - design and implement interesting stats
- - npcs / dialog
  - one boss fight 
  - magic system
+ - actual dialog for NPCs
  - quest system
- - status effects
-    - really need these for potions
-    - ideally ALL potions would work solely via applying status effects
+ - description text for each decoration
  
  
 [~dream features~]

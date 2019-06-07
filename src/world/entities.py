@@ -859,26 +859,12 @@ class Player(ActorEntity):
                                                              new_depth=self.get_depth())
 
     def update_targeting_entities(self, world):
-        action_prov = gs.get_instance().get_targeting_action_provider()
         positions = []  # list of (x, y, color)
 
-        if action_prov is not None:
-            my_pos = world.to_grid_coords(*self.center())
-            target_positions = action_prov.get_targets(pos=my_pos)
-
-            color = gs.get_instance().get_targeting_action_color()
-            for p in target_positions:
-                if world.is_solid(*p):
-                    continue
-                elif Utils.dist_manhattan(p, my_pos) > 1:
-                    between_cells = Utils.cells_between(my_pos, p, include_endpoints=False)
-                    if any(map(lambda c: world.is_solid(*c), between_cells)):
-                        continue
-                positions.append((p[0], p[1], color))
-
-        mouse_hover = gs.get_instance().mouse_grid_coords_in_world()
-        if mouse_hover is not None:
-            positions.append((mouse_hover[0], mouse_hover[1], colors.WHITE))
+        target_coords = gs.get_instance().get_targetable_coords_in_world()
+        for xy in target_coords:
+            positions.append((xy[0], xy[1], target_coords[xy]))
+        positions.sort()
 
         while len(self._targeting_animation_imgs) > len(positions):
             t_img = self._targeting_animation_imgs.pop()

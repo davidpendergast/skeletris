@@ -180,7 +180,7 @@ class GlobalState:
         self._mapped_actions = [None for _ in range(0, 6)]
         self._action_to_target = None
 
-        self._mouse_grid_coords_in_world = None
+        self._targetable_coords_in_world = {}  # (x, y) -> color
 
     def settings(self):
         return self._settings
@@ -225,12 +225,14 @@ class GlobalState:
     def world_updates_paused(self):
         return self.menu_manager().pause_world_updates() or self.dialog_manager().is_active()
 
-    def set_mouse_grid_coords_in_world(self, xy):
-        pass
-        # self._mouse_grid_coords_in_world = xy
+    def set_targetable_coords_in_world(self, targets):
+        """targets: map of (x, y) -> color"""
+        self._targetable_coords_in_world.clear()
+        if targets is not None:
+            self._targetable_coords_in_world.update(targets)
 
-    def mouse_grid_coords_in_world(self):
-        return self._mouse_grid_coords_in_world
+    def get_targetable_coords_in_world(self):
+        return self._targetable_coords_in_world
 
     def dialog_manager(self):
         return self._dialog_manager

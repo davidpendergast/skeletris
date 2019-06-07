@@ -292,6 +292,12 @@ class Action:
         self.item = item
         self.position = position
 
+    def __repr__(self):
+        item_name = None if self.item is None else self.item.get_title()
+        return "{}[actor={}, position={}, item={}]".format(
+            type(self).__name__, self.actor_entity, self.position, item_name
+        )
+
     def get_type(self):
         return self.cmd_type
 
@@ -304,6 +310,10 @@ class Action:
     def get_actor(self):
         return self.actor_entity
 
+    def get_targeting_color(self, for_mouse=False):
+        """returns: the targeting color this action should use."""
+        return None
+
     def causes_turn(self):
         """whether the actor should turn towards the target position at the start of this action."""
         return True
@@ -314,6 +324,9 @@ class Action:
 
     def is_possible(self, world):
         return True
+
+    def is_move_aciton(self):
+        return self.get_type() == ActionType.MOVE_TO
 
     def animate_in_world(self, progress, world):
         pass
@@ -341,6 +354,7 @@ class Action:
 
 
 class MoveToAction(Action):
+
     def __init__(self, actor, position):
         Action.__init__(self, ActionType.MOVE_TO, 22, actor, position=position)
         self.start_pos = None  # this is a pixel position, used for animating
@@ -377,6 +391,13 @@ class ConsumeItemAction(Action):
     def __init__(self, actor, item):
         Action.__init__(self, ActionType.CONSUME_ITEM, 40, actor, item=item)
         self._did_anim = False
+
+    def get_targeting_color(self, for_mouse=False):
+        consume_effect = self.get_item().get_consume_effect()
+        if consume_effect is not None:
+            return consume_effect.get_color()
+        else:
+            return (1, 1, 1)
 
     def is_possible(self, world):
         if self.item is None or not self.item.can_consume():
@@ -515,6 +536,9 @@ class AttackAction(Action):
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
 
+    def get_targeting_color(self, for_mouse=False):
+        return colors.RED
+
     def is_possible(self, world):
         actor = self.actor_entity
         if self.item is not None:
@@ -624,6 +648,13 @@ class ThrowItemAction(Action):
         self._did_animations = False
 
         self._thrown_item_entity = None
+
+    def get_targeting_color(self, for_mouse=False):
+        consume_effect = self.get_item().get_consume_effect()
+        if consume_effect is not None:
+            return consume_effect.get_color()
+        else:
+            return colors.RED
 
     def is_possible(self, world):
         if self.item is None or not self.item.can_throw():
@@ -796,6 +827,12 @@ class InteractAction(Action):
     def __init__(self, actor, position):
         Action.__init__(self, ActionType.INTERACT, 10, actor, position=position)
         self.target = None
+
+    def get_targeting_color(self, for_mouse=False):
+        if for_mouse:
+            return (1, 1, 1)
+        else:
+            return None
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()
