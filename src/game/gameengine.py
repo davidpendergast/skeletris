@@ -210,6 +210,9 @@ class PlayerController(ActorController):
 
         return PlayerWaitAction(actor)
 
+    def get_best_actions_for_position(self, actor, world, position, using_keyboard=True):
+        pass
+
 
 class EnemyController(ActorController):
 
@@ -305,8 +308,9 @@ class Action:
         """whether the actor should turn towards the target position at the start of this action."""
         return True
 
-    def is_fake_player_wait_action(self):
-        return self.get_type() == ActionType.PLAYER_WAIT
+    def is_free(self):
+        """Whether the action can be used without ending the actor's turn."""
+        return False
 
     def is_possible(self, world):
         return True
@@ -338,7 +342,7 @@ class Action:
 
 class MoveToAction(Action):
     def __init__(self, actor, position):
-        Action.__init__(self, ActionType.MOVE_TO, 25, actor, position=position)
+        Action.__init__(self, ActionType.MOVE_TO, 22, actor, position=position)
         self.start_pos = None  # this is a pixel position, used for animating
 
     def is_possible(self, world):
@@ -821,8 +825,88 @@ class PlayerWaitAction(Action):
     def causes_turn(self):
         return True
 
+    def is_free(self):
+        return True
+
     def is_possible(self, world):
         return True
+
+
+class PickUpItemAction(Action):
+
+    def __init__(self, actor, item, position):
+        Action.__init__(self, ActionType.PICKUP_ITEM, 1, actor, item=item, position=position)
+
+    def causes_turn(self):
+        return True
+
+    def is_free(self):
+        return True
+
+    def _get_entity_to_pickup(self, world):
+        pos = self.get_position()
+        ents_in_cell = world.get_entities_in_cell(pos[0], pos[1],
+                                                  cond=lambda e: e.is_item() and e.get_item() == self.get_item())
+        if len(ents_in_cell) == 0:
+            return None
+
+        return ents_in_cell[0]
+
+    def is_possible(self, world):
+        actor = self.get_actor()
+        a_state = actor.get_actor_state()
+
+        if a_state.held_item is not None:
+            return False
+
+        ent_to_pickup = self._get_entity_to_pickup(world)
+
+        if ent_to_pickup is None:
+            return False
+
+        if not ent_to_pickup.can_pickup(world, actor):
+            return None
+
+        return True
+
+    def finalize(self, world):
+        ent_to_pickup = self._get_entity_to_pickup(world)
+        if ent_to_pickup is None:
+            print("ERROR: item we wanted to pick up isn't there anymore? {}".format(self.get_item()))
+        else:
+            self.get_actor().get_actor_state().held_item = ent_to_pickup.get_item()
+            world.remove(ent_to_pickup)
+
+
+class DropItemAction(Action):
+    def __init__(self, actor, item, drop_dir=None):
+        Action.__init__(self, ActionType.DROP_ITEM, 1, actor, item=item)
+        self._drop_dir = drop_dir
+
+    def is_free(self):
+        return True
+
+    def is_possible(self, world):
+        actor = self.get_actor()
+        a_state = actor.get_actor_state()
+
+        if a_state.held_item is None:
+            if self.get_item() not in a_state.inventory:
+                return False
+        elif a_state.held_item != self.get_item():
+            return False
+
+        return True
+
+    def finalize(self, world):
+        actor = self.get_actor()
+        a_state = actor.get_actor_state()
+        if a_state.held_item == self.get_item():
+            a_state.held_item = None
+        else:
+            a_state.inventory().remove(self.get_item())
+
+        world.add_item_as_entity(self.get_item(), actor.center(), direction=self._drop_dir)
 
 
 class ActionProvider:

@@ -527,8 +527,10 @@ class World:
                 a_state = actor.get_actor_state()
                 action = actor.request_next_action(self)
 
-                if action.is_fake_player_wait_action():
-                    action.pre_start(self)  # just to make the player turn
+                if action.is_free():
+                    action.pre_start(self)
+                    action.start(self)
+                    action.finalize(self)
                     break
                 else:
                     a_state.set_ready_to_act(False)

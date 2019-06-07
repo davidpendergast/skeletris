@@ -1088,43 +1088,41 @@ class InGameUiState(Menu):
 
         player = world.get_player()
         ps = gs.get_instance().player_state()
+        pc = gs.get_instance().player_controller()
 
         if button != 1 or gs.get_instance().world_updates_paused():
             return
 
-        if ps.held_item is None:
-            can_pickup = lambda i: i.is_item() and i.can_pickup(world, player)
-            clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=can_pickup)
-            if clicked_item is not None:
-                world.remove(clicked_item)
-                ps.held_item = clicked_item.get_item()
-                return
+        import src.game.gameengine as gameengine
 
         if player is not None:
-            import src.game.gameengine as gameengine
-            pc = gs.get_instance().player_controller()
-            pos = world.to_grid_coords(*player.center())
-
             if ps.held_item is not None:
+                # first try to throw it
                 throw_action = gameengine.ThrowItemAction(player, ps.held_item, world_grid_pos)
-                if throw_action.is_possible(world):
-                    pc.add_requests(throw_action, pc.HIGHEST_PRIORITY)
-                else:
-                    # TODO - dropping an item should probably be an action (some kind of "free" action maybe?)
-                    p_center = player.center()  # drop position
-                    drop_dir = Utils.sub(world_pos, p_center)
+                pc.add_requests(throw_action, pc.HIGHEST_PRIORITY)
 
-                    item = ps.held_item
-                    ps.held_item = None
+                # then just drop it
+                drop_dir = Utils.sub(world_pos, player.center())
+                drop_action = gameengine.DropItemAction(player, ps.held_item, drop_dir=drop_dir)
+                pc.add_requests(drop_action, pc.HIGHEST_PRIORITY)
 
-                    world.add_item_as_entity(item, p_center, direction=drop_dir)
             else:
+                # picking up items
+                clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=lambda i: i.is_item())
+                if clicked_item is not None:
+                    item_pos = world.to_grid_coords(*clicked_item.center())
+                    pickup_request = gameengine.PickUpItemAction(player, clicked_item.get_item(), item_pos)
+
+                    pc.add_requests(pickup_request, pc.HIGHEST_PRIORITY)
+
+                # now do attacking and interacting stuff
                 requests = []
+                pos = world.to_grid_coords(*player.center())
                 action_prov = gs.get_instance().get_targeting_action_provider()
                 if action_prov is not None:
                     requests.append(action_prov.get_action(player, world_grid_pos))
 
-                for action in self.get_basic_movement_actions(player, world_grid_pos):
+                for action in self.get_basic_movement_actions(player, world_grid_pos, for_click=True):
                     requests.append(action)
 
                 if world_grid_pos == pos:
@@ -1277,12 +1275,15 @@ class InGameUiState(Menu):
             if pushed_dismiss_key:
                 gs.get_instance().dialog_manager().interact()
 
-    def get_basic_movement_actions(self, player, move_pos):
+    def get_basic_movement_actions(self, player, move_pos, for_click=False):
         import src.game.gameengine as gameengine
+
         yield gameengine.AttackAction(player, None, move_pos)
-        yield gameengine.OpenDoorAction(player, move_pos)
         yield gameengine.InteractAction(player, move_pos)
-        yield gameengine.MoveToAction(player, move_pos)
+
+        if not for_click:
+            yield gameengine.OpenDoorAction(player, move_pos)
+            yield gameengine.MoveToAction(player, move_pos)
 
     def send_player_action_requests(self, player, world):
         pos = world.to_grid_coords(player.center()[0], player.center()[1])
@@ -1318,7 +1319,7 @@ class InGameUiState(Menu):
                         res_list.append(action_prov.get_action(player, position=extended_target_pos))
 
         if target_pos is not None:
-            for basic_action in self.get_basic_movement_actions(player, target_pos):
+            for basic_action in self.get_basic_movement_actions(player, target_pos, for_click=False):
                 res_list.append(basic_action)
 
         if input_state.is_held(gs.get_instance().settings().enter_key()):
