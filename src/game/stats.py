@@ -61,6 +61,8 @@ class StatTypes:
     SPEED = StatType("SPEED", color=colors.YELLOW, desc="+{} Speed")
 
     UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
+    THROWN_ATT = StatType("THROWN_ATT", color=colors.RED, desc="+{} to Throw Damage",
+                          local_desc="+{} Damage when Thrown")
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
     LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level", color=colors.LIGHT_BLUE)
     HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)

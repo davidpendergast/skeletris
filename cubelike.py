@@ -28,7 +28,7 @@ def run():
 
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
 
-    pygame.display.set_caption("Cubelike")
+    pygame.display.set_caption("Slap Monster, Get Treasure")
 
     pygame.display.set_mode(SCREEN_SIZE, mods)
 

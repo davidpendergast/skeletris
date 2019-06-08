@@ -29,8 +29,29 @@
  - level generation
     - chest loot generation
  - choose name for game
+    
  - enemy generation
  - some indicator that enemies are still acting
+ - game needs an end
+ - title screen needs to be animated, otherwise game feels frozen
+ 
+ 
+[game name]
+    Cubelike
+        - blend of roguelike and "cube"?
+        - don't really want to use word "Cube" because it's awkward to say
+    Skeletris
+        - very close to "Dungetris" which is an existing tetris-infused roguelike
+    
+    Slap Monsters, Find Loot
+        - cute, memorable, 2nd half needs work
+        - hate the word "loot"
+        - "ess em eff ell" sucks
+        - 
+    Slap Monster, Get Treasure
+        - "ess em gee tee", pretty good, acronym available
+        - ambiguously necessary comma
+        
  
  
 [future features]

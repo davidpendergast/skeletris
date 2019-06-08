@@ -479,9 +479,17 @@ class OpenDoorAction(MoveToAction):
         self.actor_entity.set_center(end_pos[0], end_pos[1])
 
 
-def determine_damage_dealt(attacker, defender, item_used=None):
+def determine_damage_dealt(attacker, defender, item_used=None, is_thrown=False):
     t_def = defender.stat_value(StatTypes.DEF)
-    a_att = attacker.stat_value_with_item(StatTypes.ATT, item_used)
+
+    if not is_thrown:
+        a_att = attacker.stat_value_with_item(StatTypes.ATT, item_used)
+    elif item_used is not None:
+        a_att = item_used.stat_value(StatTypes.ATT, local=False)
+        a_att += item_used.stat_value(StatTypes.ATT, local=True)
+        a_att += attacker.stat_value_with_item(StatTypes.THROWN_ATT, item_used)
+    else:
+        a_att = 0  # idk
 
     # explanation:
     #   attacker rolls a D6 for each ATT value they have.
@@ -599,7 +607,7 @@ class AttackAction(Action):
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         t_state = target.get_actor_state()
         a_state = self.get_actor().get_actor_state()
-        dmg_dealt = determine_damage_dealt(a_state, t_state, item_used=self.item)
+        dmg_dealt = determine_damage_dealt(a_state, t_state, item_used=self.item, is_thrown=False)
 
         self._results = (dmg_dealt, target)
 
@@ -700,7 +708,11 @@ class ThrowItemAction(Action):
             self._did_animations = True
             damage = self._results[0]
             target = self._results[1]
-            attacker = self.get_item()  # again, pretending the "attacker" is only wearing the item.
+
+            # we only want on-hit effects that living on the thrown item to apply
+            # and we don't want any on-hit effects to go back to the thrower (I think?)
+            attacker = self.get_item()
+
             defender = target.get_actor_state()
 
             apply_damage_and_hit_effects(damage, attacker, defender,
@@ -727,16 +739,9 @@ class ThrowItemAction(Action):
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         t_state = target.get_actor_state()
 
-        # here's how a thrown's item damage is calculated:
-        # it's as if the "attacker" is an actor with only the item equipped and nothing else,
-        # attacking the target using the item. so basically it uses the global and local stats
-        # on the thrown item and nothing else to apply damage.
-        dummy_attack_state = self.item
+        dmg_dealt = determine_damage_dealt(a_state, t_state, item_used=self.item, is_thrown=True)
 
-        dmg_dealt = determine_damage_dealt(dummy_attack_state, t_state, item_used=self.item)
-
-        # although, all that being said, we do want to force damage to be non-zero.
-        # otherwise on-hit effects won't trigger because it'd be a miss.
+        # force damage to be non-zero, otherwise on-hit effects won't trigger because it'd be a miss.
         dmg_dealt = max(1, dmg_dealt)
 
         self._results = (dmg_dealt, target)
@@ -1090,7 +1095,7 @@ class AttackItemActionProvider(ActionProvider):
 class ItemActions:
     CONSUME_ITEM = ConsumeItemActionProvider()
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
-    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1, 2))
+    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1))
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
     SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))
     DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, (1,))
