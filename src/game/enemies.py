@@ -2,11 +2,8 @@ import random
 
 import src.game.spriteref as spriteref
 from src.world.entities import Enemy
-from src.game.droprates import EnemyRates
 from src.game.stats import StatTypes
 import src.game.stats as stats
-from src.game.loot import LootFactory
-from src.utils.util import Utils
 import src.game.inventory as inventory
 import src.items.item as item
 import src.items.itemgen as itemgen
@@ -200,6 +197,29 @@ class DicelTemplate(EnemyTemplate):
         })
 
 
+class ScorpionTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Wanderer", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_scorpion_all
+
+    def get_level_range(self):
+        return range(9, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 8,
+            StatTypes.SPEED: 6,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 4,
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 4,
+            StatTypes.LIGHT_LEVEL: 1,  # the gimmick
+        })
+
+
 class FallenTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -280,6 +300,7 @@ TEMPLATE_DICEL = DicelTemplate()
 TEMPLATE_THE_FALLEN = FallenTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
 TEMPLATE_FROG = FrogTemplate()
+TEMPLATE_SCORPION = ScorpionTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
@@ -290,7 +311,8 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
                         TEMPLATE_FROG,
-                        TEMPLATE_FUNGOI]
+                        TEMPLATE_FUNGOI,
+                        TEMPLATE_SCORPION]
 
 
 def get_rand_template_for_level(level, rand_val):

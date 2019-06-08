@@ -28,7 +28,6 @@
     - chest loot generation
  - choose name for game
  - enemy generation
- - animation or some indicator for skipping turn
  - some indicator that enemies are still acting
  
  

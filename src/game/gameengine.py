@@ -9,6 +9,8 @@ import src.game.dialog as dialog
 import src.game.statuseffects as statuseffects
 import src.game.balance as balance
 from src.game.stats import StatProvider
+import src.game.debug as debug
+
 
 import random
 
@@ -71,7 +73,13 @@ class ActorState(StatProvider):
             return 0.66
 
     def set_hp(self, val):
-        self.current_hp = min(val, self.max_hp())
+        new_hp = min(val, self.max_hp())
+
+        # just a debug thing, don't worry about it
+        if self.alignment == 0 and debug.player_cant_die():
+            new_hp = max(1, new_hp)
+
+        self.current_hp = new_hp
 
     def energy(self):
         return self.current_energy

@@ -2,9 +2,12 @@ import os
 
 _IS_DEV = os.path.exists("this_is_dev.txt")
 
-# these flags can be manually flipped before launching to alter the game's behavior
+# flip to enable / disable the following debug settings
 _DEBUG = True
+
+# these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LEVEL_RESTRICTIONS_ON_DROPS = True
+_PLAYER_CANT_DIE = True
 
 
 def is_dev():
@@ -17,3 +20,7 @@ def is_debug():
 
 def ignore_level_restrictions_on_drops():
     return is_debug() and _IGNORE_LEVEL_RESTRICTIONS_ON_DROPS
+
+
+def player_cant_die():
+    return is_debug() and _PLAYER_CANT_DIE
