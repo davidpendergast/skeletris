@@ -1101,6 +1101,7 @@ class ChestEntity(Entity):
 
 
 class PickupEntity(Entity):
+    """An entity that slides across the floor and can be "picked up" by actors."""
 
     @staticmethod
     def rand_vel(speed=None, direction=None):
@@ -1120,7 +1121,6 @@ class PickupEntity(Entity):
         self.fric = 0.95
         self.bounce_offset = int(random.random() * 100)
 
-        self.pickup_radius = 32
         self.pickup_delay = 45
         self.time_touched = 0
 
@@ -1160,7 +1160,7 @@ class PickupEntity(Entity):
         spr_h = 2 * cur_sprite.height() if self.sprite_rotation % 2 == 0 else 2 * cur_sprite.width()
 
         x = self.get_render_center()[0] - spr_w // 2 + offs[0]
-        y = self.get_render_center()[1] - spr_h + (2 - bounce) + offs[1]
+        y = self.get_render_center()[1] - spr_h - bounce + offs[1]
         depth = self.get_depth()
 
         self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),
@@ -1220,15 +1220,10 @@ class ItemEntity(PickupEntity):
         return True
 
     def can_pickup(self, world, actor):
-        if actor is None:
-            return False
-        if not self.is_visible_in_world(world):
-            return False
-
-        my_pos = world.to_grid_coords(self.center()[0], self.center()[1])
-        a_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-
-        return abs(my_pos[0] - a_pos[0]) <= 1 and abs(my_pos[1] - a_pos[1]) <= 1
+        if actor.is_player():
+            return self.is_visible_in_world(world)
+        else:
+            return True
 
 
 class DoorEntity(Entity):

@@ -912,6 +912,11 @@ class PickUpItemAction(Action):
         if not ent_to_pickup.can_pickup(world, actor):
             return None
 
+        a_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        dxy = Utils.sub(a_pos, self.get_position())
+        if abs(dxy[0]) > 1 or abs(dxy[1]) > 1:
+            return False
+
         return True
 
     def finalize(self, world):

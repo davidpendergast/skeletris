@@ -6,12 +6,14 @@
  - can equip items/mess with inv while perfoming other actions
     - should implement this as an action
  - can't right-click a potion while dialog is active
- - item entities bob down a little too far, below their own shadows
+    - dialog should skip when you click basically anywhere, right?
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
+ - when you die with an item on the cursor, it stays on cursor through death sequence
+ - offscreen light sources that are nearby will make enemies act non-instantly, which is a annoying
     
  - world gen issues:
      - npcs can block path
