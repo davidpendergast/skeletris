@@ -11,7 +11,6 @@ import src.game.events as events
 import src.game.music as music
 import src.game.settings as settings
 import src.game.globalstate as gs
-import src.utils.passwordgen as passwordgen
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState

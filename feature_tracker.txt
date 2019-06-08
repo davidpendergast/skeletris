@@ -3,12 +3,8 @@
 
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - fine? adds character
- - can pickup items/mess with inv while perfoming other actions
-    - this is kinda hard to fix
-    - it has some gameplay consequences too, like the player can instantly swap 
-        between gear between attacking / defending.
-    - i think for now, we probably just need to leave it, hard to fix without 
-        hurting UX during normal play.
+ - can equip items/mess with inv while perfoming other actions
+    - should implement this as an action
  - can't right-click a potion while dialog is active
  - item entities bob down a little too far, below their own shadows
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
@@ -16,7 +12,6 @@
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
- - should turn around when you drop an item behind yourself
     
  - world gen issues:
      - npcs can block path

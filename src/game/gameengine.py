@@ -916,6 +916,7 @@ class PickUpItemAction(Action):
 
 
 class DropItemAction(Action):
+
     def __init__(self, actor, item, drop_dir=None):
         Action.__init__(self, ActionType.DROP_ITEM, 1, actor, item=item)
         self._drop_dir = drop_dir
@@ -934,6 +935,13 @@ class DropItemAction(Action):
             return False
 
         return True
+
+    def start(self, world):
+        if self._drop_dir is not None:
+            if self._drop_dir[0] > 0.1:
+                self.get_actor().set_facing_right(True)
+            elif self._drop_dir[0] < -0.1:
+                self.get_actor().set_facing_right(False)
 
     def finalize(self, world):
         actor = self.get_actor()
