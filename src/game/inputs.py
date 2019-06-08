@@ -20,8 +20,8 @@ class InputState:
         self._pressed_this_frame = {}  # keycode -> num times
         self._pressed_last_frame = {}  # keycode -> num times
         self._held_keys = {}           # keycode -> time pressed
-        self._mouse_pos_last_update = (0, 0)
         self._mouse_pos = (0, 0)
+        self._mouse_moved_at_time = -1
         self._current_time = 0
     
     def set_key(self, key, held):
@@ -43,6 +43,8 @@ class InputState:
         self.set_key(keycode, down)
 
     def set_mouse_pos(self, pos):
+        if self._mouse_pos != pos:
+            self._mouse_moved_at_time = self._current_time
         self._mouse_pos = pos
     
     def is_held(self, key):
@@ -78,7 +80,7 @@ class InputState:
         return self._mouse_pos
 
     def mouse_moved(self):
-        return self._mouse_pos != self._mouse_pos_last_update
+        return self._mouse_moved_at_time == self._current_time - 1
         
     def mouse_in_window(self):
         return self._mouse_pos is not None    
@@ -101,7 +103,6 @@ class InputState:
         
     def update(self, current_time):
         """Remember that this gets called *after* inputs are passed in, and *before* game updates occur."""
-        self._mouse_pos_last_update = self.mouse_pos
         self._current_time = current_time
 
         self._pressed_this_frame.clear()

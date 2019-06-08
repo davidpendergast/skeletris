@@ -1,5 +1,5 @@
 # cubelike
-babby's first ~~roguelike~~ action rpg 
+babby's first roguelike
 
 here are the five most recent gifs committed:
 
