@@ -106,13 +106,13 @@ class PotionTemplate:
 HEALING = PotionTemplate("Potion of Healing", "That was refreshing.",
                          min_level=0,
                          status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
-                                                               balance.POTION_HEAL_DURATION))
+                                                               balance.POTION_SMALL_HEAL_DURATION))
 
 
 MAJOR_HEALING = PotionTemplate("Potion of Healing II", "That was refreshing!",
                                min_level=5,
                                status=statuseffects.new_regen_effect(balance.POTION_MED_HEAL_VAL,
-                                                                     balance.POTION_HEAL_DURATION))
+                                                                     balance.POTION_MED_HEAL_DURATION))
 
 HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I drink that?",
                          min_level=7,

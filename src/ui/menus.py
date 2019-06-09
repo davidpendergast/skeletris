@@ -1002,7 +1002,16 @@ class InGameUiState(Menu):
                 tt_width = current_tooltip.get_rect()[2]
                 tt_height = current_tooltip.get_rect()[3]
                 tt_x = min(screen_pos[0], gs.get_instance().screen_size[0] - tt_width)
-                tt_y = min(screen_pos[1] + 24, gs.get_instance().screen_size[1] - tt_height)
+
+                y_offs = 24
+                if screen_pos[1] + y_offs + tt_height > gs.get_instance().screen_size[1]:
+                    if screen_pos[1] - y_offs - tt_height >= 0:
+                        tt_y = screen_pos[1] - y_offs - tt_height
+                    else:
+                        tt_y = screen_pos[1] + 24  # if it's too tall to fit on the screen at all, we've got a problem
+                else:
+                    tt_y = screen_pos[1] + 24
+
                 offs = (-tt_x, -tt_y)
                 render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
 
