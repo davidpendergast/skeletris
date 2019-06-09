@@ -85,9 +85,8 @@ class MenuManager:
                 else:
                     cursor = None
                 if cursor is None:
-                    pygame.mouse.set_visible(False)
+                    pygame.mouse.set_cursor(*spriteref.UI.Cursors.invisible_cursor)
                 else:
-                    pygame.mouse.set_visible(True)
                     pygame.mouse.set_cursor(*cursor)
 
     def should_draw_world(self):
@@ -888,7 +887,7 @@ class InGameUiState(Menu):
 
     def _get_top_right_info_obj(self, world):
         return None  # this is kinda annoying now that tooltips are pretty wumbo
-        
+
         #player = world.get_player()
         #if player is not None:
         #    return gs.get_instance().player_state().held_item

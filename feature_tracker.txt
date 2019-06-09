@@ -20,8 +20,6 @@
      - can still spawn in a detached room (see bad_spawn.png)
 
  - fullscreen issues:
-    - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that 
-        position when it becomes unhidden. i blame pygame for this
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
  
 [current features]

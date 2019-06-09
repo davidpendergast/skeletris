@@ -140,9 +140,15 @@ class UI:
 
         arrow_cursor_sprite = None
         hand_cursor_sprite = None
+        invis_cursor_sprite = None
 
         arrow_cursor = None
         hand_cursor = None
+
+        # need to use an invisible cursor instead of calling pygame.set_visible(False)
+        # because there's a bug on linux where the cursor position jumps around when
+        # you toggle its visibility in fullscreen mode.
+        invisible_cursor = None
 
         @staticmethod
         def init_cursors(sheet):
@@ -150,8 +156,13 @@ class UI:
             # UI.Cursors.arrow_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.arrow_cursor_sprite.rect(), sheet)
             print("INFO: arrow_cursor={}".format(UI.Cursors.arrow_cursor))
 
-            UI.Cursors.hand_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.hand_cursor_sprite.rect(), sheet, hotspot=(5, 3))
+            UI.Cursors.hand_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.hand_cursor_sprite.rect(),
+                                                                 sheet, hotspot=(5, 3))
             print("INFO: hand_cursor={}".format(UI.Cursors.hand_cursor))
+
+            UI.Cursors.invisible_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.invis_cursor_sprite.rect(),
+                                                                      sheet, hotspot=(0, 0))
+            print("INFO: invisible_cursor={}".format(UI.Cursors.invisible_cursor))
 
         @staticmethod
         def sprite_to_cursor(cursor_rect, sheet, hotspot=(0, 0)):
@@ -675,6 +686,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 
     UI.Cursors.arrow_cursor_sprite = make(24, 312, 24, 24, shift=start_pos)
     UI.Cursors.hand_cursor_sprite = make(48, 336, 16, 16, shift=start_pos)
+    UI.Cursors.invis_cursor_sprite = make(72, 336, 8, 8, shift=start_pos)
 
     UI.Cursors.init_cursors(sheet)
 
