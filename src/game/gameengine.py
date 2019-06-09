@@ -37,15 +37,6 @@ class ActorState(StatProvider):
 
         self.held_item = None  # item on the mouse cursor TODO - this doesn't belong here~
 
-    def all_stat_providers(self):
-        yield self.base_stats
-        for item in self.inventory().all_equipped_items():
-            yield item
-        for perm_effect in self.permanent_effects:
-            yield perm_effect
-        for status_effect in self.status_effects:
-            yield status_effect
-
     def get_all_mappable_action_providers(self):
         yield ItemActions.UNARMED_ATTACK
         for item in self.inventory().all_equipped_items():
@@ -58,9 +49,21 @@ class ActorState(StatProvider):
                     yield ItemActionProvider(item, action_provider)
 
     def stat_value(self, stat_type, local=False):
-        res = 0
-        for provider in self.all_stat_providers():
-            res += provider.stat_value(stat_type, local=local)
+        res = self.base_stats.stat_value(stat_type, local=local)
+        for item in self.inventory().all_equipped_items():
+            res += item.stat_value(stat_type, local=local)
+
+        # note that this will call back into this same method, gotta be careful not to blow the stack
+        nullified = self.is_nullified() if stat_type != StatTypes.NULLIFICATION else False
+
+        for perm_effect in self.permanent_effects:
+            if not nullified or perm_effect.ignores_nullification():
+                res += perm_effect.stat_value(stat_type, local=local)
+
+        for status_effect in self.status_effects:
+            if not nullified or status_effect.ignores_nullification():
+                res += status_effect.stat_value(stat_type, local=local)
+
         return res
 
     def hp(self):
@@ -90,6 +93,9 @@ class ActorState(StatProvider):
     def speed(self):
         raw_val = self.stat_value(StatTypes.SPEED)
         return Utils.bound(raw_val, 1, self.max_energy())
+
+    def is_nullified(self):
+        return self.stat_value(StatTypes.NULLIFICATION) > 0
 
     def set_ready_to_act(self, val):
         self._ready_to_act = val
@@ -157,11 +163,14 @@ class ActorState(StatProvider):
 
     def countdown_status_effects(self):
         all_effects = self.all_status_effects()
+        nullified = self.is_nullified()
+
         for e in all_effects:
-            if self.status_effects[e] <= 1:
+            if self.status_effects[e] <= 1 or (nullified and not e.ignores_nullification()):
                 del self.status_effects[e]
             else:
                 self.status_effects[e] = self.status_effects[e] - 1
+
 
 
 class ActorController:
@@ -1079,6 +1088,11 @@ class ConsumeItemActionProvider(ActionProvider):
 class AttackItemActionProvider(ActionProvider):
 
     def __init__(self, name, icon, target_dists, color=colors.RED):
+
+        if not isinstance(target_dists, tuple):
+            # i don't trust myself to not typo this
+            raise ValueError("target_dists needs to be a tuple. instead got {}".format(target_dists))
+
         ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
                                 target_dists=target_dists, color=color, needs_to_be_equipped=True)
 
@@ -1095,7 +1109,7 @@ class AttackItemActionProvider(ActionProvider):
 class ItemActions:
     CONSUME_ITEM = ConsumeItemActionProvider()
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
-    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1))
+    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1,))
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
     SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))
     DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, (1,))

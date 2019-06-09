@@ -68,10 +68,13 @@ class StatTypes:
     HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)
     POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)
 
+    NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
+                             color=colors.WHITE)
+
     # this is currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
 
-    PLUS_SPEED_ON_HIT = StatType("SLOWNESS_ON_HIT_1",
+    PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",
                                  color=colors.YELLOW,
                                  desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
                                  local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")

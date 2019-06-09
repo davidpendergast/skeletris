@@ -1,19 +1,19 @@
 
 [bugs]
 
- - when you pop a dialog, player keeps current animation (most noticeable if walking)
-    - fine? adds character
  - can equip items/mess with inv while perfoming other actions
     - should implement this as an action
  - can't right-click a potion while dialog is active
-    - dialog should skip when you click basically anywhere, right?
+    - dialog should advance when you click basically anywhere, right?
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
  - when you die with an item on the cursor, it stays on cursor through death sequence
- - offscreen light sources that are nearby will make enemies act non-instantly, which is a annoying
+    - not a huge deal, but should probably at least hide the image
+ - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
+    - which is annoying
     
  - world gen issues:
      - npcs can block path
@@ -21,27 +21,33 @@
 
  - fullscreen issues:
     - in fullscreen mode, when mouse cursor becomes hidden, it snaps back to that 
-        position when it becomes unhidden
+        position when it becomes unhidden. i blame pygame for this
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
  
 [current features]
- - when you activate or hover over a keymapped attack, it should show the attack range
  - level generation
-    - chest loot generation
- - choose name for game
-    
- - enemy generation
- - some indicator that enemies are still acting
+    - enemy generation
+ - choose name for game   
  - game needs an end
- - title screen needs to be animated, otherwise game feels frozen
+ - game needs a 'give feedback' button in-game (link to a google doc is probably fine)
+ - title screen needs to be animated, otherwise game feels frozen when you open it
+ - better animation when you interact with the level-end door
+    - door starts opening when you activate, screen fades to black
+    - next level generates while screen is black
+    - next level fades off of black
  
  
 [game name]
     Cubelike
-        - blend of roguelike and "cube"?
-        - don't really want to use word "Cube" because it's awkward to say
+        - blend of roguelike and "cube" (?)
+        - been using this as the name since the begining
+        - don't really want to use word "Cube" because it's awkward to say/hard to hear
+            - "it's called kyubelike"
+            - what?
+            - "it's cube-like, like roguelike, if you pronounce it wrong"
+    
     Skeletris
-        - very close to "Dungetris" which is an existing tetris-infused roguelike
+        - very close to "Dungetris" which is an existing tetris-infused indie roguelike
     
     Slap Monsters, Find Loot
         - cute, memorable, 2nd half needs work
@@ -49,11 +55,15 @@
         - "ess em eff ell" sucks
         - 
     Slap Monster, Get Treasure
-        - "ess em gee tee", pretty good, acronym available
-        - ambiguously necessary comma
+        - pros:
+            - "ess em gee tee", pretty good, acronym available
+            - sounds like lgbt
+            - describes all important parts of the game
+        - cons:
+            - ambiguously necessary comma
+            - ambiguously necessary "s" after Monster
+            - it's pretty stupid
         
- 
- 
 [future features]
 
  - design and implement interesting stats
@@ -62,6 +72,8 @@
  - actual dialog for NPCs
  - quest system
  - description text for each decoration
+ - some indicator that enemies are still acting
+ - when you activate or hover over a keymapped attack, it should show the attack range
  
  
 [~dream features~]
@@ -69,4 +81,7 @@
  - many boss fights
  - animated text in TextImages ~wavy language~
  - farming
+ 
+[bugs that are fine]
+ - when you pop a dialog, player keeps current animation (most noticeable if walking)
 

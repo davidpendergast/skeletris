@@ -46,7 +46,7 @@ class ItemFactory:
             actions = [ItemActions.WHIP_ATTACK]
             return SpriteItem("Whip of Sapping", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True),
-                               AppliedStat(StatTypes.PLUS_SPEED_ON_HIT, 1, local=True)],
+                               AppliedStat(StatTypes.PLUS_SPEED_ON_HIT, 2, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
@@ -129,8 +129,9 @@ SLOW_POTION = PotionTemplate("Potion of the Sloth", "I... feel... slow.",
                                                                   balance.POTION_SLOW_DUR))
 
 
-NULL_POTION = PotionTemplate("Placebo Potion", "I feel a little better... I think?",
-                             min_level=6)
+NULL_POTION = PotionTemplate("Null Potion", "I feel a little better... I think?",
+                             min_level=6,
+                             status=statuseffects.new_nullification_effect(balance.POTION_NULLIFICATION_DURATION))
 
 NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my prescription years ago.",
                               min_level=3,

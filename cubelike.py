@@ -242,7 +242,7 @@ def run():
 
         if debug.is_dev() and input_state.is_held(pygame.K_TAB):
             # if holding tab in dev activate slo-mo
-            clock.tick(1)
+            clock.tick(15)
         else:
             clock.tick(60)
 

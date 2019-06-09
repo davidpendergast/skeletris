@@ -393,29 +393,6 @@ TITLE_CANDIDATES = [
         " ░  ░  ░  ░      ░   ░ ░   ░   ░       ",
         "       ░         ░         ░           ",
     ]),
-    # "\n".join([
-    #     "  ██████  ██ ▄█▀▓█████  ██▓    ▓█████▄▓██████▒ ██▀███   ██▒  ██████ ",
-    #     "▒██    ▒  ██▄█▒ ▒█   ▀ ▓██▒    ▓█   ▀▓  ██▒ ▒░▓██ ▒ ██░▒██▒▒██    ▒ ",
-    #     "░ ▓██▄   ▒███▄░ ▒███   ▒██░    ▒███  ▒ ▓██░ ░░▓██ ░▄█ ░▒██▒░ ▓██▄   ",
-    #     "  ▒   ██▒▓██ █▄ ▒▓█  ▄ ▒██░    ▒▓█  ▄░ ▓██▓ ░ ▒██▀▀█▄  ░██░  ▒   ██▒",
-    #     "▒██████▒▒▒██▒ █▄░▒████▒░██████▒░▒████▒ ▒██▒ ░ ░██▓ ▒██▒░██░▒██████▒▒",
-    #     "▒ ▒▓▒ ▒ ░▒ ▒▒ ▓▒░░ ▒░ ░░ ▒░▓  ░░░ ▒░ ░ ▒ ░░   ░ ▒▓ ░▒▓░░▓  ▒ ▒▓▒ ▒ ░",
-    #     "░ ░▒  ░ ░░ ░▒ ▒░ ░ ░  ░░ ░ ▒  ░ ░ ░  ░   ░      ░▒ ░ ▒░ ▒ ░░ ░▒  ░ ░",
-    #     "░  ░  ░  ░ ░░ ░    ░     ░ ░      ░    ░        ░░   ░  ▒ ░░  ░  ░  ",
-    #     "      ░  ░  ░      ░  ░    ░  ░   ░  ░           ░      ░        ░  "
-    # ]),
-    # "\n".join([
-    #     " ▄████▄   █    ██  ▄▄▄▄   ▓█████  ██▓     ██▓ ██ ▄█▀▓█████ ",
-    #     "▒██▀ ▀█   ██  ▓██▒▓█████▄ ▓█   ▀ ▓██▒    ▓██▒ ██▄█▒ ▓█   ▀ ",
-    #     "▒▓█    ▄ ▓██  ▒██░▒██▒ ▄██▒███   ▒██░    ▒██▒▓███▄░ ▒███   ",
-    #     "▒▓▓▄ ▄██▒▓▓█  ░██░▒██░█▀  ▒▓█  ▄ ▒██░    ░██░▓██ █▄ ▒▓█  ▄ ",
-    #     "▒ ▓███▀ ░▒▒█████▓ ░▓█  ▀█▓░▒████▒░██████▒░██░▒██▒ █▄░▒████▒",
-    #     "░ ░▒ ▒  ░░▒▓▒ ▒ ▒ ░▒▓███▀▒░░ ▒░ ░░ ▒░▓  ░░▓  ▒ ▒▒ ▓▒░░ ▒░ ░",
-    #     "  ░  ▒   ░░▒░ ░ ░ ▒░▒   ░  ░ ░  ░░ ░ ▒  ░ ▒ ░░ ░▒ ▒░ ░ ░  ░",
-    #     "░         ░░░ ░ ░  ░    ░    ░     ░ ░    ▒ ░░ ░░ ░    ░   ",
-    #     "░ ░         ░      ░         ░  ░    ░  ░ ░  ░  ░      ░  ░",
-    #     "░                       ░                                  "
-    # ]),
 ]
 
 
@@ -910,11 +887,13 @@ class InGameUiState(Menu):
             return None
 
     def _get_top_right_info_obj(self, world):
-        player = world.get_player()
-        if player is not None:
-            return gs.get_instance().player_state().held_item
-        else:
-            return None
+        return None  # this is kinda annoying now that tooltips are pretty wumbo
+        
+        #player = world.get_player()
+        #if player is not None:
+        #    return gs.get_instance().player_state().held_item
+        #else:
+        #    return None
 
     def _update_top_right_info_panel(self, world):
         obj_to_display = self._get_top_right_info_obj(world)
@@ -1281,16 +1260,17 @@ class InGameUiState(Menu):
         pos = world.to_grid_coords(*player.center())
         res = []
 
-        action_prov = gs.get_instance().get_targeting_action_provider()
-        if action_prov is not None:
-            for i in range(1, 5):
-                dx = target_pos[0] - pos[0]
-                dy = target_pos[1] - pos[1]
-                extended_target_pos = (pos[0] + dx * i, pos[1] + dy * i)
-                res.append(action_prov.get_action(player, position=extended_target_pos))
-        else:
-            import src.game.gameengine as gameengine
-            res.append(gameengine.AttackAction(player, None, target_pos))
+        if gs.get_instance().player_state().held_item is None:
+            action_prov = gs.get_instance().get_targeting_action_provider()
+            if action_prov is not None:
+                for i in range(1, 5):
+                    dx = target_pos[0] - pos[0]
+                    dy = target_pos[1] - pos[1]
+                    extended_target_pos = (pos[0] + dx * i, pos[1] + dy * i)
+                    res.append(action_prov.get_action(player, position=extended_target_pos))
+            else:
+                import src.game.gameengine as gameengine
+                res.append(gameengine.AttackAction(player, None, target_pos))
 
         for basic_action in self.get_basic_movement_actions(player, target_pos, for_click=False):
             res.append(basic_action)

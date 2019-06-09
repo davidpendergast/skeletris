@@ -57,7 +57,7 @@ class TooltipFactory:
             if consume_effect is not None:
                 text_builder.add("Gives ")
                 text_builder.add(consume_effect.get_name(), color=consume_effect.get_color())
-                text_builder.add_line(" when consumed.")
+                text_builder.add_line(" when consumed ({} turns).".format(consume_effect.get_duration()))
             if in_inv:
                 if consume_effect is not None:
                     text_builder.add_line("")
@@ -112,19 +112,24 @@ class TooltipFactory:
     @staticmethod
     def build_action_provider_tooltip(action_prov, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
-        text_builder.add(action_prov.get_name(), color=action_prov.get_color())
+        text_builder.add_line(action_prov.get_name())
 
         if action_prov.get_type() == gameengine.ActionType.ATTACK:
             ps = gs.get_instance().player_state()
             att_value = ps.stat_value_with_item(StatTypes.ATT, action_prov.get_item())
-            if att_value > 0:
-                text_builder.add(" (+{})".format(att_value), color=StatTypes.ATT.get_color())
+            text_builder.add_line("Attack: {}".format(att_value), color=StatTypes.ATT.get_color())
 
-        text_builder.add_line("")
+            dists = action_prov.get_target_dists()
+            dists_str = ", ".join([str(d) for d in dists])
+            text_builder.add_line("Range: {}".format(dists_str), color=colors.LIGHT_GRAY)
 
         if action_prov.get_item() is not None:
+            added_newline = False
             for item_stat in action_prov.get_item().all_applied_stats():
                 if not item_stat.is_hidden() and item_stat.is_local():
+                    if not added_newline:
+                        text_builder.add_line("")
+                        added_newline = True
                     text_builder.add_line(str(item_stat), color=item_stat.color())
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),

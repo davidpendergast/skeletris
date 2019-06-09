@@ -14,13 +14,15 @@ def _new_unique_key():
 
 class StatusEffect(StatProvider):
 
-    def __init__(self, name, duration, color, icon, applied_stats, unique_key=None, player_text=None):
+    def __init__(self, name, duration, color, icon, applied_stats, unique_key=None, player_text=None,
+                 ignore_nullification=False):
         self.name = name
         self.duration = duration
         self.color = color
         self.icon = icon
         self.applied_stats = applied_stats
         self.player_text = player_text
+        self._ignore_nullifcation = ignore_nullification
         self.unique_key = unique_key if unique_key is not None else _new_unique_key()
 
     def stat_value(self, stat_type, local=False):
@@ -39,6 +41,9 @@ class StatusEffect(StatProvider):
 
     def all_applied_stats(self):
         return self.applied_stats
+
+    def ignores_nullification(self):
+        return self._ignore_nullifcation
 
     def get_name(self):
         return self.name
@@ -108,3 +113,10 @@ def new_slow_effect(val, duration, player_text=None):
     return StatusEffect("Reduced Speed", duration, colors.DARK_YELLOW,
                         spriteref.status_diagonal_lines_icon, stats,
                         player_text=player_text)
+
+
+def new_nullification_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.NULLIFICATION, balance.POTION_NULLIFICATION_DURATION)]
+    return StatusEffect("Nullification", duration, colors.LIGHT_GRAY,
+                        spriteref.status_diagonal_lines_icon, stats,
+                        player_text=player_text, ignore_nullification=True)
