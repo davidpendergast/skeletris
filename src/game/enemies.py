@@ -82,6 +82,28 @@ class TrillaTemplate(EnemyTemplate):
         return range(6, 16)
 
 
+class SmallFrogTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Frog", spriteref.medium_shadow)
+
+    def get_sprites(self):
+        return spriteref.enemy_frog_all
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 5,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 0,
+            StatTypes.INTELLIGENCE: 1
+        })
+
+    def get_level_range(self):
+        return range(0, 6)
+
+
 class TrilliteTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -92,16 +114,17 @@ class TrilliteTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 2,
+            StatTypes.VIT: 4,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 1,
+            StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 1
+
         })
 
     def get_level_range(self):
-        return range(0, 6)
+        return range(3, 7)
 
 
 class SmallMuncherTemplate(EnemyTemplate):
@@ -301,6 +324,7 @@ TEMPLATE_THE_FALLEN = FallenTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
 TEMPLATE_FROG = FrogTemplate()
 TEMPLATE_SCORPION = ScorpionTemplate()
+TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
@@ -311,6 +335,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
                         TEMPLATE_FROG,
+                        TEMPLATE_SMALL_FROG,
                         TEMPLATE_FUNGOI,
                         TEMPLATE_SCORPION]
 
