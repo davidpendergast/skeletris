@@ -238,6 +238,8 @@ def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
     return img
 
 
+title_img = make(64, 64, 81, 16)
+
 player_idle_0 = make(0, 0, 16, 32)
 player_idle_1 = make(16, 0, 16, 32)
 player_idle_all = [player_idle_0, player_idle_1]

@@ -10,7 +10,7 @@ def _parse_leading_num(str_with_num):
         return int(just_the_num)
 
 
-def write_readme(template_file, dest_file, gif_directory):
+def write_readme(game_name, template_file, dest_file, gif_directory):
     try:
         with open(template_file, "r") as f:
             template_lines = f.readlines()
@@ -22,6 +22,10 @@ def write_readme(template_file, dest_file, gif_directory):
 
         result_lines = []
         for line in template_lines:
+            name_idx = line.find("{game_name}")
+            if name_idx >= 0:
+                line = line.replace("{game_name}", game_name)
+
             found_replacement = False
             for i in range(0, 50):
                 if i >= len(gif_filenames):
@@ -39,6 +43,7 @@ def write_readme(template_file, dest_file, gif_directory):
                     found_replacement = True
                     result_lines.append(res_line)
                     break
+
             if not found_replacement:
                 result_lines.append(line)
 

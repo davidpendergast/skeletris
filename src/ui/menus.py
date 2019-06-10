@@ -6,6 +6,7 @@ from src.game import spriteref as spriteref
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
+from src.renderengine.img import ImageBundle
 from src.utils.util import Utils
 import src.game.events as events
 import src.game.music as music
@@ -176,8 +177,20 @@ class Menu:
 class OptionsMenu(Menu):
 
     def __init__(self, menu_id, title, options, title_size=5):
+        """
+        title: text or sprite
+        options: list of strings
+        title_size: scale of title text or sprite
+        """
         Menu.__init__(self, menu_id)
-        self.title_text = title
+
+        if isinstance(title, str):
+            self.title_text = title
+            self.title_sprite = None
+        else:
+            self.title_sprite = title
+            self.title_text = None
+
         self.title_size = title_size
         self.options_text = options
 
@@ -222,6 +235,10 @@ class OptionsMenu(Menu):
             if self._title_img is None:
                 self._title_img = TextImage(0, 0, self.title_text, layer=spriteref.UI_0_LAYER,
                                             color=self.get_title_color(), scale=self.title_size)
+        elif self.title_sprite is not None:
+            if self._title_img is None:
+                self._title_img = ImageBundle(self.title_sprite, 0, 0, spriteref.UI_0_LAYER,
+                                              color=self.get_title_color(), scale=self.title_size)
 
     def build_option_imgs(self):
         if self._option_imgs is None:
@@ -403,11 +420,11 @@ class StartMenu(OptionsMenu):
     EXIT_OPT = 3
 
     def __init__(self):
-        title_to_use = random.choice(TITLE_CANDIDATES)
-        n_lines = title_to_use.count("\n")
-        title_size = 1 if n_lines > 4 else 3
-        OptionsMenu.__init__(self, MenuManager.START_MENU,
-                title_to_use, ["start", "controls", "sound", "exit"], title_size=title_size)
+        OptionsMenu.__init__(self,
+                             MenuManager.START_MENU,
+                             spriteref.title_img,
+                             ["start", "controls", "sound", "exit"],
+                             title_size=6)
 
     def get_song(self):
         return music.Songs.MENU_THEME

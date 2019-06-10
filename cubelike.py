@@ -5,18 +5,21 @@ import pygame
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 
-print("INFO: launching Cubelike...")
+NAME_OF_THE_GAME = "Skeletris"
+
+print("INFO: launching {}...".format(NAME_OF_THE_GAME))
 print("INFO: running pygame version: " + pygame.version.ver)
 
 import src.game.debug as debug
 if debug.is_dev():
-    print("generating readme...")
+    print("INFO: generating readme...")
     import src.game.readme_writer as readme_writer
-    readme_writer.write_readme(Utils.resource_path("readme_template.txt"),
+    readme_writer.write_readme(NAME_OF_THE_GAME,
+                               Utils.resource_path("readme_template.txt"),
                                Utils.resource_path("README.md"),
                                Utils.resource_path("gifs"))
 
-print("initializing sounds...")
+print("INFO: initializing sounds...")
 pygame.mixer.pre_init(44100, -16, 1, 2048)
 
 SCREEN_SIZE = (800, 600)
@@ -28,7 +31,7 @@ def run():
 
     mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
 
-    pygame.display.set_caption("Slap Monster, Get Treasure")
+    pygame.display.set_caption(NAME_OF_THE_GAME)
 
     pygame.display.set_mode(SCREEN_SIZE, mods)
 
@@ -248,7 +251,7 @@ def run():
 
         if gs.get_instance().tick_counter % 60 == 0:
             if clock.get_fps() < 59:
-                print("fps: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
+                print("WARN: fps drop: {} ({} sprites)".format(round(clock.get_fps()*10) / 10.0, render_eng.count_sprites()))
 
     try:
         print("INFO: saving settings before exit")

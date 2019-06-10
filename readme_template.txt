@@ -1,4 +1,4 @@
-# cubelike
+# {game_name}
 babby's first roguelike
 
 here are the five most recent gifs committed:
