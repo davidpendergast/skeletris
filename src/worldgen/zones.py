@@ -289,7 +289,7 @@ def get_zone_name(zone_id):
 
 def make(zone):
     _ALL_ZONES[zone.get_id()] = zone
-    print("created zone: {}".format(zone.get_id()))
+    print("INFO: created zone: {}".format(zone.get_id()))
 
 
 class Zone:

@@ -414,8 +414,6 @@ for message in Messages:
     for word in message.value.split():  # split on whitespace
         _cached_text.add(word)
 
-print("caching text: {}".format(_cached_text))
-
 _cached_lengths = set([len(t) for t in _cached_text])
 cached_text_imgs = {}
 
@@ -751,29 +749,29 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
 
     _x = raw_image.get_width()
     _y = 0
-    print("building cinematics sheet...")
+    print("INFO: building cinematics sheet...")
     build_cine_sheet((_x, _y), raw_cine_img, sheet)
     _y += raw_cine_img.get_height()
 
-    print("building ui sheet...")
+    print("INFO: building ui sheet...")
     build_ui_sheet((_x, _y), raw_ui_img, sheet)
     _y += raw_ui_img.get_height()
 
-    print("building items sheet...")
+    print("INFO: building items sheet...")
     build_items_sheet((_x, _y), raw_items_img, sheet)
     _y += raw_items_img.get_height()
 
-    print("building boss sheet...")
+    print("INFO: building boss sheet...")
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
     _y += raw_boss_img.get_height()
 
-    print("building font sheet...")
+    print("INFO: building font sheet...")
     build_font_sheet((_x, _y), raw_font_img, sheet)
     _y += raw_font_img.get_height()
 
     draw_y = raw_image.get_height()
 
-    print("building approx {} wall sprites...".format(256 * len(_wall_types)))
+    print("INFO: building approx {} wall sprites...".format(256 * len(_wall_types)))
 
     for wall_type in _wall_types:
         wall_array = wall_type[0]
@@ -831,7 +829,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     draw_y += _char_h
 
     all_cube_configs = CubeUtils.get_all_possible_cube_configs(n=(4, 5, 6, 7))
-    print("building {} item sprites...".format(len(all_cube_configs)))
+    print("INFO: building {} item sprites...".format(len(all_cube_configs)))
 
     draw_x = 0
     for item in all_cube_configs:
@@ -862,7 +860,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     num_frames = 8
     anim_frames = 4
 
-    print("drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
+    print("INFO: drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
 
     for i in range(0, len(circle_art_widths)):
         w = circle_art_widths[i]
@@ -892,7 +890,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     n_cooldowns = 20
     cd_size = 28
     cd_color = (255, 255, 255)  # (196, 196, 196)
-    print("drawing {} cooldown overlays...".format(n_cooldowns))
+    print("INFO: drawing {} cooldown overlays...".format(n_cooldowns))
 
     for i in range(0, n_cooldowns):
         if draw_x + cd_size > left_size[0]:
@@ -907,7 +905,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     draw_x = 0
 
     num_floor_types = len(_floor_types)
-    print("drawing {} darkened floor tiles...".format(num_floor_types * floor_darkness_resolution))
+    print("INFO: drawing {} darkened floor tiles...".format(num_floor_types * floor_darkness_resolution))
     dest_r = [0, 0, 0, 0]
 
     for floor_id in range(0, num_floor_types):
@@ -944,6 +942,6 @@ if __name__ == "__main__":
     raw5 = pygame.image.load("assets/bosses.png")
     raw6 = pygame.image.load("assets/font.png")
     output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6)
-    print("created {} sprites".format(len(all_imgs)))
+    print("INFO: created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     

@@ -126,36 +126,37 @@ class _Layer:
 def printOpenGLError():
     err = glGetError()
     if (err != GL_NO_ERROR):
-        print('GLERROR: ', gluErrorString(err))
+        print("GLERROR: {}".format(gluErrorString(err)))
 
 
 class Shader:
 
     def __init__(self, vertex_shader_source, fragment_shader_source):
-        # create program
+        print("INFO: creating program...")
         self.program=glCreateProgram()
-        print('create program')
         printOpenGLError()
 
-        # vertex shader
-        print('compile vertex shader...')
+        print("INFO: compile vertex shader...")
         self.vs = glCreateShader(GL_VERTEX_SHADER)
         glShaderSource(self.vs, [vertex_shader_source])
         glCompileShader(self.vs)
         glAttachShader(self.program, self.vs)
         printOpenGLError()
-        print(glGetShaderInfoLog(self.vs))
+        info_log = glGetShaderInfoLog(self.vs)
+        if len(info_log) > 0:
+            print("INFO: vertex shader has non-empty info log: {}".format(info_log))
 
-        # fragment shader
-        print('compile fragment shader...')
+        print("INFO: compile fragment shader...")
         self.fs = glCreateShader(GL_FRAGMENT_SHADER)
         glShaderSource(self.fs, [fragment_shader_source])
         glCompileShader(self.fs)
         glAttachShader(self.program, self.fs)
         printOpenGLError()
-        print(glGetShaderInfoLog(self.fs))
+        info_log = glGetShaderInfoLog(self.fs)
+        if len(info_log) > 0:
+            print("INFO: fragment shader has non-empty info log: {}".format(info_log))
 
-        print('link...')
+        print("INFO: link program...")
         glLinkProgram(self.program)
         printOpenGLError()
 
@@ -252,7 +253,7 @@ class RenderEngine:
         
         vstring = glGetString(GL_VERSION)
         vstring = vstring.decode() if vstring is not None else None
-        print("running OpenGL version: {}".format(vstring))
+        print("INFO: running OpenGL version: {}".format(vstring))
         
         self.shader = Shader(
             '''
