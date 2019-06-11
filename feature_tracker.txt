@@ -16,7 +16,6 @@
     - which is annoying
     
  - world gen issues:
-     - npcs can block path
      - can still spawn in a detached room (see bad_spawn.png)
 
  - fullscreen issues:

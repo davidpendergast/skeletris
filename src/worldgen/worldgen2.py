@@ -835,12 +835,16 @@ class Features:
                          FeatureUtils.convert(["W", "d"]), can_rotate=False)
 
     SIGN = Feature("sign",
-                              FeatureUtils.convert(["W", "-"]),
-                              FeatureUtils.convert(["W", "s"]), can_rotate=False)
+                   FeatureUtils.convert(["W", "-"]),
+                   FeatureUtils.convert(["W", "s"]), can_rotate=False)
 
     QUEST_NPC = Feature("quest_npc",
-                        FeatureUtils.convert(["W", "-"]),
-                        FeatureUtils.convert(["W", "n"]), can_rotate=True)
+                        FeatureUtils.convert(["?W?",
+                                              "?-?",
+                                              "---"]),
+                        FeatureUtils.convert(["?W?",
+                                              "?n?",
+                                              "---"]), can_rotate=True)
 
     @staticmethod
     def get_random_feature():
