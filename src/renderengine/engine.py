@@ -1,6 +1,8 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+import numpy
+
 
 def assert_int(val):
     if not isinstance(val, int):
@@ -51,11 +53,12 @@ class _Layer:
         self._offset = (0, 0)
         self._z_order = z_order
         self.sort_sprites = sort_sprites
-        
-        self.vertices = []
-        self.tex_coords = []
-        self.indices = []
-        self.colors = [] if use_color else None
+
+        # these are the pointers the layer passes to gl
+        self.vertices = numpy.array([], dtype=float)
+        self.tex_coords = numpy.array([], dtype=float)
+        self.indices = numpy.array([], dtype=float)
+        self.colors = numpy.array([], dtype=float) if use_color else None
         
         self._dirty_sprites = []
         self._to_remove = []
@@ -108,11 +111,11 @@ class _Layer:
 
         n_sprites = len(self.images)
 
-        self.vertices = pad_or_trunc(self.vertices, 8 * n_sprites)
-        self.tex_coords = pad_or_trunc(self.tex_coords, 8 * n_sprites)
-        self.indices = pad_or_trunc(self.indices, 6 * n_sprites)
-        if self.colors is not None:
-            self.colors = pad_or_trunc(self.colors, 4 * n_sprites)
+        self.vertices.resize(8 * n_sprites)
+        self.tex_coords.resize(8 * n_sprites)
+        self.indices.resize(6 * n_sprites)
+        if self.uses_color():
+            self.colors.resize(4 * 3 * n_sprites)
 
         for i in range(0, n_sprites):
             bundle = bundle_lookup[self.images[i]]
@@ -124,12 +127,13 @@ class _Layer:
                     self.indices)
             
     def render(self):
-        self._set_client_state_alone(True)
-        self._set_pointers_alone()
-        self._draw_elements_alone()
-        self._set_client_state_alone(False)
+        # split up like this to make it easier to find performance bottlenecks
+        self._set_client_states(True)
+        self._set_pointers()
+        self._draw_elements()
+        self._set_client_states(False)
 
-    def _set_client_state_alone(self, enable):
+    def _set_client_states(self, enable):
         if enable:
             glEnableClientState(GL_VERTEX_ARRAY)
             glEnableClientState(GL_TEXTURE_COORD_ARRAY)
@@ -141,13 +145,13 @@ class _Layer:
             glDisableClientState(GL_TEXTURE_COORD_ARRAY)
             glDisableClientState(GL_VERTEX_ARRAY)
 
-    def _set_pointers_alone(self):
+    def _set_pointers(self):
         glVertexPointer(2, GL_FLOAT, 0, self.vertices)
         glTexCoordPointer(2, GL_FLOAT, 0, self.tex_coords)
         if self.uses_color():
             glColorPointer(3, GL_FLOAT, 0, self.colors)
 
-    def _draw_elements_alone(self):
+    def _draw_elements(self):
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, self.indices)
 
     def __len__(self):

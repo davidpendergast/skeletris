@@ -126,6 +126,9 @@ class ImageBundle:
         return self._is_destroyed
         
     def add_urself(self, i, vertices, texts, colors, indices):
+        """
+            i: sprite's "index", which determines where in the arrays its data is written.
+        """
         x = self.x()
         y = self.y()
         model = self.model()
@@ -151,11 +154,9 @@ class ImageBundle:
         vertices[i*8 + 7] = y
 
         if colors is not None:
-            color = self.color()
-            colors[i * 4 + 0] = color
-            colors[i * 4 + 1] = color
-            colors[i * 4 + 2] = color
-            colors[i * 4 + 3] = color
+            rgb = self.color()
+            for j in range(0, 12):
+                colors[i * 12 + j] = rgb[j % 3]
 
         if model is not None:
             corners = [
