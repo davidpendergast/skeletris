@@ -7,6 +7,35 @@ def assert_int(val):
         raise ValueError("value is not an int: {}".format(val))
 
 
+def pad_or_trunc(l, length):
+    if len(l) < length:
+        return l + [0] * (length - len(l))
+    else:
+        return l[:length]
+
+
+def remove_all_in_place(l, elements):
+    if len(l) == 0:
+        return l
+
+    rem_set = set(elements)
+    last_element = len(l) - 1
+    i = 0
+
+    while i <= last_element:
+        if l[i] in rem_set:
+            while i <= last_element and l[last_element] in rem_set:
+                last_element -= 1
+            if i > last_element:
+                break
+            else:
+                l[i] = l[last_element]
+                last_element -= 1
+        i += 1
+
+    del l[(last_element+1):]
+
+
 class _Layer:
     def __init__(self, name, layer_id, z_order, sort_sprites, use_color):
         """
@@ -63,53 +92,64 @@ class _Layer:
             for bun_id in self._to_remove:
                 if bun_id in self._image_set:
                     self._image_set.remove(bun_id)
-            rem_set = set(self._to_remove)
-            self.images = [img for img in self.images if img not in rem_set]
-            self._to_remove = []
-            self._to_add = [x for x in self._to_add if x not in rem_set]
+
+            remove_all_in_place(self.images, self._to_remove)
+            remove_all_in_place(self._to_add, self._to_remove)
+            self._to_remove.clear()
 
         if len(self._to_add) > 0:
             self.images.extend(self._to_add)
-            self._to_add = []
-            
-        # todo: smarter update
-        self._dirty_sprites = []
+            self._to_add.clear()
+
+        self._dirty_sprites.clear()
         
         if self.sort_sprites:
             self.images.sort(key=lambda x: -bundle_lookup[x].depth())
-        
-        self.vertices = []
-        self.tex_coords = []
-        self.indices = []
+
+        n_sprites = len(self.images)
+
+        self.vertices = pad_or_trunc(self.vertices, 8 * n_sprites)
+        self.tex_coords = pad_or_trunc(self.tex_coords, 8 * n_sprites)
+        self.indices = pad_or_trunc(self.indices, 6 * n_sprites)
         if self.colors is not None:
-            self.colors = []
-        
-        for img in self.images:
-            bundle = bundle_lookup[img]
-            bundle.add_urself( 
+            self.colors = pad_or_trunc(self.colors, 4 * n_sprites)
+
+        for i in range(0, n_sprites):
+            bundle = bundle_lookup[self.images[i]]
+            bundle.add_urself(
+                    i,
                     self.vertices, 
                     self.tex_coords, 
                     self.colors, 
                     self.indices)
             
-    def render(self):  
-        glEnableClientState(GL_VERTEX_ARRAY)
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-        if self.uses_color():
-            glEnableClientState(GL_COLOR_ARRAY)
-            
+    def render(self):
+        self._set_client_state_alone(True)
+        self._set_pointers_alone()
+        self._draw_elements_alone()
+        self._set_client_state_alone(False)
+
+    def _set_client_state_alone(self, enable):
+        if enable:
+            glEnableClientState(GL_VERTEX_ARRAY)
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+            if self.uses_color():
+                glEnableClientState(GL_COLOR_ARRAY)
+        else:
+            if self.uses_color():
+                glDisableClientState(GL_COLOR_ARRAY)
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+            glDisableClientState(GL_VERTEX_ARRAY)
+
+    def _set_pointers_alone(self):
         glVertexPointer(2, GL_FLOAT, 0, self.vertices)
         glTexCoordPointer(2, GL_FLOAT, 0, self.tex_coords)
         if self.uses_color():
             glColorPointer(3, GL_FLOAT, 0, self.colors)
-        
+
+    def _draw_elements_alone(self):
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, self.indices)
-        
-        if self.uses_color():
-            glDisableClientState(GL_COLOR_ARRAY)
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-        glDisableClientState(GL_VERTEX_ARRAY)
-        
+
     def __len__(self):
         return len(self.images)   
         

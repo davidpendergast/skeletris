@@ -125,55 +125,64 @@ class ImageBundle:
     def is_destroyed(self):
         return self._is_destroyed
         
-    def add_urself(self, vertices, texts, colors, indices):
+    def add_urself(self, i, vertices, texts, colors, indices):
         x = self.x()
         y = self.y()
         model = self.model()
-
         if model is None:
-            return
-
-        w = int(model.w * self.scale() * self.ratio()[0])
-        h = int(model.h * self.scale() * self.ratio()[1])
+            w = 0
+            h = 0
+        else:
+            w = int(model.w * self.scale() * self.ratio()[0])
+            h = int(model.h * self.scale() * self.ratio()[1])
 
         if self.rotation() == 1 or self._rotation == 3:
             temp_w = w
             w = h
             h = temp_w
 
-        color = self.color()
-        
-        vertices.extend([
-                x, y,
-                x, y + h,
-                x + w, y + h,
-                x + w, y])
-        
-        if colors is not None:            
-            colors.extend([
-                    color, color, color, color   
-            ])
+        vertices[i*8 + 0] = x
+        vertices[i*8 + 1] = y
+        vertices[i*8 + 2] = x
+        vertices[i*8 + 3] = y + h
+        vertices[i*8 + 4] = x + w
+        vertices[i*8 + 5] = y + h
+        vertices[i*8 + 6] = x + w
+        vertices[i*8 + 7] = y
 
-        corners = [
-            model.tx1, model.ty2,
-            model.tx1, model.ty1,
-            model.tx2, model.ty1,
-            model.tx2, model.ty2
-        ]
+        if colors is not None:
+            color = self.color()
+            colors[i * 4 + 0] = color
+            colors[i * 4 + 1] = color
+            colors[i * 4 + 2] = color
+            colors[i * 4 + 3] = color
 
-        if self.xflip():
-            corners[0] = model.tx2
-            corners[2] = model.tx2
-            corners[4] = model.tx1
-            corners[6] = model.tx1
+        if model is not None:
+            corners = [
+                model.tx1, model.ty2,
+                model.tx1, model.ty1,
+                model.tx2, model.ty1,
+                model.tx2, model.ty2
+            ]
 
-        for _ in range(0, self.rotation()):
-            corners = corners[2:] + corners[:2]
-        
-        texts.extend(corners)
-        
-        i = 0 if len(indices) == 0 else indices[-1] + 1
-        indices.extend([i, i+1, i+2, i, i+2, i+3])
+            if self.xflip():
+                corners[0] = model.tx2
+                corners[2] = model.tx2
+                corners[4] = model.tx1
+                corners[6] = model.tx1
+
+            for _ in range(0, self.rotation()):
+                corners = corners[2:] + corners[:2]
+
+            for j in range(0, 8):
+                texts[i * 8 + j] = corners[j]
+
+        indices[6 * i + 0] = 4 * i
+        indices[6 * i + 1] = 4 * i + 1
+        indices[6 * i + 2] = 4 * i + 2
+        indices[6 * i + 3] = 4 * i
+        indices[6 * i + 4] = 4 * i + 2
+        indices[6 * i + 5] = 4 * i + 3
 
     def __repr__(self):
         return "ImageBundle({}, {}, {}, {}, {}, {}, {}, {}, {}. {})".format(
