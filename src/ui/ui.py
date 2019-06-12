@@ -541,8 +541,8 @@ class DialogPanel(InteractableImage):
         return Utils.rect_contains(self._rect, (x, y))
 
     def on_click(self, x, y, button=1):
-        if button == 1:
-            gs.get_instance().dialog_manager().interact()
+        # clicking anywhere while dialog is open advances the dialog
+        # so if we advanced here, it'd double-advance
         return True
 
     def get_tooltip_target_at(self, x, y):

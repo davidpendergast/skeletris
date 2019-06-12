@@ -857,7 +857,7 @@ class InGameUiState(Menu):
         self.inventory_panel = None
         self.health_bar_panel = None
         self.dialog_panel = None
-        self.top_right_info_panel = None
+        self.top_right_info_panel = None  # currently unused
 
         self.item_on_cursor_info = None  # tuple (item, ItemImage, offset)
 
@@ -1173,7 +1173,7 @@ class InGameUiState(Menu):
 
         click_actions = []
 
-        if screen_pos is not None:
+        if screen_pos is not None and not gs.get_instance().world_updates_paused():
             button1 = input_state.mouse_was_pressed(button=1)
             button3 = input_state.mouse_was_pressed(button=3)
             if button1 or button3:
@@ -1228,11 +1228,12 @@ class InGameUiState(Menu):
         # (because gs.world_updates_paused will get flipped to false when we interact).
         if gs.get_instance().dialog_manager().is_active():
             keys = [k for k in gs.get_instance().settings().all_dialog_dismiss_keys()]
-            pushed_dismiss_key = False
-            for k in keys:
-                if input_state.was_pressed(k):
-                    pushed_dismiss_key = True
-                    break
+            pushed_dismiss_key = input_state.mouse_was_pressed(button=1)
+            if not pushed_dismiss_key:
+                for k in keys:
+                    if input_state.was_pressed(k):
+                        pushed_dismiss_key = True
+                        break
             if pushed_dismiss_key:
                 gs.get_instance().dialog_manager().interact()
 
