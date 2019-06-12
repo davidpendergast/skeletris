@@ -9,21 +9,31 @@
  - "ValueError: failed to place start anywhere on path"
     - slightly fixed this by making the "start" feature less restrictive
     - still need logic to re-attempt the generation without crashing
- - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
-    - which is annoying
+ 
  - world gen issues:
      - can still spawn in a detached room (see bad_spawn.png)
 
- - fullscreen issues:
+ - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
+    - gotta setup my windows machine to test, probably need to handle resolution scaling issues
+    - linux-style colored console text is an epic fail on windows
+  
  
 [current features]
+ - fix cinematics
+    - should show before "boss encounter"
+    - and at end credits
  - level generation
     - enemy generation
- - choose name for game   
+        - what more needs done here?
+ - choose name for game
+    - this is mentally exhausting btw lol 
  - game needs an end
     - for now, maybe zone 16 is just the Frog Boss fight, and after he dies, credits roll?
+    - seems good to me
+    - NO this is a future feature, stop scope creeping pls
  - game needs a 'give feedback' button in-game (link to a google doc is probably fine)
+    - bleh just DM me
  - title screen needs to be animated, otherwise game feels frozen when you open it
  - better animation when you interact with the level-end door
     - door starts opening when you activate, screen fades to black
@@ -45,10 +55,12 @@
         - pros:
             - sounds cool
             - available
+            - this can also be the name of the city in which the game takes place
         - cons:
             - similar to "Dungetris" which is an existing indie tetris-roguelike fusion
                 - games are totally different though, probably fine to use
-            - says basically nothing about the game except "there are skeletons"
+            - says basically nothing about the game except "there are skeletons + tetris"
+            - there are like four ppl using this name on social media accounts
     
     Slap Monsters, Find Loot
         - cute, memorable, 2nd half needs work
@@ -71,6 +83,7 @@
             - identical to "Crypt of the Fungal Lord", which exists
             - similar to "Curse of the Mushroom King", which exists
         
+        
 [future features]
 
  - design and implement interesting stats
@@ -87,8 +100,12 @@
  - see notes app on phone
  - many boss fights
  - animated text in TextImages ~wavy language~
+    - reconsider, according to twitter this will kill the game
  - farming
+    - if you can dream it you can meme it
  
 [bugs that are fine]
- - when you pop a dialog, player keeps current animation (most noticeable if walking)
+    - when you pop a dialog, player keeps current animation (most noticeable if walking)
+    - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
+        - for now, let's just not have any enemies that emit light by default
 

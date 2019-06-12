@@ -675,11 +675,12 @@ class ActorEntity(Entity):
                 self.executing_action.animate_in_world(prog, world)
 
     def _apply_status_effects(self, world):
-        hp_change = 0
         a_state = self.get_actor_state()
+        old_hp = a_state.hp()
 
         pulse_color = None
 
+        hp_change = 0
         for eff in a_state.all_status_effects():
             hp_change += eff.stat_value(stats.StatTypes.HP_REGEN)
             hp_change -= eff.stat_value(stats.StatTypes.POISON)
@@ -689,14 +690,15 @@ class ActorEntity(Entity):
             elif hp_change < 0:
                 pulse_color = stats.StatTypes.POISON.get_color()
 
-        old_hp = a_state.hp()
         a_state.set_hp(old_hp + hp_change)
         new_hp = a_state.hp()
-        if new_hp > old_hp:
+
+        if new_hp != old_hp and pulse_color is not None:
             self.perturb_color(pulse_color, 30)
+
+        if new_hp > old_hp:
             world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 3, self)
         elif new_hp < old_hp:
-            self.perturb_color(pulse_color, 30)
             world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 3, self)
 
     def update(self, world):
