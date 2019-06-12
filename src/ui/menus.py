@@ -969,8 +969,13 @@ class InGameUiState(Menu):
 
                 import src.world.entities as entities
                 if isinstance(obj_at_xy, entities.ItemEntity):
-                    if obj_at_xy.can_pickup(world, world.get_player()):
-                        return spriteref.UI.Cursors.hand_cursor
+                    player = world.get_player()
+                    if player is not None:
+                        import src.game.gameengine as gameengine
+                        pos = world.to_grid_coords(*obj_at_xy.center())
+                        pickup_action = gameengine.PickUpItemAction(player, obj_at_xy.get_item(), pos)
+                        if pickup_action.is_possible(world):
+                            return spriteref.UI.Cursors.hand_cursor
 
             return super().cursor_style_at(world, xy)
 

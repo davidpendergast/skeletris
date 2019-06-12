@@ -11,8 +11,6 @@
     - still need logic to re-attempt the generation without crashing
  - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
     - which is annoying
- - hovering over a non-grabbable item shouldn't give the grabby-hand cursor
-    
  - world gen issues:
      - can still spawn in a detached room (see bad_spawn.png)
 
