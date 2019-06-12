@@ -1118,7 +1118,7 @@ class InGameUiState(Menu):
 
         ps = gs.get_instance().player_state()
 
-        if not InputState.get_instance().mouse_in_window():
+        if not ps.is_alive() or not InputState.get_instance().mouse_in_window():
             destroy_image = True
 
         elif ps.held_item is not None and self.item_on_cursor_info is None:
@@ -1135,7 +1135,8 @@ class InGameUiState(Menu):
         if did_rotate_input and not gs.get_instance().world_updates_paused():
             if ps.held_item is not None and ps.held_item.can_rotate():
                 ps.held_item = ps.held_item.rotate()
-                create_image = True
+                if not destroy_image:  # so you can't flicker the image after death basically
+                    create_image = True
                 destroy_image = True
 
         if destroy_image and self.item_on_cursor_info is not None:

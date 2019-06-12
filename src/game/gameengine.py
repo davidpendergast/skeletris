@@ -172,7 +172,6 @@ class ActorState(StatProvider):
                 self.status_effects[e] = self.status_effects[e] - 1
 
 
-
 class ActorController:
 
     def get_next_action(self, actor, world):
