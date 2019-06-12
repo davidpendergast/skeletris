@@ -538,11 +538,10 @@ class DialogPanel(InteractableImage):
             render_eng.update(self._speaker_img)
 
     def contains_point(self, x, y):
-        return Utils.rect_contains(self._rect, (x, y))
+        return True  # when it's open, we block ALL clicks
 
     def on_click(self, x, y, button=1):
-        # clicking anywhere while dialog is open advances the dialog
-        # so if we advanced here, it'd double-advance
+        gs.get_instance().dialog_manager().interact()
         return True
 
     def get_tooltip_target_at(self, x, y):

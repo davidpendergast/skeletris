@@ -1130,7 +1130,9 @@ class InGameUiState(Menu):
                 destroy_image = True
                 create_image = True
 
-        if InputState.get_instance().was_pressed(gs.get_instance().settings().rotate_cw_key()):
+        # TODO - this ought to be an action probably
+        did_rotate_input = InputState.get_instance().was_pressed(gs.get_instance().settings().rotate_cw_key())
+        if did_rotate_input and not gs.get_instance().world_updates_paused():
             if ps.held_item is not None and ps.held_item.can_rotate():
                 ps.held_item = ps.held_item.rotate()
                 create_image = True
@@ -1173,7 +1175,7 @@ class InGameUiState(Menu):
 
         click_actions = []
 
-        if screen_pos is not None and not gs.get_instance().world_updates_paused():
+        if screen_pos is not None:
             button1 = input_state.mouse_was_pressed(button=1)
             button3 = input_state.mouse_was_pressed(button=3)
             if button1 or button3:
@@ -1228,12 +1230,11 @@ class InGameUiState(Menu):
         # (because gs.world_updates_paused will get flipped to false when we interact).
         if gs.get_instance().dialog_manager().is_active():
             keys = [k for k in gs.get_instance().settings().all_dialog_dismiss_keys()]
-            pushed_dismiss_key = input_state.mouse_was_pressed(button=1)
-            if not pushed_dismiss_key:
-                for k in keys:
-                    if input_state.was_pressed(k):
-                        pushed_dismiss_key = True
-                        break
+            pushed_dismiss_key = False
+            for k in keys:
+                if input_state.was_pressed(k):
+                    pushed_dismiss_key = True
+                    break
             if pushed_dismiss_key:
                 gs.get_instance().dialog_manager().interact()
 

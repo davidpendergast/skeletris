@@ -141,6 +141,7 @@ class Settings:
         for k in self.all_direction_keys():
             yield k
         yield self.enter_key()
+        yield self.rotate_cw_key()
 
     def num_mapped_actions(self):
         return len(KEY_MAPPED_ACTIONS)
