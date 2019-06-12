@@ -22,10 +22,12 @@
 [current features]
  - fix cinematics
     - should show before "boss encounter"
+        - *eyes narrow* no boss fights in demo
     - and at end credits
  - level generation
     - enemy generation
         - what more needs done here?
+        - besides adding more enemies
  - choose name for game
     - this is mentally exhausting btw lol 
  - game needs an end
@@ -35,6 +37,7 @@
  - game needs a 'give feedback' button in-game (link to a google doc is probably fine)
     - bleh just DM me
  - title screen needs to be animated, otherwise game feels frozen when you open it
+    - eek
  - better animation when you interact with the level-end door
     - door starts opening when you activate, screen fades to black
     - next level generates while screen is black
@@ -94,6 +97,8 @@
  - description text for each decoration
  - some indicator that enemies are still acting
  - when you activate or hover over a keymapped attack, it should show the attack range
+ - in-game map (toggle ascii overlay)
+ - fade to black between zones / menus
  
  
 [~dream features~]

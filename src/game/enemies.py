@@ -38,24 +38,24 @@ class EnemyTemplate:
         })
 
 
-class FlappumTemplate(EnemyTemplate):
+class CaveCrawlerTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Cave Crawler", spriteref.medium_shadow)
 
     def get_sprites(self):
-        return spriteref.enemy_flappum_all
+        return spriteref.enemy_cave_crawler_all
 
     def get_level_range(self):
-        return range(0, 4)
+        return range(1, 5)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 5,
+            StatTypes.VIT: 6,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 2,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 2
         })
 
@@ -92,10 +92,10 @@ class SmallFrogTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 5,
+            StatTypes.VIT: 3,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 2,
+            StatTypes.UNARMED_ATT: 1,
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 1
         })
@@ -124,7 +124,7 @@ class TrilliteTemplate(EnemyTemplate):
         })
 
     def get_level_range(self):
-        return range(3, 7)
+        return range(2, 7)
 
 
 class SmallMuncherTemplate(EnemyTemplate):
@@ -313,7 +313,7 @@ class FrogTemplate(EnemyTemplate):
 
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = TrilliteTemplate()
-TEMPLATE_FLAPPUM = FlappumTemplate()
+TEMPLATE_CAVE_CRAWLER = CaveCrawlerTemplate()
 TEMPLATE_MUNCHER = MuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_ALT = MuncherTemplate(alt=True)
 TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
@@ -331,7 +331,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_DICEL,
                         TEMPLATE_THE_FALLEN,
                         TEMPLATE_CYCLOI,
-                        TEMPLATE_FLAPPUM,
+                        TEMPLATE_CAVE_CRAWLER,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
                         TEMPLATE_FROG,
@@ -349,7 +349,7 @@ def get_rand_template_for_level(level, rand_val):
 
     if len(choices) == 0:
         print("WARN: no enemy templates for level: {}".format(level))
-        return TEMPLATE_FLAPPUM
+        return TEMPLATE_CAVE_CRAWLER
     else:
         return choices[int(rand_val * len(choices))]
 

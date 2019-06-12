@@ -624,7 +624,7 @@ class DesolateCaveZone(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return [enemies.TEMPLATE_FLAPPUM]
+        return [enemies.TEMPLATE_CAVE_CRAWLER]
 
 
 class DesolateCaveZone2(Zone):
@@ -644,7 +644,7 @@ class DesolateCaveZone2(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return [enemies.TEMPLATE_FLAPPUM]
+        return [enemies.TEMPLATE_CAVE_CRAWLER]
 
 
 class DesolateCaveZone3(Zone):
@@ -663,7 +663,7 @@ class DesolateCaveZone3(Zone):
         return music.Songs.SILENCE
 
     def get_enemies(self):
-        return [enemies.TEMPLATE_FLAPPUM, enemies.TEMPLATE_MUNCHER_SMALL]
+        return [enemies.TEMPLATE_CAVE_CRAWLER, enemies.TEMPLATE_MUNCHER_SMALL]
 
 
 class HauntedForestZone1(Zone):
@@ -687,7 +687,7 @@ class HauntedForestZone1(Zone):
         return w
 
     def get_enemies(self):
-        return [enemies.TEMPLATE_FLAPPUM, enemies.TEMPLATE_MUNCHER_SMALL_ALT, enemies.TEMPLATE_FUNGOI]
+        return [enemies.TEMPLATE_CAVE_CRAWLER, enemies.TEMPLATE_MUNCHER_SMALL_ALT, enemies.TEMPLATE_FUNGOI]
 
 
 class FrogLairZone(Zone):
