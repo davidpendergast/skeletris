@@ -432,12 +432,13 @@ class ZoneBuilder:
         return world
 
     @staticmethod
-    def generate_new_world(level):
+    def generate_tile_grid(level):
         dims = (3, 3)
         start = (0, 0)
         end = (dims[0] - 1, dims[1] - 1)
         t_size = 12
-        path, p_grid = worldgen2.GridBuilder.random_partition_grid(dims[0], dims[1], start=start, end=end)
+        path, p_grid = worldgen2.GridBuilder.random_partition_grid(dims[0], dims[1],
+                                                                   start=start, end=end, fully_connected=True)
 
         t_grid = worldgen2.TileGrid(dims[0], dims[1], tile_size=(t_size, t_size))
 
@@ -458,9 +459,6 @@ class ZoneBuilder:
                         empty_rooms.extend(rooms)
 
                     t_grid.set_tile(x, y, tile)
-
-        print(t_grid)
-        print(path)
 
         worldgen2.TileGridBuilder.clean_up_dangly_bits(t_grid)
         worldgen2.TileGridBuilder.clean_up_doors(t_grid)
@@ -485,7 +483,22 @@ class ZoneBuilder:
                 break
 
         if not start_placed:
-            raise ValueError("failed to place start anywhere on path...")
+            print("INFO: falling back to non-fancy start")
+            for p in path:
+                rooms_in_p = list(room_map.get(p))
+                random.shuffle(rooms_in_p)
+                for r in rooms_in_p:
+                    if r not in empty_rooms:
+                        continue
+                    if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.BACKUP_START, t_grid, r):
+                        start_placed = True
+                        empty_rooms.remove(r)
+                        break
+                if start_placed:
+                    break
+
+            if not start_placed:
+                raise ValueError("failed to place start (or backup start) anywhere on path...")
 
         end_placed = False
         for p in reversed(path):
@@ -504,12 +517,17 @@ class ZoneBuilder:
         if not start_placed:
             raise ValueError("failed to place end anywhere on path...")
 
-
         while len(empty_rooms) > 0:
             r = empty_rooms.pop()
             if random.random() > 0.05:
                 feat = worldgen2.Features.get_random_feature()
                 worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+
+        return t_grid
+
+    @staticmethod
+    def generate_new_world(level):
+        t_grid = ZoneBuilder.generate_tile_grid(level)
 
         print("INFO: generated world: level={}".format(level))
         print(t_grid)

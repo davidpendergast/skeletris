@@ -1,5 +1,7 @@
 import re
 import random
+from sys import platform
+
 from src.utils.util import Utils
 
 
@@ -21,18 +23,21 @@ class TileType:
 
 
 def color_char(c):
-    if c == TileType.DOOR:
-        return "\033[1;34m" + c + "\033[0;0m"  # blue
-    elif c == TileType.MONSTER:
-        return "\033[1;31m" + c + "\033[0;0m"  # red
-    elif c == TileType.CHEST:
-        return "\033[1;35m" + c + "\033[0;0m"  # magenta
-    elif c == TileType.EXIT or c == TileType.PLAYER or c == TileType.ENTRANCE:
-        return "\033[1;32m" + c + "\033[0;0m"  # green
-    elif c == TileType.EMPTY or c == TileType.WALL or c == TileType.FLOOR:
-        return c
+    if platform == "linux" or platform == "linux2":
+        if c == TileType.DOOR:
+            return "\033[1;34m" + c + "\033[0;0m"  # blue
+        elif c == TileType.MONSTER:
+            return "\033[1;31m" + c + "\033[0;0m"  # red
+        elif c == TileType.CHEST:
+            return "\033[1;35m" + c + "\033[0;0m"  # magenta
+        elif c == TileType.EXIT or c == TileType.PLAYER or c == TileType.ENTRANCE:
+            return "\033[1;32m" + c + "\033[0;0m"  # green
+        elif c == TileType.EMPTY or c == TileType.WALL or c == TileType.FLOOR:
+            return c
+        else:
+            return "\033[1;33m" + c + "\033[0;0m"  # yellow
     else:
-        return "\033[1;33m" + c + "\033[0;0m"  # yellow
+        return c  # don't really care about colors on other systems
 
 
 class Tileish:
@@ -45,6 +50,11 @@ class Tileish:
 
     def h(self):
         return 0
+
+    def coords(self):
+        for x in range(0, self.w()):
+            for y in range(0, self.h()):
+                yield (x, y)
 
     def is_valid(self, x, y):
         return 0 <= x < self.w() and 0 <= y < self.h()
@@ -96,11 +106,6 @@ class Tile(Tileish):
     def h(self):
         return len(self.grid[0])
 
-    def coords(self):
-        for x in range(0, self.w()):
-            for y in range(0, self.h()):
-                yield (x, y)
-
     def door_coords(self, door_num):
         if door_num == 0:
             return [(self._door_offs + i, 0) for i in range(0, self._door_length)]
@@ -130,6 +135,14 @@ class Tile(Tileish):
             return [4, 5]
         elif side == (-1, 0):
             return [6, 7]
+
+    @staticmethod
+    def get_door_direction(door_num):
+        dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        for d in dirs:
+            if door_num in Tile.doors_on_side(d):
+                return d
+        return None
 
     @staticmethod
     def connecting_door(door_num):
@@ -323,7 +336,7 @@ class GridBuilder:
         return path
 
     @staticmethod
-    def random_partition_grid(w, h, start=None, end=None):
+    def random_partition_grid(w, h, start=None, end=None, fully_connected=True):
         """returns: (path, partition_grid)"""
         start = start if start is not None else (random.randint(0, w - 1), random.randint(0, h - 1))
         end = end if end is not None else (random.randint(0, w - 1), random.randint(0, h - 1))
@@ -380,7 +393,74 @@ class GridBuilder:
                                            force_not_doors=force_disabled)
             p_grid.set(x, y, p)
 
+        if fully_connected:
+            disjoint_neighborhoods = list(GridBuilder.get_disconnected_neighborhoods(p_grid))
+            if len(disjoint_neighborhoods) > 1:
+
+                good_neighborhood = None  # the neighborhood that contains start and end, aka the "main one"
+                for n in disjoint_neighborhoods:
+                    contains_start = any([((start[0], start[1], i) in n) for i in range(0, 8)])
+                    contains_end = any([((end[0], end[1], i) in n) for i in range(0, 8)])
+                    if contains_start and contains_end:
+                        good_neighborhood = n
+                        break
+
+                if good_neighborhood is None:
+                    raise ValueError("there's no neighborhood containing the start and end positions")
+
+                for n in disjoint_neighborhoods:
+                    if n == good_neighborhood:
+                        continue
+                    else:
+                        # now we need to surgically remove all the disconnected doors...
+                        for xyd in n:
+                            x, y, d = xyd
+                            part = p_grid.get(x, y)
+                            p_grid.set(x, y, Partition.without_door(part, d))
+
         return path, p_grid
+
+    @staticmethod
+    def get_disconnected_neighborhoods(p_grid):
+        all_doors = set()  # list of (x, y, door_num)
+        for x in range(0, p_grid.w()):
+            for y in range(0, p_grid.h()):
+                for door_num in range(0, 8):
+                    if p_grid.has_door(x, y, door_num):
+                        all_doors.add((x, y, door_num))
+
+        res = []
+
+        for xyd in all_doors:
+            x, y, door_num = xyd
+            sub_neigh = [(x, y, d) for d in p_grid.get(x, y).get_group(door_num)]
+
+            connected_door_num = Tile.connecting_door(door_num)
+            direction = Tile.get_door_direction(door_num)
+            connected_door = (x + direction[0], y + direction[1], connected_door_num)
+            if connected_door in all_doors:
+                sub_neigh.append(connected_door)
+
+            existing_neighborhoods = []
+            for neighborhood in res:
+                for door in sub_neigh:
+                    if door in neighborhood and neighborhood not in existing_neighborhoods:
+                        existing_neighborhoods.append(neighborhood)
+
+            if len(existing_neighborhoods) == 0:
+                new_neighborhood = set()
+                new_neighborhood.update(sub_neigh)
+                res.append(new_neighborhood)
+            elif len(existing_neighborhoods) == 1:
+                existing_neighborhoods[0].update(sub_neigh)
+            else:
+                for i in range(1, len(existing_neighborhoods)):
+                    to_merge = existing_neighborhoods[i]
+                    existing_neighborhoods[0].update(to_merge)
+                    res.remove(to_merge)
+                existing_neighborhoods[0].update(sub_neigh)
+
+        return res
 
 
 class RectUtils:
@@ -515,7 +595,10 @@ class TileFiller:
     @staticmethod
     def basic_room_fill(tile, partition, min_rooms=1, max_rooms=4, iter_limit=300,
                         min_size=3, max_size=6, disjoint_rooms=True, connected_rooms=True):
-        """returns: list of room rectangles"""
+        """
+        disjoint_rooms: if True, forces rooms to be non-overlapping
+        connected_rooms: if True, forces rooms to be touching existing floor tiles
+        returns: list of room rectangles"""
         TileFiller.basic_floor_fill(tile, partition)
 
         n = random.randint(min_rooms, max_rooms)
@@ -655,6 +738,17 @@ class TileGridBuilder:
                 if 0 < len(island) < smaller_than:
                     for pos in island:
                         tile_grid.set(pos[0], pos[1], TileType.WALL)
+
+    @staticmethod
+    def search(tile_grid, for_values):
+        """returns: all coordinates in the tile grid with the given values"""
+        res = set()
+
+        for xy in tile_grid.coords():
+            if for_values is None or tile_grid.get(xy[0], xy[1]) in for_values:
+                res.add(xy)
+
+        return res
 
 
 class Feature(Tileish):
@@ -809,6 +903,11 @@ class Features:
                                           "WvW",
                                           "WWW"]), can_rotate=False)
 
+    # we fall back to this style of a start if there's nowhere to place the fancy type
+    BACKUP_START = Feature("backup_start",
+                           FeatureUtils.convert(["-", "W"]),
+                           FeatureUtils.convert(["p", "W"]), can_rotate=False)
+
     EXIT = Feature("exit_door",
                    FeatureUtils.convert(["W", "-"]),
                    FeatureUtils.convert(["W", "e"]), can_rotate=False)
@@ -854,6 +953,7 @@ class Features:
 
 
 class Partition:
+
     def __init__(self, p):
         for g in p:
             g.sort()
@@ -911,6 +1011,12 @@ class Partition:
 
         return True
 
+    def get_group(self, door_num):
+        for g in self.p:
+            if door_num in g:
+                return g
+        return None
+
     def __repr__(self):
         res = "Partition:{}".format(self.p)
         if not self.is_valid():
@@ -919,6 +1025,18 @@ class Partition:
 
     def __eq__(self, other):
         return self.p == other.p  # should both have been sorted the same
+
+    @staticmethod
+    def without_door(partition, door_num):
+        if not partition.has_door(door_num):
+            return partition
+        else:
+            new_p = []
+            for group in partition.p:
+                new_group = [d for d in group if d != door_num]
+                if len(new_group) > 0:
+                    new_p.append(new_group)
+            return Partition(new_p)
 
     @staticmethod
     def random_partition(force_valid=True, min_doors=0, max_doors=8, force_doors=[], force_not_doors=[], force_connected=[]):

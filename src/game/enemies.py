@@ -292,7 +292,6 @@ class FrogTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Cave Beast", spriteref.enormous_shadow)
-        print("my_sprites={}".format(self.get_sprites()))
 
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
