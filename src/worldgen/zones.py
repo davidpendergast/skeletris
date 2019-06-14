@@ -404,7 +404,7 @@ class ZoneBuilder:
             world.add(dec_ent)
         elif tile_type == worldgen2.TileType.SIGN:
             sign_ent = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, x, y)
-            sign_ent.set_interact_dialog(dialog.PlayerDialog("It says: \"This sign rocks!\""))
+            sign_ent.set_interact_dialog(dialog.get_sign_dialog(level))
             world.add(sign_ent)
 
     @staticmethod

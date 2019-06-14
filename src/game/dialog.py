@@ -1,4 +1,5 @@
 import re
+import random
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -336,5 +337,38 @@ class CustomCutsceneAction(CutSceneAction):
 
     def __str__(self):
         return "CustomCutsceneAction[{}]".format(self.name)
+
+
+def get_sign_dialog(level):
+    rotate_key = gs.get_instance().settings().rotate_cw_key()
+    if isinstance(rotate_key, list):
+        rotate_key = Utils.stringify_key(rotate_key[0])
+    else:
+        rotate_key = str(rotate_key)
+
+    inv_key = gs.get_instance().settings().inventory_key()
+    if isinstance(inv_key, list):
+        inv_key = Utils.stringify_key(inv_key[0])
+    else:
+        inv_key = str(inv_key)
+
+    esc_key = gs.get_instance().settings().exit_key()
+    if isinstance(esc_key, list):
+        esc_key = Utils.stringify_key(esc_key[0])
+    else:
+        esc_key = str(esc_key)
+
+    how_to_play_text = ["You can rotate the item on your cursor!\nIt's important! Just press [{}].".format(rotate_key),
+                        "Open your inventory by pressing [{}].".format(inv_key),
+                        "Resting enemies don't slap back!\nLook for the Zzz's!",
+                        "Death is permanent, so watch your step.",
+                        "You can customize the controls if you don't like them!\nPress [{}]".format(esc_key)]
+
+    flavor_text = ["This sign rocks!"]
+
+    message = random.choice(how_to_play_text + flavor_text)
+    text = "\"{}\"".format(message)
+    return Dialog(text)
+
 
 
