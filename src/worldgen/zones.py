@@ -391,10 +391,8 @@ class ZoneBuilder:
             next_zone_id = generated_zone_id(min(n_generated_zones(), level + 1))
             world.add(entities.ExitEntity(x, y, next_zone_id))
         elif tile_type == worldgen2.TileType.NPC:
-            npc_id = random.choice(list(npc.TEMPLATES.keys()))
-            template = npc.TEMPLATES[npc_id]
-            on_interact = lambda ent, world: gs.get_instance().dialog_manager().set_dialog(npc.get_sample_dialog(npc_id))
-            world.add(entities.NpcEntity(x, y, template, on_interact))
+            print("WARN: attempted to add an NPC using add_entities_for_tile")
+            pass
         elif tile_type == worldgen2.TileType.STRAY_ITEM:
             pass
         elif tile_type == worldgen2.TileType.DECORATION:
@@ -413,6 +411,8 @@ class ZoneBuilder:
         h = t_grid.h()
         world = World(t_grid.w(), t_grid.h())
 
+        npc_coords = []
+
         for x in range(0, w):
             for y in range(0, h):
                 tile_type = t_grid.get(x, y)
@@ -427,7 +427,16 @@ class ZoneBuilder:
                     if random.random() < 0.25:
                         world.set_floor_type(spriteref.FLOOR_CRACKED_ID, xy=(x, y))
 
-                ZoneBuilder._add_entities_for_tile(level, x, y, tile_type, world)
+                if tile_type == worldgen2.TileType.NPC:
+                    npc_coords.append((x, y))
+                else:
+                    ZoneBuilder._add_entities_for_tile(level, x, y, tile_type, world)
+
+        if len(npc_coords) > 0:
+            npc_ents = npc.NpcFactory.get_npcs(level, len(npc_coords))
+            random.shuffle(npc_coords)
+            for i in range(0, len(npc_ents)):
+                world.add(npc_ents[i], gridcell=npc_coords[i])
 
         return world
 

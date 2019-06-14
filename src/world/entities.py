@@ -1497,13 +1497,16 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, on_interact, color=(1, 1, 1)):
+    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), npc_seed=None):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
+
         self.npc_template = npc_template
+        self.npc_seed = npc_seed if npc_seed is not None else random.random()
+        self.npc_interact_count = 0
+
         self.color = color
         self._facing_right = True
-        self.on_interact = on_interact
 
     def get_shadow_sprite(self):
         return self.get_npc_template().shadow_sprite
@@ -1555,8 +1558,8 @@ class NpcEntity(Entity):
         return True
 
     def interact(self, world):
-        if self.on_interact is not None:
-            self.on_interact(self, world)
+        self.npc_template.handle_interact(self, world, self.npc_seed, self.npc_interact_count)
+        self.npc_interact_count += 1
 
 
 class TriggerBox(Entity):
