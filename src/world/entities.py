@@ -173,8 +173,8 @@ class Entity(Updateable):
             if self._shadow is None:
                 self._shadow = img.ImageBundle.new_bundle(spriteref.SHADOW_LAYER)
             sh_scale = 2
-            sh_x = self.get_render_center()[0] - (sh_model.width() * sh_scale) // 2
-            sh_y = self.get_render_center()[1] - (sh_model.height() * sh_scale) // 2
+            sh_x = self.get_render_center()[0] - (sh_model.width() * sh_scale) // 2 + self.get_shadow_offset()[0]
+            sh_y = self.get_render_center()[1] - (sh_model.height() * sh_scale) // 2 + self.get_shadow_offset()[1]
             self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y, new_scale=sh_scale)
         else:
             if self._shadow is not None:
@@ -183,6 +183,9 @@ class Entity(Updateable):
 
     def get_shadow_sprite(self):
         return None
+
+    def get_shadow_offset(self):
+        return (0, 0)
 
     def get_depth(self):
         return -self.get_render_center()[1]
@@ -524,7 +527,7 @@ class FloatingTextEntity(Entity):
 
 class ActorEntity(Entity):
 
-    def __init__(self, idle_sprites, sprite_offset=(0, 0)):
+    def __init__(self, idle_sprites, sprite_offset=(0, 0), shadow_offset=(0, 0)):
         Entity.__init__(self, 0, 0, 24, 24)
 
         self.executing_action = None
@@ -549,13 +552,19 @@ class ActorEntity(Entity):
         # used to compensate for off-center sprites
         self._sprite_offset = sprite_offset
 
-        # used to visually move the actor without actually moving them
+        # used to adjust shadow's draw position
+        self._shadow_offset = shadow_offset
+
+        # used to (temporarily) visually move the actor without actually moving them
         self._draw_offset = (0, 0)
 
         self._was_moving = 60  # how long it's been since the actor was moving
 
     def get_shadow_sprite(self):
         return self._shadow_sprite
+
+    def get_shadow_offset(self):
+        return self._shadow_offset
 
     def get_light_level(self):
         return self.get_actor_state().light_level()
@@ -933,8 +942,8 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites, shadow_sprite=None, sprite_offset=(0, 0)):
-        ActorEntity.__init__(self, sprites, sprite_offset=sprite_offset)
+    def __init__(self, x, y, state, sprites, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+        ActorEntity.__init__(self, sprites, sprite_offset=sprite_offset, shadow_offset=shadow_offset)
         self._enemy_state = state
         from src.game.gameengine import EnemyController  # TODO fix project structure
         self._enemy_controller = EnemyController()

@@ -142,7 +142,7 @@ class ZoneLoader:
                         bp.set_sensor_door(x, y)
                     elif color == ZoneLoader.RETURN_EXIT:
                         bp.set(x, y, World.FLOOR)
-                        pass  # we don't do this anymore
+                        bp.return_exit_spawns.append((x, y))
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
                         if exit_id in _ALL_ZONES:
@@ -336,7 +336,14 @@ class ZoneBuilder:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
             next_zone_id = get_storyline_zone_id(level + 1)
-            world.add(entities.ExitEntity(x, y, next_zone_id))
+            actual_zone = get_zone(next_zone_id)
+            if actual_zone is not None:
+                if actual_zone.is_boss_zone():
+                    world.add(entities.BossExitEntity(x, y, next_zone_id))
+                else:
+                    world.add(entities.ExitEntity(x, y, next_zone_id))
+            else:
+                print("ERROR: invalid next zone \"{}\"".format(next_zone_id))
         elif tile_type == worldgen2.TileType.NPC:
             print("WARN: attempted to add an NPC using add_entities_for_tile")
             pass

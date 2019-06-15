@@ -24,6 +24,9 @@ class EnemyTemplate:
     def get_sprite_offset(self):
         return (0, 0)
 
+    def get_shadow_offset(self):
+        return (0, 0)
+
     def get_name(self):
         return self._name
 
@@ -300,19 +303,25 @@ class FrogTemplate(EnemyTemplate):
         return spriteref.Bosses.frog_idle_1
 
     def get_sprite_offset(self):
-        return (0, 32)
+        return (0, 8)
+
+    def get_shadow_offset(self):
+        return (0, -4)
+
+    def get_shadow_sprite(self):
+        return spriteref.enormous_shadow
 
     def get_level_range(self):
         return range(7, 8)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 30,
+            StatTypes.VIT: 15,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 2,
             StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 5,
-            StatTypes.INTELLIGENCE: 3
+            StatTypes.DEF: 4,
+            StatTypes.INTELLIGENCE: 2
         })
 
 
@@ -388,7 +397,9 @@ class EnemyFactory:
         res = []
         for _ in range(0, n):
             res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(),
-                             shadow_sprite=template.get_shadow_sprite(), sprite_offset=template.get_sprite_offset()))
+                             sprite_offset=template.get_sprite_offset(),
+                             shadow_sprite=template.get_shadow_sprite(),
+                             shadow_offset=template.get_shadow_offset()))
 
         return res
 

@@ -187,7 +187,7 @@ class WorldBlueprint:
         self.chest_spawns = []
         self.exit_spawns = {}         # zone_id -> (x, y)
         self.boss_exit_spawns = {}    # zone_id -> (x, y)
-        self.return_exit_spawns = {}  # zone_id -> (x, y)
+        self.return_exit_spawns = []  # list of (x, y)
         self.save_station = None
         self.locked_doors = []
         self.sensor_doors = []
@@ -299,8 +299,8 @@ class WorldBlueprint:
                 w.add(BossExitEntity(*self.boss_exit_spawns[zone_id], zone_id))
 
         if len(self.return_exit_spawns) > 0:
-            for zone_id in self.return_exit_spawns:
-                w.add(ReturnExitEntity(*self.return_exit_spawns[zone_id], zone_id))
+            for return_pos in self.return_exit_spawns:
+                w.add(ReturnExitEntity(return_pos[0], return_pos[1], None))
 
         w.flush_new_entity_additions()
         return w
