@@ -7,7 +7,7 @@ _DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LEVEL_RESTRICTIONS_ON_DROPS = True
-_PLAYER_CANT_DIE = False
+_PLAYER_CANT_DIE = True
 
 
 def is_dev():

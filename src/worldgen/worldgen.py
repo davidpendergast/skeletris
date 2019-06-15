@@ -173,7 +173,7 @@ class BuilderUtils:
 
 class WorldBlueprint:
 
-    def __init__(self, size, level, enemy_types=[]):
+    def __init__(self, size, level):
         self.size = size
         self.level = level
         self.geo = []
@@ -183,7 +183,6 @@ class WorldBlueprint:
             self.geo_alt_art.append([None] * size[1])
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
-        self.enemy_types = enemy_types
         self.rare_enemy_spawns = []
         self.chest_spawns = []
         self.exit_spawns = {}         # zone_id -> (x, y)
@@ -279,18 +278,12 @@ class WorldBlueprint:
                         w.add(DoorEntity(x, y))
 
         for spawn_pos in self.enemy_spawns:
-            if len(self.enemy_types) > 0:
-                template = random.choice(self.enemy_types)
-                enemy = EnemyFactory.gen_enemy(template, self.level)
+            enemy = EnemyFactory.gen_enemy(None, self.level)
+            if enemy is not None:
                 w.add(enemy, gridcell=spawn_pos)
-            else:
-                print("WARN: Zone has no defined enemy types. Skipping enemy spawn at {}".format(spawn_pos))
 
         if self.save_station is not None:
-            on_interact = lambda ent, world: None
-            save_entity = NpcEntity(self.save_station[0], self.save_station[1],
-                                    npc.get_template(npc.NpcID.MACHINE), on_interact)
-            w.add(save_entity)
+            pass  # this doesn't work anymore
 
         for chest_pos in self.chest_spawns:
             w.add(ChestEntity(chest_pos[0], chest_pos[1]))

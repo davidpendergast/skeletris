@@ -46,8 +46,17 @@ def get_zone(zone_id):
     return _ALL_ZONES[zone_id]
 
 
-def generated_zone_id(level):
+def _generated_zone_id(level):
     return "generated_{}".format(level)
+
+
+def get_storyline_zone_id(level):
+    if level == 7:
+        return FrogLairZone.ZONE_ID
+    elif level <= 15:
+        return _generated_zone_id(level)
+    else:
+        return _generated_zone_id(15)
 
 
 def init_zones():
@@ -58,60 +67,10 @@ def init_zones():
         make(zone_instance)
 
     for i in range(0, NUM_GENERATED_ZONES):
-        _ALL_ZONES[generated_zone_id(i)] = ZoneBuilder.build_me_a_zone(i)
+        _ALL_ZONES[_generated_zone_id(i)] = ZoneBuilder.build_me_a_zone(i)
 
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = generated_zone_id(0)
-
-    _ZONE_TRANSITIONS.clear()
-    _ZONE_TRANSITIONS[DesolateCaveZone.ZONE_ID] = [DesolateCaveZone2.ZONE_ID]
-    _ZONE_TRANSITIONS[DesolateCaveZone2.ZONE_ID] = [DesolateCaveZone3.ZONE_ID]
-    _ZONE_TRANSITIONS[DesolateCaveZone3.ZONE_ID] = [FrogLairZone.ZONE_ID]
-    _ZONE_TRANSITIONS[FrogLairZone.ZONE_ID] = [TombTownZone.ZONE_ID]
-
-    for i in range(0, NUM_GENERATED_ZONES-1):
-        _ZONE_TRANSITIONS[generated_zone_id(i)] = [generated_zone_id(i+1)]
-
-    # final zone just loops back to itself
-    _ZONE_TRANSITIONS[generated_zone_id(NUM_GENERATED_ZONES - 1)] = [generated_zone_id(NUM_GENERATED_ZONES - 1)]
-
-    _ZONE_TRANSITIONS[DoorTestZone.ZONE_ID] = [DoorTestZoneL.ZONE_ID, DoorTestZoneR.ZONE_ID]
-
-    _test_zone_sanity()
-
-
-def _test_zone_sanity():
-    if first_zone() is None or first_zone().ZONE_ID not in _ALL_ZONES:
-        raise ValueError("no first zone")
-
-    return_ids = {}  # zone -> return_id
-
-    for z1 in _ZONE_TRANSITIONS:
-        if z1 not in _ALL_ZONES:
-            raise ValueError("unrecognized id: {}".format(z1))
-
-        for z2 in _ZONE_TRANSITIONS[z1]:
-            if z2 not in _ALL_ZONES:
-                raise ValueError("unrecognized id: {}".format(z2))
-
-
-def get_return_zone(zone_id):
-    for z1 in _ZONE_TRANSITIONS:
-        for z2 in _ZONE_TRANSITIONS[z1]:
-            if z2 == zone_id:
-                return z1
-    return None
-
-
-def get_exits(zone_id):
-    if zone_id not in _ZONE_TRANSITIONS:
-        return []
-    else:
-        return _ZONE_TRANSITIONS[zone_id]
-
-
-def get_enemy_types(zone_id):
-    return get_zone(zone_id).get_enemies()
+    _FIRST_ZONE_ID = _generated_zone_id(0)
 
 
 class ZoneLoader:
@@ -150,10 +109,9 @@ class ZoneLoader:
             filepath = "assets/zones/" + filename
             raw_img = pygame.image.load(Utils.resource_path(filepath))
             img_size = (raw_img.get_width(), raw_img.get_height())
-            bp = WorldBlueprint(img_size, level, enemy_types=get_enemy_types(zone_id))
+            bp = WorldBlueprint(img_size, level)
 
-            return_id = get_return_zone(zone_id)
-            exit_ids = get_exits(zone_id)
+            exit_id = get_storyline_zone_id(level + 1)
 
             unknowns = {}
 
@@ -184,17 +142,11 @@ class ZoneLoader:
                         bp.set_sensor_door(x, y)
                     elif color == ZoneLoader.RETURN_EXIT:
                         bp.set(x, y, World.FLOOR)
-                        if return_id is not None:
-                            bp.return_exit_spawns[return_id] = (x, y)
-                            return_id = None
-                        else:
-                            print("WARN: no return zone for {} at ({}, {})".format(zone_id, x, y))
+                        pass  # we don't do this anymore
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
-                        if len(exit_ids) > 0:
-                            exit_id = exit_ids[0]
-                            exit_ids = exit_ids[1:]
-                            if exit_id in _ALL_ZONES and _ALL_ZONES[exit_id].is_boss_zone():
+                        if exit_id in _ALL_ZONES:
+                            if _ALL_ZONES[exit_id].is_boss_zone():
                                 bp.boss_exit_spawns[exit_id] = (x, y)
                             else:
                                 bp.exit_spawns[exit_id] = (x, y)
@@ -228,11 +180,6 @@ class ZoneLoader:
                             unknowns[color].append(pos)
                         else:
                             unknowns[color] = [pos]
-
-            for exit_id in exit_ids:
-                print("WARN: {} didn't create exit to zone {}".format(zone_id, exit_id))
-            if return_id is not None:
-                print("WARN: {} didn't create return exit to zone {}".format(zone_id, return_id))
 
             return bp, unknowns
 
@@ -388,7 +335,7 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.ENTRANCE:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
-            next_zone_id = generated_zone_id(min(n_generated_zones(), level + 1))
+            next_zone_id = get_storyline_zone_id(level + 1)
             world.add(entities.ExitEntity(x, y, next_zone_id))
         elif tile_type == worldgen2.TileType.NPC:
             print("WARN: attempted to add an NPC using add_entities_for_tile")
@@ -546,7 +493,7 @@ class ZoneBuilder:
     @staticmethod
     def build_me_a_zone(level):
         zone = Zone("Depth {}".format(level), level, bg_color=BLACK)
-        zone.zone_id = generated_zone_id(level)
+        zone.zone_id = get_storyline_zone_id(level)
         zone.ZONE_ID = zone.zone_id
 
         zone.build_world = lambda: ZoneBuilder.generate_new_world(level)
@@ -724,38 +671,20 @@ class FrogLairZone(Zone):
     FROG_SPAWN = (255, 203, 203)
 
     def __init__(self):
-        Zone.__init__(self, "The Dark Pool", 5, filename="frog_lair.png", bg_color=BLACK)
+        Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png", bg_color=BLACK)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
-        # w.set_floor_type(spriteref.FLOOR_NORMAL_ID)
 
-        if not gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
-            frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
-            frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
-            w.add(frog_entity, gridcell=frog_spawn)
+        frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
 
-            def kill_action(_event, _world):
-                print("INFO: unlocking all doors")
-                for e in _world.all_entities(onscreen=False):
-                    if e.is_door() and e.is_locked():
-                        e.do_open()
-                gs.get_instance().story_state().set(StoryStateKey.FROG_BOSS_DEAD, True)
-                music.play_song(self.frog_dead_song())
+        frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
+        w.add(frog_entity, gridcell=frog_spawn)
 
-            gs.get_instance().add_trigger(events.EventListener(kill_action, events.EventType.ENEMY_KILLED,
-                                          lambda evt: evt.get_uid() == frog_entity.get_uid(),
-                                          single_use=True))
-
-            gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
-        else:
-            print("INFO: frog is dead, unlocking all doors")
-            for e in w.all_entities(onscreen=False):
-                if e.is_door():
-                    # we're opening the unlocked door too to avoid hidden-area funkiness
-                    e.do_open()
+        # TODO this doesn't work
+        # gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
 
         return w
 
@@ -763,10 +692,7 @@ class FrogLairZone(Zone):
         return music.Songs.SILENCE
 
     def get_music_id(self):
-        if gs.get_instance().story_state().get(StoryStateKey.FROG_BOSS_DEAD):
-            return self.frog_dead_song()
-        else:
-            return music.Songs.AMPHIBIAN
+        return music.Songs.AMPHIBIAN
 
     def is_boss_zone(self):
         return True
@@ -790,11 +716,11 @@ class CaveHorrorZone(Zone):
         #tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle,
         #                                       60, spriteref.ENTITY_LAYER, w=64*5, h=8)
         #tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
-        tree_sprite.set_x_centered(False)
-        tree_sprite.set_y_centered(False)
-        tree_sprite.set_x(64 * tree_loc[0] - 64)
-        tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
-        w.add(tree_sprite)
+        #tree_sprite.set_x_centered(False)
+        #tree_sprite.set_y_centered(False)
+        #tree_sprite.set_x(64 * tree_loc[0] - 64)
+        #tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
+        #w.add(tree_sprite)
 
         fight_end_loc = unknowns[self._fight_end_door][0]
 

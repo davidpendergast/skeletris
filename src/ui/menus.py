@@ -821,9 +821,12 @@ class DebugZoneSelectMenu(OptionsMenu):
 
     def _zones_to_show(self):
         import src.worldgen.zones as zones
-        all_zones = [z for z in zones.all_zone_ids() if ("generated" in z) != self.hand_built]
-        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
+        if self.hand_built:
+            all_zones = [z for z in zones.all_zone_ids() if ("generated" not in z)]
+        else:
+            all_zones = [zones.get_storyline_zone_id(level) for level in range(0, 16)]
 
+        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
         return all_zones
 
     def get_enabled(self, idx):

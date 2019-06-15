@@ -524,7 +524,7 @@ class FloatingTextEntity(Entity):
 
 class ActorEntity(Entity):
 
-    def __init__(self, idle_sprites):
+    def __init__(self, idle_sprites, sprite_offset=(0, 0)):
         Entity.__init__(self, 0, 0, 24, 24)
 
         self.executing_action = None
@@ -545,6 +545,9 @@ class ActorEntity(Entity):
         self._perturb_color = [0, 0, 0]
         self._perturb_color_duration = 1
         self._perturb_color_ticks = 1
+
+        # used to compensate for off-center sprites
+        self._sprite_offset = sprite_offset
 
         # used to visually move the actor without actually moving them
         self._draw_offset = (0, 0)
@@ -636,8 +639,8 @@ class ActorEntity(Entity):
     def get_render_center(self, ignore_perturbs=False):
         """returns: the center point (x, y) of where the actor should be drawn."""
 
-        x = self.center()[0] + self.get_draw_offset()[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + 12
+        x = self.center()[0] + self.get_draw_offset()[0] + self._sprite_offset[0]
+        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + 12
 
         if not ignore_perturbs:
             x += self.get_perturbed_xy()[0]
@@ -930,8 +933,8 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites):
-        ActorEntity.__init__(self, sprites)
+    def __init__(self, x, y, state, sprites, shadow_sprite=None, sprite_offset=(0, 0)):
+        ActorEntity.__init__(self, sprites, sprite_offset=sprite_offset)
         self._enemy_state = state
         from src.game.gameengine import EnemyController  # TODO fix project structure
         self._enemy_controller = EnemyController()
@@ -939,6 +942,8 @@ class Enemy(ActorEntity):
         self.set_y(y)
         self.state = state
         self.sprites = sprites
+        if shadow_sprite is not None:
+            self._shadow_sprite = shadow_sprite
         self._bar_imgs = []
 
         # floating z's above enemy while waiting for player
