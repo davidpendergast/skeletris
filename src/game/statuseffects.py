@@ -6,6 +6,8 @@ import src.game.spriteref as spriteref
 import src.game.balance as balance
 
 _UNIQUE_KEY = 0
+
+
 def _new_unique_key():
     global _UNIQUE_KEY
     _UNIQUE_KEY += 1
@@ -73,50 +75,51 @@ class StatusEffect(StatProvider):
         return hash(self.unique_key)
 
 
-def new_night_vision_effect(val, duration, player_text=None):
+def new_night_vision_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.LIGHT_LEVEL, val)]
     return StatusEffect("Night Vision", duration, StatTypes.LIGHT_LEVEL.get_color(),
-                        spriteref.status_eye_icon, stats, unique_key="vision",
+                        spriteref.status_eye_icon, stats, unique_key=unique_key,
                         player_text=player_text)
 
 
-def new_plus_defenses_effect(duration, player_text=None):
+def new_plus_defenses_effect(duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.DEF, balance.STATUS_EFFECT_PLUS_DEFENSE_VAL)]
     return StatusEffect("Increased Defenses", duration, StatTypes.DEF.get_color(),
-                        spriteref.status_shield_icon, stats, unique_key="shield_def_bonus",
+                        spriteref.status_shield_icon, stats, unique_key=unique_key,
                         player_text=player_text)
 
 
-def new_regen_effect(val, duration, player_text=None):
+def new_regen_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.HP_REGEN, val)]
     return StatusEffect("Regeneration", duration, StatTypes.HP_REGEN.get_color(),
-                        spriteref.status_sparkles_icon, stats,
-                        player_text=player_text)
+                        spriteref.status_sparkles_icon, stats, unique_key=unique_key,
+                        player_text=player_text,)
 
 
-def new_poison_effect(val, duration, player_text=None):
+def new_poison_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.POISON, val)]
     return StatusEffect("Poison", duration, StatTypes.POISON.get_color(),
-                        spriteref.status_drop_icon, stats,
+                        spriteref.status_drop_icon, stats, unique_key=unique_key,
                         player_text=player_text)
 
 
-def new_speed_effect(val, duration, player_text=None):
+def new_speed_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, val)]
     return StatusEffect("Increased Speed", duration, StatTypes.SPEED.get_color(),
-                        spriteref.status_up_arrow_icon, stats,
+                        spriteref.status_up_arrow_icon, stats, unique_key=unique_key,
                         player_text=player_text)
 
 
-def new_slow_effect(val, duration, player_text=None):
+def new_slow_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, val)]
     return StatusEffect("Reduced Speed", duration, colors.DARK_YELLOW,
-                        spriteref.status_diagonal_lines_icon, stats,
+                        spriteref.status_diagonal_lines_icon, stats, unique_key=unique_key,
                         player_text=player_text)
 
 
-def new_nullification_effect(duration, player_text=None):
+def new_nullification_effect(duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.NULLIFICATION, balance.POTION_NULLIFICATION_DURATION)]
     return StatusEffect("Nullification", duration, colors.LIGHT_GRAY,
                         spriteref.status_diagonal_lines_icon, stats,
-                        player_text=player_text, ignore_nullification=True)
+                        player_text=player_text, unique_key=unique_key,
+                        ignore_nullification=True)

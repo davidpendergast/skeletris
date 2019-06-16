@@ -121,22 +121,26 @@ HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I dri
 SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
                               min_level=9,
                               status=statuseffects.new_speed_effect(balance.POTION_SPEED_VAL,
-                                                                    balance.POTION_SPEED_DUR))
+                                                                    balance.POTION_SPEED_DUR,
+                                                                    unique_key="speed_potion"))
 
 SLOW_POTION = PotionTemplate("Potion of the Sloth", "I... feel... slow.",
                              min_level=4,
                              status=statuseffects.new_slow_effect(balance.POTION_SLOW_VAL,
-                                                                  balance.POTION_SLOW_DUR))
+                                                                  balance.POTION_SLOW_DUR,
+                                                                  unique_key="slow_potion"))
 
 
 NULL_POTION = PotionTemplate("Null Potion", "I feel a little better... I think?",
                              min_level=6,
-                             status=statuseffects.new_nullification_effect(balance.POTION_NULLIFICATION_DURATION))
+                             status=statuseffects.new_nullification_effect(balance.POTION_NULLIFICATION_DURATION,
+                                                                           unique_key="null_potion"))
 
 NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my prescription years ago.",
                               min_level=3,
                               status=statuseffects.new_night_vision_effect(balance.POTION_NIGHT_VISION_VAL,
-                                                                           balance.POTION_NIGHT_VISION_DURATION))
+                                                                           balance.POTION_NIGHT_VISION_DURATION,
+                                                                           unique_key="light_potion"))
 
 
 class PotionTemplates:
