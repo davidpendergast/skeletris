@@ -363,12 +363,10 @@ def get_sign_dialog(level):
                         "Resting enemies don't slap back!\nLook for the Zzz's!",
                         "Death is permanent, so watch your step.",
                         "You can customize the controls if you don't like them!\nPress [{}]".format(esc_key)]
-
     flavor_text = ["This sign rocks!"]
 
     message = random.choice(how_to_play_text + flavor_text)
-    text = "\"{}\"".format(message)
-    return Dialog(text)
+    return NpcDialog(message, spriteref.sign_faces)
 
 
 
