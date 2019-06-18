@@ -1349,6 +1349,8 @@ class ExitEntity(Entity):
         self.count = 0
         self.open_duration = 60
 
+        self._did_new_zone = False  # gets flipped when its interacted with
+
     def get_sprite(self, anim_tick):
         if self.count == 0:
             sprite = self.idle_sprites()[(anim_tick // 2) % 2]
@@ -1392,19 +1394,8 @@ class ExitEntity(Entity):
         return True
 
     def update(self, world):
-        if not gs.get_instance().world_updates_paused():
-            if self.count < self.open_duration:
-                player = world.get_player()
-
-                if player is not None:
-                    p_pos = world.to_grid_coords(*player.center())
-                    my_pos = world.to_grid_coords(*self.center())
-
-                    if p_pos[0] == my_pos[0] and p_pos[1] - 1 == my_pos[1]:
-                        self.count += 1
-                    else:
-                        self.count -= 2
-                    self.count = Utils.bound(self.count, 0, self.open_duration)
+        if self._did_new_zone and self.count < self.open_duration:
+            self.count += 1
 
         self.update_images()
 
@@ -1412,12 +1403,14 @@ class ExitEntity(Entity):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self, world):
-        return self.count >= self.open_duration
+        return not self._did_new_zone
 
     def interact(self, world):
         new_zone_evt = self.make_new_zone_event()
         if new_zone_evt is not None:
-            gs.get_instance().event_queue().add(new_zone_evt)
+            self._did_new_zone = True
+            gs.get_instance().pause_world_updates(self.open_duration)
+            gs.get_instance().event_queue().add(new_zone_evt, delay=self.open_duration)
         else:
             dia = Dialog("This path doesn't lead anywhere...")
             gs.get_instance().dialog_manager().set_dialog(dia)

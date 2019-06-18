@@ -163,6 +163,8 @@ class GlobalState:
         self._player_state = None
         self._player_controller = None
 
+        self._world_updates_pause_timer = 0
+
         self._story_state = story_state
 
         self._menu_manager = menu_manager
@@ -223,7 +225,12 @@ class GlobalState:
         return self._menu_manager
 
     def world_updates_paused(self):
-        return self.menu_manager().pause_world_updates() or self.dialog_manager().is_active()
+        return (self.menu_manager().pause_world_updates()
+                or self.dialog_manager().is_active()
+                or self._world_updates_pause_timer > 0)
+
+    def pause_world_updates(self, duration):
+        self._world_updates_pause_timer = max(self._world_updates_pause_timer, duration)
 
     def set_targetable_coords_in_world(self, targets):
         """targets: map of (x, y) -> color"""
@@ -423,6 +430,9 @@ class GlobalState:
 
             if any_empty:
                 self._current_screenshakes = [sh for sh in self._current_screenshakes if len(sh) > 0]
+
+        if self._world_updates_pause_timer > 0 and not self.menu_manager().pause_world_updates():
+            self._world_updates_pause_timer -= 1
 
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:
