@@ -76,14 +76,22 @@ class World:
             self.add(entities.ItemEntity(item, pos[0], pos[1], vel=vel))
 
     def show_floating_text(self, text, color, scale, entity):
-        import src.world.entities as entities
-        import random  # just chill, it's fine
-        x_offs = int(15 * (0.5 - random.random()))
-        text = entities.FloatingTextEntity(text, 25, color, anchor=None, scale=scale,
-                                  start_offs=(x_offs, -64), end_offs=(x_offs, -96))
-        text.set_x(entity.center()[0] - text.w() // 2)
-        text.set_y(entity.center()[1] - text.h() // 2)
+        import src.world.entities as entities  # just chill, it's fine
+        cx = entity.center()[0]
+        cy = entity.center()[1]
+        x_render_offs = int(15 * (0.5 - random.random()))
+        text = entities.FloatingTextEntity(cx, cy, text, 25, color, anchor=None, scale=scale,
+                                           start_offs=(x_render_offs, -32),
+                                           end_offs=(x_render_offs, -64))
         self.add(text)
+
+    def show_explosion(self, cx, cy, duration, color=None, offs=(0, 0), scale=4):
+        import src.world.entities as entities
+        splosion = entities.AnimationEntity(cx, cy, spriteref.explosions, duration, spriteref.ENTITY_LAYER, scale=scale)
+        if color is not None:
+            splosion.set_color(color)
+        splosion.set_sprite_offset(offs)
+        self.add(splosion)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)

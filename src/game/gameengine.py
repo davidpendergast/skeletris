@@ -808,14 +808,10 @@ class ThrowItemAction(Action):
 
     def finalize(self, world):
         if self._thrown_item_entity is not None:
-            from src.world.entities import AnimationEntity
             pos = self._thrown_item_entity.center()
-            splosion = AnimationEntity(pos[0], pos[1], spriteref.explosions, 20, spriteref.ENTITY_LAYER, scale=3)
-            splosion.set_color(self.get_item().get_color())
-            splosion.set_sprite_offset((0, -16))
+            world.show_explosion(pos[0], pos[1], 20, color=self.get_item().get_color(), offs=(0, -16), scale=3)
 
             world.remove(self._thrown_item_entity)
-            world.add(splosion)
 
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)

@@ -246,14 +246,11 @@ class Entity(Updateable):
     def get_uid(self):
         return self._uid
 
-    def all_bundles(self, extras=[]):
+    def all_bundles(self):
         if self._shadow is not None:
             yield self._shadow
         if self._img is not None:
             yield self._img
-        for bun in extras:
-            if bun is not None:
-                yield bun
 
 
 class Pushable:
@@ -474,7 +471,8 @@ class LightEmitterAnimation(AnimationEntity):
 
 class FloatingTextEntity(Entity):
 
-    def __init__(self, text, duration, color, anchor=None, scale=2, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
+    def __init__(self, cx, cy, text, duration, color, anchor=None, scale=2, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
+        Entity.__init__(self, cx-4, cy-4, 8, 8)
         self.text = text
         self.color = color
         self.scale = scale
@@ -485,9 +483,7 @@ class FloatingTextEntity(Entity):
 
         self.duration = duration
         self.tick_count = 0
-
-        self.text_img = self._build_text_img()
-        Entity.__init__(self, 0, 0, *self.text_img.size())
+        self._text_img = None
 
     def get_progress(self):
         return Utils.bound(self.tick_count / self.duration, 0.0, 1.0)
@@ -496,14 +492,17 @@ class FloatingTextEntity(Entity):
         return TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, color=self.color, scale=self.scale)
 
     def update_images(self):
+        if self._text_img is None:
+            self._text_img = self._build_text_img()
+
         prog = self.get_progress()
         offs_x = self.start_offs[0] * (1 - prog) + self.end_offs[0] * prog
         offs_y = self.start_offs[1] * (1 - prog) + self.end_offs[1] * prog
 
-        x = self.x() + offs_x
-        y = self.y() + offs_y
+        x = self.center()[0] + offs_x - self._text_img.w() // 2
+        y = self.center()[1] + offs_y - self._text_img.h()
 
-        self.text_img.update(new_x=x, new_y=y)
+        self._text_img = self._text_img.update(new_x=x, new_y=y, new_depth=self.get_depth())
 
     def update(self, world):
         # these keep updating even when updates are paused
@@ -511,18 +510,17 @@ class FloatingTextEntity(Entity):
             world.remove(self)
         else:
             if self.anchor is not None:
-                size = self.text_img.size()
+                size = self._text_img.size()
                 self.set_x(self.anchor.center()[0] - size[0] // 2)
                 self.set_y(self.anchor.center()[1] - size[1] // 2)
 
             self.update_images()
             self.tick_count += 1
 
-    def all_bundles(self, extras=[]):
-        for i in self.text_img.all_bundles():
-            yield i
-        for e in extras:
-            yield e
+    def all_bundles(self):
+        if self._text_img is not None:
+            for bun in self._text_img.all_bundles():
+                yield bun
 
 
 class ActorEntity(Entity):
@@ -587,10 +585,7 @@ class ActorEntity(Entity):
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
 
-        splosion = AnimationEntity(pos[0], pos[1], spriteref.explosions, 40, spriteref.ENTITY_LAYER, scale=4)
-        splosion.set_color((0, 0, 0))
-        world.add(splosion)
-
+        world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
         world.remove(self)
 
     def cleanup(self):
@@ -931,8 +926,8 @@ class Player(ActorEntity):
         return (Entity.valid_to_stand_on(self, world, x, y) and
                 not world.get_hidden_at(x, y))
 
-    def all_bundles(self, extras=[]):
-        for b in super().all_bundles(extras=extras):
+    def all_bundles(self):
+        for b in super().all_bundles():
             yield b
         if self._held_item_img is not None:
             yield self._held_item_img
@@ -1019,8 +1014,8 @@ class Enemy(ActorEntity):
                                                  new_scale=scale,
                                                  new_depth=self.get_depth())
 
-    def all_bundles(self, extras=[]):
-        for bun in super().all_bundles(extras=extras):
+    def all_bundles(self):
+        for bun in super().all_bundles():
             yield bun
         for bar_img in self._bar_imgs:
             yield bar_img
@@ -1488,8 +1483,8 @@ class DecorationEntity(Entity):
 
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
 
-    def all_bundles(self, extras=[]):
-        for bun in Entity.all_bundles(self, extras=extras):
+    def all_bundles(self):
+        for bun in Entity.all_bundles(self):
             yield bun
         if self._img is not None:
             yield self._img
@@ -1847,8 +1842,8 @@ class HoverTextEntity(Entity):
             self._dirty = True
         self.text = text
 
-    def all_bundles(self, extras=[]):
-        for bun in Entity.all_bundles(self, extras=extras):
+    def all_bundles(self):
+        for bun in Entity.all_bundles(self):
             yield bun
 
         for bun in self._border_imgs:

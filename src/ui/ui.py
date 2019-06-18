@@ -952,6 +952,12 @@ class TextImage:
     def size(self):
         return self.actual_size
 
+    def w(self):
+        return self.actual_size[0]
+
+    def h(self):
+        return self.actual_size[1]
+
     def line_height(self):
         return (spriteref.Font.get_char("a").height() + self.y_kerning) * self.scale
 
