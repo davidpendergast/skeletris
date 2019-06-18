@@ -245,7 +245,7 @@ class ScorpionTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 4,
-            StatTypes.LIGHT_LEVEL: 1,  # the gimmick
+            # StatTypes.LIGHT_LEVEL: 1,  # TODO - can't yet, "slows down" game when these guys are offscreen but nearby
         })
 
 

@@ -158,7 +158,7 @@ class PotionItemFactory:
 
     @staticmethod
     def gen_item(level):
-        if debug.ignore_level_restrictions_on_drops():
+        if debug.ignore_loot_levels():
             templates = [t for t in PotionTemplates.all_templates()]
         else:
             templates = [t for t in PotionTemplates.all_templates(for_level=level)]

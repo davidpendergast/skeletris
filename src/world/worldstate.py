@@ -352,7 +352,7 @@ class World:
             return True
 
         if including_entities:
-            if len(self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_solid())) > 0:
+            if len(self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_solid(self))) > 0:
                 return True
 
         return False
@@ -376,7 +376,7 @@ class World:
             return doors[0]
 
     def get_interactable_in_cell(self, grid_x, grid_y):
-        ents = self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_interactable())
+        ents = self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_interactable(self))
         if len(ents) == 0:
             return None
         else:

@@ -220,15 +220,15 @@ class Entity(Updateable):
     def is_door(self):
         return False
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         return False
 
     def interact(self, world):
         pass
 
-    def is_solid(self):
+    def is_solid(self, world):
         """returns: whether this entity prevents the movement of Actors."""
-        return self.is_npc() or self.is_actor() or self.is_interactable()
+        return self.is_npc() or self.is_actor() or self.is_interactable(world)
 
     def is_pushable(self):
         return isinstance(self, Pushable)
@@ -449,7 +449,7 @@ class PlayerCorpseAnimation(AnimationEntity):
     def __init__(self, cx, cy, duration):
         AnimationEntity.__init__(self, cx, cy, spriteref.player_death_seq, duration, spriteref.ENTITY_LAYER)
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         # XXX just to make it so enemies can't step on you
         return True
 
@@ -1101,7 +1101,7 @@ class ChestEntity(Entity):
     def update(self, world):
         self.update_images()
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         return not self.is_open()
 
     def interact(self, world):
@@ -1291,26 +1291,58 @@ class DoorEntity(Entity):
         print("WARN: door is neither horizontal nor vertical: {}".format(self))
         return random.random() < 0.5
 
-    def _get_sprites(self, is_horz):
-        return spriteref.door_h if is_horz else spriteref.door_v
+    def get_sprites(self, world):
+        if self.can_open(world):
+            return spriteref.door_h if self._is_horz else spriteref.door_v
+        else:
+            return spriteref.door_h_locked if self._is_horz else spriteref.door_v_locked
 
     def update(self, world):
         if self._is_horz is None:
             self._is_horz = self._calc_is_horz(world)
 
-        self.sprites = self._get_sprites(self._is_horz)
+        self.sprites = self.get_sprites(world)
         self.update_images()
 
     def is_door(self):
         return True
 
+    def can_open(self, world):
+        return True
 
-class LockedDoorEntity(DoorEntity):
-    pass
+    def is_interactable(self, world):
+        return not self.can_open(world) and self.get_locked_message(world) is not None
+
+    def interact(self, world):
+        if self.is_interactable(world):
+            dia = Dialog(self.get_locked_message(world))
+            gs.get_instance().dialog_manager().set_dialog(dia)
+        else:
+            print("WARN: interacted with non-interactable door..?")
+
+    def get_locked_message(self, world):
+        return "It's locked."
 
 
 class SensorDoorEntity(DoorEntity):
-    pass
+
+    def __init__(self, grid_x, grid_y, sensor_range=8):
+        DoorEntity.__init__(self, grid_x, grid_y)
+        self.sensor_range = sensor_range
+
+    def _get_blocking_enemies(self, world):
+        return world.entities_in_circle(
+            self.center(),
+            self.sensor_range * world.cellsize(),
+            onscreen=True,
+            cond=lambda e: e.is_enemy() and e.is_visible_in_world(world))
+
+    def can_open(self, world):
+        return len(self._get_blocking_enemies(world)) == 0
+
+    def get_locked_message(self, world):
+        num_blocking = len(self._get_blocking_enemies(world))
+        return "Access denied. Hostile entities nearby: {}".format(num_blocking)
 
 
 class ExitEntity(Entity):
@@ -1384,7 +1416,7 @@ class ExitEntity(Entity):
     def make_new_zone_event(self):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         return self.count >= self.open_duration
 
     def interact(self, world):
@@ -1501,7 +1533,7 @@ class DecorationEntity(Entity):
     def visible_in_darkness(self):
         return False
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         return self._interact_dialog is not None
 
     def interact(self, world):
@@ -1568,7 +1600,7 @@ class NpcEntity(Entity):
     def is_npc(self):
         return True
 
-    def is_interactable(self):
+    def is_interactable(self, world):
         return True
 
     def interact(self, world):

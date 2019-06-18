@@ -21,7 +21,7 @@ class LootFactory:
 
         loot = []
         while len(loot) < n_items:
-            if debug.ignore_level_restrictions_on_drops():
+            if debug.ignore_loot_levels():
                 item_type_choices = ItemTypes.all_types()
             else:
                 item_type_choices = ItemTypes.all_types(at_level=level)

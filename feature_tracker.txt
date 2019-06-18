@@ -10,7 +10,6 @@
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, probably need to handle resolution scaling issues
-    - linux-style colored console text is an epic fail on windows
   
  
 [current features]
@@ -24,17 +23,16 @@
  - enemies equipping / picking up items (intelligence >= 4)
  - enemies consuming / throwing items (intelligence >= 5)
  - game needs an end
-    - for now, maybe zone 16 is just the Frog Boss fight, and after it dies, credits roll?
+    - for now, maybe zone 8 is just the Frog Boss fight, and after it dies, credits roll?
     - not really a boss fight, so it's fine
  - better animation when you interact with the level-end door
     - door starts opening when you activate, screen fades to black
     - next level generates while screen is black
     - next level fades off of black
- - specific dialog pools for each NPC
-        
         
 [future features]
-
+ - backstab attack 
+    - jump over target, attack from other side (if possible)
  - design and implement interesting stats
  - one boss fight 
  - cinematic stuff (these are currently broken fyi)
@@ -48,6 +46,7 @@
  - fade to black between zones / menus
  - title screen needs to be animated, otherwise game feels frozen when you open it
  - permanent effects (aka curses)
+ - doors that can only be unlocked with "keys"
  
  
 [~dream features~]

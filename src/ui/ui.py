@@ -222,8 +222,7 @@ class InventoryPanel(InteractableImage):
             render_eng.update(self.lvl_text)
         s_xy[1] += self.lvl_text.line_height()
 
-        att_value = (self.player_state.stat_value(StatTypes.ATT) +
-                     self.player_state.stat_value(StatTypes.UNARMED_ATT))
+        att_value = self.player_state.stat_value(StatTypes.ATT)
         att_str = "ATT:{}".format(att_value)
         if att_str != self.att_text.get_text():
             self.att_text = self.att_text.update(new_text=att_str, new_x=s_xy[0], new_y=s_xy[1])

@@ -467,14 +467,16 @@ class OpenDoorAction(MoveToAction):
         if world.get_geo(self.position[0], self.position[1]) != World.DOOR:
             return False
 
-        if world.get_door_in_cell(*self.position) is None:
+        door_to_open = world.get_door_in_cell(*self.position)
+
+        if door_to_open is None or not door_to_open.can_open(world):
             return False
 
         return True
 
     def start(self, world):
         super().start(world)
-        self.door_entity = world.get_door_in_cell(*self.position)
+        self.door_entity = world.   get_door_in_cell(*self.position)
 
     def animate_in_world(self, progress, world):
         super().animate_in_world(progress, world)

@@ -89,7 +89,6 @@ class ZoneLoader:
     HOLE = (100, 100, 100)
 
     DOOR = (0, 0, 255)
-    LOCKED_DOOR = (0, 0, 130)
     SENSOR_DOOR = (100, 100, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
@@ -136,8 +135,6 @@ class ZoneLoader:
                         bp.set(x, y, World.HOLE)
                     elif color == ZoneLoader.DOOR:
                         bp.set(x, y, World.DOOR)
-                    elif color == ZoneLoader.LOCKED_DOOR:
-                        bp.set_locked_door(x, y)
                     elif color == ZoneLoader.SENSOR_DOOR:
                         bp.set_sensor_door(x, y)
                     elif color == ZoneLoader.RETURN_EXIT:
@@ -563,7 +560,7 @@ class DesolateCaveZone(Zone):
                 unlock_dialog = dialog.PlayerDialog(text)
                 switch_pos = ((pos[0] + 0.5) * 64, (pos[1] + 0.5) * 64)
                 doors = w.entities_in_circle(switch_pos, 800, onscreen=False,
-                                             cond=lambda ent: isinstance(ent, entities.LockedDoorEntity))
+                                             cond=lambda ent: ent.is_door())
                 nearest_door = doors[0]
                 action = lambda _e, _w: nearest_door.do_open()
                 listener = events.EventListener(action, events.EventType.DIALOG_EXIT,

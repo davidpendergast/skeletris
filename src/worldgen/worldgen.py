@@ -2,7 +2,7 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, LockedDoorEntity, SensorDoorEntity, \
+from src.world.entities import Player, ExitEntity, SensorDoorEntity, \
     BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, NpcEntity
 import src.game.npc as npc
 
@@ -189,7 +189,6 @@ class WorldBlueprint:
         self.boss_exit_spawns = {}    # zone_id -> (x, y)
         self.return_exit_spawns = []  # list of (x, y)
         self.save_station = None
-        self.locked_doors = []
         self.sensor_doors = []
         self.global_floor_alt_art = None
         self.global_wall_alt_art = None
@@ -209,8 +208,6 @@ class WorldBlueprint:
     def set(self, x, y, val):
         if self.is_valid(x, y):
             self.geo[x][y] = val
-            if (x, y) in self.locked_doors and val != World.DOOR:
-                raise ValueError("just stamped out a locked door at {}, {}".format(x, y))
             if (x, y) in self.sensor_doors and val != World.DOOR:
                 raise ValueError("just stamped out a sensor door at {}, {}".format(x, y))
 
@@ -229,10 +226,6 @@ class WorldBlueprint:
 
     def set_global_floor_alt_art(self, val):
         self.global_floor_alt_art = val
-
-    def set_locked_door(self, x, y):
-        self.set(x, y, World.DOOR)
-        self.locked_doors.append((x, y))
 
     def set_sensor_door(self, x, y):
         self.set(x, y, World.DOOR)
@@ -270,9 +263,7 @@ class WorldBlueprint:
                         w.set_floor_type(alt_art, xy=(x, y))
 
                 if self.geo[x][y] == World.DOOR:
-                    if (x, y) in self.locked_doors:
-                        w.add(LockedDoorEntity(x, y))
-                    elif (x, y) in self.sensor_doors:
+                    if (x, y) in self.sensor_doors:
                         w.add(SensorDoorEntity(x, y))
                     else:
                         w.add(DoorEntity(x, y))
