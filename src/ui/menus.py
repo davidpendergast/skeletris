@@ -30,6 +30,7 @@ class MenuManager:
     KEYBINDING_MENU = 7
     DEBUG_OPTION_MENU = 8
     SETTINGS_MENU = 9
+    TEXT_MENU = 10
 
     def __init__(self, menu):
         self._active_menu = StartMenu()
@@ -153,9 +154,6 @@ class Menu:
 
     def get_camera_center_point_on_screen(self):
         return None
-
-    def absorbs_key_inputs(self):
-        return False
 
     def get_active_tooltip(self):
         return self._active_tooltip
@@ -300,14 +298,12 @@ class OptionsMenu(Menu):
             new_selection = self._selection
             dy = 0
             up_pressed = input_state.was_pressed(gs.get_instance().settings().menu_up_key())
-            if not self.absorbs_key_inputs():
-                up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
+            up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
             if up_pressed:
                 dy -= 1
 
             down_pressed = input_state.was_pressed(gs.get_instance().settings().menu_down_key())
-            if not self.absorbs_key_inputs():
-                down_pressed = down_pressed or input_state.was_pressed(gs.get_instance().settings().down_key())
+            down_pressed = down_pressed or input_state.was_pressed(gs.get_instance().settings().down_key())
             if down_pressed:
                 dy += 1
 
@@ -397,21 +393,6 @@ class OptionsMenu(Menu):
         return super().cursor_style_at(world, xy)
 
 
-TITLE_CANDIDATES = [
-    "\n".join([
-        "   ██████  ███▄ ▄███▓  ▄███▒ ▄███████▓ ",
-        " ▒██    ▒ ▓██▒▀█▀ ██▒ ██▒ ▀█░▓  ██▒ ▓▒ ",
-        " ░ ▓██▄   ▓██    ▓██░ ██░▄▄▄ ▒  ██░ ▒░ ",
-        "   ▒   ██ ▒██    ▒██ ░▓█  ██▓░  ██▓ ░  ",
-        " ▒██████▒ ▒██▒   ░██▒░▒▓███▀▒  ▒██▒ ░  ",
-        " ▒ ▒▓▒ ▒  ░ ▒░   ░  ░ ░▒   ▒   ▒ ░░    ",
-        " ░ ░▒  ░  ░  ░      ░  ░   ░     ░     ",
-        " ░  ░  ░  ░      ░   ░ ░   ░   ░       ",
-        "       ░         ░         ░           ",
-    ]),
-]
-
-
 class StartMenu(OptionsMenu):
 
     START_OPT = 0
@@ -464,6 +445,40 @@ class PauseMenu(OptionsMenu):
 
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+
+
+class TextOnlyMenu(OptionsMenu):
+
+    def __init__(self, text, next_menu, auto_advance_duration=None, fade_back_to_world_duration=30):
+        OptionsMenu.__init__(self, MenuManager.TEXT_MENU, text, ["~hidden~"])
+
+        self.fade_back_to_world_duration = fade_back_to_world_duration
+        self.next_menu = next_menu
+
+        # to automatically advance the text menu
+        self.count = 0
+        self.auto_advance_duration = auto_advance_duration
+
+    def get_clear_color(self):
+        return (0, 0, 0)
+
+    def get_option_color(self, idx):
+        return self.get_clear_color()
+
+    def handle_inputs(self, world):
+        do_advance = InputState.get_instance().was_anything_pressed()
+
+        if self.auto_advance_duration is not None:
+            self.count += 1
+            if self.count > self.auto_advance_duration:
+                do_advance = True
+
+        if do_advance:
+            gs.get_instance().menu_manager().set_active_menu(self.next_menu)
+
+            if self.fade_back_to_world_duration > 0 and self.next_menu.get_type() == MenuManager.IN_GAME_MENU:
+                gs.get_instance().do_fade_sequence(1.0, 0.0, self.fade_back_to_world_duration)
+                gs.get_instance().pause_world_updates(self.fade_back_to_world_duration // 2)
 
 
 class SoundSettingsMenu(OptionsMenu):
@@ -848,7 +863,8 @@ class DebugZoneSelectMenu(OptionsMenu):
         elif 0 <= idx < len(self.opts):
             selected_opt = self.opts[idx]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
-            gs.get_instance().event_queue().add(events.NewZoneEvent(selected_opt, gs.get_instance().current_zone))
+            new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
+            gs.get_instance().event_queue().add(new_zone_evt)
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
 
 

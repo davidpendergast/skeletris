@@ -176,6 +176,8 @@ class GlobalState:
 
         self._current_screenshakes = []  # list of stacks of (x, y) pairs
 
+        self._fade_overlay_sequence = []  # list of (color, alpha) tuples
+
         self._event_queue = events.EventQueue()
         self._event_triggers = {}  # EventType -> list(EventListener)
 
@@ -220,6 +222,20 @@ class GlobalState:
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:
             self._event_triggers[e_type] = [e for e in self._event_triggers[e_type] if e.scope is not scope]
+
+    def get_fade_overlay_state(self):
+        if len(self._fade_overlay_sequence) > 0:
+            return self._fade_overlay_sequence[-1]
+        else:
+            return None
+
+    def do_fade_sequence(self, start_alpha, end_alpha, duration, color=(0, 0, 0)):
+        self._fade_overlay_sequence.clear()
+        for i in range(0, duration + 1):
+            # it's a stack, so building it backwards
+            alpha = end_alpha * (1 - i / duration) + start_alpha * (i / duration)
+            alpha = Utils.bound(alpha, 0, 1)
+            self._fade_overlay_sequence.append((color, alpha))
 
     def menu_manager(self):
         return self._menu_manager
@@ -433,6 +449,9 @@ class GlobalState:
 
         if self._world_updates_pause_timer > 0 and not self.menu_manager().pause_world_updates():
             self._world_updates_pause_timer -= 1
+
+        if len(self._fade_overlay_sequence) > 0:
+            self._fade_overlay_sequence.pop(-1)
 
         self.tick_counter += 1
         if self.tick_counter % 8 == 0:

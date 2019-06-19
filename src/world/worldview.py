@@ -19,6 +19,8 @@ class WorldView:
 
         self._onscreen_entities = set()
 
+        self._fade_overlay_bundle = None  # used to achieve a 'fade to black effect'
+
     def update_geo_bundle(self, grid_x, grid_y):
         if not self.world.is_valid(grid_x, grid_y):
             return
@@ -126,6 +128,30 @@ class WorldView:
         self._geo_bundle_lookup.clear()
         self._onscreen_geo_bundles.clear()
 
+        if self._fade_overlay_bundle is not None:
+            render_eng.remove(self._fade_overlay_bundle)
+            self._fade_overlay_bundle = None
+
+    def _update_fade_overlay(self):
+        fade_state = gs.get_instance().get_fade_overlay_state()
+        if fade_state is None or fade_state[1] == 0:
+            if self._fade_overlay_bundle is not None:
+                RenderEngine.get_instance().remove(self._fade_overlay_bundle)
+                self._fade_overlay_bundle = None
+        else:
+            if self._fade_overlay_bundle is None:
+                self._fade_overlay_bundle = img.ImageBundle.new_bundle(spriteref.UI_0_LAYER,
+                                                                       scale=1, depth=-float('inf'))
+
+            color, alpha = fade_state
+            sprite = spriteref.get_floor_lighting(1-alpha)
+            scr_size = gs.get_instance().screen_size
+            ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + scr_size[1] / sprite.height()))
+
+            self._fade_overlay_bundle = self._fade_overlay_bundle.update(new_model=sprite, new_x=0, new_y=0,
+                                                                         new_ratio=ratio, new_color=color)
+            RenderEngine.get_instance().update(self._fade_overlay_bundle)
+
     def update_all(self):
         cam_center = gs.get_instance().get_camera_center_in_world()
 
@@ -163,3 +189,4 @@ class WorldView:
                 gs.get_instance().set_camera_center_in_world(*Utils.round(new_pos))
 
         self._update_onscreen_tile_bundles()
+        self._update_fade_overlay()

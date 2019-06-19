@@ -15,15 +15,13 @@ import src.game.globalstate as gs
 from src.game.storystate import StoryStateKey
 from src.worldgen import worldgen2
 import src.game.npc as npc
+import src.utils.colors as colors
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
 NUM_GENERATED_ZONES = 16
-
-BLACK = (0, 0, 0)
-DARK_GREY = (92, 92, 92)
 
 
 def first_zone_id():
@@ -241,7 +239,7 @@ class Zone:
     def __init__(self, name, level, filename=None, bg_color=None):
         self.name = name
         self.zone_id = None  # gets set by init_zones()
-        self.bg_color = bg_color if bg_color is not None else BLACK
+        self.bg_color = bg_color if bg_color is not None else colors.BLACK
         self.level = level
         self.blueprint_file = filename
 
@@ -496,7 +494,7 @@ class ZoneBuilder:
 
     @staticmethod
     def build_me_a_zone(level):
-        zone = Zone("Depth {}".format(level), level, bg_color=BLACK)
+        zone = Zone("Depth {}".format(level), level)
         zone.zone_id = get_storyline_zone_id(level)
         zone.ZONE_ID = zone.zone_id
 
@@ -649,7 +647,7 @@ class HauntedForestZone1(Zone):
     ZONE_ID = "haunted_forest_1"
 
     def __init__(self):
-        Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=DARK_GREY)
+        Zone.__init__(self, "Haunted Forest 1", 3, filename="haunted_forest_1.png", bg_color=colors.DARK_GRAY)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -675,7 +673,7 @@ class FrogLairZone(Zone):
     FROG_SPAWN = (255, 203, 203)
 
     def __init__(self):
-        Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png", bg_color=BLACK)
+        Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -707,7 +705,7 @@ class CaveHorrorZone(Zone):
     ZONE_ID = "cave_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_lair.png", bg_color=BLACK)
+        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_lair.png")
         self._tree_color = (255, 170, 170)
         self._fight_end_door = (0, 170, 170)
 
@@ -739,7 +737,7 @@ class TombTownZone(Zone):
     ZONE_ID = "tomb_town"
 
     def __init__(self):
-        Zone.__init__(self, "Tomb Town", 16, filename="town.png", bg_color=DARK_GREY)
+        Zone.__init__(self, "Tomb Town", 16, filename="town.png", bg_color=colors.DARK_GRAY)
 
     WALL_SIGNS = {
             (255, 172, 150): ("read", "dear ugly frog,\nyou're so ugly. please go away.\nsincerely,\nmary"),
@@ -801,7 +799,7 @@ class DoorTestZone(Zone):
     ZONE_ID = "door_test"
 
     def __init__(self):
-        Zone.__init__(self, "Main Zone", 15, filename="door_test_1.png")
+        Zone.__init__(self, "Main Zone", 3, filename="door_test_1.png")
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())

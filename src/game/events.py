@@ -197,13 +197,9 @@ class DialogExitEvent(Event):
 
 class NewZoneEvent(Event):
 
-    NORMAL = "NORMAL"
-    RETURNING = "RETURNING"
-    SAVE_STATION = "SAVE_STATION"
-
-    def __init__(self, next_zone, current_zone, transfer_type=NORMAL):
-        data = (next_zone, current_zone, transfer_type)
-        desc = "moved from zone {} to {} via {}".format(current_zone, next_zone, transfer_type)
+    def __init__(self, next_zone, current_zone, show_zone_title_menu=True):
+        data = (next_zone, current_zone, show_zone_title_menu)
+        desc = "moved from zone {} to {} via {}".format(current_zone, next_zone, show_zone_title_menu)
         Event.__init__(self, EventType.NEW_ZONE, data, description=desc)
 
     def get_next_zone(self):
@@ -212,7 +208,7 @@ class NewZoneEvent(Event):
     def get_current_zone(self):
         return self.get_data()[1]
 
-    def get_transfer_type(self):
+    def get_show_zone_title(self):
         return self.get_data()[2]
 
 

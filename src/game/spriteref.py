@@ -390,13 +390,13 @@ large_shadow = make(96, 32, 32, 8)
 enormous_shadow = make(128, 32, 48, 16)
 chest_shadow = make(96, 40, 32, 8)
 
-floor_shadows = [make(176 + i, 32, 1, 1) for i in range(0, 8)]
+transparency_gradient = [make(176 + i, 32, 1, 1) for i in range(0, 8)]
 
 
 def get_floor_lighting(val):
     darkness_val = Utils.bound(1-val, 0.0, 0.99)
-    idx = int(darkness_val * len(floor_shadows))
-    return floor_shadows[idx]
+    idx = int(darkness_val * len(transparency_gradient))
+    return transparency_gradient[idx]
 
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]

@@ -1150,8 +1150,8 @@ class PickupEntity(Entity):
     def get_color(self):
         return (1, 1, 1)
 
-    def get_sprite(self, anim_tick):
-        return self.sprites[anim_tick % len(self.sprites)]
+    def get_sprite(self):
+        return self.sprites[gs.get_instance().anim_tick % len(self.sprites)]
 
     def get_sprite_offset(self):
         return (0, 0)
@@ -1163,7 +1163,7 @@ class PickupEntity(Entity):
         anim_tick = gs.get_instance().anim_tick
         bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
 
-        cur_sprite = self.get_sprite(anim_tick)
+        cur_sprite = self.get_sprite()
 
         offs = self.get_sprite_offset()
 
@@ -1346,19 +1346,23 @@ class ExitEntity(Entity):
         Entity.__init__(self, grid_x * 64, (grid_y - 1) * 64, 64, 64)
 
         self.next_zone_id = next_zone_id
+        self._is_opening = False
         self.count = 0
-        self.open_duration = 60
 
-        self._did_new_zone = False  # gets flipped when its interacted with
+        self._animation_duration = 80
+        self._door_animation_range = (0, 0.7)
+        self._fade_animation_range = (0.5, 1.0)
 
-    def get_sprite(self, anim_tick):
-        if self.count == 0:
-            sprite = self.idle_sprites()[(anim_tick // 2) % 2]
+    def get_sprite(self):
+        start_open_tick = int(self._animation_duration * self._door_animation_range[0])
+        end_open_tick = int(self._animation_duration * self._door_animation_range[1])
+        if self.count < start_open_tick:
+            return self.idle_sprites()[(gs.get_instance().anim_tick // 2) % 2]
         else:
             open_spr = self.opening_sprites()
-            idx = int(self.get_progress() * len(open_spr))
-            sprite = open_spr[idx]
-        return sprite
+            open_prog = Utils.bound((self.count - start_open_tick) / (end_open_tick - start_open_tick), 0, 0.999)
+            idx = int(open_prog * len(open_spr))
+            return open_spr[idx]
 
     def get_zone(self):
         return self.next_zone_id
@@ -1379,8 +1383,7 @@ class ExitEntity(Entity):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
-        anim_tick = gs.get_instance().anim_tick
-        sprite = self.get_sprite(anim_tick)
+        sprite = self.get_sprite()
         offs = self.sprite_offset(sprite, 4)
 
         x = self.x() + offs[0]
@@ -1388,14 +1391,27 @@ class ExitEntity(Entity):
         self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
 
     def get_progress(self):
-        return Utils.bound(self.count / self.open_duration, 0.0, 0.999)
+        return Utils.bound(self.count / self._animation_duration, 0.0, 1.0)
 
     def is_exit(self):
         return True
 
     def update(self, world):
-        if self._did_new_zone and self.count < self.open_duration:
-            self.count += 1
+        if self._is_opening:
+            # pause game while door is opening
+            gs.get_instance().pause_world_updates(2)
+
+            if self.count < self._animation_duration:
+                self.count += 1
+
+                start_fade_tick = int(self._animation_duration * self._fade_animation_range[0])
+                end_fade_tick = int(self._animation_duration * self._fade_animation_range[1])
+                if self.count == start_fade_tick:
+                    gs.get_instance().do_fade_sequence(0, 1, end_fade_tick - start_fade_tick + 1)
+
+            else:
+                new_zone_event = self.make_new_zone_event()
+                gs.get_instance().event_queue().add(new_zone_event)
 
         self.update_images()
 
@@ -1403,14 +1419,11 @@ class ExitEntity(Entity):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self, world):
-        return not self._did_new_zone
+        return True
 
     def interact(self, world):
-        new_zone_evt = self.make_new_zone_event()
-        if new_zone_evt is not None:
-            self._did_new_zone = True
-            gs.get_instance().pause_world_updates(self.open_duration)
-            gs.get_instance().event_queue().add(new_zone_evt, delay=self.open_duration)
+        if self.next_zone_id is not None:
+            self._is_opening = True
         else:
             dia = Dialog("This path doesn't lead anywhere...")
             gs.get_instance().dialog_manager().set_dialog(dia)
@@ -1424,13 +1437,13 @@ class ReturnExitEntity(ExitEntity):
 
     def make_new_zone_event(self):
         if self.next_zone_id is not None:
-            return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id(),
-                                       transfer_type=events.NewZoneEvent.RETURNING)
+            return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
         else:
             return None
 
-    def get_sprite(self, anim_tick):
+    def get_sprite(self):
         sprites = spriteref.return_door_smoke
+        anim_tick = gs.get_instance().anim_tick
         return sprites[anim_tick % len(sprites)]
 
     def sprite_offset(self, sprite, scale):

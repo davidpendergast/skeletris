@@ -120,17 +120,19 @@ def run():
                 if active_menu is not None:
                     active_menu.cleanup()
 
-                if event.get_transfer_type() == events.NewZoneEvent.RETURNING:
-                    spawn_at = event.get_current_zone()
-                else:
-                    spawn_at = None
+                zone_id = event.get_next_zone()
 
-                world = zones.build_world(event.get_next_zone(), spawn_at_door_with_zone_id=spawn_at)
+                if event.get_show_zone_title():
+                    title = zones.get_zone(zone_id).get_name()
+                    title_menu = menus.TextOnlyMenu(title, menus.InGameUiState(), auto_advance_duration=60)
+                    gs.get_instance().menu_manager().set_active_menu(title_menu)
+
+                world = zones.build_world(zone_id)
                 world_view = WorldView(world)
 
-                # kind of a hack to prevent the world from flashing for a frame before the cinematic starts
-                if len(gs.get_instance().get_cinematics_queue()) > 0:
-                    gs.get_instance().menu_manager().update(world)
+                ## kind of a hack to prevent the world from flashing for a frame before the cinematic starts
+                #if len(gs.get_instance().get_cinematics_queue()) > 0:
+                #    gs.get_instance().menu_manager().update(world)
 
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
@@ -204,17 +206,7 @@ def run():
             gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
 
         if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
-            print("INFO: opened debug menu")
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
-
-        if input_state.was_pressed(pygame.K_o):
-            manager = gs.get_instance().menu_manager()
-            if not manager.get_active_menu().absorbs_key_inputs():
-                cur_value = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
-                if cur_value > 0:
-                    gs.get_instance().settings().set(settings.MUSIC_VOLUME, 0)
-                else:
-                    gs.get_instance().settings().set(settings.MUSIC_VOLUME, 100)
 
         if debug.is_debug() and input_state.was_pressed(pygame.K_x):
             manager = gs.get_instance().menu_manager()

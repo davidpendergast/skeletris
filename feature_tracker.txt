@@ -6,7 +6,6 @@
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol 
- - pause while exit door is opening -> unpause at next world
 
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)

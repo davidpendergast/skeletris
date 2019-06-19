@@ -100,6 +100,15 @@ class InputState:
 
     def all_pressed_keys(self):
         return [x for x in self._pressed_this_frame if self._pressed_this_frame[x] > 0]
+
+    def was_anything_pressed(self):
+        if len(self.all_pressed_keys()) > 0:
+            return True
+        else:
+            for i in range(0, 3):
+                if self.mouse_was_pressed(button=i):
+                    return True
+        return False
         
     def update(self, current_time):
         """Remember that this gets called *after* inputs are passed in, and *before* game updates occur."""
