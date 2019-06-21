@@ -135,8 +135,7 @@ class NpcFactory:
         npc_ids_for_level = list(TEMPLATES.keys())
 
         while len(res) < n and len(npc_ids_for_level) > 0:
-            # npc_id = npc_ids_for_level.pop(-1)
-            npc_id = random.choice(npc_ids_for_level)
+            npc_id = npc_ids_for_level.pop(-1)
             template = TEMPLATES[npc_id]
             res.append(entities.NpcEntity(0, 0, template, npc_seed=random.random()))
 

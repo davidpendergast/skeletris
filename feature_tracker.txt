@@ -29,8 +29,10 @@
     - door starts opening when you activate, screen fades to black
     - next level generates while screen is black
     - next level fades off of black
+ - help panel
         
 [future features]
+ - map panel
  - backstab attack 
     - jump over target, attack from other side (if possible)
  - design and implement interesting stats

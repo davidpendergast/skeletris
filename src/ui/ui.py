@@ -664,6 +664,105 @@ class StatusEffectImage(InteractableImage):
             yield self._icon_img
 
 
+class HotbarSidePanelButton(InteractableImage):
+
+    def __init__(self, rect):
+        self.rect = rect
+        self._icon_img = None
+
+        self.active_color = colors.DARK_GRAY
+        self.inactive_color = colors.LIGHT_GRAY
+
+    def contains_point(self, x, y):
+        if self.rect is None:
+            return False
+        else:
+            return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
+                    self.rect[1] <= y < self.rect[1] + self.rect[3])
+
+    def get_icon_sprite(self):
+        return None
+
+    def get_color(self):
+        return self.inactive_color
+
+    def update_images(self):
+        if self.rect is None:
+            return
+
+        if self._icon_img is None:
+            self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+
+        self._icon_img = self._icon_img.update(new_model=self.get_icon_sprite(),
+                                               new_depth=FG_DEPTH,
+                                               new_x=self.rect[0],
+                                               new_y=self.rect[1],
+                                               new_color=self.get_color())
+
+    def all_bundles(self):
+        if self._icon_img is not None:
+            yield self._icon_img
+
+
+class HotbarInventoryButton(HotbarSidePanelButton):
+
+    def get_icon_sprite(self):
+        return spriteref.UI.inventory_button
+
+    def get_color(self):
+        if gs.get_instance().is_inventory_open():
+            return self.active_color
+        else:
+            return self.inactive_color
+
+    def on_click(self, x, y, button=1):
+        is_open = gs.get_instance().is_inventory_open()
+        gs.get_instance().set_inventory_open(not is_open)
+        return True
+
+    def get_tooltip_target_at(self, x, y):
+        inv_key = gs.get_instance().settings().inventory_key()
+        text = "Inventory [{}]".format(Utils.stringify_key(inv_key[0]))
+
+        res = TextBuilder()
+        res.add(text)
+        return res
+
+
+class HotbarMapButton(HotbarSidePanelButton):
+
+    def get_icon_sprite(self):
+        return spriteref.UI.map_button
+
+    def on_click(self, x, y, button=1):
+        pass
+
+    def get_tooltip_target_at(self, x, y):
+        text = "Map [m]"
+
+        res = TextBuilder()
+        res.add_line(text)
+        res.add("(coming soon!)", color=colors.LIGHT_GRAY)
+        return res
+
+
+class HotbarHelpButton(HotbarSidePanelButton):
+
+    def get_icon_sprite(self):
+        return spriteref.UI.help_button
+
+    def on_click(self, x, y, button=1):
+        pass
+
+    def get_tooltip_target_at(self, x, y):
+        text = "Help [h]"
+
+        res = TextBuilder()
+        res.add_line(text)
+        res.add("(coming soon!)", color=colors.LIGHT_GRAY)
+        return res
+
+
 class HealthBarPanel(InteractableImage):
 
     SIZE = (400 * 2, 53 * 2)
@@ -683,8 +782,10 @@ class HealthBarPanel(InteractableImage):
 
         self._status_imgs = []  # list of StatusEffectImages
 
-        #self._turn_count_img = None
-        #self._time_img = None
+        self._sidepanel_buttons = [None] * 8
+        self._sidepanel_buttons[0] = HotbarInventoryButton(None)
+        self._sidepanel_buttons[1] = HotbarMapButton(None)
+        self._sidepanel_buttons[2] = HotbarHelpButton(None)
 
     def contains_point(self, x, y):
         if super().contains_point(x, y):
@@ -707,6 +808,19 @@ class HealthBarPanel(InteractableImage):
             return target
         else:
             return super().get_tooltip_target_at(x, y)
+
+    def _update_sidepanel_buttons(self):
+        x_start = self._rect[0] + 7 * 2
+        y_start = self._rect[1] + 16 * 2
+
+        for i in range(0, len(self._sidepanel_buttons)):
+            if self._sidepanel_buttons[i] is not None:
+                self._sidepanel_buttons[i].rect = [x_start + 15 * 2 * (i % 4),
+                                                   y_start + 15 * 2 * (i // 4),
+                                                   15 * 2, 15 * 2]
+
+                if self._sidepanel_buttons[i].is_dirty():
+                    self._sidepanel_buttons[i].update_images()
 
     def _update_action_icons(self):
         x_starts = [self._rect[0] + 87 * 2 + i * 40 * 2 for i in range(0, 3)] + \
@@ -808,33 +922,7 @@ class HealthBarPanel(InteractableImage):
 
         self._update_action_icons()
         self._update_status_effect_icons()
-
-        #time_info_x = self._rect[0] + 8 * 2
-        #time_info_y = self._rect[1] + 16 * 2
-        #if self._time_img is None:
-        #    self._time_img = TextImage(0, 0, "", spriteref.UI_0_LAYER, colors.LIGHT_GRAY, scale=1)
-        #hours = gs.get_instance().tick_counter // (60 * 60 * 60)
-        #minutes = (gs.get_instance().tick_counter // (60 * 60)) % 60
-        #seconds = (gs.get_instance().tick_counter // 60) % 60
-        #minutes_str = "0"+str(minutes) if minutes < 10 else str(minutes)
-        #seconds_str = "0"+str(seconds) if seconds < 10 else str(seconds)
-        #if hours != 0:
-        #    time_text = "{}:{}:{}".format(hours, minutes_str, seconds_str)
-        #else:
-        #    time_text = "{}:{}".format(minutes_str, seconds_str)
-        #self._time_img.update(new_text=time_text,
-        #                            new_x=time_info_x,
-        #                            new_y=time_info_y,
-        #                            new_depth=FG_DEPTH)
-        #time_info_y += self._time_img.size()[1]
-        #
-        #if self._turn_count_img is None:
-        #    self._turn_count_img = TextImage(0, 0, "", spriteref.UI_0_LAYER, colors.LIGHT_GRAY, scale=1)
-        #turn_text = "Turn: {}".format(gs.get_instance().turn_counter)
-        #self._turn_count_img.update(new_text=turn_text,
-        #                            new_x=time_info_x,
-        #                            new_y=time_info_y,
-        #                            new_depth=FG_DEPTH)
+        self._update_sidepanel_buttons()
 
     def all_child_imgs(self):
         for i in self._action_imgs:
@@ -842,6 +930,9 @@ class HealthBarPanel(InteractableImage):
                 yield i
         for i in self._status_imgs:
             yield i
+        for i in self._sidepanel_buttons:
+            if i is not None:
+                yield i
 
     def is_dirty(self):
         return True
@@ -855,10 +946,9 @@ class HealthBarPanel(InteractableImage):
             yield self._top_img
         for floating_bar in self._floating_bars:
             yield floating_bar[0]
-        #if self._time_img is not None:
-        #    yield self._time_img
-        #if self._turn_count_img is not None:
-        #    yield self._turn_count_img
+        for sidepanel_button in self._sidepanel_buttons:
+            if sidepanel_button is not None:
+                yield sidepanel_button
 
 
 class TextBuilder:

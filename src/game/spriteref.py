@@ -131,6 +131,10 @@ class UI:
     inspect_action = None
     inventory_action = None
 
+    inventory_button = None
+    map_button = None
+    help_button = None
+
     @staticmethod
     def get_health_bar(pcnt_full):
         return UI.health_bars_with_length[round(pcnt_full * 256)]
@@ -662,6 +666,10 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.potion_action = make(28, 252, 28, 28, shift=start_pos)
     UI.inspect_action = make(56, 252, 28, 28, shift=start_pos)
     UI.inventory_action = make(84, 252, 28, 28, shift=start_pos)
+
+    UI.inventory_button = make(52, 237, 15, 15, shift=start_pos)
+    UI.map_button = make(67, 237, 15, 15, shift=start_pos)
+    UI.help_button = make(82, 237, 15, 15, shift=start_pos)
 
     UI.tooltip_bg = make(48, 232, 2, 2, shift=start_pos)
 

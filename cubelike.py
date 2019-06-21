@@ -130,10 +130,6 @@ def run():
                 world = zones.build_world(zone_id)
                 world_view = WorldView(world)
 
-                ## kind of a hack to prevent the world from flashing for a frame before the cinematic starts
-                #if len(gs.get_instance().get_cinematics_queue()) > 0:
-                #    gs.get_instance().menu_manager().update(world)
-
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
                 running = False
