@@ -15,6 +15,7 @@ import src.game.globalstate as gs
 from src.game.storystate import StoryStateKey
 from src.worldgen import worldgen2
 import src.game.npc as npc
+import src.game.decoration as decoration
 import src.utils.colors as colors
 
 _FIRST_ZONE_ID = None
@@ -345,14 +346,11 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.STRAY_ITEM:
             pass
         elif tile_type == worldgen2.TileType.DECORATION:
-            dec_sprite = random.choice(spriteref.large_decs + spriteref.smol_decs)
-            dec_ent = entities.DecorationEntity.wall_decoration([dec_sprite], x, y)
-            dec_ent.set_interact_dialog(dialog.Dialog("It seems to be a decoration of some kind."))
-            world.add(dec_ent)
+            dec_ent = decoration.DecorationFactory.get_decoration(level)
+            world.add(dec_ent, gridcell=(x, y-1))
         elif tile_type == worldgen2.TileType.SIGN:
-            sign_ent = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, x, y)
-            sign_ent.set_interact_dialog(dialog.get_sign_dialog(level))
-            world.add(sign_ent)
+            sign_ent = decoration.DecorationFactory.get_sign(level)
+            world.add(sign_ent, gridcell=(x, y-1))
 
     @staticmethod
     def _tile_grid_to_world(level, t_grid):

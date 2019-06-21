@@ -948,7 +948,8 @@ class HealthBarPanel(InteractableImage):
             yield floating_bar[0]
         for sidepanel_button in self._sidepanel_buttons:
             if sidepanel_button is not None:
-                yield sidepanel_button
+                for bun in sidepanel_button.all_bundles():
+                    yield bun
 
 
 class TextBuilder:

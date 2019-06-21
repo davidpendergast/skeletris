@@ -317,8 +317,8 @@ wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 24, and_add_to_list=large_d
 
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
-wall_decoration_plant_1 = make(8, 376, 8, 24, and_add_to_list=smol_decs)
-wall_decoration_plant_2 = make(16, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_plants = [make(8, 376, 8, 24, and_add_to_list=smol_decs),
+                          make(16, 376, 8, 24, and_add_to_list=smol_decs)]
 wall_decoration_rake = make(24, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_bones = make(32, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
@@ -343,7 +343,8 @@ enemy_the_fallen_all = [make(240, 144 + i * 32, 16, 32) for i in range(0, 2)]
 enemy_skelekid_all = [make(256, 144 + i * 32, 16, 32) for i in range(0, 2)]
 enemy_fungoi_all = [make(416, 144 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_fungoi_down = [make(448, 176 + i * 16, 32, 16) for i in range(0, 2)]
-enemy_scorpion_all = [make(512 + i * 32, 176, 32, 32) for i in range(0, 2)]
+enemy_scorpion_all = [make(432, 208 + i * 32, 32, 32) for i in range(0, 2)]
+enemy_ghast_all = [make(464, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_frog_all = [make(448 + i * 16, 160, 16, 16) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
