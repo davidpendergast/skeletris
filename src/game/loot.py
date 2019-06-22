@@ -1,9 +1,9 @@
 import random
 
 from src.items.item import ItemType, ItemTypes
-from src.items.itemgen import ItemFactory, StatCubesItemFactory
-from src.game.droprates import EnemyDroprate, ChestDroprate
+from src.items.itemgen import ItemFactory
 import src.game.debug as debug
+import src.game.balance as balance
 
 
 class LootFactory:
@@ -13,10 +13,10 @@ class LootFactory:
         """
             returns: list of items
         """
-        n_items = ChestDroprate.guaranteed_items(level)
+        n_items = balance.CHEST_MIN_NUM_ITEMS
 
-        for _ in range(0, ChestDroprate.item_chances(level)):
-            if random.random() < ChestDroprate.rate_per_item(level):
+        for _ in range(0, (balance.CHEST_MAX_NUM_ITEMS - n_items)):
+            if random.random() < balance.CHEST_DROP_RATE:
                 n_items += 1
 
         loot = []
@@ -34,11 +34,3 @@ class LootFactory:
                 if item is not None:
                     loot.append(item)
         return loot
-
-    @staticmethod
-    def gen_num_potions_to_drop(level):
-        num = 0
-        for i in range(EnemyDroprate.potion_chances(level)):
-            if random.random() < EnemyDroprate.rate_per_potion(level):
-                num += 1
-        return num

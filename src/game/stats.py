@@ -71,8 +71,9 @@ class StatTypes:
     NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
                              color=colors.WHITE)
 
-    # this is currently only used to control enemy behavior.
+    # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
+    WEALTH = StatType("WEALTH")
 
     PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",
                                  color=colors.YELLOW,
