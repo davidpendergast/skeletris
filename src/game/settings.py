@@ -29,12 +29,13 @@ class KeySetting(Setting):
 
 
 # these are all configurable
-KEY_UP = Setting("move up", "UP", [pygame.K_w])
-KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a])
-KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d])
-KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s])
-KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r])
+KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP])
+KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT])
+KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT])
+KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN])
+KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_i])
 KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
+KEY_MAP = Setting("map", "MAP", [pygame.K_m])
 
 num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]

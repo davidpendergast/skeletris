@@ -563,11 +563,18 @@ class ControlsMenu(OptionsMenu):
         else:
             opt = ControlsMenu.OPTS[idx]
 
-            cur_value = gs.get_instance().settings().get(opt[1])
-            if isinstance(cur_value, list):
-                cur_value = cur_value[0]
+            cur_values = gs.get_instance().settings().get(opt[1])
 
-            return opt[0] + " [{}]".format(Utils.stringify_key(cur_value))
+            if not isinstance(cur_values, list):
+                cur_values = [cur_values]
+
+            if len(cur_values) == 0:
+                return "{} [None]".format(opt[0])
+            else:
+                cur_value_strings = [Utils.stringify_key(k) for k in cur_values]
+                value_str = "[" + ", ".join(cur_value_strings) + "]"
+
+                return "{} {}".format(opt[0], value_str)
 
     def get_num_options(self):
         return len(ControlsMenu.OPTS) + 1  # extra one is the "back" option
