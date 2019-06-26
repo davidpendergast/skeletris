@@ -37,6 +37,8 @@ class ActorState(StatProvider):
 
         self.held_item = None  # item on the mouse cursor TODO - this doesn't belong here~
 
+        self.unarmed_projectile_sprite = None
+
     def get_all_mappable_action_providers(self):
         yield ItemActions.UNARMED_ATTACK
         for item in self.inventory().all_equipped_items():
@@ -69,11 +71,14 @@ class ActorState(StatProvider):
     def hp(self):
         return self.current_hp
 
-    def turn_duration_modifier(self):
+    def turn_duration_modifier(self, action_type):
         if self.alignment == 0:
             return 1.0
         else:
-            return 0.66
+            if action_type == ActionType.MOVE_TO:
+                return 0.66
+            else:
+                return 0.85
 
     def set_hp(self, val):
         new_hp = min(val, self.max_hp())
@@ -92,6 +97,9 @@ class ActorState(StatProvider):
 
     def unarmed_range(self):
         return Utils.bound(self.stat_value(StatTypes.UNARMED_RANGE), 1, 8)
+
+    def get_projectile_sprite(self):
+        return self.unarmed_projectile_sprite
 
     def speed(self):
         raw_val = self.stat_value(StatTypes.SPEED)
@@ -374,7 +382,7 @@ class Action:
     def is_possible(self, world):
         return True
 
-    def is_move_aciton(self):
+    def is_move_action(self):
         return self.get_type() == ActionType.MOVE_TO
 
     def animate_in_world(self, progress, world):
@@ -593,9 +601,21 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
 class AttackAction(Action):
 
     def __init__(self, actor, item, position):
-        Action.__init__(self, ActionType.ATTACK, 24, actor, item=item, position=position)
+        self._projectile_sprite = AttackAction._calc_projectile_sprite(actor, item)
+        duration = 24 if self._projectile_sprite is None else 40
+
+        Action.__init__(self, ActionType.ATTACK, duration, actor, item=item, position=position)
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
+
+        self._projectile_animator = None  # only used when it's a projectile attack
+
+    @staticmethod
+    def _calc_projectile_sprite(actor, item):
+        if item is None:
+            return actor.get_actor_state().get_projectile_sprite()
+        else:
+            return item.get_projectile_sprite()
 
     def get_targeting_color(self, for_mouse=False):
         return colors.RED
@@ -661,33 +681,53 @@ class AttackAction(Action):
         self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
-        run_at_pct = 0.3
-        recover_pcnt = 1 - run_at_pct
+        if self._projectile_sprite is not None:
+            if self._projectile_animator is None:
 
-        start_at = self.actor_entity.center()
-        target_at = self._results[1].center()
-        stop_at = target_at
+                # TODO obviously a dumb way to get the projectile's sprite
+                from src.items.item import ItemTypes
+                if self.get_item() is not None and self.get_item().get_type() == ItemTypes.BOW_WEAPON:
+                    projectile_sprite = spriteref.Items.arrow_projectile_small
+                else:
+                    projectile_sprite = spriteref.Items.projectile_small
 
-        vec = Utils.sub(target_at, start_at)
-        dist = Utils.mag(vec)
-        if dist > 16:
-            vec = Utils.set_length(vec, dist - 16)
-            stop_at = Utils.add(start_at, vec)
-
-        if progress <= run_at_pct:
-            new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
+                self._projectile_animator = _ThrownItemAnimator(self.get_actor(),
+                                                                self.get_position(),
+                                                                self._projectile_sprite,
+                                                                colors.WHITE,  # TODO - better color choosing
+                                                                hide_actor_held_item=False)
+            self._projectile_animator.animate_in_world(progress, world)
         else:
-            self._apply_attack_and_add_animations_if_necessary(world)
-            new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
+            run_at_pct = 0.3
+            recover_pcnt = 1 - run_at_pct
 
-        pre_move_offset = self.actor_entity.get_draw_offset()
-        new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
-        vel = Utils.sub(new_move_offset, pre_move_offset)
+            start_at = self.actor_entity.center()
+            target_at = self._results[1].center()
+            stop_at = target_at
 
-        self.actor_entity.set_draw_offset(*new_move_offset)
-        self.actor_entity.set_vel(vel)
+            vec = Utils.sub(target_at, start_at)
+            dist = Utils.mag(vec)
+            if dist > 16:
+                vec = Utils.set_length(vec, dist - 16)
+                stop_at = Utils.add(start_at, vec)
+
+            if progress <= run_at_pct:
+                new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
+            else:
+                self._apply_attack_and_add_animations_if_necessary(world)
+                new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
+
+            pre_move_offset = self.actor_entity.get_draw_offset()
+            new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
+            vel = Utils.sub(new_move_offset, pre_move_offset)
+
+            self.actor_entity.set_draw_offset(*new_move_offset)
+            self.actor_entity.set_vel(vel)
 
     def finalize(self, world):
+        if self._projectile_animator is not None:
+            self._projectile_animator.finalize(world)
+
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
@@ -705,6 +745,72 @@ class AttackAction(Action):
                 self._results[1].set_facing_right(False)
 
 
+class _ThrownItemAnimator:
+    def __init__(self, actor, position, item_sprite, item_color, hide_actor_held_item=False, item_start_rotation=0):
+        self._actor = actor
+        self._position = position
+        self._hide_actor_held_item = hide_actor_held_item
+        self._thrown_item_entity = None
+        self._item_sprite = item_sprite
+        self._item_color = item_color
+        self._item_start_rotation = item_start_rotation
+
+    def animate_in_world(self, progress, world):
+        release_time = 0.3
+
+        if progress >= release_time:
+            if self._item_sprite is None:
+                return  # items should probably always have sprites but idk
+
+            # can't be holding the item while it's flying through the air
+            if self._hide_actor_held_item:
+                self._actor.set_visually_held_item_override(False)
+
+            start_pos = self._actor.center()
+            end_pos = Utils.mult(Utils.add(self._position, (0.5, 0.5)), world.cellsize())
+
+            if self._thrown_item_entity is None:
+                from src.world.entities import AnimationEntity
+                self._thrown_item_entity = AnimationEntity(start_pos[0], start_pos[1], [self._item_sprite], 1,
+                                                           spriteref.ENTITY_LAYER, scale=2)
+                self._thrown_item_entity.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
+                self._thrown_item_entity.set_color(self._item_color)
+                self._thrown_item_entity.set_shadow_sprite(spriteref.small_shadow)
+                world.add(self._thrown_item_entity)
+
+            airtime_prog = (progress - release_time) / (1 - release_time)
+
+            pos = Utils.linear_interp(start_pos, end_pos, airtime_prog)
+            self._thrown_item_entity.move_to(pos[0], pos[1])
+
+            x = airtime_prog
+
+            # heights at x = 0.0, 0.5, and 1.0 respectively
+            y1 = 48  # TODO - start at actor's actual height
+            y2 = 64
+            y3 = 16
+
+            # trust me on this
+            a = 2 * y1 - 4 * y2 + 2 * y3
+            b = -3 * y1 + 4 * y2 - y3
+            c = y1
+
+            h = a * x * x + b * x + c
+
+            self._thrown_item_entity.set_sprite_offset((0, -h))
+
+            # make it spin through the air
+            rot = (self._item_start_rotation + int(airtime_prog * 6)) % 4
+            self._thrown_item_entity.set_rotation(rot)
+
+    def finalize(self, world):
+        if self._thrown_item_entity is not None:
+            pos = self._thrown_item_entity.center()
+            world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=3)
+
+            world.remove(self._thrown_item_entity)
+
+
 class ThrowItemAction(Action):
 
     def __init__(self, actor, item, position):
@@ -712,7 +818,7 @@ class ThrowItemAction(Action):
         self._results = None
         self._did_animations = False
 
-        self._thrown_item_entity = None
+        self._thrown_item_animator = None
 
     def get_targeting_color(self, for_mouse=False):
         consume_effect = self.get_item().get_consume_effect()
@@ -796,59 +902,19 @@ class ThrowItemAction(Action):
         self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
-        release_time = 0.3
+        if self._thrown_item_animator is None:
+            self._thrown_item_animator = _ThrownItemAnimator(self.get_actor(),
+                                                             self.get_position(),
+                                                             self.get_item().get_entity_sprite(),
+                                                             self.get_item().get_color(),
+                                                             hide_actor_held_item=True,
+                                                             item_start_rotation=self.get_item().sprite_rotation())
 
-        if progress >= release_time:
-            item_sprite = self.get_item().get_entity_sprite()
-            if item_sprite is None:
-                return  # items should probably always have sprites but idk
-
-            # can't be holding the item while it's flying through the air
-            self.actor_entity.set_visually_held_item_override(False)
-
-            start_pos = self.actor_entity.center()
-            end_pos = Utils.mult(Utils.add(self.get_position(), (0.5, 0.5)), world.cellsize())
-
-            if self._thrown_item_entity is None:
-                from src.world.entities import AnimationEntity
-                self._thrown_item_entity = AnimationEntity(start_pos[0], start_pos[1], [item_sprite], 1,
-                                                           spriteref.ENTITY_LAYER, scale=2)
-                self._thrown_item_entity.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
-                self._thrown_item_entity.set_color(self.get_item().get_color())
-                self._thrown_item_entity.set_shadow_sprite(spriteref.small_shadow)
-                world.add(self._thrown_item_entity)
-
-            airtime_prog = (progress - release_time) / (1 - release_time)
-
-            pos = Utils.linear_interp(start_pos, end_pos, airtime_prog)
-            self._thrown_item_entity.move_to(pos[0], pos[1])
-
-            x = airtime_prog
-
-            # heights at x = 0.0, 0.5, and 1.0 respectively
-            y1 = 48  # TODO - start at actor's actual height
-            y2 = 64
-            y3 = 16
-
-            # trust me on this
-            a = 2*y1 - 4*y2 + 2*y3
-            b = -3*y1 + 4*y2 - y3
-            c = y1
-
-            h = a*x*x + b*x + c
-
-            self._thrown_item_entity.set_sprite_offset((0, -h))
-
-            # make it spin through the air
-            rot = (self.get_item().sprite_rotation() + int(airtime_prog * 6)) % 4
-            self._thrown_item_entity.set_rotation(rot)
+        self._thrown_item_animator.animate_in_world(progress, world)
 
     def finalize(self, world):
-        if self._thrown_item_entity is not None:
-            pos = self._thrown_item_entity.center()
-            world.show_explosion(pos[0], pos[1], 20, color=self.get_item().get_color(), offs=(0, -16), scale=3)
-
-            world.remove(self._thrown_item_entity)
+        if self._thrown_item_animator is not None:
+            self._thrown_item_animator.finalize(world)
 
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)

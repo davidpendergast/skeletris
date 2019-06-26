@@ -71,13 +71,16 @@ class ItemFactory:
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             return SpriteItem("Wand of Mystery", item_type, level, cubes, [],
-                              spriteref.Items.wand_small, spriteref.Items.wand_big)
+                              spriteref.Items.wand_small, spriteref.Items.wand_big,
+                              projectile_sprite=spriteref.Items.projectile_small)
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
             return SpriteItem("Bow of Speed", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True)],
-                              spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions)
+                              spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions,
+                              projectile_sprite=spriteref.Items.arrow_projectile_small)
+
         elif item_type == ItemTypes.AXE_WEAPON:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]

@@ -544,7 +544,7 @@ class World:
                     a_state.set_ready_to_act(False)
 
                     if action.is_possible(self):
-                        dur_modifier = a_state.turn_duration_modifier()
+                        dur_modifier = a_state.turn_duration_modifier(action.get_type())
                         dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
                         actor.set_action(action, dur)
 

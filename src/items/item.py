@@ -206,6 +206,10 @@ class Item(StatProvider):
     def can_throw(self):
         return self.get_type().has_tag(ItemTags.THROWABLE)
 
+    def get_projectile_sprite(self):
+        """returns: the projectile sprite this item should use for its attack animations."""
+        return None
+
     def rotate(self):
         return self
 
@@ -241,13 +245,15 @@ class Item(StatProvider):
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None, consume_effect=None):
+                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None, consume_effect=None,
+                 projectile_sprite=None):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
                       can_rotate=can_rotate, title_color=title_color, actions=actions, consume_effect=consume_effect)
 
         self._small_sprite = small_sprite
         self._big_sprite = big_sprite
+        self._projectile_sprite = projectile_sprite
         self._sprite_rotation = sprite_rotation
 
     def big_sprite(self):
@@ -255,6 +261,9 @@ class SpriteItem(Item):
 
     def get_entity_sprite(self):
         return self._small_sprite
+
+    def get_projectile_sprite(self):
+        return self._projectile_sprite
 
     def sprite_rotation(self):
         return self._sprite_rotation
@@ -275,7 +284,7 @@ class SpriteItem(Item):
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
                               can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions,
-                              consume_effect=self.consume_effect)
+                              consume_effect=self.consume_effect, projectile_sprite=self._projectile_sprite)
 
 
 class StatCubesItem(Item):

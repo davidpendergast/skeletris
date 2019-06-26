@@ -6,7 +6,7 @@ _IS_DEV = os.path.exists("this_is_dev.txt")
 _DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
-_IGNORE_LOOT_LEVELS = False
+_IGNORE_LOOT_LEVELS = True
 _PLAYER_CANT_DIE = True
 
 

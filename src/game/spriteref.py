@@ -82,6 +82,8 @@ class Items:
     potion_small = None
 
     misc_small = None
+    projectile_small = None
+    arrow_projectile_small = None
 
     spear_icon = None
     sword_icon = None
@@ -138,7 +140,6 @@ class UI:
     @staticmethod
     def get_health_bar(pcnt_full):
         return UI.health_bars_with_length[round(pcnt_full * 256)]
-
 
     class Cursors:
 
@@ -503,7 +504,7 @@ FLOOR_FANCY_ID = 5
 FLOOR_SWAMP_ID = 6
 FLOOR_PIT_ID = 7
 _floor_types = [floors, floors_alt, floors_cracked, floors_dark_cracked,
-                 floors_hole, floors_fancy, floors_swamp, floors_pit]
+                floors_hole, floors_fancy, floors_swamp, floors_pit]
 
 floor_darkness_resolution = 8  # adjustable, used to generate floor sprites
 _floor_lookup = {}  # (floor_id, encoding, darkness) -> ImageModel
@@ -636,6 +637,8 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.potion_small = make(198, 8, 6, 8, shift=start_pos)
 
     Items.misc_small = make(192, 12, 5, 4, shift=start_pos)
+    Items.projectile_small = make(208, 11, 5, 5, shift=start_pos)
+    Items.arrow_projectile_small = make(216, 8, 8, 8, shift=start_pos)
 
     Items.spear_icon = make(0, 80, 10, 10, shift=start_pos)
     Items.sword_icon = make(10, 80, 10, 10, shift=start_pos)

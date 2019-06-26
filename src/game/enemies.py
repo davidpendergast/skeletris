@@ -22,6 +22,9 @@ class EnemyTemplate:
     def get_shadow_sprite(self):
         return self._shadow_sprite
 
+    def get_projectile_sprite(self):
+        return None
+
     def get_sprite_offset(self):
         return (0, 0)
 
@@ -258,6 +261,9 @@ class GhastTemplate(EnemyTemplate):
             StatTypes.UNARMED_RANGE: 2
         })
 
+    def get_projectile_sprite(self):
+        return spriteref.Items.projectile_small
+
 
 class ScorpionTemplate(EnemyTemplate):
 
@@ -424,6 +430,7 @@ class EnemyFactory:
         import src.game.gameengine as gameengine
         a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
         a_state.set_energy(0 if random.random() < 0.5 else 4)
+        a_state.unarmed_projectile_sprite = template.get_projectile_sprite()
 
         return a_state
 
