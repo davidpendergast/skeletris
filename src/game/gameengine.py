@@ -746,6 +746,7 @@ class AttackAction(Action):
 
 
 class _ThrownItemAnimator:
+
     def __init__(self, actor, position, item_sprite, item_color, hide_actor_held_item=False, item_start_rotation=0):
         self._actor = actor
         self._position = position
@@ -755,9 +756,11 @@ class _ThrownItemAnimator:
         self._item_color = item_color
         self._item_start_rotation = item_start_rotation
 
-    def animate_in_world(self, progress, world):
-        release_time = 0.3
+        self._did_jump = False
 
+    def animate_in_world(self, progress, world):
+
+        release_time = 0.3
         if progress >= release_time:
             if self._item_sprite is None:
                 return  # items should probably always have sprites but idk
@@ -765,6 +768,10 @@ class _ThrownItemAnimator:
             # can't be holding the item while it's flying through the air
             if self._hide_actor_held_item:
                 self._actor.set_visually_held_item_override(False)
+
+            if not self._did_jump:
+                self._did_jump = True
+                self._actor.perturb_z(jump_height=20, jump_duration=15)
 
             start_pos = self._actor.center()
             end_pos = Utils.mult(Utils.add(self._position, (0.5, 0.5)), world.cellsize())

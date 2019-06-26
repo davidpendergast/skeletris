@@ -547,6 +547,9 @@ class ActorEntity(Entity):
         self._perturb_color_duration = 1
         self._perturb_color_ticks = 1
 
+        # used to jump a little bit (z-axis)
+        self._z_perturb_points = []
+
         # used to compensate for off-center sprites
         self._sprite_offset = sprite_offset
 
@@ -627,12 +630,21 @@ class ActorEntity(Entity):
         if self._perturb_color_ticks < self._perturb_color_duration:
             self._perturb_color_ticks += 1
 
+        if len(self._z_perturb_points) > 0:
+            self._z_perturb_points.pop()
+
     def get_perturbed_xy(self):
         if len(self._perturb_points) == 0:
             return (0, 0)
         else:
             x, y = self._perturb_points[-1]
             return (round(x), round(y))
+
+    def get_perturbed_z(self):
+        if len(self._z_perturb_points) == 0:
+            return 0
+        else:
+            return round(self._z_perturb_points[-1])
 
     def get_draw_offset(self):
         return self._draw_offset
@@ -755,6 +767,16 @@ class ActorEntity(Entity):
         self._perturb_color_duration = duration
         self._perturb_color_ticks = 0
 
+    def perturb_z(self, jump_height=16, jump_duration=20):
+        self._z_perturb_points.clear()
+        for i in range(0, jump_duration+1):
+            # at start and end of jump, x = 0, at middle x = 1
+            if i <= jump_duration / 2:
+                x = i / (jump_duration / 2)
+            else:
+                x = 2 - i / (jump_duration / 2)
+            self._z_perturb_points.append(-jump_height * math.sqrt(x))
+
     def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
@@ -762,7 +784,7 @@ class ActorEntity(Entity):
         sprite = self.get_sprite()
 
         x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
-        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale()) + self.get_perturbed_z()
 
         depth = self.get_depth()
         xflip = self.should_xflip()
@@ -859,7 +881,8 @@ class Player(ActorEntity):
                 bobs = (0, 1, 2, 1)  # these numbers are solely dependant on how the sprites are drawn..
                 bob_offset = bobs[(gs.get_instance().anim_tick // 2) % 4]
 
-            draw_y = y_center - my_height - scale * (1 + sprite_h - bob_offset)
+            draw_y = y_center - my_height - scale * (1 + sprite_h - bob_offset) + self.get_perturbed_z()
+
             self._held_item_img = self._held_item_img.update(new_model=item_sprite,
                                                              new_rotation=sprite_rot,
                                                              new_x=draw_x, new_y=draw_y,

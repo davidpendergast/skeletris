@@ -77,7 +77,7 @@ class ItemFactory:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
             return SpriteItem("Bow of Speed", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 3, local=True)],
+                              [AppliedStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions,
                               projectile_sprite=spriteref.Items.arrow_projectile_small)
 
