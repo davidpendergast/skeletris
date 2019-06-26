@@ -61,6 +61,7 @@ class StatTypes:
     SPEED = StatType("SPEED", color=colors.YELLOW, desc="+{} Speed")
 
     UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
+    UNARMED_RANGE = StatType("UNARMED_RANGE", desc="+{} to Unarmed Range")
     THROWN_ATT = StatType("THROWN_ATT", color=colors.RED, desc="+{} to Throw Damage",
                           local_desc="+{} Damage when Thrown")
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
@@ -117,6 +118,7 @@ def default_player_stats():
         StatTypes.VIT: 8,
         StatTypes.DEF: 1,
         StatTypes.UNARMED_ATT: 2,
+        StatTypes.UNARMED_RANGE: 1,
         StatTypes.LIGHT_LEVEL: 4,
         StatTypes.MIN_LIGHT_LEVEL: 2,
         StatTypes.SPEED: 4,

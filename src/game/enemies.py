@@ -251,10 +251,11 @@ class GhastTemplate(EnemyTemplate):
             StatTypes.VIT: 12,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 4,
+            StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 2
+            StatTypes.WEALTH: 2,
+            StatTypes.UNARMED_RANGE: 2
         })
 
 
@@ -300,7 +301,7 @@ class FallenTemplate(EnemyTemplate):
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 4,
-            StatTypes.INTELLIGENCE: 4,
+            StatTypes.INTELLIGENCE: 5,
             StatTypes.WEALTH: 2
         })
 

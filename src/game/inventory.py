@@ -127,6 +127,7 @@ class InventoryState:
         if self.inv_grid.place(item, pos):
             return True
         return False
+
     def add_to_equipment(self, item, pos=(0, 0)):
 
         if self.equip_grid.place(item, pos):

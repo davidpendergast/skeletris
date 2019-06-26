@@ -90,6 +90,9 @@ class ActorState(StatProvider):
     def intelligence(self):
         return Utils.bound(self.stat_value(StatTypes.INTELLIGENCE), 1, 5)
 
+    def unarmed_range(self):
+        return Utils.bound(self.stat_value(StatTypes.UNARMED_RANGE), 1, 8)
+
     def speed(self):
         raw_val = self.stat_value(StatTypes.SPEED)
         return Utils.bound(raw_val, 1, self.max_energy())
@@ -235,13 +238,43 @@ class EnemyController(ActorController):
     def __init__(self):
         ActorController.__init__(self)
 
-    def _get_attack_action(self, actor, world):
-        pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
-        random.shuffle(neighbors)
+    def _get_positions_to_attack(self, actor, world):
+        res = []
+        for nearby_actor in world.entities_in_circle(actor.center(), 400,
+                                                     onscreen=False, cond=lambda e: e.is_actor()):
+            if nearby_actor.get_actor_state().alignment != actor.get_actor_state().alignment:
+                nearby_actor_center = nearby_actor.center()
+                res.append(world.to_grid_coords(nearby_actor_center[0], nearby_actor_center[1]))
 
-        for n in neighbors:
-            res = AttackAction(actor, None, n)
+        actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        res.sort(key=lambda pos: Utils.dist_manhattan(pos, actor_pos))
+
+        return res
+
+    def _get_attack_action(self, actor, world):
+        target_positions = self._get_positions_to_attack(actor, world)
+        if len(target_positions) == 0:
+            return None
+
+        # smart enemies use their items to attack
+        a_state = actor.get_actor_state()
+        if a_state.intelligence() >= 5:
+            import src.items.item as item
+            weapons = []
+            for it in a_state.inventory().all_equipped_items():
+                if item.ItemTags.WEAPON in it.get_tags():
+                    weapons.append(it)
+            random.shuffle(weapons)
+
+            for wep in weapons:
+                for target in target_positions:
+                    res = AttackAction(actor, wep, target)
+                    if res.is_possible(world):
+                        return res
+
+        # falling back to an unarmed attack
+        for target in target_positions:
+            res = AttackAction(actor, None, target)
             if res.is_possible(world):
                 return res
 
@@ -584,7 +617,11 @@ class AttackAction(Action):
                     attack_range = action_prov.get_targets(pos=actor_pos)
 
         if attack_range is None:
-            attack_range = [n for n in Utils.neighbors(*actor_pos)]
+            unarmed_range = actor.get_actor_state().unarmed_range()
+            attack_range = []
+            for i in range(1, unarmed_range + 1):
+                for n in Utils.neighbors(*actor_pos, dist=i):
+                    attack_range.append(n)
 
         if self.position not in attack_range:
             return False

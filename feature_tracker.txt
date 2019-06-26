@@ -24,6 +24,12 @@
     - cave horror
  - help panel
  - ranged enemies
+ - implement wands as a projectile-based weapon
+ - allow weapons to spawn with a stat 
+ - stun effect
+ - confuse effect
+ - add effects to enemies
+ - "ranged" enemies
         
 [future features]
  - map panel
