@@ -41,6 +41,7 @@ class ItemFactory:
             return SpriteItem("Sword of Truth", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
+
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
@@ -48,12 +49,14 @@ class ItemFactory:
                               [AppliedStat(StatTypes.ATT, 3, local=True),
                                AppliedStat(StatTypes.PLUS_SPEED_ON_HIT, 2, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
+
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
             return SpriteItem("Dagger of Quickness", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
+
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_ATTACK]
@@ -61,6 +64,7 @@ class ItemFactory:
                               [AppliedStat(StatTypes.ATT, 2, local=True),
                                AppliedStat(StatTypes.PLUS_DEFENSE_ON_HIT, 4, local=True)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
+
         elif item_type == ItemTypes.SPEAR_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
@@ -68,11 +72,16 @@ class ItemFactory:
                               [AppliedStat(StatTypes.ATT, 2, local=True),
                                AppliedStat(StatTypes.THROWN_ATT, 4, local=True)],
                               spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
+
         elif item_type == ItemTypes.WAND_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
-            return SpriteItem("Wand of Mystery", item_type, level, cubes, [],
+            actions = [ItemActions.WAND_ATTACK]
+            return SpriteItem("Wand of Harming", item_type, level, cubes,
+                              [AppliedStat(StatTypes.ATT, 1, local=True),
+                               AppliedStat(StatTypes.POISON_ON_HIT, 2, local=True)],
                               spriteref.Items.wand_small, spriteref.Items.wand_big,
-                              projectile_sprite=spriteref.Items.projectile_small)
+                              projectile_sprite=spriteref.Items.projectile_small, actions=actions)
+
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
@@ -102,7 +111,6 @@ class PotionTemplate:
         self.dialog_text = dialog_text
         self.min_level = min_level
         self.status_effect = status
-
         _ALL_POTION_TEMPLATES.append(self)
 
 

@@ -597,6 +597,19 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
                 if s.get_color() is not None:
                     attacker_entity.perturb_color(s.get_color(), 30)
 
+        new_status_effects_for_defender = []
+
+        pois_duration = attacker.stat_value_with_item(StatTypes.POISON_ON_HIT, item_used)
+        pois_dmg = balance.POTION_POIS_VAL  # TODO this should be a stat
+        if pois_duration > 0 and pois_dmg > 0:
+            new_status_effects_for_defender.append(statuseffects.new_poison_effect(pois_dmg, pois_duration))
+
+        if defender_entity is not None:
+            for s in new_status_effects_for_defender:
+                defender_entity.get_actor_state().add_status_effect(s)
+                if s.get_color() is not None:
+                    defender_entity.perturb_color(s.get_color(), 30)
+
 
 class AttackAction(Action):
 
@@ -1220,6 +1233,7 @@ class ItemActions:
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
     SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1,))
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
+    WAND_ATTACK = AttackItemActionProvider("Wand Attack", spriteref.Items.magic_icon, (1, 2))
     SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))
     DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, (1,))
     BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, (2, 3))

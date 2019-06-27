@@ -23,13 +23,12 @@
  - end-of-game boss
     - cave horror
  - help panel
- - ranged enemies
- - implement wands as a projectile-based weapon
  - allow weapons to spawn with a stat 
  - stun effect
  - confuse effect
  - add effects to enemies
- - "ranged" enemies
+ - multi-numeric stats (e.g. Gives +X ATT for Y turns)
+ - make most status effect numbers in balance.py into stats (poison dmg, etc.)
         
 [future features]
  - map panel
@@ -43,7 +42,6 @@
  - design and implement interesting stats
  - one boss fight 
  - cinematic stuff (these are currently broken fyi)
- - magic system
  - actual dialog for NPCs
  - quest system
  - some indicator that enemies are still acting

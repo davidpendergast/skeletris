@@ -67,7 +67,10 @@ class StatTypes:
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
     LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level", color=colors.LIGHT_BLUE)
     HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)
-    POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)
+
+    POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)  # poison that's currently inflicted
+    POISON_ON_HIT = StatType("POISON_ON_HIT", color=colors.PURPLE, desc="Inflicts Poison on Hit (lasts {} turns)",
+                             local_desc="Inflicts Poison on Hit (lasts {} turns)")
 
     NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
                              color=colors.WHITE)
