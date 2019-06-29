@@ -278,8 +278,8 @@ class ScorpionTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 8,
-            StatTypes.SPEED: 6,
+            StatTypes.VIT: 12,
+            StatTypes.SPEED: 8,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
@@ -289,16 +289,19 @@ class ScorpionTemplate(EnemyTemplate):
         })
 
 
-class FallenTemplate(EnemyTemplate):
+class WraithTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Wraith", spriteref.medium_shadow)
 
     def get_sprites(self):
-        return spriteref.enemy_the_fallen_all
+        return spriteref.enemy_wraith_all
 
     def get_level_range(self):
         return range(8, 16)
+
+    def get_projectile_sprite(self):
+        return spriteref.Items.projectile_small
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -308,7 +311,9 @@ class FallenTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 5,
-            StatTypes.WEALTH: 2
+            StatTypes.WEALTH: 2,
+            StatTypes.UNARMED_RANGE: 3,
+            StatTypes.CONFUSION_ON_HIT: 5
         })
 
 
@@ -375,7 +380,7 @@ TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
 TEMPLATE_CYCLOPS = CyclopsTemplate()
 TEMPLATE_DICEL = DicelTemplate()
-TEMPLATE_THE_FALLEN = FallenTemplate()
+TEMPLATE_WRAITH = WraithTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
 TEMPLATE_FROG = FrogTemplate()
 TEMPLATE_SCORPION = ScorpionTemplate()
@@ -385,7 +390,7 @@ TEMPLATE_GHAST = GhastTemplate()
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
                         # TEMPLATE_DICEL,
-                        TEMPLATE_THE_FALLEN,
+                        TEMPLATE_WRAITH,
                         TEMPLATE_CYCLOPS,
                         TEMPLATE_CAVE_CRAWLER,
                         TEMPLATE_TRILLA,

@@ -610,6 +610,10 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         if pois_duration > 0 and pois_dmg > 0:
             new_status_effects_for_defender.append(statuseffects.new_poison_effect(pois_dmg, pois_duration))
 
+        confuse_duration = attacker.stat_value_with_item(StatTypes.CONFUSION_ON_HIT, item_used)
+        if confuse_duration > 0:
+            new_status_effects_for_defender.append(statuseffects.new_confusion_effect(confuse_duration))
+
         if defender_entity is not None:
             for s in new_status_effects_for_defender:
                 defender_entity.get_actor_state().add_status_effect(s)

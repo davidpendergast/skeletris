@@ -31,14 +31,12 @@
  - end-of-game boss
     - cave horror
  - help panel
- - allow weapons to spawn with a stat 
  - stun effect
- - confuse effect
  - add effects to enemies
- - multi-numeric stats (e.g. Gives +X ATT for Y turns)
+ - multi-numeric stats (e.g. Gives +X ATT on hit for Y turns)
  - make most status effect numbers in balance.py into stats (poison dmg, etc.)
  - projectiles should get a color based on the item/status or something
- - enemies should eventually get tired of chasing
+ - holding the up/down key in menus should continue scrolling
         
 [future features]
  - map panel
@@ -60,6 +58,7 @@
  - title screen needs to be animated, otherwise game feels frozen when you open it
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
+ - visual effect when confusion "triggers"
  
  
 [~dream features~]
@@ -96,6 +95,7 @@
                 - games are totally different though, probably fine to use
             - says basically nothing about the game except "there are skeletons + tetris"
             - there are like four ppl using this name on social media accounts
+                - sorry kids, it's mine now
     
     Slap Monsters, Find Loot
         - cute, memorable, 2nd half needs work
