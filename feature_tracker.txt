@@ -36,7 +36,6 @@
  - projectiles should get a color based on the item/status or something
  - holding the up/down key in menus should continue scrolling
  - HP on kill
- - don't apply perturbation to enemies if you've just killed them
         
 [future features]
  - map panel

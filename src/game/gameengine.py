@@ -579,8 +579,11 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
 
         if defender_entity is not None and world is not None:
             world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, defender_entity)
-            defender_entity.perturb_color(colors.R_TEXT_COLOR, 25)
-            defender_entity.perturb(20, 18)
+
+            if defender.hp() > 0:
+                # it looks pretty janky if the enemy perturbs a single frame before disappearing
+                defender_entity.perturb_color(colors.R_TEXT_COLOR, 25)
+                defender_entity.perturb(20, 18)
 
         new_status_effects_for_attacker = []
 
