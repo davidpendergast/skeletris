@@ -75,6 +75,10 @@ class StatTypes:
     NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
                              color=colors.WHITE)
 
+    CONFUSION = StatType("CONFUSION", desc="Moving is more difficult", color=colors.RED)
+    CONFUSION_ON_HIT = StatType("CONFUSION_ON_HIT", color=colors.RED, desc="Inflicts Confusion on Hit (lasts {} turns)",
+                                local_desc="Inflicts Confusion on Hit (lasts {} turns)")
+
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
     WEALTH = StatType("WEALTH")

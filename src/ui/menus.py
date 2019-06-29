@@ -16,6 +16,7 @@ import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState
 import src.utils.colors as colors
+import src.game.balance as balance
 
 
 class MenuManager:
@@ -1279,6 +1280,16 @@ class InGameUiState(Menu):
             yield gameengine.OpenDoorAction(player, move_pos)
             yield gameengine.MoveToAction(player, move_pos)
 
+    def get_confusion_move_actions(self, player, pos):
+        import src.game.gameengine as gameengine
+
+        neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
+        random.shuffle(neighbors)
+
+        for n in neighbors:
+            yield gameengine.OpenDoorAction(player, n)
+            yield gameengine.MoveToAction(player, n)
+
     def send_action_requests(self, player, world, click_actions=None):
         dx = 0
         dy = 0
@@ -1301,7 +1312,7 @@ class InGameUiState(Menu):
 
         res_list = []
         if target_pos is not None:
-            res_list = self.get_keyboard_action_requests(world, player, target_pos)
+            res_list.extend(self.get_keyboard_action_requests(world, player, target_pos))
 
         import src.game.gameengine as gameengine
         if input_state.is_held(gs.get_instance().settings().enter_key()):
@@ -1330,6 +1341,11 @@ class InGameUiState(Menu):
             else:
                 import src.game.gameengine as gameengine
                 res.append(gameengine.AttackAction(player, None, target_pos))
+
+        if target_pos is not None and gs.get_instance().player_state().is_confused():
+            if random.random() < balance.CONFUSION_CHANCE:
+                for confuse_action in self.get_confusion_move_actions(player, pos):
+                    res.append(confuse_action)
 
         for basic_action in self.get_basic_movement_actions(player, target_pos, for_click=False):
             res.append(basic_action)

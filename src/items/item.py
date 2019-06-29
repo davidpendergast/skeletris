@@ -164,7 +164,8 @@ class ItemTypes:
     WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7,
                             drop_rate=balance.WEAPON_DROP_RATE)
 
-    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]), drop_rate=balance.POTION_DROP_RATE)
+    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]),
+                       drop_rate=balance.POTION_DROP_RATE)
 
 
 class Item(StatProvider):

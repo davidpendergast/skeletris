@@ -118,8 +118,15 @@ def new_slow_effect(val, duration, player_text=None, unique_key=None):
 
 
 def new_nullification_effect(duration, player_text=None, unique_key=None):
-    stats = [AppliedStat(StatTypes.NULLIFICATION, balance.POTION_NULLIFICATION_DURATION)]
+    stats = [AppliedStat(StatTypes.NULLIFICATION, 1)]
     return StatusEffect("Nullification", duration, colors.LIGHT_GRAY,
                         spriteref.status_diagonal_lines_icon, stats,
                         player_text=player_text, unique_key=unique_key,
                         ignore_nullification=True)
+
+
+def new_confusion_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.CONFUSION, 1)]
+    return StatusEffect("Confusion", duration, colors.RED,
+                        spriteref.status_sparkles_icon, stats,
+                        player_text=player_text, unique_key="confusion")

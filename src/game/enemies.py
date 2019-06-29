@@ -191,7 +191,7 @@ class MuncherTemplate(EnemyTemplate):
         })
 
 
-class CycloiTemplate(EnemyTemplate):
+class CyclopsTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Cyclops", spriteref.large_shadow)
@@ -207,7 +207,7 @@ class CycloiTemplate(EnemyTemplate):
             StatTypes.VIT: 10,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 6,
+            StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2
@@ -373,7 +373,7 @@ TEMPLATE_MUNCHER = MuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_ALT = MuncherTemplate(alt=True)
 TEMPLATE_MUNCHER_SMALL = SmallMuncherTemplate(alt=False)
 TEMPLATE_MUNCHER_SMALL_ALT = SmallMuncherTemplate(alt=True)
-TEMPLATE_CYCLOI = CycloiTemplate()
+TEMPLATE_CYCLOPS = CyclopsTemplate()
 TEMPLATE_DICEL = DicelTemplate()
 TEMPLATE_THE_FALLEN = FallenTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
@@ -386,7 +386,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
                         # TEMPLATE_DICEL,
                         TEMPLATE_THE_FALLEN,
-                        TEMPLATE_CYCLOI,
+                        TEMPLATE_CYCLOPS,
                         TEMPLATE_CAVE_CRAWLER,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,

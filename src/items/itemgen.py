@@ -170,17 +170,17 @@ MAJOR_HEALING = PotionTemplate("Potion of Healing II", "That was refreshing!",
                                                                      balance.POTION_MED_HEAL_DURATION))
 
 HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I drink that?",
-                         min_level=7,
+                         min_level=4,
                          status=statuseffects.new_poison_effect(balance.POTION_POIS_VAL,
                                                                 balance.POTION_POIS_DURATION))
 SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
-                              min_level=9,
+                              min_level=2,
                               status=statuseffects.new_speed_effect(balance.POTION_SPEED_VAL,
                                                                     balance.POTION_SPEED_DUR,
                                                                     unique_key="speed_potion"))
 
 SLOW_POTION = PotionTemplate("Potion of the Sloth", "I... feel... slow.",
-                             min_level=4,
+                             min_level=1,
                              status=statuseffects.new_slow_effect(balance.POTION_SLOW_VAL,
                                                                   balance.POTION_SLOW_DUR,
                                                                   unique_key="slow_potion"))
@@ -196,6 +196,10 @@ NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my 
                               status=statuseffects.new_night_vision_effect(balance.POTION_NIGHT_VISION_VAL,
                                                                            balance.POTION_NIGHT_VISION_DURATION,
                                                                            unique_key="light_potion"))
+
+CONFUSION_POTION = PotionTemplate("Confusion Potion", "<this text isn't even used...>",
+                                  min_level=5,
+                                  status=statuseffects.new_confusion_effect(balance.POTION_CONFUSION_DURATION))
 
 
 class PotionTemplates:

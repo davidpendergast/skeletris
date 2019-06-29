@@ -98,6 +98,9 @@ class ActorState(StatProvider):
     def unarmed_range(self):
         return Utils.bound(self.stat_value(StatTypes.UNARMED_RANGE), 1, 8)
 
+    def is_confused(self):
+        return self.stat_value(StatTypes.CONFUSION) > 0
+
     def get_projectile_sprite(self):
         return self.unarmed_projectile_sprite
 
@@ -286,9 +289,12 @@ class EnemyController(ActorController):
             if res.is_possible(world):
                 return res
 
-    def _get_pathing_action(self, actor, world):
+    def _get_movement_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         skilled_enough = random.random() < balance.ENEMY_PATHING_SKILL[actor.get_actor_state().intelligence() - 1]
+
+        if actor.get_actor_state().is_confused() and random.random() < balance.CONFUSION_CHANCE:
+            skilled_enough = False
 
         if not world.get_hidden(*pos) and skilled_enough:
             p = world.get_player()
@@ -317,9 +323,9 @@ class EnemyController(ActorController):
         if attack_action is not None and attack_action.is_possible(world):
             return attack_action
 
-        pathing_action = self._get_pathing_action(actor, world)
-        if pathing_action is not None and pathing_action.is_possible(world):
-            return pathing_action
+        movement_action = self._get_movement_action(actor, world)
+        if movement_action is not None and movement_action.is_possible(world):
+            return movement_action
 
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         return SkipTurnAction(actor, position=pos)
@@ -600,7 +606,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         new_status_effects_for_defender = []
 
         pois_duration = attacker.stat_value_with_item(StatTypes.POISON_ON_HIT, item_used)
-        pois_dmg = balance.POTION_POIS_VAL  # TODO this should be a stat
+        pois_dmg = balance.POTION_POIS_VAL
         if pois_duration > 0 and pois_dmg > 0:
             new_status_effects_for_defender.append(statuseffects.new_poison_effect(pois_dmg, pois_duration))
 
