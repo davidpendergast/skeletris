@@ -475,9 +475,10 @@ class ZoneBuilder:
 
         while len(empty_rooms) > 0:
             r = empty_rooms.pop()
-            if random.random() > 0.05:
-                feat = worldgen2.Features.get_random_feature()
-                worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+            if random.random() < 0.95:
+                feat = worldgen2.Features.get_random_feature(at_level=level)
+                if feat is not None:
+                    worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
 
         return t_grid
 

@@ -6,19 +6,17 @@
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol 
-    - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
+ - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
 
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, need to handle resolution scaling issues
+    - near-zero mac testing (mac friends on git say it's ok though...)
   
 [balance issues]
  - need more sources of healing
     - it gets especially hard when health potions stop being the only potion type
-    - some potions should be rarer than others
     - doctors could give potions
- - impossible to outrun smart enemies with speed 4
-    - fine?
  
 [current features]
  - level generation
@@ -37,6 +35,8 @@
  - make most status effect numbers in balance.py into stats (poison dmg, etc.)
  - projectiles should get a color based on the item/status or something
  - holding the up/down key in menus should continue scrolling
+ - HP on kill
+ - don't apply perturbation to enemies if you've just killed them
         
 [future features]
  - map panel
@@ -58,7 +58,7 @@
  - title screen needs to be animated, otherwise game feels frozen when you open it
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
- - visual effect when confusion "triggers"
+ - visual effect when confusion triggers
  
  
 [~dream features~]

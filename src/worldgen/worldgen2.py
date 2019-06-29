@@ -751,15 +751,21 @@ class TileGridBuilder:
         return res
 
 
+_ALL_FEATURES = []
+
+
 class Feature(Tileish):
 
-    def __init__(self, feat_id, replace, place, can_rotate=True):
+    def __init__(self, feat_id, replace, place, appear_rate=1, can_rotate=True):
         self.feat_id = feat_id
         self.replace = replace
         self.place = place
         self.can_rotate = can_rotate
+        self._appear_rate = appear_rate
 
         self._validate()
+
+        _ALL_FEATURES.append(self)
 
     def _validate(self):
         if len(self.replace) == 0 or len(self.replace[0]) == 0:
@@ -779,6 +785,9 @@ class Feature(Tileish):
                 raise ValueError("invalid feature {}: mismatched place/replace widths on row {}: {} != {}".format(
                     self.feat_id, i, place_width, replace_width
                 ))
+
+    def appear_rate(self, at_level=None):
+        return self._appear_rate
 
     def w(self):
         return len(self.replace[0])
@@ -895,34 +904,35 @@ class FeatureUtils:
 
 
 class Features:
+
     START = Feature("start",
                     FeatureUtils.convert(["?-?",
                                           "WWW",
                                           "..."]),
                     FeatureUtils.convert(["?p?",
                                           "WvW",
-                                          "WWW"]), can_rotate=False)
+                                          "WWW"]), can_rotate=False, appear_rate=0)
 
     # we fall back to this style of a start if there's nowhere to place the fancy type
     BACKUP_START = Feature("backup_start",
                            FeatureUtils.convert(["-", "W"]),
-                           FeatureUtils.convert(["p", "W"]), can_rotate=False)
+                           FeatureUtils.convert(["p", "W"]), can_rotate=False, appear_rate=0)
 
     EXIT = Feature("exit_door",
                    FeatureUtils.convert(["W", "-"]),
-                   FeatureUtils.convert(["W", "e"]), can_rotate=False)
+                   FeatureUtils.convert(["W", "e"]), can_rotate=False, appear_rate=0)
 
     SMALL_MONSTER = Feature("monster_2x2",
                             FeatureUtils.convert(["--", "--"]),
-                            FeatureUtils.convert(["m-", "--"]))
+                            FeatureUtils.convert(["m-", "--"]), appear_rate=10)
 
     LARGE_MONSTER = Feature("monster_3x3",
                             FeatureUtils.convert(["---", "---", "---"]),
-                            FeatureUtils.convert(["m--", "--m", "-m-"]))
+                            FeatureUtils.convert(["m--", "--m", "-m-"]), appear_rate=6)
 
     CHEST = Feature("chest",
                     FeatureUtils.convert(["W", "-"]),
-                    FeatureUtils.convert(["W", "c"]), can_rotate=True)
+                    FeatureUtils.convert(["W", "c"]), can_rotate=True, appear_rate=8)
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["-"]),
@@ -930,26 +940,28 @@ class Features:
 
     DECORATION = Feature("decoration",
                          FeatureUtils.convert(["W", "-"]),
-                         FeatureUtils.convert(["W", "d"]), can_rotate=False)
+                         FeatureUtils.convert(["W", "d"]), can_rotate=False, appear_rate=6)
 
     SIGN = Feature("sign",
                    FeatureUtils.convert(["W", "-"]),
-                   FeatureUtils.convert(["W", "s"]), can_rotate=False)
+                   FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=8)
 
     QUEST_NPC = Feature("quest_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True)
+                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=1)
 
     @staticmethod
-    def get_random_feature():
-        return random.choice([Features.SMALL_MONSTER,
-                              Features.CHEST,
-                              Features.QUEST_NPC,
-                              Features.LARGE_MONSTER,
-                              # Features.STRAY_ITEM,
-                              Features.DECORATION,
-                              Features.SIGN
-                              ])
+    def get_random_feature(at_level=None):
+        weighted_feats = []
+        for f in _ALL_FEATURES:
+            for _ in range(0, f.appear_rate(at_level=at_level)):
+                weighted_feats.append(f)
+
+        if len(weighted_feats) > 0:
+            return random.choice(weighted_feats)
+        else:
+            print("WARN: no valid features for level: {}" + at_level)
+            return None
 
 
 class Partition:
@@ -1160,7 +1172,7 @@ if __name__ == "__main__":
     while len(empty_rooms) > 0:
         r = empty_rooms.pop()
         feat = Features.get_random_feature()
-        if random.random() > 0.333:
+        if feat is not None and random.random() > 0.333:
             FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
 
     TileGridBuilder.add_walls(t_grid)
