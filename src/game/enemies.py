@@ -361,9 +361,9 @@ class FrogTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 15,
+            StatTypes.VIT: 30,
             StatTypes.SPEED: 3,
-            StatTypes.ATT: 2,
+            StatTypes.ATT: 6,
             StatTypes.UNARMED_ATT: 1,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 2,

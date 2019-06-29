@@ -14,18 +14,38 @@ class CubeUtils:
         return (x_range[1] - x_range[0] + 1, y_range[1] - y_range[0] + 1)
 
     @staticmethod
-    def clean_cubes(cubes):
+    def sort_cubes(cubes):
         temp = list(cubes)
-        temp = CubeUtils._push_to_origin(temp)
         temp.sort(key=lambda c: c[0] + 1000 * c[1])
         return tuple(temp)
 
     @staticmethod
+    def clean_cubes(cubes):
+        res = CubeUtils._push_to_origin(cubes)
+        return CubeUtils.sort_cubes(res)
+
+    @staticmethod
     def rotate_cubes(cubes):
-        new_cubes = []
+        rot_mapping = CubeUtils.calc_rotation_mapping(cubes)
+        res = tuple(rot_mapping[cube] for cube in cubes)
+        return CubeUtils.sort_cubes(res)
+
+    @staticmethod
+    def calc_rotation_mapping(cubes):
+        """returns: map (x, y) -> (x, y)"""
+        res = {}
+        min_x = float('inf')
+        min_y = float('inf')
         for cube in cubes:
-            new_cubes.append((5 - cube[1], cube[0]))
-        return CubeUtils.clean_cubes(new_cubes)
+            res[cube] = (5 - cube[1], cube[0])
+            min_x = min(min_x, res[cube][0])
+            min_y = min(min_y, res[cube][1])
+
+        if min_x != 0 or min_y != 0:
+            for cube in cubes:
+                res[cube] = (res[cube][0] - min_x, res[cube][1] - min_y)
+
+        return res
 
     @staticmethod
     def do_seed(seed):

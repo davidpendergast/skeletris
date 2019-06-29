@@ -338,9 +338,19 @@ class StatCubesItem(Item):
         return True
 
     def rotate(self):
-        new_cubes = CubeUtils.rotate_cubes(self.cubes)
+        new_cubes = []
+        new_art = {}
+        rotation_mapping = CubeUtils.calc_rotation_mapping(self.cubes)
+        for cube in self.cubes:
+            new_cube = rotation_mapping[cube]
+            new_cubes.append(new_cube)
+            if cube in self.cube_art:
+                new_art[new_cube] = self.cube_art[cube]
+
+        new_cubes = CubeUtils.sort_cubes(new_cubes)
+
         return StatCubesItem(self.name, self.level, self.stats,
-                             new_cubes, self.color, cube_art=self.cube_art, uuid_str=self.uuid)
+                             new_cubes, self.color, cube_art=new_art, uuid_str=self.uuid)
         
     def __str__(self):
         res = "[{}]".format(self.name)
