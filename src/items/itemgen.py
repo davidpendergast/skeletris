@@ -1,7 +1,7 @@
 import random
 import math
 
-from src.items.item import ItemTypes, SpriteItem, StatCubesItem, AppliedStat
+from src.items.item import ItemTypes, SpriteItem, StatCubesItem, AppliedStat, ItemTags
 from src.game.stats import StatTypes, StatType, StatProvider
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -22,7 +22,30 @@ NON_CORE_STATS = []
 class ItemFactory:
 
     @staticmethod
-    def gen_item(level, item_type):
+    def gen_item_type(level):
+        if debug.ignore_loot_levels():
+            item_type_choices = ItemTypes.all_types()
+            return random.choice(item_type_choices)
+        else:
+            item_type_choices = []
+            for c in ItemTypes.all_types(at_level=level):
+                for _ in range(0, c.get_drop_rate()):
+                    item_type_choices.append(c)
+            if len(item_type_choices) > 0:
+                return random.choice(item_type_choices)
+            else:
+                print("WARN: no valid item types to drop as loot at level: {}".format(level))
+                return None
+
+
+    @staticmethod
+    def gen_item(level, item_type=None):
+
+        if item_type is None:
+            item_type = ItemFactory.gen_item_type(level)
+            if item_type is None:
+                return None
+
         if item_type == ItemTypes.STAT_CUBE_5:
             return StatCubesItemFactory.gen_item(level, n_cubes=5)
         elif item_type == ItemTypes.STAT_CUBE_6:
@@ -30,12 +53,31 @@ class ItemFactory:
         elif item_type == ItemTypes.STAT_CUBE_7:
             return StatCubesItemFactory.gen_item(level, n_cubes=7)
 
-        from src.game.gameengine import ItemActions
-
-        if item_type == ItemTypes.POTION:
+        elif item_type == ItemTypes.POTION:
             return PotionItemFactory.gen_item(level)
 
-        elif item_type == ItemTypes.SWORD_WEAPON:
+        elif item_type.has_tag(ItemTags.WEAPON):
+            return WeaponItemFactory.gen_item(level, item_type=item_type)
+
+        return None
+
+
+class WeaponItemFactory:
+
+    @staticmethod
+    def gen_item(level, item_type=None):
+
+        if item_type is None:
+            all_types = ItemTypes.all_types(at_level=level, with_tags=(ItemTags.WEAPON,))
+            if len(all_types) > 0:
+                item_type = random.choice(all_types)
+            else:
+                print("WARN: no valid weapon types for level: {}".format(level))
+                return None
+
+        from src.game.gameengine import ItemActions
+
+        if item_type == ItemTypes.SWORD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
             return SpriteItem("Sword of Truth", item_type, level, cubes,
@@ -45,7 +87,7 @@ class ItemFactory:
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
-            return SpriteItem("Whip of Sapping", item_type, level, cubes,
+            return SpriteItem("Whip of Quickness", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True),
                                AppliedStat(StatTypes.PLUS_SPEED_ON_HIT, 2, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
@@ -53,7 +95,7 @@ class ItemFactory:
         elif item_type == ItemTypes.DAGGER_WEAPON:
             cubes = [(0, 0), (0, 1)]
             actions = [ItemActions.DAGGER_ATTACK]
-            return SpriteItem("Dagger of Quickness", item_type, level, cubes,
+            return SpriteItem("Dagger of Pain", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True)],
                               spriteref.Items.dagger_small, spriteref.Items.dagger_big, actions=actions)
 
@@ -98,7 +140,9 @@ class ItemFactory:
                                AppliedStat(StatTypes.THROWN_ATT, 3, local=True)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
+        print("ERROR: unrecognized weapon type: {}".format(item_type))
         return None
+
 
 
 _ALL_POTION_TEMPLATES = []

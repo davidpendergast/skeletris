@@ -9,7 +9,7 @@
 
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
-    - gotta setup my windows machine to test, probably need to handle resolution scaling issues
+    - gotta setup my windows machine to test, need to handle resolution scaling issues
   
  
 [current features]
@@ -29,6 +29,7 @@
  - add effects to enemies
  - multi-numeric stats (e.g. Gives +X ATT for Y turns)
  - make most status effect numbers in balance.py into stats (poison dmg, etc.)
+ - projectiles should get a color based on the item/status or something
         
 [future features]
  - map panel

@@ -7,6 +7,7 @@ import src.renderengine.img as img
 from src.items.cubeutils import CubeUtils
 import src.game.spriteref as spriteref
 import src.utils.colors as colors
+import src.game.balance as balance
 
 
 ITEM_CORE_NAME = {
@@ -86,16 +87,20 @@ class ItemTags:
 
 class ItemType:
 
-    def __init__(self, name, tags, min_level=0, max_level=float("inf")):
+    def __init__(self, name, tags, min_level=0, max_level=float("inf"), drop_rate=1):
         self.name = name
         self.tags = tags
         self.level_range = (min_level, max_level)
+        self.drop_rate = drop_rate
 
     def get_name(self):
         return self.name
 
     def get_tags(self):
         return self.tags
+
+    def get_drop_rate(self):
+        return self.drop_rate
 
     def has_tag(self, tag):
         return tag in self.tags
@@ -110,10 +115,10 @@ class ItemType:
 _ALL_TYPES = []
 
 
-def _new_type(name, tags, min_level=0, max_level=float('inf')):
+def _new_type(name, tags, min_level=0, max_level=float('inf'), drop_rate=1):
     if not isinstance(tags, tuple):
         raise ValueError("tags needs to be a tuple: {}".format(tags))
-    res = ItemType(name, tags, min_level=min_level, max_level=max_level)
+    res = ItemType(name, tags, min_level=min_level, max_level=max_level, drop_rate=drop_rate)
     _ALL_TYPES.append(res)
     return res
 
@@ -121,30 +126,45 @@ def _new_type(name, tags, min_level=0, max_level=float('inf')):
 class ItemTypes:
 
     @staticmethod
-    def all_types(at_level=None):
+    def all_types(at_level=None, with_tags=()):
         if at_level is None:
-            return list(_ALL_TYPES)
+            types_at_level = list(_ALL_TYPES)
         else:
-            res = []
+            types_at_level = []
             for t in _ALL_TYPES:
                 if t.get_level_range()[0] <= at_level <= t.get_level_range()[1]:
-                    res.append(t)
-            return res
+                    types_at_level.append(t)
 
-    STAT_CUBE_5 = _new_type("Small Trinket", tuple([ItemTags.EQUIPMENT]))
-    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]), min_level=7)
-    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT]), min_level=5),
+        if len(with_tags) > 0:
+            return [t for t in types_at_level if t in with_tags]
+        else:
+            return types_at_level
 
-    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3)
-    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
-    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7)
-    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5)
-    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE))
-    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9)
-    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9)
-    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7)
+    STAT_CUBE_5 = _new_type("Small Trinket", tuple([ItemTags.EQUIPMENT]),
+                            drop_rate=balance.STAT_CUBE_5_DROP_RATE)
+    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]), min_level=1,
+                            drop_rate=balance.STAT_CUBE_6_DROP_RATE)
+    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT]), min_level=2,
+                            drop_rate=balance.STAT_CUBE_7_DROP_RATE)
 
-    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]))
+    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3,
+                             drop_rate=balance.WEAPON_DROP_RATE)
+    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
+                             drop_rate=balance.WEAPON_DROP_RATE)
+    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7,
+                             drop_rate=balance.WEAPON_DROP_RATE)
+    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
+                            drop_rate=balance.WEAPON_DROP_RATE)
+    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE),
+                              drop_rate=balance.WEAPON_DROP_RATE)
+    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9,
+                           drop_rate=balance.WEAPON_DROP_RATE)
+    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9,
+                           drop_rate=balance.WEAPON_DROP_RATE)
+    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7,
+                            drop_rate=balance.WEAPON_DROP_RATE)
+
+    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]), drop_rate=balance.POTION_DROP_RATE)
 
 
 class Item(StatProvider):

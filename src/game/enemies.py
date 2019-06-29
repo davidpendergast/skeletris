@@ -205,7 +205,7 @@ class CycloiTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 10,
-            StatTypes.SPEED: 6,
+            StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 6,
             StatTypes.DEF: 2,
@@ -419,12 +419,10 @@ class EnemyFactory:
 
         wealth = template.get_base_stats().stat_value(StatTypes.WEALTH)
 
-        item_type_choices = item.ItemTypes.all_types(level)
-        if len(item_type_choices) > 0:
-            for _ in range(0, wealth):
-                if random.random() < balance.ENEMY_ITEM_CHANCE_PER_WEALTH:
-                    item_type = random.choice(item_type_choices)
-                    loot_item = itemgen.ItemFactory.gen_item(level, item_type)
+        for _ in range(0, wealth):
+            if random.random() < balance.ENEMY_ITEM_CHANCE_PER_WEALTH:
+                loot_item = itemgen.ItemFactory.gen_item(level, item_type=None)
+                if loot_item is not None:
                     inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine
