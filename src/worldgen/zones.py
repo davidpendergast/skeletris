@@ -493,7 +493,7 @@ class ZoneBuilder:
 
     @staticmethod
     def build_me_a_zone(level):
-        zone = Zone("Depth {}".format(level), level)
+        zone = Zone("Depth {}".format(level + 1), level)
         zone.zone_id = get_storyline_zone_id(level)
         zone.ZONE_ID = zone.zone_id
 
@@ -669,7 +669,8 @@ class FrogLairZone(Zone):
 
     ZONE_ID = "frog_lair"
 
-    FROG_SPAWN = (255, 203, 203)
+    FROG_BOSS_SPAWN = (255, 203, 203)
+    FROG_SPAWN = (255, 230, 230)
 
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
@@ -679,10 +680,15 @@ class FrogLairZone(Zone):
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
-        frog_spawn = unknowns[FrogLairZone.FROG_SPAWN][0]
+        boss_spawn = unknowns[FrogLairZone.FROG_BOSS_SPAWN][0]
 
-        frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
-        w.add(frog_entity, gridcell=frog_spawn)
+        boss_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
+        w.add(boss_entity, gridcell=boss_spawn)
+
+        if FrogLairZone.FROG_SPAWN in unknowns:
+            for frog_spawn in unknowns[FrogLairZone.FROG_SPAWN]:
+                frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SMALL_FROG, self.get_level())
+                w.add(frog_entity, gridcell=frog_spawn)
 
         # TODO this doesn't work
         # gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)

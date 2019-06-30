@@ -36,6 +36,8 @@
  - projectiles should get a color based on the item/status or something
  - holding the up/down key in menus should continue scrolling
  - HP on kill
+ - need a way to visually distinguish different depths
+    - color would be by far the easiest way~~~
         
 [future features]
  - map panel

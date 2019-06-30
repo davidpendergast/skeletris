@@ -332,7 +332,7 @@ class StatCubesItem(Item):
         self.cube_art = {} if cube_art is None else cube_art
     
     def level_string(self):
-        return "lvl:{}".format(self.level)
+        return "lvl:{}".format(self.level + 1)
 
     def can_equip(self):
         return True
@@ -350,7 +350,7 @@ class StatCubesItem(Item):
         new_cubes = CubeUtils.sort_cubes(new_cubes)
 
         return StatCubesItem(self.name, self.level, self.stats,
-                             new_cubes, self.color, cube_art=new_art, uuid_str=self.uuid)
+                             new_cubes, self.color, cube_art=self.cube_art, uuid_str=self.uuid)
         
     def __str__(self):
         res = "[{}]".format(self.name)

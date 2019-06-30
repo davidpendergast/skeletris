@@ -216,7 +216,7 @@ class InventoryPanel(InteractableImage):
 
         render_eng = RenderEngine.get_instance()
 
-        lvl_txt = "LVL:{}".format(gs.get_instance().get_zone_level())
+        lvl_txt = "Depth:{}".format(gs.get_instance().get_zone_level() + 1)
         if lvl_txt != self.lvl_text.get_text():
             self.lvl_text = self.lvl_text.update(new_text=lvl_txt, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.lvl_text)
