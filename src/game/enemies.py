@@ -135,12 +135,12 @@ class TrillaTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 12,
-            StatTypes.SPEED: 8,
-            StatTypes.ATT: 2,
+            StatTypes.SPEED: 6,
+            StatTypes.ATT: 3,
             StatTypes.UNARMED_ATT: 0,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 1
+            StatTypes.WEALTH: 3
         })
 
     def get_level_range(self):
@@ -294,12 +294,13 @@ class ScorpionTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 12,
-            StatTypes.SPEED: 8,
+            StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 4,
+            StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 4,
-            StatTypes.WEALTH: 2
+            StatTypes.WEALTH: 2,
+            StatTypes.POISON_ON_HIT: 2
             # StatTypes.LIGHT_LEVEL: 1,  # TODO - can't yet, "slows down" game when these guys are offscreen but nearby
         })
 
@@ -354,7 +355,7 @@ class FungoiTemplate(EnemyTemplate):
         })
 
 
-class FrogTemplate(EnemyTemplate):
+class FrogBossTemplate(EnemyTemplate):
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Cave Beast")
@@ -381,7 +382,7 @@ class FrogTemplate(EnemyTemplate):
             StatTypes.ATT: 6,
             StatTypes.UNARMED_ATT: 1,
             StatTypes.DEF: 4,
-            StatTypes.INTELLIGENCE: 2,
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3
         })
 
@@ -443,7 +444,7 @@ TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 TEMPLATE_GHAST = GhastTemplate()
 
 # bosses
-TEMPLATE_FROG = FrogTemplate()
+TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,

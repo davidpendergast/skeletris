@@ -38,6 +38,7 @@
  - HP on kill
  - need a way to visually distinguish different depths
     - color would be by far the easiest way~~~
+ - design and implement interesting stats
         
 [future features]
  - map panel
@@ -48,7 +49,6 @@
     - one-way tiles
  - backstab attack 
     - jump over target, attack from other side (if possible)
- - design and implement interesting stats
  - one boss fight 
  - cinematic stuff (these are currently broken fyi)
  - actual dialog for NPCs
@@ -60,12 +60,19 @@
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
  - visual effect when confusion triggers
+ - varying scenery
+    - bridges over deep pits, water pits
+ - consider allowing two weapons to be equipped at maximum
+    - there currently is almost no reason to have more than 1, let alone two
+    - this would allow for a simpler UI
+        - you'd have an active / offhand weapon, and a button to swap
+    - would allow weapons to have global stats (not currently possible because 
+      it'd become more efficient to stack small weapons instead of cubes)
+    - would need to elegantly "fail to equip" somehow
  
  
 [~dream features~]
  - many boss fights
- - animated text in TextImages ~wavy language~
-    - reconsider, according to twitter this will kill the game
  - farming
     - if you can dream it you can meme it
  

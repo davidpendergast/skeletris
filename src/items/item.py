@@ -349,8 +349,8 @@ class StatCubesItem(Item):
 
         new_cubes = CubeUtils.sort_cubes(new_cubes)
 
-        return StatCubesItem(self.name, self.level, self.stats,
-                             new_cubes, self.color, cube_art=self.cube_art, uuid_str=self.uuid)
+        return StatCubesItem(self.name, self.level, self.stats, new_cubes,
+                             self.color, cube_art=new_art, uuid_str=self.uuid)
         
     def __str__(self):
         res = "[{}]".format(self.name)
