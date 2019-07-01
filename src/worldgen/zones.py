@@ -49,10 +49,24 @@ def _generated_zone_id(level):
     return "generated_{}".format(level)
 
 
+def get_special_story_zone(level):
+    special_zones = {
+        7: FrogLairZone.ZONE_ID,
+        15: CaveHorrorZone.ZONE_ID
+    }
+
+    if level in special_zones:
+        return special_zones[level]
+    else:
+        return None
+
+
 def get_storyline_zone_id(level):
-    if level == 7:
-        return FrogLairZone.ZONE_ID
-    elif level <= 15:
+    special_zone = get_special_story_zone(level)
+    if special_zone is not None:
+        return special_zone
+
+    if 0 <= level < 16:
         return _generated_zone_id(level)
     else:
         return _generated_zone_id(15)
@@ -710,31 +724,25 @@ class CaveHorrorZone(Zone):
     ZONE_ID = "cave_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_lair.png")
-        self._tree_color = (255, 170, 170)
-        self._fight_end_door = (0, 170, 170)
+        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
+        self._tree_color = (255, 203, 203)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
-        #tree_loc = unknowns[self._tree_color][0]
-        #tree_sprite = entities.AnimationEntity(0, 0, spriteref.Bosses.cave_horror_idle,
-        #                                       60, spriteref.ENTITY_LAYER, w=64*5, h=8)
-        #tree_sprite.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
-        #tree_sprite.set_x_centered(False)
-        #tree_sprite.set_y_centered(False)
-        #tree_sprite.set_x(64 * tree_loc[0] - 64)
-        #tree_sprite.set_y(64 * tree_loc[1] - 64 - 112*2)
-        #w.add(tree_sprite)
-
-        fight_end_loc = unknowns[self._fight_end_door][0]
+        tree_pos = unknowns[self._tree_color][0]
+        tree_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level())
+        w.add(tree_entity, gridcell=tree_pos)
 
         return w
 
     def is_boss_zone(self):
         return True
+
+    def get_music_id(self):
+        return music.Songs.TREE_THEME
 
 
 class TombTownZone(Zone):

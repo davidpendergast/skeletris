@@ -7,6 +7,7 @@ class Songs:
     MENU_THEME = "01_menu_theme.ogg"
     AN_ADVENTURE_UNFOLDS = "02_an_adventure_unfolds.ogg"
     AMPHIBIAN = "03_amphibian.ogg"
+    TREE_THEME = "04_tree_theme.ogg"
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
 

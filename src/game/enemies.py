@@ -12,15 +12,14 @@ import src.game.balance as balance
 
 class EnemyTemplate:
 
-    def __init__(self, name, shadow_sprite):
+    def __init__(self, name):
         self._name = name
-        self._shadow_sprite = shadow_sprite
 
     def get_sprites(self):
         return spriteref.player_idle_arms_up_all
 
     def get_shadow_sprite(self):
-        return self._shadow_sprite
+        return spriteref.medium_shadow
 
     def get_projectile_sprite(self):
         return None
@@ -48,11 +47,15 @@ class EnemyTemplate:
             StatTypes.WEALTH: 1,
         })
 
+    def get_controller(self):
+        from src.game.gameengine import EnemyController
+        return EnemyController()
+
 
 class CaveCrawlerTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cave Crawler", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Cave Crawler")
 
     def get_sprites(self):
         return spriteref.enemy_cave_crawler_all
@@ -75,7 +78,7 @@ class CaveCrawlerTemplate(EnemyTemplate):
 class SmallFrogTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Frog", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Frog")
 
     def get_sprites(self):
         return spriteref.enemy_frog_all
@@ -98,7 +101,7 @@ class SmallFrogTemplate(EnemyTemplate):
 class TrilliteTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Mask", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Mask")
 
     def get_sprites(self):
         return spriteref.enemy_small_trilla_all
@@ -121,10 +124,13 @@ class TrilliteTemplate(EnemyTemplate):
 class TrillaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Multi-Mask", spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Multi-Mask")
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -146,7 +152,7 @@ class SmallMuncherTemplate(EnemyTemplate):
     def __init__(self, alt=False):
         self._is_alt = alt
         name = "Small Muncher"
-        EnemyTemplate.__init__(self, name, spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, name)
 
     def get_sprites(self):
         return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
@@ -171,10 +177,13 @@ class MuncherTemplate(EnemyTemplate):
     def __init__(self, alt=False):
         self._is_alt = alt
         name = "Muncher"
-        EnemyTemplate.__init__(self, name, spriteref.large_shadow)
+        EnemyTemplate.__init__(self, name)
 
     def get_sprites(self):
         return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
 
     def get_level_range(self):
         return range(10, 16)
@@ -194,10 +203,13 @@ class MuncherTemplate(EnemyTemplate):
 class CyclopsTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cyclops", spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Cyclops")
 
     def get_sprites(self):
         return spriteref.enemy_cyclops_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
 
     def get_level_range(self):
         return range(6, 16)
@@ -218,7 +230,7 @@ class CyclopsTemplate(EnemyTemplate):
 class DicelTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Dicel", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Dicel")
 
     def get_sprites(self):
         return spriteref.enemy_dicel_all
@@ -241,10 +253,13 @@ class DicelTemplate(EnemyTemplate):
 class GhastTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Ghast", spriteref.large_shadow)
+        EnemyTemplate.__init__(self, "Ghast")
 
     def get_sprites(self):
         return spriteref.enemy_ghast_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
 
     def get_level_range(self):
         return range(4, 8)
@@ -268,7 +283,7 @@ class GhastTemplate(EnemyTemplate):
 class ScorpionTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Wanderer", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Wanderer")
 
     def get_sprites(self):
         return spriteref.enemy_scorpion_all
@@ -292,7 +307,7 @@ class ScorpionTemplate(EnemyTemplate):
 class WraithTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Wraith", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Wraith")
 
     def get_sprites(self):
         return spriteref.enemy_wraith_all
@@ -320,7 +335,7 @@ class WraithTemplate(EnemyTemplate):
 class FungoiTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Fungal Bundle", spriteref.medium_shadow)
+        EnemyTemplate.__init__(self, "Fungal Bundle")
 
     def get_sprites(self):
         return spriteref.enemy_fungoi_all
@@ -342,7 +357,7 @@ class FungoiTemplate(EnemyTemplate):
 class FrogTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cave Beast", spriteref.enormous_shadow)
+        EnemyTemplate.__init__(self, "Cave Beast")
 
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
@@ -357,7 +372,7 @@ class FrogTemplate(EnemyTemplate):
         return spriteref.enormous_shadow
 
     def get_level_range(self):
-        return range(7, 8)
+        return [7]
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -371,6 +386,47 @@ class FrogTemplate(EnemyTemplate):
         })
 
 
+class CaveHorrorTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Cave Horror")
+
+    def get_sprites(self):
+        return spriteref.Bosses.cave_horror_idle
+
+    def get_sprite_offset(self):
+        return (0, 148 + 32)
+
+    def get_shadow_sprite(self):
+        return None
+
+    def get_level_range(self):
+        return [15]
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 60,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 10,
+            StatTypes.UNARMED_ATT: 0,
+            StatTypes.DEF: 16,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 6
+        })
+
+    def get_controller(self):
+        import src.game.gameengine as gameengine
+
+        class _CaveHorrorController(gameengine.ActorController):
+
+            def get_next_action(self, actor, world):
+                pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+                return gameengine.SkipTurnAction(actor, position=pos)
+
+        return _CaveHorrorController()
+
+
+# regular enemies
 TEMPLATE_TRILLA = TrillaTemplate()
 TEMPLATE_TRILLITE = TrilliteTemplate()
 TEMPLATE_CAVE_CRAWLER = CaveCrawlerTemplate()
@@ -382,14 +438,16 @@ TEMPLATE_CYCLOPS = CyclopsTemplate()
 TEMPLATE_DICEL = DicelTemplate()
 TEMPLATE_WRAITH = WraithTemplate()
 TEMPLATE_FUNGOI = FungoiTemplate()
-TEMPLATE_FROG = FrogTemplate()
 TEMPLATE_SCORPION = ScorpionTemplate()
 TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 TEMPLATE_GHAST = GhastTemplate()
 
+# bosses
+TEMPLATE_FROG = FrogTemplate()
+TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
+
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
-                        # TEMPLATE_DICEL,
                         TEMPLATE_WRAITH,
                         TEMPLATE_CYCLOPS,
                         TEMPLATE_CAVE_CRAWLER,
@@ -447,7 +505,7 @@ class EnemyFactory:
 
         res = []
         for _ in range(0, n):
-            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(),
+            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(), template.get_controller(),
                              sprite_offset=template.get_sprite_offset(),
                              shadow_sprite=template.get_shadow_sprite(),
                              shadow_offset=template.get_shadow_offset()))

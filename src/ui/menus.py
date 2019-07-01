@@ -787,23 +787,24 @@ class DeathOptionMenu(OptionsMenu):
 
 class DebugMenu(OptionsMenu):
 
-    ZONE_JUMP = 0
-    GENNED_ZONE_JUMP = 1
-    EXIT_OPT = 2
+    STORYLINE_ZONE_JUMP = 0
+    SPECIAL_ZONE_JUMP = 1
+    LOOT_ZONE_JUMP = 2
+    EXIT_OPT = 3
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "debug menu",
-                             ["hand-built zones", "generated zones", "back"])
+                             ["storyline zones", "special zones", "loot zones", "back"])
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
 
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
-        if idx == DebugMenu.ZONE_JUMP:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, True))
-        elif idx == DebugMenu.GENNED_ZONE_JUMP:
+        if idx == DebugMenu.STORYLINE_ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, False))
+        elif idx == DebugMenu.SPECIAL_ZONE_JUMP:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, True))
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
 

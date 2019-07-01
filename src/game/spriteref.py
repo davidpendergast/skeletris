@@ -708,7 +708,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
     sheet.blit(raw_boss_img, start_pos)
-    Bosses.cave_horror_idle = [make(i * 240, 80, 240, 240, shift=start_pos) for i in range(0, 2)]
+    Bosses.cave_horror_idle = [make(i * 256, 80, 256, 240, shift=start_pos) for i in range(0, 2)]
 
     Bosses.frog_idle_1 = [make(0 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]

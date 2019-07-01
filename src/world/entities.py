@@ -664,6 +664,9 @@ class ActorEntity(Entity):
 
         return (round(x), round(y))
 
+    def get_depth(self):
+        return -(self.get_render_center(ignore_perturbs=True)[1] - self._sprite_offset[1])
+
     def get_perturbed_color(self):
         if self._perturb_color_ticks >= self._perturb_color_duration:
             return self.base_color
@@ -822,6 +825,10 @@ class Player(ActorEntity):
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
+    def get_depth(self):
+        # XXX want to beat other actors
+        return super().get_depth() - 1
+
     def set_visually_held_item_override(self, val):
         """
         meant to be used by Actions pretty much exclusively.
@@ -960,17 +967,15 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+    def __init__(self, x, y, state, sprites, controller, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
         ActorEntity.__init__(self, sprites, sprite_offset=sprite_offset, shadow_offset=shadow_offset)
         self._enemy_state = state
-        from src.game.gameengine import EnemyController  # TODO fix project structure
-        self._enemy_controller = EnemyController()
+        self._enemy_controller = controller
         self.set_x(x)
         self.set_y(y)
         self.state = state
         self.sprites = sprites
-        if shadow_sprite is not None:
-            self._shadow_sprite = shadow_sprite
+        self._shadow_sprite = shadow_sprite
         self._bar_imgs = []
 
         # floating z's above enemy while waiting for player
