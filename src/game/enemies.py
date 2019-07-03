@@ -101,7 +101,7 @@ class SmallFrogTemplate(EnemyTemplate):
 class TrilliteTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Mask")
+        EnemyTemplate.__init__(self, "Trillite")
 
     def get_sprites(self):
         return spriteref.enemy_small_trilla_all
@@ -118,13 +118,13 @@ class TrilliteTemplate(EnemyTemplate):
         })
 
     def get_level_range(self):
-        return range(5, 9)
+        return range(5, 8)
 
 
 class TrillaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Multi-Mask")
+        EnemyTemplate.__init__(self, "Trilla")
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
@@ -144,7 +144,34 @@ class TrillaTemplate(EnemyTemplate):
         })
 
     def get_level_range(self):
-        return range(9, 16)
+        return range(8, 11)
+
+
+class SporeTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Spore")
+
+    def get_sprites(self):
+        return spriteref.enemy_spore_all
+
+    def get_shadow_sprite(self):
+        return spriteref.small_shadow
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 12,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 3,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 1,
+            StatTypes.CONFUSION_ON_HIT: 1
+        })
+
+    def get_level_range(self):
+        return range(8, 13)
 
 
 class SmallMuncherTemplate(EnemyTemplate):
@@ -212,7 +239,7 @@ class CyclopsTemplate(EnemyTemplate):
         return spriteref.large_shadow
 
     def get_level_range(self):
-        return range(6, 16)
+        return range(6, 10)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -314,7 +341,7 @@ class WraithTemplate(EnemyTemplate):
         return spriteref.enemy_wraith_all
 
     def get_level_range(self):
-        return range(8, 16)
+        return range(11, 16)
 
     def get_projectile_sprite(self):
         return spriteref.Items.projectile_small
@@ -442,6 +469,7 @@ TEMPLATE_FUNGOI = FungoiTemplate()
 TEMPLATE_SCORPION = ScorpionTemplate()
 TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 TEMPLATE_GHAST = GhastTemplate()
+TEMPLATE_SPORE = SporeTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -451,12 +479,12 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
                         TEMPLATE_WRAITH,
                         TEMPLATE_CYCLOPS,
+                        TEMPLATE_SPORE,
                         TEMPLATE_CAVE_CRAWLER,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
                         TEMPLATE_FROG,
                         TEMPLATE_SMALL_FROG,
-                        TEMPLATE_FUNGOI,
                         TEMPLATE_SCORPION,
                         TEMPLATE_GHAST]
 
@@ -519,6 +547,7 @@ if __name__ == "__main__":
     for i in range(0, 16):
         line = "{}:\t".format(i)
         temps = [t for t in RAND_SPAWN_TEMPLATES if i in t.get_level_range()]
+        temps.sort(key=lambda t: t.get_level_range()[0])
         line = line + "[" + ", ".join([t.get_name() for t in temps]) + "]"
         print("INFO: {}".format(line))
 

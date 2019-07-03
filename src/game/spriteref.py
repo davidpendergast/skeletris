@@ -347,6 +347,7 @@ enemy_fungoi_down = [make(448, 176 + i * 16, 32, 16) for i in range(0, 2)]
 enemy_scorpion_all = [make(432, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_ghast_all = [make(464, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_frog_all = [make(448 + i * 16, 160, 16, 16) for i in range(0, 2)]
+enemy_spore_all = [make(480 + i * 16, 160, 16, 16) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
@@ -369,6 +370,7 @@ doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]
+cave_horror_faces = [make(368, 336 + i * 32, 32, 32) for i in range(0, 2)]
 
 status_eye_icon = make(400, 208, 16, 16)
 status_drop_icon = make(400, 224, 16, 16)
