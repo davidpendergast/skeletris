@@ -1572,12 +1572,12 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), npc_seed=None):
+    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1)):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
 
         self.npc_template = npc_template
-        self.npc_seed = npc_seed if npc_seed is not None else random.random()
+        self.conv = conversation
         self.npc_interact_count = 0
 
         self.color = color
@@ -1591,8 +1591,11 @@ class NpcEntity(Entity):
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
-        sprites = self.get_npc_template().world_sprites
-        return sprites[(anim_tick // 4) % len(sprites)]
+        sprites = self.get_npc_template().get_entity_sprites()
+        if sprites is not None and len(sprites) > 0:
+            return sprites[(anim_tick // 4) % len(sprites)]
+        else:
+            return None
 
     def get_render_center(self):
         xy = super().get_render_center()
@@ -1633,7 +1636,13 @@ class NpcEntity(Entity):
         return True
 
     def interact(self, world):
-        self.npc_template.handle_interact(self, world, self.npc_seed, self.npc_interact_count)
+        if self.conv is not None:
+            import src.game.npc as npc
+            dia = npc.ConversationFactory.get_dialog(self.conv, self.npc_interact_count)
+            if dia is not None:
+                gs.get_instance().dialog_manager().set_dialog(dia)
+            gs.get_instance().set_story_var(self.conv.get_id(), True)
+
         self.npc_interact_count += 1
 
 

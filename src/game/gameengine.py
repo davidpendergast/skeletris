@@ -989,7 +989,7 @@ class InteractAction(Action):
         if for_mouse:
             return (1, 1, 1)
         else:
-            return None
+            return (1, 1, 1)
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()

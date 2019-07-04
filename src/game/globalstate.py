@@ -165,6 +165,7 @@ class GlobalState:
 
         self._world_updates_pause_timer = 0
 
+        # TODO remove
         self._story_state = story_state
 
         self._menu_manager = menu_manager
@@ -185,6 +186,9 @@ class GlobalState:
         self._action_to_target = None
 
         self._targetable_coords_in_world = {}  # (x, y) -> color
+
+        # this is the ~very unstructured~ way that "story events" are tracked
+        self._story_vars = {}
 
     def settings(self):
         return self._settings
@@ -262,6 +266,28 @@ class GlobalState:
 
     def story_state(self):
         return self._story_state
+
+    def get_story_var(self, key, as_bool=False):
+        if key in self._story_vars:
+            return (self._story_vars[key] != 0) if as_bool else self._story_vars[key]
+        else:
+            return False if as_bool else 0
+
+    def set_story_var(self, key, value):
+        if value is None:
+            if key in self._story_vars:
+                del self._story_vars[key]
+        else:
+            if value is True:
+                value = 1
+            elif value is False:
+                value = 0
+
+            if not isinstance(value, int):
+                raise ValueError("story var's value must be an int, instead got: {}".format(value))
+            else:
+                print("INFO: setting story var \"{}\" to {}".format(key, value))
+                self._story_vars[key] = value
 
     def save_game_to_disk(self, password=None):
         """

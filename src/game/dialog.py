@@ -121,7 +121,7 @@ class PlayerDialog(Dialog):
 
 class NpcDialog(Dialog):
 
-    def __init__(self, text, sprites):
+    def __init__(self, text, sprites=None):
         Dialog.__init__(self, text, sprites=sprites, left_side=False)
 
 

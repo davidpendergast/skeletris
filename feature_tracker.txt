@@ -7,6 +7,7 @@
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol 
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
+ - looks like loading a level from the debug menu generates an extra level in the background
 
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
@@ -56,7 +57,6 @@
  - some indicator that enemies are still acting
  - when you activate or hover over a keymapped attack, it should show the attack range
  - in-game map (toggle ascii overlay)
- - title screen needs to be animated, otherwise game feels frozen when you open it
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
  - visual effect when confusion triggers
