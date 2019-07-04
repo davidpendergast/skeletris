@@ -655,6 +655,29 @@ class DesolateCaveZone3(Zone):
         return [enemies.TEMPLATE_CAVE_CRAWLER, enemies.TEMPLATE_MUNCHER_SMALL]
 
 
+class TitleSceneZone(Zone):
+    # note that this zone only exists to make it easier to create the title scene (via screenshots).
+    # it isn't ever built or rendered live during normal play.
+
+    ZONE_ID = "title_scene"
+
+    def __init__(self):
+        Zone.__init__(self, "Title Scene", 0, filename="title_scene.png", bg_color=colors.BLACK)
+        self.mushroom_id = (255, 150, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        w = bp.build_world()
+
+        if self.mushroom_id in unknowns:
+            for pos in unknowns[self.mushroom_id]:
+                ent = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.MUSHROOM)
+                w.add(ent, gridcell=(pos[0], pos[1] - 1))
+
+        return w
+
+
 class HauntedForestZone1(Zone):
 
     ZONE_ID = "haunted_forest_1"

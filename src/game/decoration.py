@@ -26,10 +26,13 @@ class DecorationType:
 class DecorationFactory:
 
     @staticmethod
-    def get_decoration(level):
-        import src.world.entities as entities
-        dec_type = random.choice(_ALL_DECORATION_TYPES)
+    def get_decoration(level, dec_type=None):
+        if dec_type is None:
+            dec_type = random.choice(_ALL_DECORATION_TYPES)
+
         dec_sprite = DecorationFactory.get_sprite(dec_type, level)
+
+        import src.world.entities as entities
         dec_ent = entities.DecorationEntity.wall_decoration([dec_sprite], 0, 0)
 
         dec_dialog = DecorationFactory.get_dialog(dec_type, level)

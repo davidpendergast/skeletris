@@ -45,8 +45,9 @@ def run():
     items_img = pygame.image.load(Utils.resource_path("assets/items.png"))
     boss_img = pygame.image.load(Utils.resource_path("assets/bosses.png"))
     font_img = pygame.image.load(Utils.resource_path("assets/font.png"))
+    title_scene_img = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
 
-    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img)
+    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img, title_scene_img)
 
     import src.game.cinematics as cinematics
     cinematics.init_cinematics()
@@ -92,7 +93,7 @@ def run():
 
     import src.game.globalstate as gs
     import src.ui.menus as menus
-    gs.create_new(menus.StartMenu())
+    gs.create_new(menus.TitleMenu())
 
     import src.worldgen.zones as zones
     zones.init_zones()

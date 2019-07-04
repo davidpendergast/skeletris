@@ -32,9 +32,10 @@ class MenuManager:
     DEBUG_OPTION_MENU = 8
     SETTINGS_MENU = 9
     TEXT_MENU = 10
+    TITLE_MENU = 11
 
     def __init__(self, menu):
-        self._active_menu = StartMenu()
+        self._active_menu = TitleMenu()
         self._next_active_menu = menu
 
     def update(self, world):
@@ -128,7 +129,7 @@ class Menu:
         self._active_tooltip = None
 
     def get_clear_color(self):
-        return (0.5, 0.5, 0.5)
+        return (0, 0, 0)
 
     def get_type(self):
         return self._menu_type
@@ -421,6 +422,9 @@ class StartMenu(OptionsMenu):
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
         elif idx == StartMenu.SOUND_OPT:
             gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.START_MENU))
+
+    def esc_pressed(self):
+        gs.get_instance().menu_manager().set_active_menu(TitleMenu())
 
 
 class PauseMenu(OptionsMenu):
@@ -875,6 +879,135 @@ class DebugZoneSelectMenu(OptionsMenu):
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
             gs.get_instance().event_queue().add(new_zone_evt)
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+
+
+class TitleMenu(Menu):
+
+    def __init__(self):
+        Menu.__init__(self, MenuManager.TITLE_MENU)
+
+        self.tick_count = 0
+
+        self.title_fade_range = (60, 80)
+        self.world_fade_range = (0, 30)
+        self.show_press_any_tick = 120
+
+        self.title_img = None
+
+        self.title_fade_img = None
+        self.world_fade_img = None
+
+        self.press_any_key_img = None
+        self.press_any_key_outlines = []
+
+    def get_song(self):
+        return music.Songs.MENU_THEME
+
+    def keep_drawing_world_underneath(self):
+        return False
+
+    def update(self, world):
+
+        if self.tick_count > 15 and InputState.get_instance().was_anything_pressed():
+            if self.tick_count > self.show_press_any_tick:
+                gs.get_instance().menu_manager().set_active_menu(StartMenu())
+                return
+            else:
+                self.tick_count = max(self.tick_count, self.show_press_any_tick)
+
+        if self.title_img is None:
+            self.title_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4)
+        idx = (gs.get_instance().anim_tick // 4) % len(spriteref.TitleScene.frames)
+        model = spriteref.TitleScene.frames[idx]
+
+        # it shouldn't be necessary to center the image because it's expected to
+        # perfectly fill the screen, but we do it anyways just in case~
+        x = gs.get_instance().screen_size[0] // 2 - model.size()[0] * self.title_img.scale() // 2
+        y = gs.get_instance().screen_size[1] // 2 - model.size()[1] * self.title_img.scale() // 2
+
+        self.title_img = self.title_img.update(new_model=model, new_x=x, new_y=y, new_depth=50)
+
+        title_fade_dur = self.title_fade_range[1] - self.title_fade_range[0]
+        title_alpha = Utils.bound((self.tick_count - self.title_fade_range[0]) / title_fade_dur, 0, 1)
+        if title_alpha == 1:
+            if self.title_fade_img is not None:
+                RenderEngine.get_instance().remove(self.title_fade_img)
+                self.title_fade_img = None
+        else:
+            if self.title_fade_img is None:
+                self.title_fade_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, depth=-10)
+
+            sprite = spriteref.get_floor_lighting(title_alpha)
+            scr_size = gs.get_instance().screen_size
+            ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + (scr_size[1] // 3) / sprite.height()))
+
+            self.title_fade_img = self.title_fade_img.update(new_model=sprite, new_x=0, new_y=0,
+                                                             new_ratio=ratio, new_color=(0, 0, 0))
+
+        world_fade_dur = self.world_fade_range[1] - self.world_fade_range[0]
+        world_alpha = Utils.bound((self.tick_count - self.world_fade_range[0]) / world_fade_dur, 0, 1)
+        if world_alpha == 1:
+            if self.world_fade_img is not None:
+                RenderEngine.get_instance().remove(self.world_fade_img)
+                self.world_fade_img = None
+        else:
+            if self.world_fade_img is None:
+                self.world_fade_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, depth=-10)
+
+            sprite = spriteref.get_floor_lighting(world_alpha)
+            scr_size = gs.get_instance().screen_size
+            ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + ((scr_size[1] * 2) // 3) / sprite.height()))
+
+            self.world_fade_img = self.world_fade_img.update(new_model=sprite, new_x=0, new_y=scr_size[1] // 3,
+                                                             new_ratio=ratio, new_color=(0, 0, 0))
+
+        press_any_text_scale = 3
+
+        if self.press_any_key_img is None and self.tick_count > self.show_press_any_tick:
+            self.press_any_key_img = TextImage(0, 0, "press any key", spriteref.UI_0_LAYER,
+                                               scale=press_any_text_scale)
+
+        if self.press_any_key_img is not None:
+            text_w = self.press_any_key_img.w()
+            text_h = self.press_any_key_img.h()
+            text_x = gs.get_instance().screen_size[0] // 2 - text_w // 2
+            text_y = (gs.get_instance().screen_size[1] * 15) // 16 - text_h // 2
+            text_color = gs.get_instance().get_pulsing_color(colors.RED)
+
+            self.press_any_key_img = self.press_any_key_img.update(new_x=text_x, new_y=text_y, new_color=text_color)
+
+            if len(self.press_any_key_outlines) == 0:
+                for _ in range(0, 4):
+                    self.press_any_key_outlines.append(TextImage(0, 0, self.press_any_key_img.get_text(),
+                                                                 spriteref.UI_0_LAYER, scale=press_any_text_scale,
+                                                                 depth=10, color=(0, 0, 0)))
+
+            outline_positions = [n for n in Utils.neighbors(text_x, text_y, dist=press_any_text_scale)]
+            for i in range(0, len(self.press_any_key_outlines)):
+                outline_text = self.press_any_key_outlines[i]
+                outline_x = outline_positions[i][0]
+                outline_y = outline_positions[i][1]
+                self.press_any_key_outlines[i] = outline_text.update(new_x=outline_x, new_y=outline_y)
+
+        self.tick_count += 1
+
+        render_eng = RenderEngine.get_instance()
+        for bun in self.all_bundles():
+            render_eng.update(bun)
+
+    def all_bundles(self):
+        if self.title_img is not None:
+            yield self.title_img
+        if self.title_fade_img is not None:
+            yield self.title_fade_img
+        if self.world_fade_img is not None:
+            yield self.world_fade_img
+        for outline_img in self.press_any_key_outlines:
+            for bun in outline_img.all_bundles():
+                yield bun
+        if self.press_any_key_img is not None:
+            for bun in self.press_any_key_img.all_bundles():
+                yield bun
 
 
 class InGameUiState(Menu):

@@ -53,6 +53,10 @@ class Cinematics:
                    size[0], size[1])
 
 
+class TitleScene:
+    frames = []
+
+
 class Items:
     piece_small = None
     piece_small_inverted = None
@@ -654,6 +658,12 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.magic_icon = make(40, 90, 10, 10, shift=start_pos)
 
 
+def build_title_scene_sheet(start_pos, raw_title_scene_img, sheet):
+    sheet.blit(raw_title_scene_img, start_pos)
+
+    TitleScene.frames = [make(i * 200, 0, 200, 150, shift=start_pos) for i in range(0, 2)]
+
+
 def build_ui_sheet(start_pos, raw_ui_img, sheet):
     sheet.blit(raw_ui_img, start_pos)
 
@@ -734,7 +744,7 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
     print("Font._alphabet = {}".format(Font._alphabet))
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img):
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img, raw_title_scene_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -749,6 +759,8 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
         |             | bosses.png      |
         |             *-----------------*
         |             | font.png        |
+        |             *-----------------*
+        |             | title_scene.png |
         *-------------*-----------------*
 
     """
@@ -784,6 +796,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     print("INFO: building font sheet...")
     build_font_sheet((_x, _y), raw_font_img, sheet)
     _y += raw_font_img.get_height()
+
+    print("INFO: building title_scene sheet...")
+    build_title_scene_sheet((_x, _y), raw_title_scene_img, sheet)
+    _y += raw_title_scene_img.get_height()
 
     draw_y = raw_image.get_height()
 
@@ -957,7 +973,8 @@ if __name__ == "__main__":
     raw4 = pygame.image.load("assets/items.png")
     raw5 = pygame.image.load("assets/bosses.png")
     raw6 = pygame.image.load("assets/font.png")
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6)
+    raw7 = pygame.image.load("assets/title_scene.png")
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7)
     print("INFO: created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, "src/spritesheet.png")
     
