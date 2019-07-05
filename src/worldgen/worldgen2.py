@@ -948,7 +948,7 @@ class Features:
 
     QUEST_NPC = Feature("quest_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=1)
+                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=3)
 
     @staticmethod
     def get_random_feature(at_level=None):

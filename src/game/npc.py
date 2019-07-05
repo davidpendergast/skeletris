@@ -161,9 +161,22 @@ _ALL_CONVERSATIONS = {}  # conv_type -> Conversation
 class Conversation:
 
     def __init__(self, conv_id, npc_id, min_level=0, pre_reqs=(), anti_reqs=()):
+        """
+        conv_id: string id for this conversation
+        npc_id: npc who gives the conversation
+        min_level: minimum level at which conversation can appear
+        pre_reqs: a list of story_var keys. if non-empty, at least one must be true for the conversation to be available.
+        anti_reqs: a list of story_var keys. if non-empty, all must be false for the conversation to appear.
+        """
         self.conv_id = conv_id
         self.npc_id = npc_id
         self.min_level = min_level
+
+        # it's seriously way too hard to type single-element tuples in python
+        if not isinstance(pre_reqs, tuple):
+            raise ValueError("invalid pre_reqs: {}".format(pre_reqs))
+        if not isinstance(anti_reqs, tuple):
+            raise ValueError("invalid anti_reqs: {}".format(anti_reqs))
 
         self.pre_reqs = pre_reqs
         self.anti_reqs = anti_reqs
@@ -180,9 +193,17 @@ class Conversation:
         if self.min_level > level:
             return False
         else:
-            for key in self.pre_reqs:
-                if not gs.get_instance().get_story_var(key, as_bool=True):
+            if len(self.pre_reqs) > 0:
+                # at least one pre_req must be true
+                all_false = True
+                for key in self.pre_reqs:
+                    if gs.get_instance().get_story_var(key, as_bool=True):
+                        all_false = False
+                        break
+                if all_false:
                     return False
+
+            # all anti_reqs must be false
             for key in self.anti_reqs:
                 if gs.get_instance().get_story_var(key, as_bool=True):
                     return False
@@ -196,7 +217,12 @@ class Conversation:
 
 
 class Conversations:
-    MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY, min_level=0)
+
+    MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
+
+    MACHINE_INTRO = Conversation("MACHINE_INTRO", NpcID.MACHINE)
+
+    BEANSKULL_INTRO = Conversation("BEANSKULL_INTRO", NpcID.BEANSKULL)
 
     @staticmethod
     def get_all():
@@ -227,6 +253,55 @@ class ConversationFactory:
             else:
                 res_list = [
                     NpcDialog("Gear up. It's not safe here.")
+                ]
+
+        if conv == Conversations.MACHINE_INTRO:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Scanning..... DONE\n0 life form(s) detected"),
+                    NpcDialog("Scanning..... DONE\n0 life form(s) detected"),
+                    PlayerDialog("Hello?"),
+                    NpcDialog("Scanning..... DONE\n0 life form(s) detected"),
+                    PlayerDialog("*presses a key*"),
+                    NpcDialog("Ah! Ah! I'm awake! What do you... oh.. I don't recognize you."),
+                    NpcDialog("*zzzzt*"),
+                    PlayerDialog("Are you ok?"),
+                    NpcDialog("Loading Greeting Protocol.... ERROR\n<file missing or deleted>"),
+                    NpcDialog("No problem... that's... what's supposed to happen. Adapt and survive, adapt and..."),
+                    PlayerDialog("Can we just talk normally?"),
+                    NpcDialog("*zzzzt*"),
+                    NpcDialog("Restoring Backup..... DONE"),
+                    NpcDialog("Welcome to Skeletris! I'm Skelly, your virtual guide."),
+                    NpcDialog("This thriving metropolis was founded in <deleted> by our first mayor, <deleted>. Here you'll find the very best of skeletal amenities."),
+                    NpcDialog("Chill your bones in the dark pools, test your luck at the spooky arcade, or stop by the Haunted Diner for an award-winning mushroom burger!"),
+                    PlayerDialog("This doesn't look like a metropolis..? Where is everybody?"),
+                    NpcDialog("...it's been a while since we've had a visitor."),
+                    NpcDialog("Perhaps you should get moving.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Scanning..... DONE\n1 life form(s) detected")
+                ]
+
+        if conv == Conversations.BEANSKULL_INTRO:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Hello there! I don't think we've met before. What's your name?"),
+                    PlayerDialog("Hi... I... don't know. I just woke up and... here I am."),
+                    NpcDialog("Here you are indeed! Welcome to Skeletris... or what's left of it, anyway."),
+                    PlayerDialog("Skeletris?"),
+                    NpcDialog("You aren't familiar with this city? The... disaster?"),
+                    PlayerDialog("I'm... not."),
+                    NpcDialog("This used to be the center of civilization. Skeletons and creatures lived in harmony here, growing food, caring for each other, raising families..."),
+                    NpcDialog("..."),
+                    PlayerDialog("Something happened?"),
+                    NpcDialog("Now... well... it isn't like that anymore."),
+                    NpcDialog("If you'll excuse me, I need to harvest these mushrooms before they... get too ripe."),
+                    PlayerDialog("Oh... ok.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Sorry, talking about that stuff... brings back memories. I need to go.")
                 ]
 
         if len(res_list) > 0:
