@@ -171,7 +171,7 @@ class GlobalState:
         self._menu_manager = menu_manager
         self._dialog_manager = dialog_manager
 
-        self._inventory_open = False
+        self.active_sidepanel_id = None  # one of the SidePanelTypes
 
         self._cinematics_queue = []
 
@@ -217,11 +217,17 @@ class GlobalState:
 
         self.current_zone = zone
 
-    def is_inventory_open(self):
-        return self._inventory_open
+    def set_active_sidepanel(self, panel_id):
+        self.active_sidepanel_id = panel_id
 
-    def set_inventory_open(self, val):
-        self._inventory_open = val
+    def get_active_sidepanel(self):
+        return self.active_sidepanel_id
+
+    def toggle_sidepanel(self, panel_id):
+        if self.get_active_sidepanel() == panel_id:
+            self.set_active_sidepanel(None)
+        else:
+            self.set_active_sidepanel(panel_id)
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:

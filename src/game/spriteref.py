@@ -102,14 +102,13 @@ class Items:
 
 
 class UI:
-    item_panel_top = None
-    item_panel_middle = None
-    item_panel_bottom_0 = None
-    item_panel_bottom_1 = None  # if no bonus attributes
-
     inv_panel_top = None
     inv_panel_mid = None
     inv_panel_bot = None
+
+    map_panel_top = None
+    map_panel_mid = None
+    map_panel_bot = None
 
     world_cursors = []
 
@@ -667,14 +666,13 @@ def build_title_scene_sheet(start_pos, raw_title_scene_img, sheet):
 def build_ui_sheet(start_pos, raw_ui_img, sheet):
     sheet.blit(raw_ui_img, start_pos)
 
-    UI.item_panel_top = make(160, 0, 112, 64, shift=start_pos)
-    UI.item_panel_middle = make(160, 64, 112, 8, shift=start_pos)
-    UI.item_panel_bottom_0 = make(160, 72, 112, 8, shift=start_pos)
-    UI.item_panel_bottom_1 = make(160, 80, 112, 8, shift=start_pos)  # if no bonus attributes
-
     UI.inv_panel_top = make(0, 0, 160, 128, shift=start_pos)
     UI.inv_panel_mid = make(0, 128, 160, 16, shift=start_pos)
     UI.inv_panel_bot = make(0, 296, 160, 16, shift=start_pos)
+
+    UI.map_panel_top = make(160, 0, 160, 16, shift=start_pos)
+    UI.map_panel_mid = make(160, 16, 160, 16, shift=start_pos)
+    UI.map_panel_bot = UI.inv_panel_bot
 
     UI.world_cursors = [make(0 + i*16, 280, 16, 16, shift=start_pos) for i in range(0, 2)]
 

@@ -76,17 +76,17 @@ class ImageBundle:
         if self.model() is None:
             return 0
         elif self.rotation() % 2 == 0:
-            return self.model().width() * self.scale()
+            return self.model().width() * self.scale() * self.ratio()[0]
         else:
-            return self.model().height() * self.scale()
+            return self.model().height() * self.scale() * self.ratio()[1]
         
     def height(self):
         if self.model() is None:
             return 0
         elif self.rotation() % 2 == 0:
-            return self.model().height() * self.scale()
+            return self.model().height() * self.scale() * self.ratio()[1]
         else:
-            return self.model().width() * self.scale()
+            return self.model().width() * self.scale() * self.ratio()[0]
 
     def size(self):
         return (self.width(), self.height())

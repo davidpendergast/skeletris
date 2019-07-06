@@ -1,13 +1,12 @@
 
 [bugs]
-
  - can equip items/mess with inv while perfoming other actions
     - should implement this as an action
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
-        - this is pretty wishful thinking lol 
+        - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
-
+    - need to math a little harder here (or just leave it...)
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, need to handle resolution scaling issues
@@ -22,26 +21,33 @@
  - level generation
     - add auto-retry logic _just_in_case_ level generation fails
         - still maybe possible if somehow it really can't place start/finish
- - certain features should be once-per-level
-    - like no duplicate NPCs probably
- - enemies equipping / picking up items (intelligence >= 4)
- - enemies consuming / throwing items (intelligence >= 5)
- - end-of-game boss
-    - cave horror
- - help panel
+ - enemies equipping / consuming / throwing items (intelligence >= 5)
+ - end-of-game boss (or just some kind of cinematic sequence?)
+    - i'm fine with this, cliffhanger for the demo
+ - stuck effect 
+    - prevents movement
+    - spider-like enemy could cause this
  - stun effect
- - add effects to enemies
- - multi-numeric stats (e.g. Gives +X ATT on hit for Y turns)
- - make most status effect numbers in balance.py into stats (poison dmg, etc.)
- - projectiles should get a color based on the item/status or something
- - holding the up/down key in menus should continue scrolling
- - HP on kill
+    - reduces speed to 1?
+    - maybe -X speed is more logical
+    - crab enemy
+ - new (secondary) item stats
+    - HP on kill
+    - poison duration
+    - confusion duration
+ - Holy Artifact
+    - 
  - need a way to visually distinguish different depths
     - color would be by far the easiest way~~~
- - design and implement interesting stats
+    - more art / scenery would be another
+ - help panel
+ - map panel
         
 [future features]
- - map panel
+ - enemies picking up items (intelligence >= 4)
+    - we'd want an "arms up" sprite for eligible enemies I think
+ - holding the up/down key in menus should continue scrolling
+ - projectiles should get a color based on the item/status or something
  - tiles that alter movement
     - jump tiles
     - ice tiles

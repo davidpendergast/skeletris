@@ -90,11 +90,99 @@ class InteractableImage:
         for c in self.all_child_imgs():
             for bun in c.all_bundles():
                 yield bun
-        
 
-class InventoryPanel(InteractableImage):
+
+class SidePanelTypes:
+    INVENTORY = "INVENTORY"
+    MAP = "MAP"
+    HELP = "HELP"
+
+
+class SidePanel(InteractableImage):
+
+    def __init__(self, panel_type):
+        InteractableImage.__init__(self)
+        self._panel_type = panel_type
+
+        self.layer = spriteref.UI_0_LAYER
+
+        self.sc = 2
+        self.text_sc = 1
+
+        self.title_color = colors.LIGHT_GRAY
+        self.title_rect = [8*self.sc, 0*self.sc + 4, 80*self.sc, 16*self.sc - 4]
+
+    def get_panel_type(self):
+        return self._panel_type
+
+    def get_rect(self):
+        return [0, 0, 0, 0]
+
+    def build_title_img(self, text, rect=None):
+        if rect is None:
+            rect = self.title_rect
+
+        res = TextImage(rect[0], 0, text, self.layer, scale=self.text_sc, color=self.title_color)
+        new_y = rect[1] + (rect[3] - res.line_height()) // 2
+
+        return res.update(new_y=new_y)
+
+    def needs_rebuild(self):
+        return False
+
+
+class MapPanel(SidePanel):
 
     def __init__(self):
+        SidePanel.__init__(self, SidePanelTypes.MAP)
+
+        self.top_img = None
+        self.mid_img = None  # in this house we  s t r e t c h
+        self.bot_img = None
+
+        self.title_text = None
+
+        self.map_rect = [16 * self.sc, 32 * self.sc, 144 * self.sc, 224 * self.sc]
+        self.total_rect = [0, 0, spriteref.UI.map_panel_top.width() * self.sc,
+                           self.map_rect[1] + self.map_rect[3] + 32 * self.sc]
+
+        self.build_images()
+
+    def get_rect(self):
+        return self.total_rect
+
+    def build_images(self):
+        y = 0
+        self.top_img = ImageBundle(spriteref.UI.map_panel_top, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
+        y += self.top_img.height()
+
+        self.mid_img = ImageBundle(spriteref.UI.map_panel_mid, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
+        mid_img_h = spriteref.UI.map_panel_mid.height() * self.sc
+        mid_img_ratio = (1, self.map_rect[3] / mid_img_h)
+        self.mid_img = self.mid_img.update(new_ratio=mid_img_ratio)
+        y += self.mid_img.height()
+
+        self.bot_img = ImageBundle(spriteref.UI.map_panel_bot, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
+
+        self.title_text = self.build_title_img("Map")
+
+    def all_bundles(self):
+        if self.top_img is not None:
+            yield self.top_img
+        if self.mid_img is not None:
+            yield self.mid_img
+        if self.bot_img is not None:
+            yield self.bot_img
+        if self.title_text is not None:
+            for bun in self.title_text.all_bundles():
+                yield bun
+
+
+class InventoryPanel(SidePanel):
+
+    def __init__(self):
+        SidePanel.__init__(self, SidePanelTypes.INVENTORY)
+
         self.player_state = gs.get_instance().player_state()
         self.state = self.player_state.inventory()
         self.layer = spriteref.UI_0_LAYER
@@ -103,23 +191,20 @@ class InventoryPanel(InteractableImage):
         self.mid_imgs = []
         self.bot_img = None
 
-        self.title_colors = colors.LIGHT_GRAY
         self.eq_title_text = None
         self.inv_title_text = None
 
         self.sc = 2
         self.text_sc = 1
         
-        self.total_rect = [0, 0,
-                           spriteref.UI.inv_panel_top.width() * self.sc,
+        self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width() * self.sc,
                            (128 + 16 * self.state.rows) * self.sc]
 
         self.equip_grid_rect = [8*self.sc, 16*self.sc, 80*self.sc, 80*self.sc]
         self.inv_grid_rect = [8*self.sc, 112*self.sc, 144*self.sc, 16*self.state.rows*self.sc]
         self.stats_rect = [96*self.sc, 16*self.sc, 56*self.sc, 80*self.sc]
 
-        self.eq_title_rect = [8*self.sc, 0*self.sc + 4, 80*self.sc, 16*self.sc - 4]
-        self.inv_title_rect = [8*self.sc, 96*self.sc + 4, 80*self.sc, 16*self.sc - 4]
+        self.inv_title_rect = [8 * self.sc, 96 * self.sc + 4, 80 * self.sc, 16 * self.sc - 4]
 
         self.lvl_text = None
         self.att_text = None
@@ -163,11 +248,6 @@ class InventoryPanel(InteractableImage):
             return None
         else:
             return grid.item_at_position(cell)
-
-    def _build_title_img(self, text, rect):
-        res = TextImage(rect[0], 0, text, self.layer, scale=self.text_sc, color=self.title_colors)
-        new_y = rect[1] + (rect[3] - res.line_height()) // 2
-        return res.update(new_y=new_y)
         
     def _build_images(self):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
@@ -176,9 +256,11 @@ class InventoryPanel(InteractableImage):
             self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH))
         y = (128 + self.state.rows*16 - 16)*self.sc
         self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
-        
-        self.inv_title_text = self._build_title_img("Inventory", self.inv_title_rect)
-        self.eq_title_text = self._build_title_img("Equipment", self.eq_title_rect)
+
+        # despite being called the inventory panel, the title of the panel is actually "Equipment".
+        # (because the equipment grid is above the inventory grid.)
+        self.eq_title_text = self.build_title_img("Equipment")
+        self.inv_title_text = self.build_title_img("Inventory", rect=self.inv_title_rect)
 
         self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH)
         self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
@@ -330,6 +412,9 @@ class InventoryPanel(InteractableImage):
 
     def is_dirty(self):
         return True
+
+    def needs_rebuild(self):
+        return self.state.is_dirty()
 
     def all_child_imgs(self):
         """yields all the sub-InteractableImages of this one"""
@@ -710,14 +795,14 @@ class HotbarInventoryButton(HotbarSidePanelButton):
         return spriteref.UI.inventory_button
 
     def get_color(self):
-        if gs.get_instance().is_inventory_open():
+        if gs.get_instance().get_active_sidepanel() == SidePanelTypes.INVENTORY:
             return self.active_color
         else:
             return self.inactive_color
 
     def on_click(self, x, y, button=1):
-        is_open = gs.get_instance().is_inventory_open()
-        gs.get_instance().set_inventory_open(not is_open)
+        if button == 1:
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
         return True
 
     def get_tooltip_target_at(self, x, y):
@@ -737,8 +822,16 @@ class HotbarMapButton(HotbarSidePanelButton):
     def get_icon_sprite(self):
         return spriteref.UI.map_button
 
+    def get_color(self):
+        if gs.get_instance().get_active_sidepanel() == SidePanelTypes.MAP:
+            return self.active_color
+        else:
+            return self.inactive_color
+
     def on_click(self, x, y, button=1):
-        pass
+        if button == 1:
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP)
+        return True
 
     def get_tooltip_target_at(self, x, y):
         map_keys = gs.get_instance().settings().map_key()
@@ -748,8 +841,7 @@ class HotbarMapButton(HotbarSidePanelButton):
             text = "Map [{}]".format(Utils.stringify_key(map_keys[0]))
 
         res = TextBuilder()
-        res.add_line(text)
-        res.add("(coming soon!)", color=colors.LIGHT_GRAY)
+        res.add(text)
         return res
 
 

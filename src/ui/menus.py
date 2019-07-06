@@ -5,7 +5,7 @@ import pygame
 from src.game import spriteref as spriteref
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
-from src.ui.ui import HealthBarPanel, InventoryPanel, CinematicPanel, TextImage, ItemImage, DialogPanel
+from src.ui.ui import HealthBarPanel, InventoryPanel, MapPanel, SidePanelTypes, CinematicPanel, TextImage, ItemImage, DialogPanel
 from src.renderengine.img import ImageBundle
 from src.utils.util import Utils
 import src.game.events as events
@@ -1012,7 +1012,7 @@ class InGameUiState(Menu):
     def __init__(self):
         Menu.__init__(self, MenuManager.IN_GAME_MENU)
 
-        self.inventory_panel = None
+        self.sidepanel = None
         self.health_bar_panel = None
         self.dialog_panel = None
         self.top_right_info_panel = None  # currently unused
@@ -1031,13 +1031,13 @@ class InGameUiState(Menu):
     def get_camera_center_point_on_screen(self):
         """
             Returns the point (x, y) on screen where the camera center should be drawn. This position will
-            vary depending on the state of the UI. For example, when the inventory is open, the world will
+            vary depending on the state of the UI. For example, when a sidebar is open, the world will
             be pushed to the right so that the player's visibily is restricted evenly between the left and right.
         """
 
         screen_w, screen_h = gs.get_instance().screen_size
-        if self.inventory_panel is not None:
-            inv_w = self.inventory_panel.get_rect()[2]
+        if self.sidepanel is not None:
+            inv_w = self.sidepanel.get_rect()[2]
         else:
             inv_w = 0
 
@@ -1096,8 +1096,10 @@ class InGameUiState(Menu):
         if xy is None:
             return None
         else:
-            if self.in_inventory_panel(xy):
-                grid, cell = self.inventory_panel.get_grid_and_cell_at_pos(*xy)
+            inv_open = self.sidepanel is not None and self.sidepanel.get_panel_type() == SidePanelTypes.INVENTORY
+            if inv_open and self.sidepanel.contains_point(xy[0], xy[1]):
+                inv_panel = self.sidepanel
+                grid, cell = inv_panel.get_grid_and_cell_at_pos(*xy)
                 if grid is not None and cell is not None:
                     return grid.item_at_position(cell)
             else:
@@ -1142,8 +1144,8 @@ class InGameUiState(Menu):
             yield self.dialog_panel
         if self.health_bar_panel is not None:
             yield self.health_bar_panel
-        if self.inventory_panel is not None:
-            yield self.inventory_panel
+        if self.sidepanel is not None:
+            yield self.sidepanel
 
     def _update_tooltip(self, world):
         input_state = InputState.get_instance()
@@ -1215,26 +1217,30 @@ class InGameUiState(Menu):
         if self.dialog_panel is not None:
             self.dialog_panel.update()
 
-    def _update_inventory_panel(self):
+    def _update_sidepanel(self):
         if not gs.get_instance().player_state().is_alive():
-            gs.get_instance().set_inventory_open(False)
+            gs.get_instance().set_active_sidepanel(None)
 
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().inventory_key()):
-            cur_val = gs.get_instance().is_inventory_open()
-            gs.get_instance().set_inventory_open(not cur_val)
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
+        elif InputState.get_instance().was_pressed(gs.get_instance().settings().map_key()):
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP)
+        elif InputState.get_instance().was_pressed(gs.get_instance().settings().help_key()):
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.HELP)
 
-        if self.inventory_panel is not None and not gs.get_instance().is_inventory_open():
-            self._destroy_panel(self.inventory_panel)
-            self.inventory_panel = None
+        # TODO - add 'close' key
 
-        if self.inventory_panel is None and gs.get_instance().is_inventory_open():
-            self.rebuild_inventory()
+        expected_id = gs.get_instance().get_active_sidepanel()
+        actual_id = None if self.sidepanel is None else self.sidepanel.get_panel_type()
 
-        if self.inventory_panel is not None:
-            if self.inventory_panel.state.is_dirty():
-                self.rebuild_inventory()
-            else:
-                self.inventory_panel.update_stats_imgs()
+        if expected_id != actual_id:
+            self.rebuild_and_set_sidepanel(expected_id)
+        else:
+            if self.sidepanel is not None:
+                if self.sidepanel.needs_rebuild():
+                    self.rebuild_and_set_sidepanel(self.sidepanel.get_panel_type())
+                elif self.sidepanel.is_dirty():
+                    self.sidepanel.update_images()
 
     def _update_health_bar_panel(self):
         if not gs.get_instance().player_state().is_alive():
@@ -1250,19 +1256,6 @@ class InGameUiState(Menu):
                 self.health_bar_panel.update_images()
                 for bun in self.health_bar_panel.all_bundles():
                     RenderEngine.get_instance().update(bun)
-
-    def in_inventory_panel(self, screen_pos):
-        rect = self.get_inventory_rect()
-        if rect is None:
-            return False
-        else:
-            return Utils.rect_contains(rect, screen_pos)
-
-    def get_inventory_rect(self):
-        if self.inventory_panel is None:
-            return None
-        else:
-            return self.inventory_panel.total_rect
 
     def _get_mouse_pos_in_world(self):
         if not InputState.get_instance().mouse_in_window():
@@ -1322,16 +1315,24 @@ class InGameUiState(Menu):
                 y_offs = -screen_pos[1] - self.item_on_cursor_info[2][1]
                 RenderEngine.get_instance().set_layer_offset(spriteref.UI_TOOLTIP_LAYER, x_offs, y_offs)
 
-    def rebuild_inventory(self):
+    def rebuild_and_set_sidepanel(self, panel_id):
         render_eng = RenderEngine.get_instance()
-        if self.inventory_panel is not None:
-            for bun in self.inventory_panel.all_bundles():
+        if self.sidepanel is not None:
+            for bun in self.sidepanel.all_bundles():
                 render_eng.remove(bun)
 
-        self.inventory_panel = InventoryPanel()
-        gs.get_instance().set_inventory_open(True)
-        for bun in self.inventory_panel.all_bundles():
-            render_eng.update(bun)
+        if panel_id == SidePanelTypes.INVENTORY:
+            self.sidepanel = InventoryPanel()
+        elif panel_id == SidePanelTypes.MAP:
+            self.sidepanel = MapPanel()
+        elif panel_id == SidePanelTypes.HELP:
+            self.sidepanel = None  # TODO - help panel
+        else:
+            self.sidepanel = None
+
+        if self.sidepanel is not None:
+            for bun in self.sidepanel.all_bundles():
+                render_eng.update(bun)
 
     def update(self, world):
         input_state = InputState.get_instance()
@@ -1360,7 +1361,7 @@ class InGameUiState(Menu):
         self._update_item_on_cursor_info()
         self._update_tooltip(world)
         self._update_top_right_info_panel(world)
-        self._update_inventory_panel()
+        self._update_sidepanel()
 
         # these inputs are allowed to bleed through world_updates_paused because they're
         # sorta "meta-inputs" (i.e. they don't affect the world).
@@ -1555,17 +1556,17 @@ class InGameUiState(Menu):
 
         # TODO - not sure whether this feels right.
         # should the inv always close when you pause or change zones?
-        gs.get_instance().set_inventory_open(False)
+        gs.get_instance().set_active_sidepanel(None)
 
-        self.inventory_panel = None
+        self.sidepanel = None
         self.item_on_cursor_info = None
         self.top_right_info_panel = None
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
             yield bun
-        if self.inventory_panel is not None:
-            for bun in self.inventory_panel.all_bundles():
+        if self.sidepanel is not None:
+            for bun in self.sidepanel.all_bundles():
                 yield bun
         if self.health_bar_panel is not None:
             for bun in self.health_bar_panel.all_bundles():
