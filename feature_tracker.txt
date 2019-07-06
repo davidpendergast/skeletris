@@ -7,7 +7,6 @@
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol 
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
- - looks like loading a level from the debug menu generates an extra level in the background
 
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)

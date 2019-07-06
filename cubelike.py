@@ -127,6 +127,8 @@ def run():
                     title = zones.get_zone(zone_id).get_name()
                     title_menu = menus.TextOnlyMenu(title, menus.InGameUiState(), auto_advance_duration=60)
                     gs.get_instance().menu_manager().set_active_menu(title_menu)
+                else:
+                    gs.get_instance().menu_manager().set_active_menu(menus.InGameUiState())
 
                 world = zones.build_world(zone_id)
                 world_view = WorldView(world)

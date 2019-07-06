@@ -7,17 +7,24 @@ ALL_KEY_SETTINGS = []
 
 
 class Setting:
-    def __init__(self, name, key, default):
+    def __init__(self, name, key, default, cleaner=None, on_set=None):
         self.name = name
         self.key = key
         self.default = default
         ALL_SETTINGS[key] = self
 
+        self._cleaner = cleaner
+        self._on_setter = on_set
+
     def clean(self, new_value):
-        return new_value
+        if self._cleaner is not None:
+            return self._cleaner(new_value)
+        else:
+            return new_value
 
     def on_set(self, old_value, new_value):
-        pass
+        if self._on_setter is not None:
+            self._on_setter(old_value, new_value)
 
 
 class KeySetting(Setting):
@@ -27,37 +34,43 @@ class KeySetting(Setting):
         ALL_KEY_SETTINGS.append(self)
 
 
-# these are all configurable
-KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP])
-KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT])
-KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT])
-KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN])
-KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_RETURN, pygame.K_SPACE])
+def clean_keys(val):
+    if val is None or not isinstance(val, list):
+        return []
+    else:
+        return val
 
-KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_i])
-KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
-KEY_MAP = Setting("map", "MAP", [pygame.K_m])
-KEY_HELP = Setting("help", "HELP", [pygame.K_h])
+
+# these are all configurable
+KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP], cleaner=clean_keys)
+KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT], cleaner=clean_keys)
+KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT], cleaner=clean_keys)
+KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN], cleaner=clean_keys)
+KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_RETURN], cleaner=clean_keys)
+
+KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_i], cleaner=clean_keys)
+KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e], cleaner=clean_keys)
+KEY_MAP = Setting("map", "MAP", [pygame.K_m], cleaner=clean_keys)
+KEY_HELP = Setting("help", "HELP", [pygame.K_h], cleaner=clean_keys)
 
 num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
 
-KEY_MAPPED_ACTIONS = [Setting("action " + str(i), "ACTION_" + str(i), [num_keys[i]]) for i in range(1, 7)]
+KEY_MAPPED_ACTIONS = [Setting("action " + str(i), "ACTION_" + str(i), [num_keys[i]], cleaner=clean_keys) for i in range(1, 7)]
 
 # these are locked
-KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP])
-KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN])
-KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN])
-KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE])
+KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP], cleaner=clean_keys)
+KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN], cleaner=clean_keys)
+KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN], cleaner=clean_keys)
+KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys)
 
-EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100)
-EFFECTS_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
-EFFECTS_VOLUME.on_set = lambda old_val, new_val: sound_effects.set_volume(new_val / 100)
+EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
+                         cleaner=lambda val: Utils.bound(int(val), 0, 100),
+                         on_set=lambda old_val, new_val: sound_effects.set_volume(new_val / 100))
 
-MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100)
-MUSIC_VOLUME.clean = lambda val: Utils.bound(int(val), 0, 100)
-MUSIC_VOLUME.on_set = lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100)
-
+MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
+                       cleaner=lambda val: Utils.bound(int(val), 0, 100),
+                       on_set=lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100))
 
 class Settings:
 

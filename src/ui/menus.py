@@ -341,10 +341,6 @@ class OptionsMenu(Menu):
                         # give click priority to the thing that's selected
                         bigger_rect = Utils.rect_expand(selected_rect, 15, 15, 15, 15)
                         if Utils.rect_contains(bigger_rect, pos):
-                            if self.get_enabled(self._selection):
-                                self.option_activated(self._selection)
-                            else:
-                                pass  # TODO sound effect
                             clicked_option = self._selection
 
                     if clicked_option is None:
@@ -435,7 +431,7 @@ class PauseMenu(OptionsMenu):
     EXIT_IDX = 3
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["back", "controls", "sound", "quit"])
+        OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["resume", "controls", "sound", "quit"])
 
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
@@ -572,9 +568,6 @@ class ControlsMenu(OptionsMenu):
             opt = ControlsMenu.OPTS[idx]
 
             cur_values = gs.get_instance().settings().get(opt[1])
-
-            if not isinstance(cur_values, list):
-                cur_values = [cur_values]
 
             if len(cur_values) == 0:
                 return "{} [None]".format(opt[0])
@@ -802,6 +795,9 @@ class DebugMenu(OptionsMenu):
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
 
+    def esc_pressed(self):
+        self.option_activated(DebugMenu.EXIT_OPT)
+
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == DebugMenu.STORYLINE_ZONE_JUMP:
@@ -864,6 +860,9 @@ class DebugZoneSelectMenu(OptionsMenu):
         else:
             return True
 
+    def esc_pressed(self):
+        self.option_activated(self.back_idx)
+
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == self.back_idx:
@@ -877,7 +876,6 @@ class DebugZoneSelectMenu(OptionsMenu):
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
             gs.get_instance().event_queue().add(new_zone_evt)
-            gs.get_instance().menu_manager().set_active_menu(InGameUiState())
 
 
 class TitleMenu(Menu):

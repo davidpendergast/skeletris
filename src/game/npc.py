@@ -193,8 +193,8 @@ class Conversation:
         if self.min_level > level:
             return False
         else:
+            # if there are any, at least one pre_req must be true
             if len(self.pre_reqs) > 0:
-                # at least one pre_req must be true
                 all_false = True
                 for key in self.pre_reqs:
                     if gs.get_instance().get_story_var(key, as_bool=True):
@@ -207,6 +207,11 @@ class Conversation:
             for key in self.anti_reqs:
                 if gs.get_instance().get_story_var(key, as_bool=True):
                     return False
+
+            # no one wants to read the same thing twice
+            if gs.get_instance().get_story_var(self.get_id(), as_bool=True):
+                return False
+
             return True
 
     def __eq__(self, other):

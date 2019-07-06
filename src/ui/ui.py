@@ -721,8 +721,11 @@ class HotbarInventoryButton(HotbarSidePanelButton):
         return True
 
     def get_tooltip_target_at(self, x, y):
-        inv_key = gs.get_instance().settings().inventory_key()
-        text = "Inventory [{}]".format(Utils.stringify_key(inv_key[0]))
+        inv_keys = gs.get_instance().settings().inventory_key()
+        if len(inv_keys) == 0:
+            text = "Inventory"
+        else:
+            text = "Inventory [{}]".format(Utils.stringify_key(inv_keys[0]))
 
         res = TextBuilder()
         res.add(text)
@@ -738,7 +741,11 @@ class HotbarMapButton(HotbarSidePanelButton):
         pass
 
     def get_tooltip_target_at(self, x, y):
-        text = "Map [m]"
+        map_keys = gs.get_instance().settings().map_key()
+        if len(map_keys) == 0:
+            text = "Map"
+        else:
+            text = "Map [{}]".format(Utils.stringify_key(map_keys[0]))
 
         res = TextBuilder()
         res.add_line(text)

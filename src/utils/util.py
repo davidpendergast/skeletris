@@ -150,10 +150,6 @@ class Utils:
 
         return res
 
-
-
-
-
     @staticmethod
     def stringify_key(keycode):
         if keycode == pygame.K_LEFT:

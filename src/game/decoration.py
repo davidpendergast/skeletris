@@ -78,23 +78,23 @@ class DecorationFactory:
 
     @staticmethod
     def get_sign_dialog(level):
-        rotate_key = gs.get_instance().settings().rotate_cw_key()
-        if isinstance(rotate_key, list):
-            rotate_key = Utils.stringify_key(rotate_key[0])
+        rotate_keys = gs.get_instance().settings().rotate_cw_key()
+        if len(rotate_keys) > 0:
+            rotate_key = Utils.stringify_key(rotate_keys[0])
         else:
-            rotate_key = str(rotate_key)
+            rotate_key = "None"
 
-        inv_key = gs.get_instance().settings().inventory_key()
-        if isinstance(inv_key, list):
-            inv_key = Utils.stringify_key(inv_key[0])
+        inv_keys = gs.get_instance().settings().inventory_key()
+        if len(inv_keys) > 0:
+            inv_key = Utils.stringify_key(inv_keys[0])
         else:
-            inv_key = str(inv_key)
+            inv_key = "None"
 
-        esc_key = gs.get_instance().settings().exit_key()
-        if isinstance(esc_key, list):
-            esc_key = Utils.stringify_key(esc_key[0])
+        esc_keys = gs.get_instance().settings().exit_key()
+        if len(esc_keys) > 0:
+            esc_key = Utils.stringify_key(esc_keys[0])
         else:
-            esc_key = str(esc_key)
+            esc_key = "None"
 
         how_to_play_text = [
             "You can rotate the item on your cursor! It's important! Just press [{}].".format(rotate_key),
