@@ -296,7 +296,7 @@ class ConversationFactory:
                     NpcDialog("..."),
                     PlayerDialog("Something happened?"),
                     NpcDialog("Now... well... it isn't like that anymore."),
-                    NpcDialog("If you'll excuse me, I need to harvest these mushrooms before they... get too ripe."),
+                    NpcDialog("If you'll excuse me, I need to harvest those mushrooms before they... get too ripe."),
                     PlayerDialog("Oh... ok.")
                 ]
             else:

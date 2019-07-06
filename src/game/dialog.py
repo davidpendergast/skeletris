@@ -230,8 +230,11 @@ class Cutscene(Dialog):
         else:
             input_state = InputState.get_instance()
             current_action = self.action_list[self._action_idx]
-            force_finish = current_action.is_skippable() and input_state.was_pressed(gs.get_instance().settings().enter_key())
-            if current_action.is_finished() or force_finish:
+
+            sttgs = gs.get_instance().settings()
+            pressed_skip = input_state.was_pressed(sttgs.all_dialog_dismiss_keys())
+
+            if current_action.is_finished() or (pressed_skip and current_action.is_skippable()):
                 current_action.finalize(world)
                 self._action_idx += 1
             else:

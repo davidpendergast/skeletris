@@ -1,6 +1,5 @@
 import pygame
 from src.utils.util import Utils
-import src.utils.passwordgen as passwordgen
 import src.game.sound_effects as sound_effects
 
 ALL_SETTINGS = {}
@@ -33,9 +32,12 @@ KEY_UP = Setting("move up", "UP", [pygame.K_w, pygame.K_UP])
 KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a, pygame.K_LEFT])
 KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d, pygame.K_RIGHT])
 KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s, pygame.K_DOWN])
+KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_RETURN, pygame.K_SPACE])
+
 KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_i])
 KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e])
 KEY_MAP = Setting("map", "MAP", [pygame.K_m])
+KEY_HELP = Setting("help", "HELP", [pygame.K_h])
 
 num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
@@ -110,6 +112,9 @@ class Settings:
     def down_key(self):
         return self.get(KEY_DOWN)
 
+    def skip_turn_key(self):
+        return self.get(KEY_SKIP_TURN)
+
     def menu_up_key(self):
         return self.get(KEY_MENU_UP)
 
@@ -128,33 +133,30 @@ class Settings:
     def rotate_cw_key(self):
         return self.get(KEY_ROTATE_CW)
 
+    def map_key(self):
+        return self.get(KEY_MAP)
+
+    def help_key(self):
+        return self.get(KEY_HELP)
+
     def all_direction_keys(self):
-        for k in self.up_key():
-            yield k
-        for k in self.down_key():
-            yield k
-        for k in self.left_key():
-            yield k
-        for k in self.right_key():
-            yield k
+        res = []
+        res.extend(self.up_key())
+        res.extend(self.down_key())
+        res.extend(self.left_key())
+        res.extend(self.right_key())
+        return res
 
     def all_dialog_dismiss_keys(self):
-        for k in self.all_direction_keys():
-            yield k
-        yield self.enter_key()
-        yield self.rotate_cw_key()
+        res = []
+        res.extend(self.all_direction_keys())
+        res.extend(self.enter_key())
+        res.extend(self.rotate_cw_key())
+        res.extend(self.skip_turn_key())
+        return res
 
     def num_mapped_actions(self):
         return len(KEY_MAPPED_ACTIONS)
 
     def action_key(self, num):
         return self.get(KEY_MAPPED_ACTIONS[num])
-
-    def all_in_game_keys(self):
-        for k in self.all_direction_keys():
-            yield k
-        for i in range(0, self.num_mapped_actions()):
-            for k in self.action_key(i):
-                yield k
-        for k in self.enter_key():
-            yield k

@@ -550,8 +550,11 @@ class ControlsMenu(OptionsMenu):
         ("move left", settings.KEY_LEFT),
         ("move down", settings.KEY_DOWN),
         ("move right", settings.KEY_RIGHT),
+        ("skip turn", settings.KEY_SKIP_TURN),
+        ("rotate item", settings.KEY_ROTATE_CW),
         ("inventory", settings.KEY_INVENTORY),
-        ("rotate item", settings.KEY_ROTATE_CW)
+        ("map", settings.KEY_MAP),
+        ("help", settings.KEY_HELP)
     ]
     BACK_OPT_IDX = len(OPTS)
 
@@ -693,13 +696,9 @@ class CinematicMenu(Menu):
 
             self.cinematic_panel.update(current_image, current_text)
 
-            pressed_key = False
-            for k in gs.get_instance().settings().all_dialog_dismiss_keys():
-                if InputState.get_instance().was_pressed(k):
-                    pressed_key = True
-                    break
+            dismiss_keys = gs.get_instance().settings().all_dialog_dismiss_keys()
 
-            if self.active_tick_count > 10 and pressed_key:
+            if self.active_tick_count > 10 and InputState.get_instance().was_pressed(dismiss_keys):
                 if text_finished_scrolling:
                     self.active_scene = None
                 else:
@@ -1396,13 +1395,8 @@ class InGameUiState(Menu):
         # processing dialog last so that it'll block other things from getting inputs this frame
         # (because gs.world_updates_paused will get flipped to false when we interact).
         if gs.get_instance().dialog_manager().is_active():
-            keys = [k for k in gs.get_instance().settings().all_dialog_dismiss_keys()]
-            pushed_dismiss_key = False
-            for k in keys:
-                if input_state.was_pressed(k):
-                    pushed_dismiss_key = True
-                    break
-            if pushed_dismiss_key:
+            keys = gs.get_instance().settings().all_dialog_dismiss_keys()
+            if input_state.was_pressed(keys):
                 gs.get_instance().dialog_manager().interact()
 
     def get_basic_movement_actions(self, player, move_pos, for_click=False):
@@ -1449,7 +1443,7 @@ class InGameUiState(Menu):
             res_list.extend(self.get_keyboard_action_requests(world, player, target_pos))
 
         import src.game.gameengine as gameengine
-        if input_state.is_held(gs.get_instance().settings().enter_key()):
+        if input_state.is_held(gs.get_instance().settings().skip_turn_key()):
             res_list.append(gameengine.SkipTurnAction(player, position=pos))
 
         pc = gs.get_instance().player_controller()
