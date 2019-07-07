@@ -9,6 +9,7 @@ from src.game.stats import StatTypes
 import src.game.globalstate as gs
 import src.utils.colors as colors
 from src.renderengine.engine import RenderEngine
+from src.game.events import EventType
 
 
 BG_DEPTH = 10
@@ -145,13 +146,23 @@ class MapPanel(SidePanel):
 
         self.title_text_img = None
 
-        self.map_rect = [8 * self.sc, 16 * self.sc, 144 * self.sc, 224 * self.sc]
+        border_thickness = 8
 
-        self.total_rect = [0, 0, spriteref.UI.map_panel_top.width() * self.sc,
-                           self.map_rect[1] + self.map_rect[3] + 32 * self.sc]
+        # TODO - make this configurable
+        map_w = (spriteref.UI.map_panel_top.width() - border_thickness * 2) * self.sc
+
+        self.map_rect = [8 * self.sc,
+                         16 * self.sc,
+                         map_w,
+                         224 * self.sc]
+
+        self.total_rect = [0,
+                           0,
+                           map_w + 32 * self.sc,
+                           self.map_rect[1] + self.map_rect[3] + border_thickness * 2 * self.sc]
 
         self.map_center = None  # gets updated when player moves
-        self.map_dims = (31, 28)
+        self.map_dims = (45, 27)
 
         self.map_raw_text = None  # TextBuilder
         self.map_text_img = None
@@ -185,16 +196,19 @@ class MapPanel(SidePanel):
         self.title_text_img = self.build_title_img("Map")
 
     def update(self, world):
+
         old_map_text = self.map_raw_text
+
+        # assuming the map only needs updating after an action is completed~
+        if gs.get_instance().event_queue().has_event(EventType.ACTION_FINISHED):
+            self.map_raw_text = None
 
         player = world.get_player()
         if player is not None:
             self.map_center = world.to_grid_coords(*player.center())
 
-        self.map_raw_text = None
-
         # keeps using an old cached center if player is missing
-        if self.map_center is not None:
+        if self.map_raw_text is None and self.map_center is not None:
             rect = [self.map_center[0] - self.map_dims[0] // 2,
                     self.map_center[1] - self.map_dims[1] // 2,
                     self.map_dims[0], self.map_dims[1]]

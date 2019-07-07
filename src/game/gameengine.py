@@ -10,6 +10,7 @@ import src.game.statuseffects as statuseffects
 import src.game.balance as balance
 from src.game.stats import StatProvider
 import src.game.debug as debug
+import src.game.events as events
 
 
 import random
@@ -423,7 +424,8 @@ class Action:
         pass
 
     def finalize(self, world):
-        pass
+        evt = events.ActionFinishedEvent(self)
+        gs.get_instance().event_queue().add(evt)
 
     def __str__(self):
         return "{}:[actor={}, item={}, position={}]".format(self.cmd_type, self.actor_entity, self.item, self.position)
@@ -457,6 +459,7 @@ class MoveToAction(Action):
         self.actor_entity.move_to(round(new_pos[0]), round(new_pos[1]))
 
     def finalize(self, world):
+        super().finalize(world)
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
         self.actor_entity.set_center(end_pos[0], end_pos[1])
@@ -500,6 +503,7 @@ class ConsumeItemAction(Action):
                 self.actor_entity.set_visually_held_item_override(False)
 
     def finalize(self, world):
+        super().finalize(world)
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
         consume_effect = self.item.get_consume_effect()
         if consume_effect is not None:
@@ -543,6 +547,7 @@ class OpenDoorAction(MoveToAction):
         self.door_entity.set_open_progress_for_render(progress)
 
     def finalize(self, world):
+        super().finalize(world)
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
         self.door_entity.remove_self_from_world(world)
@@ -711,6 +716,7 @@ class AttackAction(Action):
         pass
 
     def finalize(self, world):
+        super().finalize(world)
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
@@ -755,6 +761,7 @@ class ProjectileAttackAction(AttackAction):
         self._projectile_animator.animate_in_world(progress, world)
 
     def finalize(self, world):
+        super().finalize(world)
         if self._projectile_animator is not None:
             self._projectile_animator.finalize(world)
 
@@ -908,6 +915,7 @@ class _ThrownItemAnimator:
             self._thrown_item_entity.set_rotation(rot)
 
     def finalize(self, world):
+        super().finalize(world)
         if self._thrown_item_entity is not None:
             pos = self._thrown_item_entity.center()
             world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=3)
@@ -1017,6 +1025,7 @@ class ThrowItemAction(Action):
         self._thrown_item_animator.animate_in_world(progress, world)
 
     def finalize(self, world):
+        super().finalize(world)
         if self._thrown_item_animator is not None:
             self._thrown_item_animator.finalize(world)
 
@@ -1078,9 +1087,6 @@ class InteractAction(Action):
     def animate_in_world(self, world, progress):
         pass
 
-    def finalize(self, world):
-        pass
-
 
 class PlayerWaitAction(Action):
 
@@ -1095,6 +1101,11 @@ class PlayerWaitAction(Action):
 
     def is_possible(self, world):
         return True
+
+    def finalize(self, world):
+        # note that we're purposely *NOT* calling super's finalize
+        # because we don't want to spam action_finished events.
+        pass
 
 
 class PickUpItemAction(Action):
@@ -1140,6 +1151,7 @@ class PickUpItemAction(Action):
         return True
 
     def finalize(self, world):
+        super().finalize(world)
         ent_to_pickup = self._get_entity_to_pickup(world)
         if ent_to_pickup is None:
             print("ERROR: item we wanted to pick up isn't there anymore? {}".format(self.get_item()))
@@ -1177,6 +1189,7 @@ class DropItemAction(Action):
                 self.get_actor().set_facing_right(False)
 
     def finalize(self, world):
+        # purposely *NOT* calling super's finalize because this isn't a 'real' action.
         actor = self.get_actor()
         a_state = actor.get_actor_state()
         if a_state.held_item == self.get_item():

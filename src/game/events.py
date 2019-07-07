@@ -79,8 +79,7 @@ class EventType(Enum):
     STORY_EVENT = "STORY_EVENT",
     PLAYER_DIED = "PLAYER_DIED",
     DOOR_OPENED = "DOOR_OPENED",
-    NPC_INTERACT = "NPC_INTERACT",
-    ENTITY_INTERACT = "ENTITY_INTERACT",
+    ACTION_FINISHED = "ACTION_FINISHED",
     DIALOG_EXIT = "DIALOG_EXIT",
     ENTERED_BOX = "ENTERED_BOX",
     EXITED_BOX = "EXITED_BOX",
@@ -148,22 +147,6 @@ class DoorOpenEvent(Event):
         return self.get_data()[0]
 
 
-class NpcInteractEvent(Event):
-    def __init__(self, npc_id):
-        Event.__init__(self, EventType.NPC_INTERACT, npc_id, "interacted with npc: {}".format(npc_id))
-
-    def get_npc_id(self):
-        return self.get_data()
-
-
-class EntityInteractEvent(Event):
-    def __init__(self, entity):
-        Event.__init__(self, EventType.ENTITY_INTERACT, entity, "interacted with entity: {}".format(entity))
-
-    def get_entity(self):
-        return self.get_data()
-
-
 class TriggerBoxEvent(Event):
     def __init__(self, box_id, event_type, desc):
         Event.__init__(self, event_type, box_id, description=desc)
@@ -228,11 +211,26 @@ class NewGameEvent(Event):
         return self.get_data()[0]
 
 
+class ActionFinishedEvent(Event):
+
+    def __init__(self, action):
+        data = (action.get_actor().get_uid(), action.get_type(), action.get_position())
+        Event.__init__(self, EventType.ACTION_FINISHED, data, description="action completed")
+
+    def get_uid(self):
+        return self.get_data()[0]
+
+    def get_type(self):
+        return self.get_data()[1]
+
+    def get_position(self):
+        return self.get_data()[2]
+
+
 class PlayerDiedEvent(Event):
 
     def __init__(self):
-        Event.__init__(self, EventType.PLAYER_DIED, None,
-                       description="player died")
+        Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")
 
 
 class EnemyDiedEvent(Event):
