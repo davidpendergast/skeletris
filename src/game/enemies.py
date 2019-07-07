@@ -108,10 +108,11 @@ class TrilliteTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 8,
-            StatTypes.SPEED: 6,
-            StatTypes.ATT: 1,
-            StatTypes.UNARMED_ATT: 0,
+            StatTypes.VIT: 10,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.UNARMED_RANGE: 2,
             StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1
@@ -134,10 +135,11 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 12,
-            StatTypes.SPEED: 6,
-            StatTypes.ATT: 3,
-            StatTypes.UNARMED_ATT: 0,
+            StatTypes.VIT: 16,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 3,
+            StatTypes.UNARMED_RANGE: 2,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3

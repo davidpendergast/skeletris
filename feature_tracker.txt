@@ -12,6 +12,9 @@
     - gotta setup my windows machine to test, need to handle resolution scaling issues
     - near-zero mac testing (mac friends on git say it's ok though...)
  - map panel is kinda laggy
+    - not sure how to fix this, there are a lot of sprites
+ - it's possible for mapped-item-actions to display their items with the wrong rotation
+    - it's probably storing an old ref to the item with a different rotation
   
 [balance issues]
  - need more sources of healing

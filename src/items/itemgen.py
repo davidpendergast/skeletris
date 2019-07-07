@@ -111,8 +111,8 @@ class WeaponItemFactory:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3)]
             actions = [ItemActions.SPEAR_ATTACK]
             return SpriteItem("Spear of Justice", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 2, local=True),
-                               AppliedStat(StatTypes.THROWN_ATT, 4, local=True)],
+                              [AppliedStat(StatTypes.ATT, 4, local=True),
+                               AppliedStat(StatTypes.THROWN_ATT, 2, local=True)],
                               spriteref.Items.spear_small, spriteref.Items.spear_big, actions=actions)
 
         elif item_type == ItemTypes.WAND_WEAPON:
