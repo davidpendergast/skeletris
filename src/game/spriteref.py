@@ -440,6 +440,12 @@ def split_text(text, add_to=None):
     elif len(text) == 1:
         add_to.append(text)
         return add_to
+    elif len(text) > 200:
+        # really long strings will blow the stack...
+        for i in range(0, 200):
+            add_to.append(text[i])
+        split_text(text[200:], add_to)
+        return add_to
     else:
         for length in _cached_lengths:
             if len(text) >= length:

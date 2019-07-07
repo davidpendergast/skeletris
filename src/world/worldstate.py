@@ -2,6 +2,7 @@ import random
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
+import src.utils.colors as colors
 import src.game.globalstate as gs
 
 CELLSIZE = 64
@@ -399,6 +400,57 @@ class World:
                 grid_pos = self.to_grid_coords(e.center()[0], e.center()[1])
                 if grid_x == grid_pos[0] and grid_y == grid_pos[1]:
                     res.append(e)
+        return res
+
+    def get_map_text_for_cells(self, grid_rect, respect_visiblity=True):
+        from src.ui.ui import TextBuilder, TextImage
+        res = TextBuilder()
+
+        corners = [(grid_rect[0], grid_rect[1]),
+                   (grid_rect[0] + grid_rect[2] - 1, grid_rect[1]),
+                   (grid_rect[0], grid_rect[1] + grid_rect[3] - 1),
+                   (grid_rect[0] + grid_rect[2] - 1, grid_rect[1] + grid_rect[3] - 1)]
+
+        ent_coords = {}
+
+        for e in self.all_entities(onscreen=respect_visiblity):
+            e_pos = self.to_grid_coords(*e.center())
+            if Utils.rect_contains(grid_rect, e_pos) and (not respect_visiblity or e.is_visible_in_world(self)):
+                if e.is_player():
+                    ent_coords[e_pos] = ("p", colors.WHITE)
+                elif e.is_enemy():
+                    ent_coords[e_pos] = ("m", colors.RED)
+                elif e.is_npc():
+                    ent_coords[e_pos] = ("n", colors.YELLOW)
+                elif e.is_exit():
+                    ent_coords[e_pos] = ("e", colors.GREEN)
+                elif e.is_chest() and not e.is_open():
+                    ent_coords[e_pos] = ("c", colors.PURPLE)
+
+        for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
+            for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):
+                if (x, y) in ent_coords:
+                    char, color = ent_coords[(x, y)]
+                    res.add(char, color=color)
+                elif self.get_geo(x, y) == World.WALL:
+                    res.add("X", color=colors.DARK_GRAY)
+                elif self.get_geo(x, y) == World.FLOOR:
+                    if self.get_hidden(x, y):
+                        res.add(".", color=colors.BLACK)
+                    elif self.get_lighting(x, y) > 0:
+                        res.add(".", color=colors.LIGHT_GRAY)
+                    else:
+                        res.add(".", color=colors.DARK_GRAY)
+                elif self.get_geo(x, y) == World.DOOR:
+                    res.add("0", color=colors.BLUE)
+                else:
+                    if (x, y) in corners:
+                        res.add(".", color=colors.BLACK)
+                    else:
+                        res.add(TextImage.INVISIBLE_CHAR)
+
+            res.add_line("")
+
         return res
 
     def get_path_between(self, p1, p2, max_length=-1, cond=None):

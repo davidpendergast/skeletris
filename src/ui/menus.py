@@ -1217,7 +1217,7 @@ class InGameUiState(Menu):
         if self.dialog_panel is not None:
             self.dialog_panel.update()
 
-    def _update_sidepanel(self):
+    def _update_sidepanel(self, world):
         if not gs.get_instance().player_state().is_alive():
             gs.get_instance().set_active_sidepanel(None)
 
@@ -1237,6 +1237,8 @@ class InGameUiState(Menu):
             self.rebuild_and_set_sidepanel(expected_id)
         else:
             if self.sidepanel is not None:
+                self.sidepanel.update(world)
+
                 if self.sidepanel.needs_rebuild():
                     self.rebuild_and_set_sidepanel(self.sidepanel.get_panel_type())
                 elif self.sidepanel.is_dirty():
@@ -1361,7 +1363,7 @@ class InGameUiState(Menu):
         self._update_item_on_cursor_info()
         self._update_tooltip(world)
         self._update_top_right_info_panel(world)
-        self._update_sidepanel()
+        self._update_sidepanel(world)
 
         # these inputs are allowed to bleed through world_updates_paused because they're
         # sorta "meta-inputs" (i.e. they don't affect the world).

@@ -118,6 +118,9 @@ class SidePanel(InteractableImage):
     def get_rect(self):
         return [0, 0, 0, 0]
 
+    def update(self, world):
+        pass
+
     def build_title_img(self, text, rect=None):
         if rect is None:
             rect = self.title_rect
@@ -140,16 +143,31 @@ class MapPanel(SidePanel):
         self.mid_img = None  # in this house we  s t r e t c h
         self.bot_img = None
 
-        self.title_text = None
+        self.title_text_img = None
 
-        self.map_rect = [16 * self.sc, 32 * self.sc, 144 * self.sc, 224 * self.sc]
+        self.map_rect = [8 * self.sc, 16 * self.sc, 144 * self.sc, 224 * self.sc]
+
         self.total_rect = [0, 0, spriteref.UI.map_panel_top.width() * self.sc,
                            self.map_rect[1] + self.map_rect[3] + 32 * self.sc]
 
+        self.map_center = None  # gets updated when player moves
+        self.map_dims = (31, 28)
+
+        self.map_raw_text = None  # TextBuilder
+        self.map_text_img = None
+
         self.build_images()
+
+        self.map_dirty = False
 
     def get_rect(self):
         return self.total_rect
+
+    def is_dirty(self):
+        return self.map_dirty
+
+    def needs_rebuild(self):
+        return False
 
     def build_images(self):
         y = 0
@@ -164,7 +182,53 @@ class MapPanel(SidePanel):
 
         self.bot_img = ImageBundle(spriteref.UI.map_panel_bot, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
 
-        self.title_text = self.build_title_img("Map")
+        self.title_text_img = self.build_title_img("Map")
+
+    def update(self, world):
+        old_map_text = self.map_raw_text
+
+        player = world.get_player()
+        player_pos = None
+        if player is not None:
+            player_pos = world.to_grid_coords(*player.center())
+            self.map_center = player_pos
+
+        self.map_raw_text = None
+
+        # keeps using an old cached center if player is missing
+        if self.map_center is not None:
+            rect = [self.map_center[0] - self.map_dims[0] // 2,
+                    self.map_center[1] - self.map_dims[1] // 2,
+                    self.map_dims[0], self.map_dims[1]]
+            self.map_raw_text = world.get_map_text_for_cells(rect, respect_visiblity=True)
+
+        if self.map_raw_text != old_map_text:
+            self.map_dirty = True
+
+    def update_images(self):
+        render_eng = RenderEngine.get_instance()
+        has_map_text = self.map_raw_text is not None and len(self.map_raw_text.text()) > 0
+        if not has_map_text and self.map_text_img is not None:
+            for bun in self.map_text_img.all_bundles():
+                render_eng.remove(bun)
+            self.map_text_img = None
+
+        if has_map_text and self.map_dirty:
+            if self.map_text_img is None:
+                self.map_text_img = TextImage(0, 0, "a", spriteref.UI_0_LAYER, depth=FG_DEPTH)
+
+            self.map_text_img = self.map_text_img.update(new_text=self.map_raw_text.text(),
+                                                         new_custom_colors=self.map_raw_text.custom_colors())
+            size = self.map_text_img.size()
+            x = self.map_rect[0] + self.map_rect[2] // 2 - size[0] // 2
+            y = self.map_rect[1] + self.map_rect[3] // 2 - size[1] // 2
+
+            self.map_text_img = self.map_text_img.update(new_x=x, new_y=y)
+
+            for bun in self.map_text_img.all_bundles():
+                render_eng.update(bun)
+
+        self.map_dirty = False
 
     def all_bundles(self):
         if self.top_img is not None:
@@ -173,8 +237,11 @@ class MapPanel(SidePanel):
             yield self.mid_img
         if self.bot_img is not None:
             yield self.bot_img
-        if self.title_text is not None:
-            for bun in self.title_text.all_bundles():
+        if self.title_text_img is not None:
+            for bun in self.title_text_img.all_bundles():
+                yield bun
+        if self.map_text_img is not None:
+            for bun in self.map_text_img.all_bundles():
                 yield bun
 
 
@@ -191,8 +258,8 @@ class InventoryPanel(SidePanel):
         self.mid_imgs = []
         self.bot_img = None
 
-        self.eq_title_text = None
-        self.inv_title_text = None
+        self.eq_title_text_img = None
+        self.inv_title_text_img = None
 
         self.sc = 2
         self.text_sc = 1
@@ -259,8 +326,8 @@ class InventoryPanel(SidePanel):
 
         # despite being called the inventory panel, the title of the panel is actually "Equipment".
         # (because the equipment grid is above the inventory grid.)
-        self.eq_title_text = self.build_title_img("Equipment")
-        self.inv_title_text = self.build_title_img("Inventory", rect=self.inv_title_rect)
+        self.eq_title_text_img = self.build_title_img("Equipment")
+        self.inv_title_text_img = self.build_title_img("Inventory", rect=self.inv_title_rect)
 
         self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH)
         self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
@@ -429,9 +496,9 @@ class InventoryPanel(SidePanel):
         for img in self.mid_imgs:
             yield img
         yield self.bot_img
-        for bun in self.inv_title_text.all_bundles():
+        for bun in self.inv_title_text_img.all_bundles():
             yield bun
-        for bun in self.eq_title_text.all_bundles():
+        for bun in self.eq_title_text_img.all_bundles():
             yield bun
         for bun in self.all_stat_text_bundles():
             yield bun
