@@ -765,32 +765,80 @@ class MeleeAttackAction(AttackAction):
 
     def __init__(self, actor, item, position):
         AttackAction.__init__(self, actor, item, position, 24)
+        self.start_pos = None
+        self.end_pos = None
+
+    def _get_end_pos(self, world):
+        cur_pos = world.to_grid_coords(*self.get_actor().center())
+        target_pos = self.get_position()
+
+        if target_pos is None or Utils.dist_manhattan(cur_pos, target_pos) <= 1:
+            return cur_pos
+
+        closest_n = (target_pos[0] - 1, target_pos[1])
+        for n in Utils.neighbors(target_pos[0], target_pos[1]):
+            if Utils.dist(cur_pos, n) < Utils.dist(cur_pos, closest_n):
+                closest_n = n
+
+        return closest_n
+
+    def is_possible(self, world):
+        if not AttackAction.is_possible(self, world):
+            return False
+
+        cur_pos = world.to_grid_coords(*self.get_actor().center())
+        end_pos = self._get_end_pos(world)
+        if cur_pos != end_pos and world.is_solid(end_pos[0], end_pos[1], including_entities=True):
+            return False
+
+        return True
+
+    def start(self, world):
+        super().start(world)
+        self.start_pos = world.to_grid_coords(*self.get_actor().center())
+        self.end_pos = self._get_end_pos(world)
+
+    def finalize(self, world):
+        end_center = (int(world.cellsize() * (self.end_pos[0] + 0.5)),
+                      int(world.cellsize() * (self.end_pos[1] + 0.5)))
+        self.actor_entity.set_center(*end_center)
+        super().finalize(world)
 
     def animate_in_world(self, progress, world):
         run_at_pct = 0.3
         recover_pcnt = 1 - run_at_pct
-
-        start_at = self.actor_entity.center()
         target_at = self._results[1].center()
-        stop_at = target_at
+
+        start_at = world.cell_center(*self.start_pos)
+        stop_at = None  # actor's position at the moment of attack
+        finish_at = world.cell_center(*self.end_pos)
 
         vec = Utils.sub(target_at, start_at)
         dist = Utils.mag(vec)
         if dist > 16:
             vec = Utils.set_length(vec, dist - 16)
             stop_at = Utils.add(start_at, vec)
+        else:
+            stop_at = target_at
 
         if progress <= run_at_pct:
-            new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
+            new_draw_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
         else:
             self._apply_attack_and_add_animations_if_necessary(world)
-            new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
+            new_draw_pos = Utils.linear_interp(stop_at, finish_at, (progress - run_at_pct) / recover_pcnt)
 
-        pre_move_offset = self.actor_entity.get_draw_offset()
-        new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
-        vel = Utils.sub(new_move_offset, pre_move_offset)
+        old_render_pos = self.actor_entity.get_render_center(ignore_perturbs=True)
 
+        # during a lunge, the actor is actually moving while the attack animation is playing
+        if start_at != finish_at:
+            new_true_pos = Utils.linear_interp(start_at, finish_at, progress)
+            self.actor_entity.set_center(*new_true_pos)
+
+        new_move_offset = Utils.sub(new_draw_pos, self.actor_entity.center())
         self.actor_entity.set_draw_offset(*new_move_offset)
+
+        new_render_pos = self.actor_entity.get_render_center(ignore_perturbs=True)
+        vel = Utils.sub(new_render_pos, old_render_pos)
         self.actor_entity.set_vel(vel)
 
 
@@ -1271,7 +1319,7 @@ class AttackItemActionProvider(ActionProvider):
 class ItemActions:
     CONSUME_ITEM = ConsumeItemActionProvider()
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
-    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1,))
+    SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1, 2))
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
     WAND_ATTACK = AttackItemActionProvider("Wand Attack", spriteref.Items.magic_icon, (1, 2), projectile=True)
     SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))

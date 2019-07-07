@@ -48,6 +48,10 @@ class World:
 
     def cellsize(self):
         return CELLSIZE
+
+    def cell_center(self, grid_x, grid_y):
+        return (int(CELLSIZE * (grid_x + 0.5)),
+                int(CELLSIZE * (grid_y + 0.5)))
         
     def add(self, entity, gridcell=None):
         """
