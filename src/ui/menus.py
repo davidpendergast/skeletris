@@ -1015,7 +1015,6 @@ class InGameUiState(Menu):
         self.sidepanel = None
         self.health_bar_panel = None
         self.dialog_panel = None
-        self.top_right_info_panel = None  # currently unused
 
         self.item_on_cursor_info = None  # tuple (item, ItemImage, offset)
 
@@ -1059,37 +1058,6 @@ class InGameUiState(Menu):
             return hover_over[0]
         else:
             return None
-
-    def _get_top_right_info_obj(self, world):
-        return None  # this is kinda annoying now that tooltips are pretty wumbo
-
-        #player = world.get_player()
-        #if player is not None:
-        #    return gs.get_instance().player_state().held_item
-        #else:
-        #    return None
-
-    def _update_top_right_info_panel(self, world):
-        obj_to_display = self._get_top_right_info_obj(world)
-        render_eng = RenderEngine.get_instance()
-
-        if self.top_right_info_panel is not None:
-            if obj_to_display is None or self.top_right_info_panel.get_target() is not obj_to_display:
-                for bun in self.top_right_info_panel.all_bundles():
-                    render_eng.remove(bun)
-                self.top_right_info_panel = None
-
-        if self.top_right_info_panel is None and obj_to_display is not None:
-            new_panel = TooltipFactory.build_tooltip(obj_to_display, layer=spriteref.UI_0_LAYER)
-            w = new_panel.get_rect()[2] if new_panel is not None else 0
-            xy = (gs.get_instance().screen_size[0] - w - 16, 16)
-
-            # XXX building it twice because we don't know how wide it will be beforehand...
-            new_panel = TooltipFactory.build_tooltip(obj_to_display, xy=xy, layer=spriteref.UI_0_LAYER)
-            self.top_right_info_panel = new_panel
-            if self.top_right_info_panel is not None:
-                for bun in self.top_right_info_panel.all_bundles():
-                    render_eng.update(bun)
 
     def _get_obj_at_screen_pos(self, world, xy):
         """returns: Item, ItemEntity, EnemyEntity, Entity, or None"""
@@ -1362,7 +1330,6 @@ class InGameUiState(Menu):
 
         self._update_item_on_cursor_info()
         self._update_tooltip(world)
-        self._update_top_right_info_panel(world)
         self._update_sidepanel(world)
 
         # these inputs are allowed to bleed through world_updates_paused because they're
@@ -1562,7 +1529,6 @@ class InGameUiState(Menu):
 
         self.sidepanel = None
         self.item_on_cursor_info = None
-        self.top_right_info_panel = None
 
     def all_bundles(self):
         for bun in Menu.all_bundles(self):
@@ -1572,9 +1538,6 @@ class InGameUiState(Menu):
                 yield bun
         if self.health_bar_panel is not None:
             for bun in self.health_bar_panel.all_bundles():
-                yield bun
-        if self.top_right_info_panel is not None:
-            for bun in self.top_right_info_panel.all_bundles():
                 yield bun
         if self.item_on_cursor_info is not None:
             for bun in self.item_on_cursor_info[1].all_bundles():
