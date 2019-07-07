@@ -300,7 +300,8 @@ class GhastTemplate(EnemyTemplate):
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
-            StatTypes.UNARMED_RANGE: 2
+            StatTypes.UNARMED_RANGE: 2,
+            StatTypes.UNARMED_IS_PROJECTILE: 1
         })
 
     def get_projectile_sprite(self):
@@ -356,6 +357,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 5,
             StatTypes.WEALTH: 2,
             StatTypes.UNARMED_RANGE: 3,
+            StatTypes.UNARMED_IS_PROJECTILE: 1,
             StatTypes.CONFUSION_ON_HIT: 5
         })
 

@@ -1436,7 +1436,10 @@ class InGameUiState(Menu):
                     res.append(action_prov.get_action(player, position=extended_target_pos))
             else:
                 import src.game.gameengine as gameengine
-                res.append(gameengine.AttackAction(player, None, target_pos))
+                if player.get_actor_state().unarmed_is_projectile():
+                    res.append(gameengine.ProjectileAttackAction(player, None, target_pos))
+                else:
+                    res.append(gameengine.MeleeAttackAction(player, None, target_pos))
 
         if target_pos is not None and gs.get_instance().player_state().is_confused():
             if random.random() < balance.CONFUSION_CHANCE:
@@ -1485,7 +1488,7 @@ class InGameUiState(Menu):
                 if action_prov is not None:
                     res.append(action_prov.get_action(player, world_grid_pos))
                 else:
-                    res.append(gameengine.AttackAction(player, None, world_grid_pos))
+                    res.append(gameengine.MeleeAttackAction(player, None, world_grid_pos))
 
                 for action in self.get_basic_movement_actions(player, world_grid_pos, for_click=True):
                     res.append(action)

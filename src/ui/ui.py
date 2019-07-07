@@ -188,10 +188,8 @@ class MapPanel(SidePanel):
         old_map_text = self.map_raw_text
 
         player = world.get_player()
-        player_pos = None
         if player is not None:
-            player_pos = world.to_grid_coords(*player.center())
-            self.map_center = player_pos
+            self.map_center = world.to_grid_coords(*player.center())
 
         self.map_raw_text = None
 
@@ -215,7 +213,7 @@ class MapPanel(SidePanel):
 
         if has_map_text and self.map_dirty:
             if self.map_text_img is None:
-                self.map_text_img = TextImage(0, 0, "a", spriteref.UI_0_LAYER, depth=FG_DEPTH)
+                self.map_text_img = TextImage(0, 0, "~not built?~", spriteref.UI_0_LAYER, depth=FG_DEPTH)
 
             self.map_text_img = self.map_text_img.update(new_text=self.map_raw_text.text(),
                                                          new_custom_colors=self.map_raw_text.custom_colors())

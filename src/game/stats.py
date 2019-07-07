@@ -62,6 +62,7 @@ class StatTypes:
 
     UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
     UNARMED_RANGE = StatType("UNARMED_RANGE", desc="+{} to Unarmed Range")
+    UNARMED_IS_PROJECTILE = StatType("UNARMED_IS_PROJECTILE", desc="Unarmed Attacks are Projectiles")
     THROWN_ATT = StatType("THROWN_ATT", color=colors.RED, desc="+{} to Throw Damage",
                           local_desc="+{} Damage when Thrown")
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")

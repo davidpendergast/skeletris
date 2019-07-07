@@ -98,6 +98,9 @@ class ActorState(StatProvider):
     def unarmed_range(self):
         return Utils.bound(self.stat_value(StatTypes.UNARMED_RANGE), 1, 8)
 
+    def unarmed_is_projectile(self):
+        return self.stat_value(StatTypes.UNARMED_IS_PROJECTILE) > 0
+
     def is_confused(self):
         return self.stat_value(StatTypes.CONFUSION) > 0
 
@@ -277,15 +280,25 @@ class EnemyController(ActorController):
                     weapons.append(it)
             random.shuffle(weapons)
 
+            attack_action_providers = []
             for wep in weapons:
+                for action_prov in wep.all_actions():
+                    if action_prov.get_type() == ActionType.ATTACK:
+                        attack_action_providers.append(action_prov)
+
+            for action_prov in attack_action_providers:
                 for target in target_positions:
-                    res = AttackAction(actor, wep, target)
-                    if res.is_possible(world):
-                        return res
+                    act = action_prov.get_action(actor, position=target)
+                    if act.is_possible(world):
+                        return act
 
         # falling back to an unarmed attack
         for target in target_positions:
-            res = AttackAction(actor, None, target)
+            if actor.get_actor_state().unarmed_is_projectile():
+                res = ProjectileAttackAction(actor, None, target)
+            else:
+                res = MeleeAttackAction(actor, None, target)
+
             if res.is_possible(world):
                 return res
 
@@ -626,22 +639,10 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
 
 class AttackAction(Action):
 
-    def __init__(self, actor, item, position):
-        self._projectile_sprite = AttackAction._calc_projectile_sprite(actor, item)
-        duration = 24 if self._projectile_sprite is None else 40
-
+    def __init__(self, actor, item, position, duration):
         Action.__init__(self, ActionType.ATTACK, duration, actor, item=item, position=position)
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
-
-        self._projectile_animator = None  # only used when it's a projectile attack
-
-    @staticmethod
-    def _calc_projectile_sprite(actor, item):
-        if item is None:
-            return actor.get_actor_state().get_projectile_sprite()
-        else:
-            return item.get_projectile_sprite()
 
     def get_targeting_color(self, for_mouse=False):
         return colors.RED
@@ -707,53 +708,9 @@ class AttackAction(Action):
         self._results = (dmg_dealt, target)
 
     def animate_in_world(self, progress, world):
-        if self._projectile_sprite is not None:
-            if self._projectile_animator is None:
-
-                # TODO obviously a dumb way to get the projectile's sprite
-                from src.items.item import ItemTypes
-                if self.get_item() is not None and self.get_item().get_type() == ItemTypes.BOW_WEAPON:
-                    projectile_sprite = spriteref.Items.arrow_projectile_small
-                else:
-                    projectile_sprite = spriteref.Items.projectile_small
-
-                self._projectile_animator = _ThrownItemAnimator(self.get_actor(),
-                                                                self.get_position(),
-                                                                self._projectile_sprite,
-                                                                colors.WHITE,  # TODO - better color choosing
-                                                                hide_actor_held_item=False)
-            self._projectile_animator.animate_in_world(progress, world)
-        else:
-            run_at_pct = 0.3
-            recover_pcnt = 1 - run_at_pct
-
-            start_at = self.actor_entity.center()
-            target_at = self._results[1].center()
-            stop_at = target_at
-
-            vec = Utils.sub(target_at, start_at)
-            dist = Utils.mag(vec)
-            if dist > 16:
-                vec = Utils.set_length(vec, dist - 16)
-                stop_at = Utils.add(start_at, vec)
-
-            if progress <= run_at_pct:
-                new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
-            else:
-                self._apply_attack_and_add_animations_if_necessary(world)
-                new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
-
-            pre_move_offset = self.actor_entity.get_draw_offset()
-            new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
-            vel = Utils.sub(new_move_offset, pre_move_offset)
-
-            self.actor_entity.set_draw_offset(*new_move_offset)
-            self.actor_entity.set_vel(vel)
+        pass
 
     def finalize(self, world):
-        if self._projectile_animator is not None:
-            self._projectile_animator.finalize(world)
-
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
@@ -769,6 +726,72 @@ class AttackAction(Action):
             self.actor_entity.set_facing_right(True)
             if self._results[0] > 0:
                 self._results[1].set_facing_right(False)
+
+
+class ProjectileAttackAction(AttackAction):
+
+    def __init__(self, actor, item, position):
+        AttackAction.__init__(self, actor, item, position, 40)
+
+        self._projectile_sprite = self._calc_projectile_sprite()
+        self._projectile_animator = None
+
+    def _calc_projectile_sprite(self):
+        res = None
+        if self.get_item() is None:
+            res = self.get_actor().get_actor_state().get_projectile_sprite()
+        else:
+            res = self.get_item().get_projectile_sprite()
+
+        return res if res is not None else spriteref.Items.projectile_small
+
+    def animate_in_world(self, progress, world):
+        if self._projectile_animator is None:
+            self._projectile_animator = _ThrownItemAnimator(self.get_actor(),
+                                                            self.get_position(),
+                                                            self._projectile_sprite,
+                                                            colors.WHITE,  # TODO - better color choosing
+                                                            hide_actor_held_item=False)
+        self._projectile_animator.animate_in_world(progress, world)
+
+    def finalize(self, world):
+        if self._projectile_animator is not None:
+            self._projectile_animator.finalize(world)
+
+        AttackAction.finalize(self, world)
+
+
+class MeleeAttackAction(AttackAction):
+
+    def __init__(self, actor, item, position):
+        AttackAction.__init__(self, actor, item, position, 24)
+
+    def animate_in_world(self, progress, world):
+        run_at_pct = 0.3
+        recover_pcnt = 1 - run_at_pct
+
+        start_at = self.actor_entity.center()
+        target_at = self._results[1].center()
+        stop_at = target_at
+
+        vec = Utils.sub(target_at, start_at)
+        dist = Utils.mag(vec)
+        if dist > 16:
+            vec = Utils.set_length(vec, dist - 16)
+            stop_at = Utils.add(start_at, vec)
+
+        if progress <= run_at_pct:
+            new_pos = Utils.linear_interp(start_at, stop_at, progress / run_at_pct)
+        else:
+            self._apply_attack_and_add_animations_if_necessary(world)
+            new_pos = Utils.linear_interp(stop_at, start_at, (progress - run_at_pct) / recover_pcnt)
+
+        pre_move_offset = self.actor_entity.get_draw_offset()
+        new_move_offset = Utils.sub(new_pos, self.actor_entity.center())
+        vel = Utils.sub(new_move_offset, pre_move_offset)
+
+        self.actor_entity.set_draw_offset(*new_move_offset)
+        self.actor_entity.set_vel(vel)
 
 
 class _ThrownItemAnimator:
@@ -1222,11 +1245,12 @@ class ConsumeItemActionProvider(ActionProvider):
 
 class AttackItemActionProvider(ActionProvider):
 
-    def __init__(self, name, icon, target_dists, color=colors.RED):
-
+    def __init__(self, name, icon, target_dists, color=colors.RED, projectile=False):
+        # i don't trust myself to not typo this
         if not isinstance(target_dists, tuple):
-            # i don't trust myself to not typo this
             raise ValueError("target_dists needs to be a tuple. instead got {}".format(target_dists))
+
+        self.projectile = projectile
 
         ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
                                 target_dists=target_dists, color=color, needs_to_be_equipped=True)
@@ -1238,7 +1262,10 @@ class AttackItemActionProvider(ActionProvider):
         return True
 
     def get_action(self, actor, position=None, item=None):
-        return AttackAction(actor, item, position)
+        if self.projectile:
+            return ProjectileAttackAction(actor, item, position)
+        else:
+            return MeleeAttackAction(actor, item, position)
 
 
 class ItemActions:
@@ -1246,10 +1273,10 @@ class ItemActions:
     SWORD_ATTACK = AttackItemActionProvider("Sword Attack", spriteref.Items.sword_icon, (1,))
     SPEAR_ATTACK = AttackItemActionProvider("Spear Attack", spriteref.Items.spear_icon, (1,))
     WHIP_ATTACK = AttackItemActionProvider("Whip Attack", spriteref.Items.whip_icon, (1,))
-    WAND_ATTACK = AttackItemActionProvider("Wand Attack", spriteref.Items.magic_icon, (1, 2))
+    WAND_ATTACK = AttackItemActionProvider("Wand Attack", spriteref.Items.magic_icon, (1, 2), projectile=True)
     SHIELD_ATTACK = AttackItemActionProvider("Shield Bash", spriteref.Items.shield_icon, (1,))
     DAGGER_ATTACK = AttackItemActionProvider("Dagger Attack", spriteref.Items.dagger_icon, (1,))
-    BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, (2, 3))
+    BOW_ATTACK = AttackItemActionProvider("Bow Shot", spriteref.Items.bow_icon, (2, 3), projectile=True)
     AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, (1,))
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
 

@@ -11,6 +11,7 @@
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, need to handle resolution scaling issues
     - near-zero mac testing (mac friends on git say it's ok though...)
+ - map panel is kinda laggy
   
 [balance issues]
  - need more sources of healing
@@ -27,6 +28,8 @@
  - stuck effect 
     - prevents movement
     - spider-like enemy could cause this
+ - lunging
+    - a ranged attack that causes you to move adjacent to the target pos
  - stun effect
     - reduces speed to 1?
     - maybe -X speed is more logical
@@ -36,12 +39,10 @@
     - poison duration
     - confusion duration
  - Holy Artifact
-    - 
  - need a way to visually distinguish different depths
     - color would be by far the easiest way~~~
     - more art / scenery would be another
  - help panel
- - map panel
         
 [future features]
  - enemies picking up items (intelligence >= 4)
