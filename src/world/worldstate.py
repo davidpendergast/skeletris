@@ -440,13 +440,12 @@ class World:
                     did_add = True
 
                 if not did_add and self.get_geo(x, y) == World.FLOOR:
-                    if self.get_hidden(x, y):
-                        res.add(".", color=colors.BLACK)
-                    elif self.get_lighting(x, y) > 0:
-                        res.add(".", color=colors.LIGHT_GRAY)
-                    else:
-                        res.add(".", color=colors.DARK_GRAY)
-                    did_add = True
+                    if not self.get_hidden(x, y):
+                        if self.get_lighting(x, y) > 0:
+                            res.add(".", color=colors.LIGHT_GRAY)
+                        else:
+                            res.add(".", color=colors.DARK_GRAY)
+                        did_add = True
 
                 if not did_add and self.get_geo(x, y) in (World.WALL, World.DOOR):
                     touching_non_hidden = False
