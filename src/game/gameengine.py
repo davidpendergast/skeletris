@@ -345,7 +345,7 @@ class EnemyController(ActorController):
         return SkipTurnAction(actor, position=pos)
 
 
-class ActionType(Enum):
+class ActionType:
     MOVE_TO = "MOVE_TO"
     SKIP_DIALOG = "SKIP_DIALOG"
     PICKUP_ITEM = "PICKUP_ITEM"

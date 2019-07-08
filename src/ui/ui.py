@@ -119,6 +119,10 @@ class SidePanel(InteractableImage):
     def get_rect(self):
         return [0, 0, 0, 0]
 
+    def contains_point(self, x, y):
+        r = self.get_rect()
+        return r[0] <= x < r[0] + r[2] and r[1] <= y < r[1] + r[3]
+
     def update(self, world):
         pass
 
@@ -158,7 +162,7 @@ class MapPanel(SidePanel):
 
         self.total_rect = [0,
                            0,
-                           map_w + 32 * self.sc,
+                           map_w + border_thickness * 2 * self.sc,
                            self.map_rect[1] + self.map_rect[3] + border_thickness * 2 * self.sc]
 
         self.map_center = None  # gets updated when player moves
@@ -200,7 +204,7 @@ class MapPanel(SidePanel):
         old_map_text = self.map_raw_text
 
         # assuming the map only needs updating after an action is completed~
-        if gs.get_instance().event_queue().has_event(EventType.ACTION_FINISHED):
+        if gs.get_instance().event_queue().has_event(types=EventType.ACTION_FINISHED):
             self.map_raw_text = None
 
         player = world.get_player()
@@ -427,10 +431,6 @@ class InventoryPanel(SidePanel):
             yield bun
         for bun in self.hp_text.all_bundles():
             yield bun
-
-    def contains_point(self, x, y):
-        r = self.get_rect()
-        return r[0] <= x < r[0] + r[2] and r[1] <= y < r[1] + r[3]
 
     def on_click(self, x, y, button=1):
         """returns: True if click was absorbed, False otherwise"""

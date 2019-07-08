@@ -7,7 +7,6 @@ class EventQueue:
 
     def __init__(self):
         self.events = []
-        self._type_lookup = {}  # EventType -> list(Event)
 
         self.next_events = {}  # int: delay -> list(Event)
 
@@ -19,16 +18,10 @@ class EventQueue:
 
     def flip(self):
         self.events.clear()
-        self._type_lookup.clear()
 
         if 0 in self.next_events:
             self.events = self.next_events[0]
             del self.next_events[0]
-
-        for e in self.events:
-            if e.get_type() not in self._type_lookup:
-                self._type_lookup[e.get_type()] = []
-            self._type_lookup[e.get_type()].append(e)
 
         all_delays = list(delay for delay in self.next_events)
         all_delays.sort()
@@ -42,8 +35,8 @@ class EventQueue:
             del self.next_events[delay]
 
     def all_events_with_type(self, single_type):
-        if single_type in self._type_lookup:
-            for e in self._type_lookup[single_type]:
+        for e in self.events:
+            if e.get_type() == single_type:
                 yield e
 
     def all_events(self, types=None, predicate=lambda x: True):
@@ -63,11 +56,11 @@ class EventQueue:
             types = Utils.listify(types)
             for t in types:
                 for e in self.all_events_with_type(t):
-                    if predicate(e):
+                    if predicate is None or predicate(e):
                         return True
         else:
             for e in self.events:
-                if predicate(e):
+                if predicate is None or predicate(e):
                     return True
 
         return False
@@ -220,7 +213,7 @@ class ActionFinishedEvent(Event):
     def get_uid(self):
         return self.get_data()[0]
 
-    def get_type(self):
+    def get_action_type(self):
         return self.get_data()[1]
 
     def get_position(self):

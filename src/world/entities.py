@@ -1477,6 +1477,10 @@ class ReturnExitEntity(ExitEntity):
     def sprite_offset(self, sprite, scale):
         return (0, -64)
 
+    def is_exit(self):
+        # maybe one day, but not now~
+        return False
+
 
 class BossExitEntity(ExitEntity):
 

@@ -110,11 +110,12 @@ def run():
     running = True
 
     while running:
+        gs.get_instance().event_queue().flip()
         gs.get_instance().update(world)
 
         for event in gs.get_instance().event_queue().all_events():
+            print("INFO: got event {}".format(event))
             if event.get_type() == events.EventType.NEW_ZONE:
-                print("INFO: new zone {}".format(event.get_next_zone()))
                 render_eng.clear_all_sprites()
 
                 active_menu = gs.get_instance().menu_manager().get_active_menu()

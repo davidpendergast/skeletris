@@ -450,10 +450,8 @@ class GlobalState:
         return (cam[0] + point[0], cam[1] + point[1])
         
     def update(self, world):
-        self.event_queue().flip()
         if world is not None:
             for e in self.event_queue().all_events():
-                print(e)
                 triggers_to_remove = []
                 if e.get_type() in self._event_triggers:
                     for trigger in self._event_triggers[e.get_type()]:
