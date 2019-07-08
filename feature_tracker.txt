@@ -11,15 +11,13 @@
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, need to handle resolution scaling issues
     - near-zero mac testing (mac friends on git say it's ok though...)
- - map panel is kinda laggy
-    - not sure how to fix this, there are a lot of sprites
  - it's possible for mapped-item-actions to display their items with the wrong rotation
     - it's probably storing an old ref to the item with a different rotation
   
 [balance issues]
  - need more sources of healing
-    - it gets especially hard when health potions stop being the only potion type
-    - doctors could give potions
+ - vit is super underpowered compared to att/def (potentially fine)
+ - small munchers are basically identical to cave crawlers (2 speed, 2 hits to kill)
  
 [current features]
  - level generation
@@ -28,9 +26,13 @@
  - enemies equipping / consuming / throwing items (intelligence >= 5)
  - end-of-game boss (or just some kind of cinematic sequence?)
     - i'm fine with this, cliffhanger for the demo
+ - entities should specify their own map (char, color) identifier
+    - and different enemies should have different symbols
  - stuck effect 
     - prevents movement
     - spider-like enemy could cause this
+ - flinch effect
+    - causes you to skip your next turn
  - lunging
     - a ranged attack that causes you to move adjacent to the target pos
  - stun effect

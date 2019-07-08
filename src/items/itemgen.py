@@ -103,7 +103,7 @@ class WeaponItemFactory:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_ATTACK]
             return SpriteItem("Shield of Mending", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 2, local=True),
+                              [AppliedStat(StatTypes.ATT, 4, local=True),
                                AppliedStat(StatTypes.PLUS_DEFENSE_ON_HIT, 4, local=True)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
 
