@@ -10,6 +10,7 @@ import src.game.globalstate as gs
 import src.utils.colors as colors
 from src.renderengine.engine import RenderEngine
 from src.game.events import EventType
+import src.game.debug as debug
 
 
 BG_DEPTH = 10
@@ -216,7 +217,7 @@ class MapPanel(SidePanel):
             rect = [self.map_center[0] - self.map_dims[0] // 2,
                     self.map_center[1] - self.map_dims[1] // 2,
                     self.map_dims[0], self.map_dims[1]]
-            self.map_raw_text = world.get_map_text_for_cells(rect, respect_visiblity=True)
+            self.map_raw_text = world.get_map_text_for_cells(rect, ignore_visiblity=debug.super_map())
 
         if self.map_raw_text != old_map_text:
             self.map_dirty = True

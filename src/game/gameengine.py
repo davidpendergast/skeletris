@@ -743,7 +743,6 @@ class ProjectileAttackAction(AttackAction):
         self._projectile_animator = None
 
     def _calc_projectile_sprite(self):
-        res = None
         if self.get_item() is None:
             res = self.get_actor().get_actor_state().get_projectile_sprite()
         else:
@@ -915,7 +914,6 @@ class _ThrownItemAnimator:
             self._thrown_item_entity.set_rotation(rot)
 
     def finalize(self, world):
-        super().finalize(world)
         if self._thrown_item_entity is not None:
             pos = self._thrown_item_entity.center()
             world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=3)

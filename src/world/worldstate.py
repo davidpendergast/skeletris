@@ -406,7 +406,7 @@ class World:
                     res.append(e)
         return res
 
-    def get_map_text_for_cells(self, grid_rect, respect_visiblity=True):
+    def get_map_text_for_cells(self, grid_rect, ignore_visiblity=False):
         from src.ui.ui import TextBuilder, TextImage
         res = TextBuilder()
 
@@ -417,9 +417,9 @@ class World:
 
         ent_coords = {}
 
-        for e in self.all_entities(onscreen=respect_visiblity):
+        for e in self.all_entities(onscreen=(not ignore_visiblity)):
             e_pos = self.to_grid_coords(*e.center())
-            if Utils.rect_contains(grid_rect, e_pos) and (not respect_visiblity or e.is_visible_in_world(self)):
+            if Utils.rect_contains(grid_rect, e_pos) and (ignore_visiblity or e.is_visible_in_world(self)):
                 if e.is_player():
                     ent_coords[e_pos] = ("p", colors.WHITE)
                 elif e.is_enemy():
@@ -433,21 +433,35 @@ class World:
 
         for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
             for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):
+                did_add = False
                 if (x, y) in ent_coords:
                     char, color = ent_coords[(x, y)]
                     res.add(char, color=color)
-                elif self.get_geo(x, y) == World.WALL:
-                    res.add("X", color=colors.DARK_GRAY)
-                elif self.get_geo(x, y) == World.FLOOR:
+                    did_add = True
+
+                if not did_add and self.get_geo(x, y) == World.FLOOR:
                     if self.get_hidden(x, y):
                         res.add(".", color=colors.BLACK)
                     elif self.get_lighting(x, y) > 0:
                         res.add(".", color=colors.LIGHT_GRAY)
                     else:
                         res.add(".", color=colors.DARK_GRAY)
-                elif self.get_geo(x, y) == World.DOOR:
-                    res.add("0", color=colors.BLUE)
-                else:
+                    did_add = True
+
+                if not did_add and self.get_geo(x, y) in (World.WALL, World.DOOR):
+                    touching_non_hidden = False
+                    for n in Utils.neighbors(x, y, and_diags=True):
+                        if self.get_geo(*n) == World.FLOOR and not self.get_hidden(*n):
+                            touching_non_hidden = True
+                            break
+                    if touching_non_hidden or ignore_visiblity:
+                        if self.get_geo(x, y) == World.WALL:
+                            res.add("X", color=colors.DARK_GRAY)
+                        else:
+                            res.add("0", color=colors.BLUE)
+                        did_add = True
+
+                if not did_add:
                     if (x, y) in corners:
                         res.add(".", color=colors.BLACK)
                     else:
