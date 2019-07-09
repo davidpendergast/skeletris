@@ -191,13 +191,13 @@ class SmallMuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 8,
-            StatTypes.SPEED: 2,
+            StatTypes.VIT: 12,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 2,
+            StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.WEALTH: 1
+            StatTypes.WEALTH: 2
         })
 
 
@@ -219,13 +219,13 @@ class MuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 16,
-            StatTypes.SPEED: 4,
+            StatTypes.VIT: 20,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 8,
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 1
+            StatTypes.WEALTH: 3
         })
 
 
