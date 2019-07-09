@@ -72,6 +72,7 @@ MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
                        cleaner=lambda val: Utils.bound(int(val), 0, 100),
                        on_set=lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100))
 
+
 class Settings:
 
     def __init__(self):

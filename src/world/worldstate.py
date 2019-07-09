@@ -612,15 +612,12 @@ class World:
                 else:
                     a_state.set_ready_to_act(False)
 
-                    if action.is_possible(self):
-                        dur_modifier = a_state.turn_duration_modifier(action.get_type())
-                        dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
-                        actor.set_action(action, dur)
+                    dur_modifier = a_state.turn_duration_modifier(action.get_type())
+                    dur = Utils.bound(int(action.get_duration() * dur_modifier), 1, None)
+                    actor.set_and_start_action(action, dur, self)
 
-                        if actor.is_player():
-                            gs.get_instance().turn_counter += 1
-                    else:
-                        raise ValueError("{} received impossible action: {}".format(actor, action))
+                    if actor.is_player():
+                        gs.get_instance().turn_counter += 1
 
                 not_visible = not actor.is_visible_in_world(self)
                 action_pos = action.get_position()

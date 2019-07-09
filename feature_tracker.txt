@@ -1,6 +1,5 @@
 
 [P1 bugs]
- - dying to a ghast crashes the game~~
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
     - gotta setup my windows machine to test, need to handle resolution scaling issues

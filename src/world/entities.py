@@ -608,7 +608,7 @@ class ActorEntity(Entity):
     def is_actor(self):
         return True
 
-    def set_action(self, action, duration):
+    def set_and_start_action(self, action, duration, world):
         if self.executing_action is not None and action is not None:
             msg = "error setting action {}, actor already has action: {}".format(action, self.executing_action)
             raise ValueError(msg)
@@ -616,6 +616,13 @@ class ActorEntity(Entity):
         self.executing_action = action
         self.executing_action_duration = duration
         self.executing_action_ticks = 0
+
+        if self.executing_action is not None:
+            if not self.executing_action.is_possible(world):
+                raise ValueError("set an impossible action {} on actor {}".format(action, self))
+
+            self.executing_action.pre_start(world)
+            self.executing_action.start(world)
 
     def set_visually_held_item_override(self, val):
         pass
@@ -676,9 +683,6 @@ class ActorEntity(Entity):
 
     def update_action(self, world, force_finalize=False):
         if self.executing_action is not None:
-            if self.executing_action_ticks == 0:
-                self.executing_action.pre_start(world)
-                self.executing_action.start(world)
             self.executing_action_ticks += 1
             if force_finalize or self.executing_action_ticks >= self.executing_action_duration:
                 self.executing_action.finalize(world)
