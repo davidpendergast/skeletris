@@ -764,8 +764,6 @@ class ProjectileAttackAction(AttackAction):
         if self._projectile_animator is not None:
             self._projectile_animator.finalize(world)
 
-        AttackAction.finalize(self, world)
-
 
 class MeleeAttackAction(AttackAction):
 

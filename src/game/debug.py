@@ -3,10 +3,10 @@ import os
 _IS_DEV = os.path.exists("this_is_dev.txt")
 
 # flip to toggle all debug settings
-_DEBUG = False
+_DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
-_IGNORE_LOOT_LEVELS = True
+_IGNORE_LOOT_LEVELS = False
 _PLAYER_CANT_DIE = True
 _SUPER_MAP = False
 

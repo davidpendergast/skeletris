@@ -1,5 +1,12 @@
 
-[bugs]
+[P1 bugs]
+ - dying to a ghast crashes the game~~
+ - OS issues:
+    - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
+    - gotta setup my windows machine to test, need to handle resolution scaling issues
+    - near-zero mac testing (mac friends on git say it's ok though...)
+
+[P2 bugs]
  - can equip items/mess with inv while perfoming other actions
     - should implement this as an action
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
@@ -7,10 +14,6 @@
         - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
- - OS issues:
-    - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
-    - gotta setup my windows machine to test, need to handle resolution scaling issues
-    - near-zero mac testing (mac friends on git say it's ok though...)
  - it's possible for mapped-item-actions to display their items with the wrong rotation
     - it's probably storing an old ref to the item with a different rotation
   
@@ -18,6 +21,7 @@
  - need more sources of healing
  - vit is super underpowered compared to att/def (potentially fine)
  - small munchers are basically identical to cave crawlers (2 speed, 2 hits to kill)
+ - need some ways to defensively alter the world's geometry
  
 [current features]
  - level generation
@@ -33,8 +37,6 @@
     - spider-like enemy could cause this
  - flinch effect
     - causes you to skip your next turn
- - lunging
-    - a ranged attack that causes you to move adjacent to the target pos
  - stun effect
     - reduces speed to 1?
     - maybe -X speed is more logical
@@ -50,6 +52,7 @@
  - help panel
         
 [future features]
+ - traps / ground effects
  - enemies picking up items (intelligence >= 4)
     - we'd want an "arms up" sprite for eligible enemies I think
  - holding the up/down key in menus should continue scrolling
@@ -88,7 +91,7 @@
     - if you can dream it you can meme it
  
  
-[bugs that are fine]
+[P3 bugs]
     - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
         - for now, let's just not have any enemies that emit light by default

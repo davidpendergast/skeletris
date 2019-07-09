@@ -257,6 +257,7 @@ class Zone:
         self.bg_color = bg_color if bg_color is not None else colors.BLACK
         self.level = level
         self.blueprint_file = filename
+        self.music_id = music.Songs.SILENCE
 
     def get_name(self):
         return self.name
@@ -274,7 +275,7 @@ class Zone:
         return self.bg_color
 
     def get_music_id(self):
-        return music.Songs.SILENCE
+        return self.music_id
 
     def build_world(self):
         pass
@@ -506,10 +507,15 @@ class ZoneBuilder:
         return ZoneBuilder._tile_grid_to_world(level, t_grid)
 
     @staticmethod
+    def get_song_for_zone(level):
+        return music.Songs.MENU_THEME
+
+    @staticmethod
     def build_me_a_zone(level):
         zone = Zone("Depth {}".format(level + 1), level)
         zone.zone_id = get_storyline_zone_id(level)
         zone.ZONE_ID = zone.zone_id
+        zone.music_id = ZoneBuilder.get_song_for_zone(level)
 
         zone.build_world = lambda: ZoneBuilder.generate_new_world(level)
 
