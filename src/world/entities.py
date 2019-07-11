@@ -568,6 +568,12 @@ class ActorEntity(Entity):
     def get_shadow_offset(self):
         return self._shadow_offset
 
+    def get_damage_sound(self):
+        return random.choice(soundref.sfx_damage_hits_all)
+
+    def get_death_sound(self):
+        return None
+
     def get_light_level(self):
         return self.get_actor_state().light_level()
 
@@ -589,9 +595,14 @@ class ActorEntity(Entity):
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
 
-        sound_effects.play_sound(soundref.sfx_deathscream_human1, volume=0.7)
+        sound_effects.play_sound(self.get_death_sound(), volume=1.0)
         world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
         world.remove(self)
+
+    def animate_damage_taken(self, world):
+        self.perturb_color(colors.R_TEXT_COLOR, 25)
+        self.perturb(20, 18)
+        sound_effects.play_sound(self.get_damage_sound(), volume=1.0)
 
     def cleanup(self):
         super().cleanup()
@@ -831,6 +842,9 @@ class Player(ActorEntity):
 
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
+    def get_death_sound(self):
+        return random.choice(soundref.sfx_deathscream_humans_all)
+
     def get_depth(self):
         # XXX want to beat other actors
         return super().get_depth() - 1
@@ -952,6 +966,8 @@ class Player(ActorEntity):
         light_emitter = LightEmitterAnimation(pos[0], pos[1], 90, self.get_light_level(), 0)
         world.add(light_emitter)
 
+        sound_effects.play_sound(self.get_death_sound(), volume=1.0)
+
         gs.get_instance().event_queue().add(events.PlayerDiedEvent(), delay=240)
         world.remove(self)
 
@@ -993,6 +1009,9 @@ class Enemy(ActorEntity):
 
     def get_controller(self):
         return self._enemy_controller
+
+    def get_death_sound(self):
+        return random.choice(soundref.sfx_deathscream_androids_all)
 
     def _update_bar_imgs(self, bars):
         """bars: list of (float: percent, tuple: color)"""

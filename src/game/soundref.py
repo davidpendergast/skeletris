@@ -12,6 +12,8 @@ sfx_deathscream_alien3 = Utils.resource_path("assets/sounds/essential_retro_512/
 sfx_deathscream_alien4 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien4.ogg")
 sfx_deathscream_alien5 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien5.ogg")
 sfx_deathscream_alien6 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien6.ogg")
+sfx_deathscream_aliens_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien{}.ogg"
+                                                  .format(i)) for i in range(1, 7)]
 
 sfx_deathscream_android1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android1.ogg")
 sfx_deathscream_android2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android2.ogg")
@@ -21,6 +23,8 @@ sfx_deathscream_android5 = Utils.resource_path("assets/sounds/essential_retro_51
 sfx_deathscream_android6 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android6.ogg")
 sfx_deathscream_android7 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android7.ogg")
 sfx_deathscream_android8 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android8.ogg")
+sfx_deathscream_androids_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android{}.ogg"
+                                                    .format(i)) for i in range(1, 9)]
 
 sfx_deathscream_human1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human1.ogg")
 sfx_deathscream_human2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human2.ogg")
@@ -36,11 +40,16 @@ sfx_deathscream_human11 = Utils.resource_path("assets/sounds/essential_retro_512
 sfx_deathscream_human12 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human12.ogg")
 sfx_deathscream_human13 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human13.ogg")
 sfx_deathscream_human14 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human14.ogg")
+sfx_deathscream_humans_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human{}.ogg"
+                                                  .format(i)) for i in range(1, 15)]
 
 sfx_deathscream_robot1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot1.ogg")
 sfx_deathscream_robot2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot2.ogg")
 sfx_deathscream_robot3 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot3.ogg")
 sfx_deathscream_robot4 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot4.ogg")
+sfx_deathscream_robots_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot{}.ogg"
+                                                  .format(i)) for i in range(1, 5)]
+
 
 sfx_exp_cluster1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_exp_cluster1.ogg")
 sfx_exp_cluster2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_exp_cluster2.ogg")
@@ -363,6 +372,9 @@ sfx_damage_hit7 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_dam
 sfx_damage_hit8 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit8.ogg")
 sfx_damage_hit9 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit9.ogg")
 sfx_damage_hit10 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit10.ogg")
+sfx_damage_hits_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit{}.ogg"
+                                           .format(i)) for i in range(1, 11)]
+
 
 sfx_sound_bling = Utils.resource_path("assets/sounds/essential_retro_512/sfx_sound_bling.ogg")
 sfx_sound_depressurizing = Utils.resource_path("assets/sounds/essential_retro_512/sfx_sound_depressurizing.ogg")

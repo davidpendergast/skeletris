@@ -11,6 +11,8 @@ import src.game.balance as balance
 from src.game.stats import StatProvider
 import src.game.debug as debug
 import src.game.events as events
+import src.game.sound_effects as sound_effects
+import src.game.soundref as soundref
 
 
 import random
@@ -599,9 +601,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
             world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, defender_entity)
 
             if defender.hp() > 0:
-                # it looks pretty janky if the enemy perturbs a single frame before disappearing
-                defender_entity.perturb_color(colors.R_TEXT_COLOR, 25)
-                defender_entity.perturb(20, 18)
+                defender_entity.animate_damage_taken(world)
 
         new_status_effects_for_attacker = []
 
