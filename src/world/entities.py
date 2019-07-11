@@ -13,6 +13,7 @@ import src.game.events as events
 from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
+import src.game.soundref as soundref
 from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
 import src.game.stats as stats
@@ -588,6 +589,7 @@ class ActorEntity(Entity):
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
 
+        sound_effects.play_sound(soundref.sfx_deathscream_human1, volume=0.7)
         world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
         world.remove(self)
 

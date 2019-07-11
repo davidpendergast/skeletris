@@ -40,6 +40,7 @@
     - reduces speed to 1?
     - maybe -X speed is more logical
     - crab enemy
+ - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
     - HP on kill
     - poison duration

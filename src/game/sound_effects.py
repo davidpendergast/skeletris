@@ -2,27 +2,21 @@ import pygame
 import os
 from src.utils.util import Utils
 import traceback
-import random
 
 
 class Effects:
-    DOOR_SLIDE = "door_slide.ogg"
-    DOOR_OPEN = "door_open.ogg"
-    ENEMY_DEATH = ("enemy_death1.ogg", "enemy_death2.ogg", "enemy_death3.ogg")
-    CLICK = "click.ogg"
-    CLICK2 = "click_2.ogg"
-    LOAD = "load.ogg"
-    MISC_MENU_= "misc_menu.ogg"
-    MISC_MENU_2 = "misc_menu_2.ogg"
-    MISC_MENU_3 = "misc_menu_3.ogg"
-    MISC_MENU_4 = "misc_menu_4.ogg"
-    NEGATIVE_2 = "negative_2.ogg"
-    SAVE = "save.ogg"
+    DOOR_SLIDE = Utils.resource_path(os.path.join("assets", "sounds", "door_slide.ogg"))
+    DOOR_OPEN = Utils.resource_path(os.path.join("assets", "sounds", "door_open.ogg"))
+    CLICK = Utils.resource_path(os.path.join("assets", "sounds", "click.ogg"))
+    CLICK2 = Utils.resource_path(os.path.join("assets", "sounds", "click_2.ogg"))
+    LOAD = Utils.resource_path(os.path.join("assets", "sounds", "load.ogg"))
+    MISC_MENU_= Utils.resource_path(os.path.join("assets", "sounds", "misc_menu.ogg"))
+    MISC_MENU_2 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_2.ogg"))
+    MISC_MENU_3 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_3.ogg"))
+    MISC_MENU_4 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_4.ogg"))
+    NEGATIVE_2 = Utils.resource_path(os.path.join("assets", "sounds", "negative_2.ogg"))
+    SAVE = Utils.resource_path(os.path.join("assets", "sounds", "save.ogg"))
 
-
-_VOLUME_MULTIPLIER = {
-    Effects.CLICK: 0.75
-}
 
 _MASTER_VOLUME = 1.0
 
@@ -49,33 +43,26 @@ def update():
         del _RECENTLY_PLAYED[effect]
 
 
-def play_sound(effect_id):
-    if _MASTER_VOLUME == 0:
+def play_sound(effect_path, volume=1.0):
+    if _MASTER_VOLUME == 0 or volume <= 0 or effect_path is None:
         return
 
-    if effect_id in _RECENTLY_PLAYED:
+    if effect_path in _RECENTLY_PLAYED:
         return
 
-    if isinstance(effect_id, list):
-        effect_filename = random.choice(effect_id)
-    else:
-        effect_filename = effect_id
-
-    if effect_filename in _LOADED_EFFECTS:
-        effect = _LOADED_EFFECTS[effect_filename]
+    if effect_path in _LOADED_EFFECTS:
+        effect = _LOADED_EFFECTS[effect_path]
     else:
         try:
-            path = Utils.resource_path(os.path.join("assets", "sounds", effect_filename))
-            effect = pygame.mixer.Sound(path)
-            if effect_id in _VOLUME_MULTIPLIER:
-                effect.set_volume(_MASTER_VOLUME * _VOLUME_MULTIPLIER[effect_id])
+            effect = pygame.mixer.Sound(effect_path)
+            effect.set_volume(_MASTER_VOLUME * volume)
         except:
-            print("ERROR: failed to load sound effect {}".format(effect_filename))
+            print("ERROR: failed to load sound effect {}".format(effect_path))
             traceback.print_exc()
             effect = None
-        _LOADED_EFFECTS[effect_filename] = effect
+        _LOADED_EFFECTS[effect_path] = effect
 
     if effect is not None:
-        _RECENTLY_PLAYED[effect_id] = 0
+        _RECENTLY_PLAYED[effect_path] = 0
         effect.play()
 
