@@ -569,10 +569,10 @@ class ActorEntity(Entity):
         return self._shadow_offset
 
     def get_damage_sound(self):
-        return random.choice(soundref.sfx_damage_hits_all)
+        return soundref.rand_damage_hit_small()
 
     def get_death_sound(self):
-        return None
+        return soundref.rand_explosion_short()
 
     def get_light_level(self):
         return self.get_actor_state().light_level()
@@ -595,14 +595,14 @@ class ActorEntity(Entity):
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
 
-        sound_effects.play_sound(self.get_death_sound(), volume=1.0)
+        sound_effects.play_sound(self.get_death_sound())
         world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
         world.remove(self)
 
     def animate_damage_taken(self, world):
         self.perturb_color(colors.R_TEXT_COLOR, 25)
         self.perturb(20, 18)
-        sound_effects.play_sound(self.get_damage_sound(), volume=1.0)
+        sound_effects.play_sound(self.get_damage_sound())
 
     def cleanup(self):
         super().cleanup()
@@ -843,7 +843,7 @@ class Player(ActorEntity):
         return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
     def get_death_sound(self):
-        return random.choice(soundref.sfx_deathscream_humans_all)
+        return soundref.rand_deathscream_human()
 
     def get_depth(self):
         # XXX want to beat other actors
@@ -966,7 +966,7 @@ class Player(ActorEntity):
         light_emitter = LightEmitterAnimation(pos[0], pos[1], 90, self.get_light_level(), 0)
         world.add(light_emitter)
 
-        sound_effects.play_sound(self.get_death_sound(), volume=1.0)
+        sound_effects.play_sound(self.get_death_sound())
 
         gs.get_instance().event_queue().add(events.PlayerDiedEvent(), delay=240)
         world.remove(self)
@@ -1009,9 +1009,6 @@ class Enemy(ActorEntity):
 
     def get_controller(self):
         return self._enemy_controller
-
-    def get_death_sound(self):
-        return random.choice(soundref.sfx_deathscream_androids_all)
 
     def _update_bar_imgs(self, bars):
         """bars: list of (float: percent, tuple: color)"""
@@ -1159,6 +1156,8 @@ class ChestEntity(Entity):
             self._is_open = True
             level = gs.get_instance().get_zone_level()
             loot = LootFactory.gen_chest_loot(level)
+
+            sound_effects.play_sound(soundref.chest_open)
 
             for item in loot:
                 world.add(ItemEntity(item, *self.center()))
@@ -1477,6 +1476,7 @@ class ExitEntity(Entity):
     def interact(self, world):
         if self.next_zone_id is not None:
             self._is_opening = True
+            sound_effects.play_sound(soundref.exit_door_open)
         else:
             dia = Dialog("This path doesn't lead anywhere...")
             gs.get_instance().dialog_manager().set_dialog(dia)

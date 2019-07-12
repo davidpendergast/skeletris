@@ -518,6 +518,7 @@ class OpenDoorAction(MoveToAction):
     def __init__(self, actor, position):
         MoveToAction.__init__(self, actor, position)
         self.door_entity = None
+        self._did_sound = False
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()
@@ -547,6 +548,9 @@ class OpenDoorAction(MoveToAction):
     def animate_in_world(self, progress, world):
         super().animate_in_world(progress, world)
         self.door_entity.set_open_progress_for_render(progress)
+        if not self._did_sound:
+            sound_effects.play_sound(soundref.door_open)
+            self._did_sound = True
 
     def finalize(self, world):
         super().finalize(world)
@@ -594,6 +598,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
     if damage <= 0:
         if defender_entity is not None and world is not None:
             world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
+            sound_effects.play_sound(soundref.whiff_noise)
     else:
         defender.set_hp(defender.hp() - damage)
 

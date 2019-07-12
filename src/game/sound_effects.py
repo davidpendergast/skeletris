@@ -43,7 +43,20 @@ def update():
         del _RECENTLY_PLAYED[effect]
 
 
-def play_sound(effect_path, volume=1.0):
+def play_sound(sound):
+    """
+    :param sound: either an effect_path, or a tuple (effect_path, volume)
+    """
+    if sound is None:
+        return
+
+    if isinstance(sound, tuple):
+        effect_path = sound[0]
+        volume = sound[1]
+    else:
+        effect_path = sound
+        volume = 1.0
+
     if _MASTER_VOLUME == 0 or volume <= 0 or effect_path is None:
         return
 

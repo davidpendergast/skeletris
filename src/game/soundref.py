@@ -1,9 +1,11 @@
+import random
 from src.utils.util import Utils
 
 #                  *----------------------------------------------------------------------*
 #                  | The Essential Retro Video Game Sound Effects Collection [512 sounds] |
 #                  | Creator: Juhani Junkala                                              |
 #                  | License: CC0                                                         |
+#                  | https://opengameart.org/content/512-sound-effects-8-bit-style        |
 #                  *----------------------------------------------------------------------*
 
 sfx_deathscream_alien1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien1.ogg")
@@ -12,8 +14,6 @@ sfx_deathscream_alien3 = Utils.resource_path("assets/sounds/essential_retro_512/
 sfx_deathscream_alien4 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien4.ogg")
 sfx_deathscream_alien5 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien5.ogg")
 sfx_deathscream_alien6 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien6.ogg")
-sfx_deathscream_aliens_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_alien{}.ogg"
-                                                  .format(i)) for i in range(1, 7)]
 
 sfx_deathscream_android1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android1.ogg")
 sfx_deathscream_android2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android2.ogg")
@@ -23,8 +23,6 @@ sfx_deathscream_android5 = Utils.resource_path("assets/sounds/essential_retro_51
 sfx_deathscream_android6 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android6.ogg")
 sfx_deathscream_android7 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android7.ogg")
 sfx_deathscream_android8 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android8.ogg")
-sfx_deathscream_androids_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_android{}.ogg"
-                                                    .format(i)) for i in range(1, 9)]
 
 sfx_deathscream_human1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human1.ogg")
 sfx_deathscream_human2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human2.ogg")
@@ -40,16 +38,11 @@ sfx_deathscream_human11 = Utils.resource_path("assets/sounds/essential_retro_512
 sfx_deathscream_human12 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human12.ogg")
 sfx_deathscream_human13 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human13.ogg")
 sfx_deathscream_human14 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human14.ogg")
-sfx_deathscream_humans_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_human{}.ogg"
-                                                  .format(i)) for i in range(1, 15)]
 
 sfx_deathscream_robot1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot1.ogg")
 sfx_deathscream_robot2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot2.ogg")
 sfx_deathscream_robot3 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot3.ogg")
 sfx_deathscream_robot4 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot4.ogg")
-sfx_deathscream_robots_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_deathscream_robot{}.ogg"
-                                                  .format(i)) for i in range(1, 5)]
-
 
 sfx_exp_cluster1 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_exp_cluster1.ogg")
 sfx_exp_cluster2 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_exp_cluster2.ogg")
@@ -372,9 +365,6 @@ sfx_damage_hit7 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_dam
 sfx_damage_hit8 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit8.ogg")
 sfx_damage_hit9 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit9.ogg")
 sfx_damage_hit10 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit10.ogg")
-sfx_damage_hits_all = [Utils.resource_path("assets/sounds/essential_retro_512/sfx_damage_hit{}.ogg"
-                                           .format(i)) for i in range(1, 11)]
-
 
 sfx_sound_bling = Utils.resource_path("assets/sounds/essential_retro_512/sfx_sound_bling.ogg")
 sfx_sound_depressurizing = Utils.resource_path("assets/sounds/essential_retro_512/sfx_sound_depressurizing.ogg")
@@ -588,3 +578,69 @@ sfx_weapon_singleshot19 = Utils.resource_path("assets/sounds/essential_retro_512
 sfx_weapon_singleshot20 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_weapon_singleshot20.ogg")
 sfx_weapon_singleshot21 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_weapon_singleshot21.ogg")
 sfx_weapon_singleshot22 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_weapon_singleshot22.ogg")
+
+# outside classes should generally access their sounds from
+# these variables so that things stay consistent.
+
+menu_click_1 = (sfx_wpn_noammo2, 0.5)
+menu_click_2 = (sfx_wpn_noammo1, 0.5)
+door_open = None # (sfx_sound_mechanicalnoise4, 0.1)
+exit_door_open = (sfx_sound_mechanicalnoise4, 0.1)
+whiff_noise = (sfx_sounds_impact10, 0.1)
+chest_open = (sfx_sounds_fanfare2, 0.3)
+
+
+def rand_deathscream_android():
+    choices = [
+        sfx_deathscream_android1, sfx_deathscream_android2, sfx_deathscream_android3, sfx_deathscream_android4,
+        sfx_deathscream_android5, sfx_deathscream_android6, sfx_deathscream_android7, sfx_deathscream_android8,
+    ]
+    return (random.choice(choices), 0.7)
+
+
+def rand_deathscream_human():
+    choices = [
+        # sfx_deathscream_human1, this one sucks
+        sfx_deathscream_human2, sfx_deathscream_human3, sfx_deathscream_human4,
+        sfx_deathscream_human5, sfx_deathscream_human6, sfx_deathscream_human7, sfx_deathscream_human8,
+        sfx_deathscream_human9, sfx_deathscream_human10, sfx_deathscream_human11, sfx_deathscream_human12,
+        sfx_deathscream_human13, sfx_deathscream_human14
+    ]
+    return (random.choice(choices), 0.4)
+
+
+def rand_deathscream_robot():
+    choices = [sfx_deathscream_robot1, sfx_deathscream_robot2, sfx_deathscream_robot3, sfx_deathscream_robot4]
+    return (random.choice(choices), 0.4)
+
+
+def rand_damage_hit_small():
+    #choices = [sfx_damage_hit1, sfx_damage_hit2, sfx_damage_hit3, sfx_damage_hit4,
+    #           sfx_damage_hit5, sfx_damage_hit6, sfx_damage_hit7, sfx_damage_hit8,
+    #           sfx_damage_hit9, sfx_damage_hit10]
+    choices = [sfx_wpn_punch1, sfx_wpn_punch2, sfx_wpn_punch3, sfx_wpn_punch4]
+    return (random.choice(choices), 0.4)
+
+
+def rand_explosion_short():
+    choices = [sfx_exp_short_soft1, sfx_exp_short_soft2, sfx_exp_short_soft3, sfx_exp_short_soft4,
+               sfx_exp_short_soft5, sfx_exp_short_soft6, sfx_exp_short_soft7, sfx_exp_short_soft8,
+               sfx_exp_short_soft9, sfx_exp_short_soft10, sfx_exp_short_soft11, sfx_exp_short_soft12]
+    return (random.choice(choices), 0.2)
+
+
+def rand_explosion_medium():
+    choices = [sfx_exp_medium1, sfx_exp_medium2, sfx_exp_medium3, sfx_exp_medium4,
+               sfx_exp_medium5, sfx_exp_medium6, sfx_exp_medium7, sfx_exp_medium8,
+               sfx_exp_medium9, sfx_exp_medium10, sfx_exp_medium11, sfx_exp_medium12,
+               sfx_exp_medium13]
+    return (random.choice(choices), 0.2)
+
+
+def rand_explosion_long():
+    choices = [sfx_exp_long1, sfx_exp_long2, sfx_exp_long3, sfx_exp_long4, sfx_exp_long5, sfx_exp_long6]
+    return (random.choice(choices), 0.2)
+
+
+
+

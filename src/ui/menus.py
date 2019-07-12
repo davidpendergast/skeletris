@@ -2,7 +2,8 @@ import random
 
 import pygame
 
-from src.game import spriteref as spriteref
+import src.game.spriteref as spriteref
+import src.game.soundref as soundref
 from src.items import item as item_module
 from src.ui.tooltips import TooltipFactory
 from src.ui.ui import HealthBarPanel, InventoryPanel, MapPanel, SidePanelTypes, CinematicPanel, TextImage, ItemImage, DialogPanel
@@ -289,7 +290,7 @@ class OptionsMenu(Menu):
 
     def set_selected(self, idx):
         if idx != self._selection and self.get_enabled(idx):
-            sound_effects.play_sound(sound_effects.Effects.CLICK)
+            sound_effects.play_sound(soundref.menu_click_1)
             self._selection = idx
 
     def handle_inputs(self, world):
@@ -369,7 +370,7 @@ class OptionsMenu(Menu):
             render_eng.update(bun)
 
     def option_activated(self, idx):
-        sound_effects.play_sound(sound_effects.Effects.CLICK2)
+        sound_effects.play_sound(soundref.menu_click_2)
 
     def esc_pressed(self):
         pass
@@ -633,7 +634,7 @@ class KeybindingEditMenu(OptionsMenu):
                 gs.get_instance().save_settings_to_disk()
                 gs.get_instance().menu_manager().set_active_menu(self._return_menu_builder())
 
-                sound_effects.play_sound(sound_effects.Effects.CLICK2)
+                sound_effects.play_sound(soundref.menu_click_2)
 
     def _is_valid_binding(self, key):
         if key in (pygame.K_RETURN, pygame.K_ESCAPE, "MOUSE_BUTTON_1"):
