@@ -6,6 +6,7 @@ import src.game.globalstate as gs
 from src.world.worldstate import World
 from src.utils.util import Utils
 from src.renderengine.engine import RenderEngine
+import src.utils.colors as colors
 
 
 class WorldView:
@@ -27,7 +28,13 @@ class WorldView:
 
         bundle = self.get_geo_bundle(grid_x, grid_y)
         sprite = self.calc_sprite_for_geo(grid_x, grid_y)  # this may be None
-        color = self.world.get_geo_color()
+
+        if self.world.get_geo(grid_x, grid_y) not in (World.FLOOR, World.DOOR):
+            color = self.world.get_geo_color()
+        else:
+            lighting = self.world.get_lighting(grid_x, grid_y)
+            color = Utils.linear_interp(self.world.get_geo_color(), colors.WHITE, lighting)
+
         if bundle is not None:
             new_bun = bundle.update(new_model=sprite,
                                     new_x=grid_x*self.world.cellsize(),
