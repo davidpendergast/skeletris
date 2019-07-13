@@ -79,6 +79,8 @@ class StatTypes:
     CONFUSION = StatType("CONFUSION", desc="Moving is more difficult", color=colors.RED)
     CONFUSION_ON_HIT = StatType("CONFUSION_ON_HIT", color=colors.RED, desc="Inflicts Confusion on Hit (lasts {} turns)",
                                 local_desc="Inflicts Confusion on Hit (lasts {} turns)")
+    SLOW_ON_HIT = StatType("SLOW_ON_HIT", color=colors.DARK_YELLOW, desc="Inflicts Slowness on Hit (lasts {} turns)",
+                           local_desc="Inflicts Confusion on Hit (lasts {} turns)")
 
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
@@ -88,6 +90,8 @@ class StatTypes:
                                  color=colors.YELLOW,
                                  desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
                                  local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")
+
+
 
     PLUS_DEFENSE_ON_HIT = StatType("PLUS_DEFENSE_ON_HIT",
                                    color=colors.BLUE,

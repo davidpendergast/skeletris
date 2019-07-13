@@ -229,6 +229,33 @@ class MuncherTemplate(EnemyTemplate):
         })
 
 
+class SlugTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Slug")
+
+    def get_sprites(self):
+        return spriteref.enemy_slug_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+    def get_level_range(self):
+        return range(5, 8)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 20,
+            StatTypes.SPEED: 1,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 6,
+            StatTypes.DEF: 6,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.SLOW_ON_HIT: 3,
+            StatTypes.WEALTH: 2
+        })
+
+
 class CyclopsTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -474,6 +501,7 @@ TEMPLATE_SCORPION = ScorpionTemplate()
 TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 TEMPLATE_GHAST = GhastTemplate()
 TEMPLATE_SPORE = SporeTemplate()
+TEMPLATE_SLUG = SlugTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -485,6 +513,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_CYCLOPS,
                         TEMPLATE_SPORE,
                         TEMPLATE_CAVE_CRAWLER,
+                        TEMPLATE_SLUG,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
                         TEMPLATE_FROG,

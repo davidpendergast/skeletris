@@ -111,7 +111,7 @@ def new_speed_effect(val, duration, player_text=None, unique_key=None):
 
 
 def new_slow_effect(val, duration, player_text=None, unique_key=None):
-    stats = [AppliedStat(StatTypes.SPEED, val)]
+    stats = [AppliedStat(StatTypes.SPEED, -val)]
     return StatusEffect("Reduced Speed", duration, colors.DARK_YELLOW,
                         spriteref.status_diagonal_lines_icon, stats, unique_key=unique_key,
                         player_text=player_text)
