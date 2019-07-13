@@ -256,6 +256,32 @@ class SlugTemplate(EnemyTemplate):
         })
 
 
+class GiantTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Putrid Host")
+
+    def get_sprites(self):
+        return spriteref.enemy_giant_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+    def get_level_range(self):
+        return range(12, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 28,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 6,
+            StatTypes.UNARMED_ATT: 4,
+            StatTypes.DEF: 3,
+            StatTypes.INTELLIGENCE: 2,
+            StatTypes.WEALTH: 4
+        })
+
+
 class CyclopsTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -502,6 +528,7 @@ TEMPLATE_SMALL_FROG = SmallFrogTemplate()
 TEMPLATE_GHAST = GhastTemplate()
 TEMPLATE_SPORE = SporeTemplate()
 TEMPLATE_SLUG = SlugTemplate()
+TEMPLATE_GIANT = GiantTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -519,7 +546,8 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_FROG,
                         TEMPLATE_SMALL_FROG,
                         TEMPLATE_SCORPION,
-                        TEMPLATE_GHAST]
+                        TEMPLATE_GHAST,
+                        TEMPLATE_GIANT]
 
 
 def get_rand_template_for_level(level, rand_val):
