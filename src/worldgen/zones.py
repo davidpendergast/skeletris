@@ -50,15 +50,16 @@ def _generated_zone_id(level):
 
 
 def get_special_story_zone(level):
-    special_zones = {
-        7: FrogLairZone.ZONE_ID,
-        15: CaveHorrorZone.ZONE_ID
-    }
+    special_zones = [
+        FrogLairZone.ZONE_ID,
+        CaveHorrorZone.ZONE_ID
+    ]
 
-    if level in special_zones:
-        return special_zones[level]
-    else:
-        return None
+    for z_id in special_zones:
+        if get_zone(z_id).get_level() == level:
+            return z_id
+
+    return None
 
 
 def get_storyline_zone_id(level):
@@ -70,6 +71,19 @@ def get_storyline_zone_id(level):
         return _generated_zone_id(level)
     else:
         return _generated_zone_id(15)
+
+
+def get_color_for_story_zone(level):
+    if level <= 3:
+        return colors.WHITE
+    elif level <= get_zone(FrogLairZone.ZONE_ID).get_level():
+        return get_zone(FrogLairZone.ZONE_ID).get_color()
+    elif level <= 11:
+        return (0.85, 0.85, 1.0)
+    elif level <= get_zone(CaveHorrorZone.ZONE_ID).get_level():
+        return get_zone(CaveHorrorZone.ZONE_ID).get_color()
+
+    return colors.WHITE
 
 
 def init_zones():
@@ -207,6 +221,7 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=
     music.play_song(zone.get_music_id())
 
     w = zone.build_world()
+    w.set_geo_color(zone.get_color())
     w.flush_new_entity_additions()
     w.set_bg_color(zone.get_bg_color())
 
@@ -258,12 +273,16 @@ class Zone:
         self.level = level
         self.blueprint_file = filename
         self.music_id = music.Songs.SILENCE
+        self.geo_color = colors.WHITE
 
     def get_name(self):
         return self.name
 
     def get_file(self):
         return self.blueprint_file
+
+    def get_color(self):
+        return self.geo_color
 
     def get_id(self):
         return self.zone_id
@@ -498,13 +517,16 @@ class ZoneBuilder:
         return t_grid
 
     @staticmethod
-    def generate_new_world(level):
-        t_grid = ZoneBuilder.generate_tile_grid(level)
+    def generate_new_world(zone):
+        t_grid = ZoneBuilder.generate_tile_grid(zone.get_level())
 
-        print("INFO: generated world: level={}".format(level))
+        print("INFO: generated world: level={}".format(zone.get_level()))
         print(t_grid)
 
-        return ZoneBuilder._tile_grid_to_world(level, t_grid)
+        w = ZoneBuilder._tile_grid_to_world(zone.get_level(), t_grid)
+        w.set_geo_color(zone.get_color())
+
+        return w
 
     @staticmethod
     def get_song_for_zone(level):
@@ -516,8 +538,9 @@ class ZoneBuilder:
         zone.zone_id = get_storyline_zone_id(level)
         zone.ZONE_ID = zone.zone_id
         zone.music_id = ZoneBuilder.get_song_for_zone(level)
+        zone.geo_color = get_color_for_story_zone(level)
 
-        zone.build_world = lambda: ZoneBuilder.generate_new_world(level)
+        zone.build_world = lambda: ZoneBuilder.generate_new_world(zone)
 
         return zone
 
@@ -717,6 +740,7 @@ class FrogLairZone(Zone):
 
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
+        self.geo_color = (0.85, 1.0, 0.85)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -755,6 +779,7 @@ class CaveHorrorZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
         self._tree_color = (255, 203, 203)
+        self.geo_color = (1.0, 0.85, 0.85)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())

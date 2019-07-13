@@ -29,6 +29,7 @@ class World:
 
         # tells the WorldView to update the bundles at these coords
         self._dirty_geo = set()
+        self._needs_full_geo_rebuild = False
 
         for _ in range(0, width):
             self._level_geo.append([World.EMPTY] * height)
@@ -45,6 +46,7 @@ class World:
 
         self._wall_art_overrides = {}  # x,y -> wall_type_id
         self._floor_art_overrides = {}  # x,y -> floor_type_id
+        self._geo_color = colors.WHITE
 
     def cellsize(self):
         return CELLSIZE
@@ -182,7 +184,6 @@ class World:
         else:
             self._wall_art_overrides[xy] = wall_id
         if old_type != wall_id:
-
             self._dirty_geo.add(xy)
 
     def wall_type_at(self, grid_xy):
@@ -339,6 +340,14 @@ class World:
 
     def get_bg_color(self):
         return self._bg_color
+
+    def get_geo_color(self):
+        return self._geo_color
+
+    def set_geo_color(self, color):
+        if self._geo_color != color:
+            self._needs_full_geo_rebuild = True
+            self._geo_color = color
 
     def set_hidden(self, grid_x, grid_y, val, and_fill_adj_floors=True):
         if self.get_geo(grid_x, grid_y) == World.FLOOR and self._hidden[grid_x][grid_y] != val:

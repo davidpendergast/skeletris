@@ -27,11 +27,14 @@ class WorldView:
 
         bundle = self.get_geo_bundle(grid_x, grid_y)
         sprite = self.calc_sprite_for_geo(grid_x, grid_y)  # this may be None
+        color = self.world.get_geo_color()
         if bundle is not None:
             new_bun = bundle.update(new_model=sprite,
                                     new_x=grid_x*self.world.cellsize(),
                                     new_y=grid_y*self.world.cellsize(),
-                                    new_scale=4, new_depth=10)
+                                    new_scale=4,
+                                    new_depth=10,
+                                    new_color=color)
             self._geo_bundle_lookup[(grid_x, grid_y)] = new_bun
             self._dirty_geo_bundles.append((grid_x, grid_y))
 
@@ -167,8 +170,12 @@ class WorldView:
             leftover_e.cleanup()
         self._onscreen_entities = new_onscreens
 
-        for dirty_xy in self.world._dirty_geo:
-            self.update_geo_bundle(dirty_xy[0], dirty_xy[1])
+        if self.world._needs_full_geo_rebuild:
+            self._geo_bundle_lookup.clear()
+        else:
+            for dirty_xy in self.world._dirty_geo:
+                self.update_geo_bundle(dirty_xy[0], dirty_xy[1])
+        self.world._needs_full_geo_rebuild = False
         self.world._dirty_geo.clear()
 
         for e in self._onscreen_entities:

@@ -66,7 +66,7 @@ def run():
     render_eng.add_layer(
             spriteref.FLOOR_LAYER,
             "floors", 0, 
-            False, False)
+            False, COLOR)
     render_eng.add_layer(
             spriteref.SHADOW_LAYER,
             "shadow_layer", 5, 
@@ -74,7 +74,7 @@ def run():
     render_eng.add_layer(
             spriteref.WALL_LAYER,
             "walls", 10, 
-            False, False)
+            False, COLOR)
     render_eng.add_layer(
             spriteref.ENTITY_LAYER,
             "entities", 15, 

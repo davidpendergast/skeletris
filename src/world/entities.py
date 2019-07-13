@@ -168,7 +168,7 @@ class Entity(Updateable):
         for bundle in self.all_bundles():
             render_eng.remove(bundle)
 
-    def update_images(self):
+    def update_shadow_image(self):
         sh_model = self.get_shadow_sprite()
         if sh_model is not None:
             if self._shadow is None:
@@ -389,7 +389,7 @@ class AnimationEntity(Entity):
                                              new_xflip=self.xflipped, new_depth=self.get_depth(),
                                              new_color=self._color, new_scale=self.scale, new_rotation=self.rotation)
 
-                super().update_images()  # updating shadow
+                super().update_shadow_image()  # updating shadow
 
         def get_progress(self):
             return Utils.bound(self.tick_count / self.duration, 0.0, 0.999)
@@ -812,7 +812,7 @@ class ActorEntity(Entity):
         self._img = self._img.update(new_model=sprite, new_color=color, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip)
 
-        super().update_images()  # get the shadow
+        self.update_shadow_image()
 
 
 class Player(ActorEntity):
@@ -1120,7 +1120,7 @@ class ChestEntity(Entity):
     def get_depth(self):
         return super().get_depth() + 1  # XXX need these to lose ties, basically
         
-    def update_images(self):
+    def update_images(self, world):
         if self.is_open():
             model = spriteref.chest_open_1
         else:
@@ -1134,7 +1134,7 @@ class ChestEntity(Entity):
         depth = self.get_depth()
         self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
         
-        super().update_images()
+        self.update_shadow_image()
         sh_x = self._shadow.x()
         sh_y = self._shadow.y()
         sh_s = self._shadow.scale()
@@ -1144,7 +1144,7 @@ class ChestEntity(Entity):
         return self._is_open
             
     def update(self, world):
-        self.update_images()
+        self.update_images(world)
 
     def is_interactable(self, world):
         return not self.is_open()
@@ -1229,7 +1229,7 @@ class PickupEntity(Entity):
         self._img = self._img.update(new_x=x, new_y=y, new_color=self.get_color(),
                                      new_model=cur_sprite, new_depth=depth, new_rotation=self.sprite_rotation)
 
-        super().update_images()
+        self.update_shadow_image()
 
     def _get_pushes(self, world):
         if not self.vel == (0, 0):
@@ -1297,7 +1297,7 @@ class DoorEntity(Entity):
         self.sprites = None
         self.open_prog = 0
 
-    def update_images(self):
+    def update_images(self, world):
         if self._is_horz is None or self.sprites is None:
             print("tried to update door image before _is_horz was calculated...")
             return
@@ -1311,7 +1311,8 @@ class DoorEntity(Entity):
         x = self.x()
         y = self.y() - (sprite.height() * self._img.scale() - self.h())
         depth = float('inf')  # should render behind all other entities
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_color=world.get_geo_color())
 
     def set_open_progress_for_render(self, prog):
         self.open_prog = prog
@@ -1349,7 +1350,7 @@ class DoorEntity(Entity):
             self._is_horz = self._calc_is_horz(world)
 
         self.sprites = self.get_sprites(world)
-        self.update_images()
+        self.update_images(world)
 
     def is_door(self):
         return True
@@ -1431,7 +1432,7 @@ class ExitEntity(Entity):
     def visible_in_darkness(self):
         return True
 
-    def update_images(self):
+    def update_images(self, world):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
 
@@ -1440,7 +1441,8 @@ class ExitEntity(Entity):
 
         x = self.x() + offs[0]
         y = self.y() + offs[1]
-        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite, new_depth=self.get_depth())
+        self._img = self._img.update(new_x=x, new_y=y, new_model=sprite,
+                                     new_color=world.get_geo_color(), new_depth=self.get_depth())
 
     def get_progress(self):
         return Utils.bound(self.count / self._animation_duration, 0.0, 1.0)
@@ -1465,7 +1467,7 @@ class ExitEntity(Entity):
                 new_zone_event = self.make_new_zone_event()
                 gs.get_instance().event_queue().add(new_zone_event)
 
-        self.update_images()
+        self.update_images(world)
 
     def make_new_zone_event(self):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
@@ -1544,7 +1546,8 @@ class DecorationEntity(Entity):
         y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
         depth = self.get_depth()
 
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y, new_depth=depth)
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_color=world.get_geo_color())
 
     def all_bundles(self):
         for bun in Entity.all_bundles(self):
@@ -1645,7 +1648,7 @@ class NpcEntity(Entity):
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_xflip=xflip, new_color=self.color)
 
-        super().update_images()  # just updating shadow
+        self.update_shadow_image()
 
     def update(self, world):
         p = world.get_player()
