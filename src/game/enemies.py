@@ -282,6 +282,35 @@ class GiantTemplate(EnemyTemplate):
         })
 
 
+class CrabTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Crab")
+
+    def get_sprites(self):
+        return spriteref.enemy_crab_all
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+    def get_shadow_offset(self):
+        return (0, -5)
+
+    def get_level_range(self):
+        return range(4, 7)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 16,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 3,
+            StatTypes.DEF: 3,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 1
+        })
+
+
 class CyclopsTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -529,6 +558,7 @@ TEMPLATE_GHAST = GhastTemplate()
 TEMPLATE_SPORE = SporeTemplate()
 TEMPLATE_SLUG = SlugTemplate()
 TEMPLATE_GIANT = GiantTemplate()
+TEMPLATE_CRAB = CrabTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -539,6 +569,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_WRAITH,
                         TEMPLATE_CYCLOPS,
                         TEMPLATE_SPORE,
+                        TEMPLATE_CRAB,
                         TEMPLATE_CAVE_CRAWLER,
                         TEMPLATE_SLUG,
                         TEMPLATE_TRILLA,

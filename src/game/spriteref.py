@@ -352,6 +352,7 @@ enemy_frog_all = [make(448 + i * 16, 160, 16, 16) for i in range(0, 2)]
 enemy_spore_all = [make(480 + i * 16, 160, 16, 16) for i in range(0, 2)]
 enemy_slug_all = [make(528, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_giant_all = [make(560, 208 + i * 32, 32, 32) for i in range(0, 2)]
+enemy_crab_all = [make(496, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
