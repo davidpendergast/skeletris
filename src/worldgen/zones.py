@@ -22,7 +22,7 @@ _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
 _ALL_ZONES = {}
 
-NUM_GENERATED_ZONES = 16
+_STORYLINE_ZONES = []
 
 
 def first_zone_id():
@@ -33,10 +33,6 @@ def first_zone():
     return get_zone(_FIRST_ZONE_ID)
 
 
-def n_generated_zones():
-    return NUM_GENERATED_ZONES
-
-
 def all_zone_ids():
     return [z for z in _ALL_ZONES]
 
@@ -45,45 +41,21 @@ def get_zone(zone_id):
     return _ALL_ZONES[zone_id]
 
 
-def _generated_zone_id(level):
-    return "generated_{}".format(level)
+def all_storyline_zone_ids():
+    return [z for z in _STORYLINE_ZONES]
 
 
-def get_special_story_zone(level):
-    special_zones = [
-        FrogLairZone.ZONE_ID,
-        CaveHorrorZone.ZONE_ID
-    ]
-
-    for z_id in special_zones:
-        if get_zone(z_id).get_level() == level:
-            return z_id
-
-    return None
-
-
-def get_storyline_zone_id(level):
-    special_zone = get_special_story_zone(level)
-    if special_zone is not None:
-        return special_zone
-
-    if 0 <= level < 16:
-        return _generated_zone_id(level)
+def next_storyline_zone(current_id):
+    if current_id not in _STORYLINE_ZONES:
+        print("WARN: {} isn't a storyline zone, so there's no 'next' storyline zone")
+        return None
     else:
-        return _generated_zone_id(15)
-
-
-def get_color_for_story_zone(level):
-    if level <= 3:
-        return colors.WHITE
-    elif level <= get_zone(FrogLairZone.ZONE_ID).get_level():
-        return get_zone(FrogLairZone.ZONE_ID).get_color()
-    elif level <= 11:
-        return (0.85, 0.85, 1.0)
-    elif level <= get_zone(CaveHorrorZone.ZONE_ID).get_level():
-        return get_zone(CaveHorrorZone.ZONE_ID).get_color()
-
-    return colors.WHITE
+        idx = _STORYLINE_ZONES.index(current_id)
+        if idx + 1 < len(_STORYLINE_ZONES):
+            return _STORYLINE_ZONES[idx + 1]
+        else:
+            # we hit the end
+            return None
 
 
 def init_zones():
@@ -93,11 +65,39 @@ def init_zones():
         zone_instance.zone_id = zone_cls.ZONE_ID
         make(zone_instance)
 
-    for i in range(0, NUM_GENERATED_ZONES):
-        _ALL_ZONES[_generated_zone_id(i)] = ZoneBuilder.build_me_a_zone(i)
+    story_zones = []
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1"))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2"))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3"))
+    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4"))
+
+    green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color))
+    story_zones.append(get_zone(FrogLairZone.ZONE_ID))
+
+    blue_color = (0.85, 0.85, 1.0)
+    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(11, "City IV", "city_4", geo_color=blue_color))
+
+    red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
+    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1", geo_color=red_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color))
+    story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
+
+    _STORYLINE_ZONES.clear()
+
+    for z in story_zones:
+        if z.get_id() not in _ALL_ZONES:
+            _ALL_ZONES[z.get_id()] = z
+        _STORYLINE_ZONES.append(z.get_id())
 
     global _FIRST_ZONE_ID
-    _FIRST_ZONE_ID = _generated_zone_id(0)
+    _FIRST_ZONE_ID = _STORYLINE_ZONES[0]
 
 
 class ZoneLoader:
@@ -137,7 +137,7 @@ class ZoneLoader:
             img_size = (raw_img.get_width(), raw_img.get_height())
             bp = WorldBlueprint(img_size, level)
 
-            exit_id = get_storyline_zone_id(level + 1)
+            exit_id = next_storyline_zone(zone_id)  # will be None if this isn't a storyline zone
 
             unknowns = {}
 
@@ -351,7 +351,7 @@ class TestZone(Zone):
 class ZoneBuilder:
 
     @staticmethod
-    def _add_entities_for_tile(level, x, y, tile_type, world):
+    def _add_entities_for_tile(zone_id, level, x, y, tile_type, world):
         if tile_type == worldgen2.TileType.PLAYER:
             world.add(entities.Player(0, 0), gridcell=(x, y))
         elif tile_type == worldgen2.TileType.CHEST:
@@ -365,7 +365,7 @@ class ZoneBuilder:
         elif tile_type == worldgen2.TileType.ENTRANCE:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
-            next_zone_id = get_storyline_zone_id(level + 1)
+            next_zone_id = next_storyline_zone(zone_id)
             actual_zone = get_zone(next_zone_id)
             if actual_zone is not None:
                 if actual_zone.is_boss_zone():
@@ -387,7 +387,7 @@ class ZoneBuilder:
             world.add(sign_ent, gridcell=(x, y-1))
 
     @staticmethod
-    def _tile_grid_to_world(level, t_grid):
+    def _tile_grid_to_world(zone_id, level, t_grid):
         w = t_grid.w()
         h = t_grid.h()
         world = World(t_grid.w(), t_grid.h())
@@ -411,7 +411,7 @@ class ZoneBuilder:
                 if tile_type == worldgen2.TileType.NPC:
                     npc_coords.append((x, y))
                 else:
-                    ZoneBuilder._add_entities_for_tile(level, x, y, tile_type, world)
+                    ZoneBuilder._add_entities_for_tile(zone_id, level, x, y, tile_type, world)
 
         if len(npc_coords) > 0:
             npc_ents = npc.NpcFactory.get_npcs(level, len(npc_coords))
@@ -523,7 +523,7 @@ class ZoneBuilder:
         print("INFO: generated world: level={}".format(zone.get_level()))
         print(t_grid)
 
-        w = ZoneBuilder._tile_grid_to_world(zone.get_level(), t_grid)
+        w = ZoneBuilder._tile_grid_to_world(zone.get_id(), zone.get_level(), t_grid)
         w.set_geo_color(zone.get_color())
 
         return w
@@ -533,15 +533,17 @@ class ZoneBuilder:
         return music.Songs.MENU_THEME
 
     @staticmethod
-    def build_me_a_zone(level):
-        zone = Zone("Depth {}".format(level + 1), level)
-        zone.zone_id = get_storyline_zone_id(level)
-        zone.ZONE_ID = zone.zone_id
-        zone.music_id = ZoneBuilder.get_song_for_zone(level)
-        zone.geo_color = get_color_for_story_zone(level)
+    def make_generated_zone(level, name, zone_id, music_id=None, geo_color=None):
+        zone = Zone(name, level)
+        zone.ZONE_ID = zone_id
+        zone.zone_id = zone_id
+
+        if music_id is not None:
+            zone.music_id = music_id
+        if geo_color is not None:
+            zone.geo_color = geo_color
 
         zone.build_world = lambda: ZoneBuilder.generate_new_world(zone)
-
         return zone
 
 

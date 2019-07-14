@@ -866,9 +866,9 @@ class DebugZoneSelectMenu(OptionsMenu):
     def _zones_to_show(self):
         import src.worldgen.zones as zones
         if self.hand_built:
-            all_zones = [z for z in zones.all_zone_ids() if ("generated" not in z)]
+            all_zones = [z for z in zones.all_zone_ids() if zones.get_zone(z).get_file() is not None]
         else:
-            all_zones = [zones.get_storyline_zone_id(level) for level in range(0, 16)]
+            all_zones = zones.all_storyline_zone_ids()
 
         all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
         return all_zones

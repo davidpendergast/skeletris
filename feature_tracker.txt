@@ -20,6 +20,7 @@
  - need more sources of healing
  - vit is super underpowered compared to att/def (potentially fine)
  - need some ways to defensively use/alter the world's geometry
+ - need enemies that buff other enemies
  
 [current features]
  - need some handling for different resolutions
@@ -27,9 +28,10 @@
  - level generation
     - add auto-retry logic _just_in_case_ level generation fails
         - still maybe possible if somehow it really can't place start/finish
- - enemies equipping / consuming / throwing items (intelligence >= 5)
+ - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
     - i'm fine with this, cliffhanger for the demo
+ - real names for generated zones
  - end-of-blue area boss
  - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
@@ -68,7 +70,6 @@
  - actual dialog for NPCs
  - quest system
  - some indicator that enemies are still acting
- - when you activate or hover over a keymapped attack, it should show the attack range
  - in-game map (toggle ascii overlay)
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
