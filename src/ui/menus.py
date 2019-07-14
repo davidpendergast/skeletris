@@ -34,6 +34,7 @@ class MenuManager:
     SETTINGS_MENU = 9
     TEXT_MENU = 10
     TITLE_MENU = 11
+    REALLY_QUIT = 12
 
     def __init__(self, menu):
         self._active_menu = TitleMenu()
@@ -437,7 +438,7 @@ class PauseMenu(OptionsMenu):
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == PauseMenu.EXIT_IDX:
-            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            gs.get_instance().menu_manager().set_active_menu(ReallyQuitMenu())
         elif idx == PauseMenu.HELP_IDX:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.IN_GAME_MENU))
         elif idx == PauseMenu.CONTINUE_IDX:
@@ -446,7 +447,26 @@ class PauseMenu(OptionsMenu):
             gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.PAUSE_MENU))
 
     def esc_pressed(self):
-        gs.get_instance().menu_manager().set_active_menu(InGameUiState())
+        self.option_activated(PauseMenu.CONTINUE_IDX)
+
+
+class ReallyQuitMenu(OptionsMenu):
+
+    EXIT_IDX = 0
+    BACK = 1
+
+    def __init__(self):
+        OptionsMenu.__init__(self, MenuManager.REALLY_QUIT, "really quit?", ["quit", "back"])
+
+    def option_activated(self, idx):
+        OptionsMenu.option_activated(self, idx)
+        if idx == ReallyQuitMenu.EXIT_IDX:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+        elif idx == ReallyQuitMenu.BACK:
+            gs.get_instance().menu_manager().set_active_menu(PauseMenu())
+
+    def esc_pressed(self):
+        self.option_activated(ReallyQuitMenu.BACK)
 
 
 class TextOnlyMenu(OptionsMenu):

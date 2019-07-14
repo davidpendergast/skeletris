@@ -36,11 +36,8 @@
     - HP on kill
     - poison duration
     - confusion duration
- - Holy Artifact
-    - also make sure it's even ~possible~ to get an item with a hole
- - need a way to visually distinguish different depths
-    - more art / scenery would be another
  - help panel
+    - even necessary?
  
 [architecture]
     - entities should keep a reference to the world they're in
