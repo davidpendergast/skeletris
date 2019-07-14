@@ -6,6 +6,7 @@ from src.game.stats import StatTypes
 import src.game.stats as stats
 import src.game.inventory as inventory
 import src.items.item as item
+import src.utils.colors as colors
 import src.items.itemgen as itemgen
 import src.game.balance as balance
 
@@ -29,6 +30,9 @@ class EnemyTemplate:
 
     def get_shadow_offset(self):
         return (0, 0)
+
+    def get_map_identifier(self):
+        return ("m", colors.RED)
 
     def get_name(self):
         return self._name
@@ -63,6 +67,9 @@ class CaveCrawlerTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(1, 3)
 
+    def get_map_identifier(self):
+        return ("c", colors.RED)
+
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 6,
@@ -82,6 +89,9 @@ class SmallFrogTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_frog_all
+
+    def get_map_identifier(self):
+        return ("f", colors.RED)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -106,6 +116,9 @@ class TrilliteTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_small_trilla_all
 
+    def get_map_identifier(self):
+        return ("t", colors.RED)
+
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 10,
@@ -129,6 +142,9 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
+
+    def get_map_identifier(self):
+        return ("T", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -156,6 +172,9 @@ class SporeTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_spore_all
+
+    def get_map_identifier(self):
+        return ("s", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.small_shadow
@@ -186,6 +205,9 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
 
+    def get_map_identifier(self):
+        return ("m", colors.RED)
+
     def get_level_range(self):
         return range(2, 5)
 
@@ -210,6 +232,9 @@ class MuncherTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
+
+    def get_map_identifier(self):
+        return ("M", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -236,6 +261,9 @@ class SlugTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_slug_all
+
+    def get_map_identifier(self):
+        return ("S", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -267,6 +295,9 @@ class GiantTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.large_shadow
 
+    def get_map_identifier(self):
+        return ("G", colors.RED)
+
     def get_level_range(self):
         return range(12, 16)
 
@@ -293,6 +324,9 @@ class CrabTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.large_shadow
 
+    def get_map_identifier(self):
+        return ("c", colors.RED)
+
     def get_shadow_offset(self):
         return (0, -5)
 
@@ -318,6 +352,9 @@ class CyclopsTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_cyclops_all
+
+    def get_map_identifier(self):
+        return ("C", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -372,6 +409,9 @@ class GhastTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.large_shadow
 
+    def get_map_identifier(self):
+        return ("g", colors.RED)
+
     def get_level_range(self):
         return range(4, 8)
 
@@ -400,6 +440,9 @@ class ScorpionTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_scorpion_all
 
+    def get_map_identifier(self):
+        return ("w", colors.RED)
+
     def get_level_range(self):
         return range(9, 16)
 
@@ -413,7 +456,6 @@ class ScorpionTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 4,
             StatTypes.WEALTH: 2,
             StatTypes.POISON_ON_HIT: 2
-            # StatTypes.LIGHT_LEVEL: 1,  # TODO - can't yet, "slows down" game when these guys are offscreen but nearby
         })
 
 
@@ -424,6 +466,9 @@ class WraithTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_wraith_all
+
+    def get_map_identifier(self):
+        return ("W", colors.RED)
 
     def get_level_range(self):
         return range(11, 16)
@@ -445,7 +490,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.CONFUSION_ON_HIT: 5
         })
 
-
+# TODO - not currently used
 class FungoiTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -475,6 +520,9 @@ class FrogBossTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
+
+    def get_map_identifier(self):
+        return ("F", colors.RED)
 
     def get_sprite_offset(self):
         return (0, 8)
@@ -507,6 +555,9 @@ class CaveHorrorTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.Bosses.cave_horror_idle
+
+    def get_map_identifier(self):
+        return ("H", colors.RED)
 
     def get_sprite_offset(self):
         return (0, 148 + 32)
@@ -626,7 +677,7 @@ class EnemyFactory:
 
         res = []
         for _ in range(0, n):
-            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(), template.get_controller(),
+            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(), template.get_map_identifier(), template.get_controller(),
                              sprite_offset=template.get_sprite_offset(),
                              shadow_sprite=template.get_shadow_sprite(),
                              shadow_offset=template.get_shadow_offset()))

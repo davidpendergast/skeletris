@@ -429,16 +429,9 @@ class World:
         for e in self.all_entities(onscreen=(not ignore_visiblity)):
             e_pos = self.to_grid_coords(*e.center())
             if Utils.rect_contains(grid_rect, e_pos) and (ignore_visiblity or e.is_visible_in_world(self)):
-                if e.is_player():
-                    ent_coords[e_pos] = ("p", colors.WHITE)
-                elif e.is_enemy():
-                    ent_coords[e_pos] = ("m", colors.RED)
-                elif e.is_npc():
-                    ent_coords[e_pos] = ("n", colors.YELLOW)
-                elif e.is_exit():
-                    ent_coords[e_pos] = ("e", colors.GREEN)
-                elif e.is_chest() and not e.is_open():
-                    ent_coords[e_pos] = ("c", colors.PURPLE)
+                identifier = e.get_map_identifier()
+                if identifier is not None:
+                    ent_coords[e_pos] = identifier
 
         for y in range(grid_rect[1], grid_rect[1] + grid_rect[3]):
             for x in range(grid_rect[0], grid_rect[0] + grid_rect[2]):

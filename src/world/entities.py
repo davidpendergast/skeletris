@@ -74,6 +74,10 @@ class Entity(Updateable):
 
     def get_light_level(self):
         return 0
+
+    def get_map_identifier(self):
+        """returns: (char, color) or None"""
+        return None
         
     def center(self):
         return self.rect.center
@@ -526,12 +530,14 @@ class FloatingTextEntity(Entity):
 
 class ActorEntity(Entity):
 
-    def __init__(self, idle_sprites, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+    def __init__(self, idle_sprites, map_id=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
         Entity.__init__(self, 0, 0, 24, 24)
 
         self.executing_action = None
         self.executing_action_duration = 1
         self.executing_action_ticks = 0
+
+        self.map_id = map_id
 
         self.idle_sprites = Utils.listify(idle_sprites)
         self._facing_right = random.random() > 0.5
@@ -564,6 +570,9 @@ class ActorEntity(Entity):
 
     def get_shadow_sprite(self):
         return self._shadow_sprite
+
+    def get_map_identifier(self):
+        return self.map_id
 
     def get_shadow_offset(self):
         return self._shadow_offset
@@ -818,7 +827,7 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
-        ActorEntity.__init__(self, spriteref.player_idle_all)
+        ActorEntity.__init__(self, spriteref.player_idle_all, map_id=("p", colors.WHITE))
         self.set_x(x)
         self.set_y(y)
 
@@ -989,8 +998,8 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites, controller, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
-        ActorEntity.__init__(self, sprites, sprite_offset=sprite_offset, shadow_offset=shadow_offset)
+    def __init__(self, x, y, state, sprites, map_id, controller, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+        ActorEntity.__init__(self, sprites, map_id=map_id, sprite_offset=sprite_offset, shadow_offset=shadow_offset)
         self._enemy_state = state
         self._enemy_controller = controller
         self.set_x(x)
@@ -1110,6 +1119,9 @@ class ChestEntity(Entity):
         
     def is_chest(self):
         return True
+
+    def get_map_identifier(self):
+        return ("c", colors.PURPLE)
     
     def get_shadow_sprite(self):
         return spriteref.chest_shadow
@@ -1417,6 +1429,9 @@ class ExitEntity(Entity):
             idx = int(open_prog * len(open_spr))
             return open_spr[idx]
 
+    def get_map_identifier(self):
+        return ("e", colors.GREEN)
+
     def get_zone(self):
         return self.next_zone_id
 
@@ -1620,6 +1635,9 @@ class NpcEntity(Entity):
 
     def get_npc_template(self):
         return self.npc_template
+
+    def get_map_identifier(self):
+        return self.npc_template.get_map_identifier()
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick

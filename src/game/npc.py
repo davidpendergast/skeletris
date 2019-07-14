@@ -7,6 +7,7 @@ from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
 import src.game.globalstate as gs
 import src.game.dialog as dialog
+import src.utils.colors as colors
 
 
 class NpcID(Enum):
@@ -23,9 +24,10 @@ class NpcID(Enum):
 
 class NpcTemplate:
 
-    def __init__(self, npc_id, name, entity_sprites, dialog_sprites, shadow_sprite=sr.medium_shadow):
+    def __init__(self, npc_id, name, entity_sprites, dialog_sprites, map_id, shadow_sprite=sr.medium_shadow):
         self.npc_id = npc_id
         self.name = name
+        self.map_id = map_id
         self._entity_sprites = entity_sprites
         self._dialog_sprites = dialog_sprites
         self.shadow_sprite = shadow_sprite
@@ -41,6 +43,9 @@ class NpcTemplate:
             return self._dialog_sprites
         else:
             return None
+
+    def get_map_identifier(self):
+        return self.map_id
 
     def get_dialog_as_list(self, seed, interact_count):
         text = "Hi! I don't have anything important to say, but it's a pleasure to meet you."
@@ -61,7 +66,8 @@ class NpcTemplate:
 class MarySkellyTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MARY_SKELLY, "Mary Skelly", sr.mary_skelly_all, sr.mary_skelly_faces)
+        NpcTemplate.__init__(self, NpcID.MARY_SKELLY, "Mary Skelly",
+                             sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
 
     def get_dialog_as_list(self, seed, interact_count):
         text = [
@@ -76,19 +82,19 @@ class MayorPatchesTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
-                             shadow_sprite=sr.large_shadow)
+                             ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
 
 class BeanskullTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces)
+        NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
 
 class GlorpleTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces)
+        NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
     def get_dialog_as_list(self, seed, interact_count):
         return [dialog.NpcDialog("You're doing a great job so far!", self.get_dialog_sprites())]
@@ -97,7 +103,7 @@ class GlorpleTemplate(NpcTemplate):
 class MachineTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces)
+        NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces, ("M", colors.YELLOW))
 
     def get_dialog_as_list(self, seed, interact_count):
         # TODO - tailor these to the player's actual progress
@@ -116,13 +122,13 @@ class MachineTemplate(NpcTemplate):
 class DoctorTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces)
+        NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
 
 
 class CaveHorrorNpcTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.CAVE_HORROR, "Cave Horror", [], sr.cave_horror_faces)
+        NpcTemplate.__init__(self, NpcID.CAVE_HORROR, "Cave Horror", [], sr.cave_horror_faces, ("H", colors.RED))
 
 
 TEMPLATES = {

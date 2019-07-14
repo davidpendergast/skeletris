@@ -50,6 +50,11 @@
     - color would be by far the easiest way~~~
     - more art / scenery would be another
  - help panel
+ 
+[architecture]
+    - entities should keep a reference to the world they're in
+        - instead of passing the world into literally method
+    - global state should have a reference to the active world that menus / ui can use
         
 [future features]
  - traps / ground effects
