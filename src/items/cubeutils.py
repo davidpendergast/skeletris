@@ -90,6 +90,25 @@ class CubeUtils:
         return tuple(res)
 
     @staticmethod
+    def is_holy(cubes):
+        """return: whether the cube configuration has a hole"""
+        size = CubeUtils.item_size(cubes)
+        for x in range(1, size[0] - 1):
+            for y in range(1, size[1] - 1):
+                if (x, y) not in cubes:
+                    fully_surrounded = True
+                    for n_offs in CubeUtils.NEIGHBORS:
+                        neighbor = (x + n_offs[0], y + n_offs[1])
+                        if neighbor not in cubes:
+                            fully_surrounded = False
+                            break
+
+                    if fully_surrounded:
+                        return True
+        return False
+
+
+    @staticmethod
     def _push_to_origin(cubes):
         min_x = min([c[0] for c in cubes])
         min_y = min([c[1] for c in cubes])

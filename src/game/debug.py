@@ -6,9 +6,10 @@ _IS_DEV = os.path.exists("this_is_dev.txt")
 _DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
-_IGNORE_LOOT_LEVELS = False
+_IGNORE_LOOT_LEVELS = True
 _PLAYER_CANT_DIE = True
-_SUPER_MAP = False
+_MAP_SEES_ALL = False
+_HOLY_ARTIFACTS_100x_MORE_LIKELY = False
 
 
 def is_dev():
@@ -27,5 +28,5 @@ def player_cant_die():
     return is_debug() and _PLAYER_CANT_DIE
 
 
-def super_map():
-    return is_debug() and _SUPER_MAP
+def map_sees_all():
+    return is_debug() and _MAP_SEES_ALL

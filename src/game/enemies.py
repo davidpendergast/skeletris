@@ -490,6 +490,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.CONFUSION_ON_HIT: 5
         })
 
+
 # TODO - not currently used
 class FungoiTemplate(EnemyTemplate):
 

@@ -317,9 +317,20 @@ class StatCubesItemFactory:
         non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
 
         cubes = CubeUtils.gen_cubes(n_cubes)
+        is_holy = CubeUtils.is_holy(cubes)
 
-        # TODO - should probably overhaul item naming
-        if len(cubes) <= 5:
+        if n_cubes >= 7 and not is_holy and debug._HOLY_ARTIFACTS_100x_MORE_LIKELY:
+            for _ in range(0, 100):
+                cubes = CubeUtils.gen_cubes(n_cubes)
+                is_holy = CubeUtils.is_holy(cubes)
+                if is_holy:
+                    break
+
+        if is_holy:
+            name = "Holy Artifact"
+            for stat in core_stats:
+                stat.value = stat.value * 2
+        elif len(cubes) <= 5:
             name = ItemTypes.STAT_CUBE_5.get_name()
         elif len(cubes) == 6:
             name = ItemTypes.STAT_CUBE_6.get_name()

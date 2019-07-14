@@ -217,7 +217,7 @@ class MapPanel(SidePanel):
             rect = [self.map_center[0] - self.map_dims[0] // 2,
                     self.map_center[1] - self.map_dims[1] // 2,
                     self.map_dims[0], self.map_dims[1]]
-            self.map_raw_text = world.get_map_text_for_cells(rect, ignore_visiblity=debug.super_map())
+            self.map_raw_text = world.get_map_text_for_cells(rect, ignore_visiblity=debug.map_sees_all())
 
         if self.map_raw_text != old_map_text:
             self.map_dirty = True
