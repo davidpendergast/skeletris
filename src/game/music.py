@@ -10,6 +10,7 @@ class Songs:
     AN_ADVENTURE_UNFOLDS = "02_an_adventure_unfolds.ogg"
     AMPHIBIAN = "03_amphibian.ogg"
     TREE_THEME = "04_tree_theme.ogg"
+    FUTURE_CITY = "06_future_city.ogg"
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
 
