@@ -98,7 +98,6 @@ def run():
     import src.worldgen.zones as zones
     zones.init_zones()
 
-    import src.game.settings as settings
     import src.game.events as events
     import src.game.sound_effects as sound_effects
     import src.game.soundref as soundref

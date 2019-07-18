@@ -587,21 +587,34 @@ sfx_negative_2 = Utils.resource_path("assets/sounds/negative_2.ogg")
 sfx_save = Utils.resource_path("assets/sounds/save.ogg")
 
 # outside classes should generally access their sounds from
-# these variables so that things stay consistent.
+# these variables and methods so that things stay consistent.
 
-newgame_start = (sfx_click_2, 1.0)
-game_quit = None
-menu_click_1 = (sfx_click_1, 1.0)  # used when a menu selection changes
-menu_click_2 = (sfx_click_2, 1.0)  # used when a menu option is activated
-menu_back = (sfx_click_2, 1.0)     # used when a 'go back' menu option is activated
+newgame_start = (sfx_menu_select4, 0.3)
+game_quit = (sfx_sound_shutdown1, 0.4)
+
+menu_move = (sfx_menu_move1, 0.2)
+menu_select = (sfx_menu_move2, 0.3)
+menu_back = (sfx_menu_move3, 0.2)
 pause_in = (sfx_sounds_pause1_in, 0.1)
 pause_out = (sfx_sounds_pause1_out, 0.1)
-menu_error = (sfx_negative_2, 0.8)  # used when a disabled option is activated
-dialog_click = (sfx_click_2, 1.0)
-door_open = (sfx_door_slide, 0.3)
+error = (sfx_negative_2, 0.8)
+sidepanel_in = (sfx_movement_ladder4a, 0.2)
+sidepanel_out = (sfx_movement_ladder4b, 0.2)
+
+dialog_click = (sfx_movement_ladder1a, 0.2)
+door_open = (sfx_movement_dooropen2, 0.1)
 exit_door_open = (sfx_sound_mechanicalnoise4, 0.1)
 whiff_noise = (sfx_sounds_impact10, 0.1)
 chest_open = (sfx_sounds_fanfare3, 0.2)
+potion_drink = (sfx_sounds_powerup6, 0.3)
+item_throw_start = None
+
+item_pickup = (sfx_movement_ladder3b, 0.3)
+item_place = (sfx_movement_ladder3a, 0.3)
+item_replace = (sfx_movement_ladder3loop)  # this is nifty
+item_drop = (sfx_movement_ladder5a, 0.3)
+item_rotate = (sfx_movement_ladder5b, 0.3)
+item_cant_place = (sfx_negative_2, 0.8)
 
 
 def rand_deathscream_android():

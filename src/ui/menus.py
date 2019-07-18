@@ -291,7 +291,7 @@ class OptionsMenu(Menu):
 
     def set_selected(self, idx):
         if idx != self._selection and self.get_enabled(idx):
-            sound_effects.play_sound(soundref.menu_click_1)
+            sound_effects.play_sound(soundref.menu_move)
             self._selection = idx
 
     def handle_inputs(self, world):
@@ -323,7 +323,7 @@ class OptionsMenu(Menu):
                 if self.get_enabled(self._selection):
                     self.option_activated(self._selection)
                 else:
-                    sound_effects.play_sound(soundref.menu_error)
+                    sound_effects.play_sound(soundref.menu_back)
 
             if self._option_rects is None:
                 return
@@ -421,10 +421,10 @@ class StartMenu(OptionsMenu):
             gs.get_instance().event_queue().add(events.GameExitEvent())
         elif idx == StartMenu.OPTIONS_OPT:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == StartMenu.SOUND_OPT:
             gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.START_MENU))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(TitleMenu())
@@ -444,16 +444,16 @@ class PauseMenu(OptionsMenu):
     def option_activated(self, idx):
         if idx == PauseMenu.EXIT_IDX:
             gs.get_instance().menu_manager().set_active_menu(ReallyQuitMenu())
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == PauseMenu.HELP_IDX:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.IN_GAME_MENU))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == PauseMenu.CONTINUE_IDX:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.pause_out)
         elif idx == PauseMenu.SOUND_IDX:
             gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.PAUSE_MENU))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
         self.option_activated(PauseMenu.CONTINUE_IDX)
@@ -546,13 +546,13 @@ class SoundSettingsMenu(OptionsMenu):
             gs.get_instance().settings().set(settings.MUSIC_VOLUME, new_val)
             gs.get_instance().save_settings_to_disk()
             rebuild = True
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == SoundSettingsMenu.EFFECTS_VOLUME_IDX:
             new_val = 0 if self.effects_enabled else 100
             gs.get_instance().settings().set(settings.EFFECTS_VOLUME, new_val)
             gs.get_instance().save_settings_to_disk()
             rebuild = True
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == SoundSettingsMenu.BACK_IDX:
             if self.prev_id == MenuManager.START_MENU:
                 gs.get_instance().menu_manager().set_active_menu(StartMenu())
@@ -621,7 +621,7 @@ class ControlsMenu(OptionsMenu):
         else:
             opt = ControlsMenu.OPTS[idx]
             gs.get_instance().menu_manager().set_active_menu(KeybindingEditMenu(opt[1], opt[0], lambda: ControlsMenu(self.prev_id)))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
         self.option_activated(ControlsMenu.BACK_OPT_IDX)
@@ -662,7 +662,7 @@ class KeybindingEditMenu(OptionsMenu):
                 gs.get_instance().save_settings_to_disk()
                 gs.get_instance().menu_manager().set_active_menu(self._return_menu_builder())
 
-                sound_effects.play_sound(soundref.menu_click_2)
+                sound_effects.play_sound(soundref.menu_select)
 
     def _is_valid_binding(self, key):
         if key in (pygame.K_RETURN, pygame.K_ESCAPE, "MOUSE_BUTTON_1"):
@@ -831,10 +831,10 @@ class DebugMenu(OptionsMenu):
     def option_activated(self, idx):
         if idx == DebugMenu.STORYLINE_ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, False))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.SPECIAL_ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, True))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)
@@ -901,16 +901,16 @@ class DebugZoneSelectMenu(OptionsMenu):
             sound_effects.play_sound(soundref.menu_back)
         elif idx == self.next_page_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1, self.hand_built))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == self.prev_page_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1, self.hand_built))
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
         elif 0 <= idx < len(self.opts):
             selected_opt = self.opts[idx]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
             gs.get_instance().event_queue().add(new_zone_evt)
-            sound_effects.play_sound(soundref.menu_click_2)
+            sound_effects.play_sound(soundref.menu_select)
 
 
 class TitleMenu(Menu):
@@ -1222,7 +1222,7 @@ class InGameUiState(Menu):
 
     def _update_sidepanel(self, world):
         if not gs.get_instance().player_state().is_alive():
-            gs.get_instance().set_active_sidepanel(None)
+            gs.get_instance().set_active_sidepanel(None, play_sound=False)
 
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().inventory_key()):
             gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
@@ -1564,7 +1564,7 @@ class InGameUiState(Menu):
 
         # TODO - not sure whether this feels right.
         # should the inv always close when you pause or change zones?
-        gs.get_instance().set_active_sidepanel(None)
+        gs.get_instance().set_active_sidepanel(None, play_sound=False)
 
         self.sidepanel = None
         self.item_on_cursor_info = None

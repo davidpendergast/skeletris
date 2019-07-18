@@ -8,6 +8,8 @@ import src.game.settings as settings
 from src.game.storystate import StoryStateKey, StoryState
 from src.utils.util import Utils
 import src.utils.passwordgen as passwordgen
+import src.game.soundref as soundref
+import src.game.sound_effects as sound_effects
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -217,17 +219,23 @@ class GlobalState:
 
         self.current_zone = zone
 
-    def set_active_sidepanel(self, panel_id):
+    def set_active_sidepanel(self, panel_id, play_sound=True):
+        if play_sound and self.active_sidepanel_id != panel_id:
+            if panel_id is None:
+                sound_effects.play_sound(soundref.sidepanel_out)
+            else:
+                sound_effects.play_sound(soundref.sidepanel_in)
+
         self.active_sidepanel_id = panel_id
 
     def get_active_sidepanel(self):
         return self.active_sidepanel_id
 
-    def toggle_sidepanel(self, panel_id):
+    def toggle_sidepanel(self, panel_id, play_sound=True):
         if self.get_active_sidepanel() == panel_id:
-            self.set_active_sidepanel(None)
+            self.set_active_sidepanel(None, play_sound=play_sound)
         else:
-            self.set_active_sidepanel(panel_id)
+            self.set_active_sidepanel(panel_id, play_sound=play_sound)
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:

@@ -195,7 +195,7 @@ class DialogManager:
                         self.last_scroll_time = gs.get_instance().tick_counter
 
                     if gs.get_instance().tick_counter % self.noise_freq == 0:
-                        sound_effects.play_sound(soundref.menu_click_2)
+                        sound_effects.play_sound(soundref.dialog_click)
 
                     # when we uncover the first option, skip to end
                     if not dialog.is_done_scrolling() and dialog.get_text()[dialog.scroll_pos] == '{':
