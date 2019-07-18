@@ -5,17 +5,12 @@ import traceback
 
 
 class Effects:
-    DOOR_SLIDE = Utils.resource_path(os.path.join("assets", "sounds", "door_slide.ogg"))
     DOOR_OPEN = Utils.resource_path(os.path.join("assets", "sounds", "door_open.ogg"))
-    CLICK = Utils.resource_path(os.path.join("assets", "sounds", "click.ogg"))
-    CLICK2 = Utils.resource_path(os.path.join("assets", "sounds", "click_2.ogg"))
     LOAD = Utils.resource_path(os.path.join("assets", "sounds", "load.ogg"))
     MISC_MENU_= Utils.resource_path(os.path.join("assets", "sounds", "misc_menu.ogg"))
     MISC_MENU_2 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_2.ogg"))
     MISC_MENU_3 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_3.ogg"))
     MISC_MENU_4 = Utils.resource_path(os.path.join("assets", "sounds", "misc_menu_4.ogg"))
-    NEGATIVE_2 = Utils.resource_path(os.path.join("assets", "sounds", "negative_2.ogg"))
-    SAVE = Utils.resource_path(os.path.join("assets", "sounds", "save.ogg"))
 
 
 _MASTER_VOLUME = 1.0

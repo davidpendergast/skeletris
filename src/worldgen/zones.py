@@ -78,7 +78,7 @@ def init_zones():
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
 
     blue_color = (0.85, 0.85, 1.0)
-    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color, music_id=music.Songs.DEAD_CITY))
     story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color))
     story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color))
     story_zones.append(ZoneBuilder.make_generated_zone(11, "City IV", "city_4", geo_color=blue_color))

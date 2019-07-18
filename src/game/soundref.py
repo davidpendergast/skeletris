@@ -579,15 +579,29 @@ sfx_weapon_singleshot20 = Utils.resource_path("assets/sounds/essential_retro_512
 sfx_weapon_singleshot21 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_weapon_singleshot21.ogg")
 sfx_weapon_singleshot22 = Utils.resource_path("assets/sounds/essential_retro_512/sfx_weapon_singleshot22.ogg")
 
+# other sounds #
+sfx_door_slide = Utils.resource_path("assets/sounds/door_slide.ogg")
+sfx_click_1 = Utils.resource_path("assets/sounds/click.ogg")
+sfx_click_2 = Utils.resource_path("assets/sounds/click_2.ogg")
+sfx_negative_2 = Utils.resource_path("assets/sounds/negative_2.ogg")
+sfx_save = Utils.resource_path("assets/sounds/save.ogg")
+
 # outside classes should generally access their sounds from
 # these variables so that things stay consistent.
 
-menu_click_1 = (sfx_wpn_noammo2, 0.5)
-menu_click_2 = (sfx_wpn_noammo1, 0.5)
-door_open = None # (sfx_sound_mechanicalnoise4, 0.1)
+newgame_start = (sfx_click_2, 1.0)
+game_quit = None
+menu_click_1 = (sfx_click_1, 1.0)  # used when a menu selection changes
+menu_click_2 = (sfx_click_2, 1.0)  # used when a menu option is activated
+menu_back = (sfx_click_2, 1.0)     # used when a 'go back' menu option is activated
+pause_in = (sfx_sounds_pause1_in, 0.1)
+pause_out = (sfx_sounds_pause1_out, 0.1)
+menu_error = (sfx_negative_2, 0.8)  # used when a disabled option is activated
+dialog_click = (sfx_click_2, 1.0)
+door_open = (sfx_door_slide, 0.3)
 exit_door_open = (sfx_sound_mechanicalnoise4, 0.1)
 whiff_noise = (sfx_sounds_impact10, 0.1)
-chest_open = (sfx_sounds_fanfare2, 0.3)
+chest_open = (sfx_sounds_fanfare3, 0.2)
 
 
 def rand_deathscream_android():

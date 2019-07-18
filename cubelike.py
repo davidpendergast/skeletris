@@ -101,6 +101,7 @@ def run():
     import src.game.settings as settings
     import src.game.events as events
     import src.game.sound_effects as sound_effects
+    import src.game.soundref as soundref
     from src.world.worldview import WorldView
         
     world = None
@@ -207,6 +208,7 @@ def run():
 
         if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
+            sound_effects.play_sound(soundref.pause_in)
 
         if debug.is_debug() and input_state.was_pressed(pygame.K_x):
             manager = gs.get_instance().menu_manager()

@@ -5,6 +5,7 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.events as events
 import src.game.sound_effects as sound_effects
+import src.game.soundref as soundref
 from src.game.inputs import InputState
 
 import src.game.globalstate as gs
@@ -194,7 +195,7 @@ class DialogManager:
                         self.last_scroll_time = gs.get_instance().tick_counter
 
                     if gs.get_instance().tick_counter % self.noise_freq == 0:
-                        sound_effects.play_sound(sound_effects.Effects.CLICK2)
+                        sound_effects.play_sound(soundref.menu_click_2)
 
                     # when we uncover the first option, skip to end
                     if not dialog.is_done_scrolling() and dialog.get_text()[dialog.scroll_pos] == '{':
