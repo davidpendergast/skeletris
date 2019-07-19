@@ -549,6 +549,43 @@ class FrogBossTemplate(EnemyTemplate):
         })
 
 
+class RoboTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Mecha Robo")
+
+    def get_sprites(self):
+        return spriteref.Bosses.robo_idle
+
+    def get_map_identifier(self):
+        return ("R", colors.RED)
+
+    def get_shadow_sprite(self):
+        return spriteref.enormous_shadow
+
+    def get_shadow_offset(self):
+        return (0, -8)
+
+    def get_sprite_offset(self):
+        return (0, 6)
+
+    def get_level_range(self):
+        return [11]
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 40,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 7,
+            StatTypes.UNARMED_ATT: 0,
+            StatTypes.DEF: 10,
+            StatTypes.INTELLIGENCE: 2,
+            StatTypes.WEALTH: 5,
+            StatTypes.UNARMED_RANGE: 2,
+            StatTypes.UNARMED_IS_PROJECTILE: 1
+        })
+
+
 class CaveHorrorTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -614,6 +651,7 @@ TEMPLATE_CRAB = CrabTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
+TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,

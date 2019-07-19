@@ -4,7 +4,9 @@ DARK_GRAY = (0.36, 0.36, 0.36)
 LIGHT_GRAY = (0.85, 0.85, 0.85)
 WHITE = (1, 1, 1)
 
-LIGHT_BLUE = (0.75, 0.75, 1)
+LIGHT_BLUE = (0.85, 0.85, 1)
+LIGHT_RED = (1, 0.85, 0.85)
+LIGHT_GREEN = (0.85, 1, 0.85)
 
 RED = (1, 0.65, 0.65)
 GREEN = (0.65, 1, 0.65)

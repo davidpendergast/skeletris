@@ -71,17 +71,15 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3"))
     story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4"))
 
-    green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
-    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color))
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
+    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))
+    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=colors.LIGHT_GREEN))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
 
-    blue_color = (0.85, 0.85, 1.0)
-    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(11, "City IV", "city_4", geo_color=blue_color, music_id=music.Songs.DEAD_CITY))
+    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=colors.LIGHT_BLUE))
+    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=colors.LIGHT_BLUE))
+    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=colors.LIGHT_BLUE))
+    story_zones.append(get_zone(RoboLairZone.ZONE_ID))
 
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
     story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1", geo_color=red_color))
@@ -742,7 +740,6 @@ class FrogLairZone(Zone):
 
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
-        self.geo_color = (0.85, 1.0, 0.85)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -773,6 +770,35 @@ class FrogLairZone(Zone):
     def is_boss_zone(self):
         return True
 
+    def get_color(self):
+        return colors.LIGHT_GREEN
+
+
+class RoboLairZone(Zone):
+
+    ZONE_ID = "robo_lair"
+
+    def __init__(self):
+        Zone.__init__(self, "Server Room", 11, filename="robo_lair.png")
+        self._robo_color = (255, 170, 170)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+        w.set_wall_type(spriteref.WALL_NORMAL_ID)
+
+        robo_pos = unknowns[self._robo_color][0]
+        robo_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_ROBO, self.get_level())
+        w.add(robo_entity, gridcell=robo_pos)
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.DEAD_CITY
+
+    def get_color(self):
+        return colors.LIGHT_BLUE
+
 
 class CaveHorrorZone(Zone):
 
@@ -781,7 +807,6 @@ class CaveHorrorZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
         self._tree_color = (255, 203, 203)
-        self.geo_color = (1.0, 0.85, 0.85)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -799,6 +824,9 @@ class CaveHorrorZone(Zone):
 
     def get_music_id(self):
         return music.Songs.TREE_THEME
+
+    def get_color(self):
+        return colors.LIGHT_RED
 
 
 class TombTownZone(Zone):

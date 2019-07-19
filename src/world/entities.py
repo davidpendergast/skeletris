@@ -334,6 +334,9 @@ class AnimationEntity(Entity):
             self.fric = self.fric if fric is None else fric
             self.collides = self.collides if collides is None else collides
 
+        def get_depth(self):
+            return super().get_depth() - 32  # gotta win~
+
         def set_finish_behavior(self, mode):
             self.on_finish_mode = mode
 

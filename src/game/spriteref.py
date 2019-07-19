@@ -206,6 +206,8 @@ class Bosses:
     frog_airborn_rising = []
     frog_airborn_falling = []
 
+    robo_idle = []
+
 
 class Font:
     _alphabet = {}  # str -> img
@@ -727,6 +729,8 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
     sheet.blit(raw_boss_img, start_pos)
     Bosses.cave_horror_idle = [make(i * 256, 80, 256, 240, shift=start_pos) for i in range(0, 2)]
+
+    Bosses.robo_idle = [make(496 + i * 48, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
 
     Bosses.frog_idle_1 = [make(0 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
