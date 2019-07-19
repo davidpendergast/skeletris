@@ -175,8 +175,10 @@ class DialogManager:
                 if dialog.scroll_pos > 0 and self.did_interact_this_tick:
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next())
+                        sound_effects.play_sound(soundref.dialog_next)
                     else:
                         dialog.scroll_pos = len(dialog.get_text())
+                        sound_effects.play_sound(soundref.dialog_skip)
 
                 elif not dialog.is_done_scrolling():
                     cur_delay = gs.get_instance().tick_counter - self.last_scroll_time
@@ -201,6 +203,7 @@ class DialogManager:
                     if not dialog.is_done_scrolling() and dialog.get_text()[dialog.scroll_pos] == '{':
                         dialog.scroll_pos = len(dialog.get_text())
                 else:
+                    # TODO - del this
                     num_options = len(dialog.get_options())
                     if dialog.is_done_scrolling() and num_options > 1:
                         cur_option = dialog.get_selected_opt_idx()

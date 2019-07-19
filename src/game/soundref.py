@@ -589,32 +589,41 @@ sfx_save = Utils.resource_path("assets/sounds/save.ogg")
 # outside classes should generally access their sounds from
 # these variables and methods so that things stay consistent.
 
-newgame_start = (sfx_menu_select4, 0.3)
+_soft_blip_1 = (sfx_movement_ladder1a, 0.2)
+_soft_blip_2 = (sfx_movement_ladder1b, 0.2)
+
+newgame_start = (sfx_sound_mechanicalnoise4, 0.2)
 game_quit = (sfx_sound_shutdown1, 0.4)
 
-menu_move = (sfx_menu_move1, 0.2)
-menu_select = (sfx_menu_move2, 0.3)
-menu_back = (sfx_menu_move3, 0.2)
+menu_move = _soft_blip_1
+menu_select = _soft_blip_2
+menu_back = _soft_blip_2
+
 pause_in = (sfx_sounds_pause1_in, 0.1)
 pause_out = (sfx_sounds_pause1_out, 0.1)
-error = (sfx_negative_2, 0.8)
-sidepanel_in = (sfx_movement_ladder4a, 0.2)
-sidepanel_out = (sfx_movement_ladder4b, 0.2)
 
-dialog_click = (sfx_movement_ladder1a, 0.2)
+error = (sfx_negative_2, 0.8)
+
+sidepanel_in = None
+sidepanel_out = None
+
+dialog_click = _soft_blip_1
+dialog_skip = _soft_blip_2
+dialog_next = _soft_blip_2
+
 door_open = (sfx_movement_dooropen2, 0.1)
-exit_door_open = (sfx_sound_mechanicalnoise4, 0.1)
+exit_door_open = (sfx_sound_mechanicalnoise4, 0.2)
 whiff_noise = (sfx_sounds_impact10, 0.1)
-chest_open = (sfx_sounds_fanfare3, 0.2)
+chest_open = (sfx_sounds_fanfare3, 0.1)
 potion_drink = (sfx_sounds_powerup6, 0.3)
 item_throw_start = None
 
-item_pickup = (sfx_movement_ladder3b, 0.3)
-item_place = (sfx_movement_ladder3a, 0.3)
-item_replace = (sfx_movement_ladder3loop)  # this is nifty
+item_pickup = (sfx_movement_ladder5b, 0.3)
+item_place = (sfx_movement_ladder5a, 0.3)
+item_replace = (sfx_movement_ladder5b, 0.3)
 item_drop = (sfx_movement_ladder5a, 0.3)
 item_rotate = (sfx_movement_ladder5b, 0.3)
-item_cant_place = (sfx_negative_2, 0.8)
+item_cant_place = None  # intentionally none
 
 
 def rand_deathscream_android():
@@ -646,6 +655,11 @@ def rand_damage_hit_small():
     #           sfx_damage_hit5, sfx_damage_hit6, sfx_damage_hit7, sfx_damage_hit8,
     #           sfx_damage_hit9, sfx_damage_hit10]
     choices = [sfx_wpn_punch1, sfx_wpn_punch2, sfx_wpn_punch3, sfx_wpn_punch4]
+    return (random.choice(choices), 0.4)
+
+
+def rand_heal_small():
+    choices = [sfx_sounds_powerup10]
     return (random.choice(choices), 0.4)
 
 

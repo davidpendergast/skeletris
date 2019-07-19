@@ -1299,6 +1299,7 @@ class InGameUiState(Menu):
                 if not destroy_image:  # so you can't flicker the image after death basically
                     create_image = True
                 destroy_image = True
+                sound_effects.play_sound(soundref.item_rotate)
 
         if destroy_image and self.item_on_cursor_info is not None:
             self._destroy_panel(self.item_on_cursor_info[1])

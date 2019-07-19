@@ -11,6 +11,8 @@ import src.utils.colors as colors
 from src.renderengine.engine import RenderEngine
 from src.game.events import EventType
 import src.game.debug as debug
+import src.game.sound_effects as sound_effects
+import src.game.soundref as soundref
 
 
 BG_DEPTH = 10
@@ -457,15 +459,20 @@ class InventoryPanel(SidePanel):
                     if grid.can_place(ps.held_item, cell):
                         grid.place(ps.held_item, cell)
                         ps.held_item = None
+                        sound_effects.play_sound(soundref.item_place)
                     else:
                         replaced_with = grid.try_to_replace(ps.held_item, cell)
                         if replaced_with is not None:
                             ps.held_item = replaced_with
+                            sound_effects.play_sound(soundref.item_replace)
+                        else:
+                            sound_effects.play_sound(soundref.item_cant_place)
                 else:
                     clicked_item = grid.item_at_position(cell)
                     if clicked_item is not None:
                         grid.remove(clicked_item)
                         gs.get_instance().player_state().held_item = clicked_item
+                        sound_effects.play_sound(soundref.item_pickup)
 
         elif button == 3:
             if ps.held_item is None:

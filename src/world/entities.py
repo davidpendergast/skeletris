@@ -746,8 +746,10 @@ class ActorEntity(Entity):
 
         if new_hp > old_hp:
             world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 3, self)
+            sound_effects.play_sound(soundref.rand_heal_small())
         elif new_hp < old_hp:
             world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 3, self)
+            sound_effects.play_sound(soundref.rand_damage_hit_small())
 
     def update(self, world):
         Entity.update(self, world)

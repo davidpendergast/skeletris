@@ -282,7 +282,7 @@ class ConversationFactory:
                     PlayerDialog("Can we just talk normally?"),
                     NpcDialog("*zzzzt*"),
                     NpcDialog("Restoring Backup..... DONE"),
-                    NpcDialog("Welcome to Skeletris! I'm Skelly, your virtual guide."),
+                    NpcDialog("Welcome to Skeletris! I'm Machine, your virtual guide."),
                     NpcDialog("This thriving metropolis was founded in <deleted> by our first mayor, <deleted>. Here you'll find the very best of skeletal amenities."),
                     NpcDialog("Chill your bones in the dark pools, test your luck at the spooky arcade, or stop by the Haunted Diner for an award-winning mushroom burger!"),
                     PlayerDialog("This doesn't look like a metropolis..? Where is everybody?"),

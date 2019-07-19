@@ -504,6 +504,8 @@ class ConsumeItemAction(Action):
                 self.actor_entity.perturb_color(consume_effect.get_color(), 30)
                 self.actor_entity.set_visually_held_item_override(False)
 
+            sound_effects.play_sound(soundref.potion_drink)
+
     def finalize(self, world):
         super().finalize(world)
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
@@ -1165,6 +1167,8 @@ class PickUpItemAction(Action):
             self.get_actor().get_actor_state().held_item = ent_to_pickup.get_item()
             world.remove(ent_to_pickup)
 
+            sound_effects.play_sound(soundref.item_pickup)
+
 
 class DropItemAction(Action):
 
@@ -1204,6 +1208,7 @@ class DropItemAction(Action):
             a_state.inventory().remove(self.get_item())
 
         world.add_item_as_entity(self.get_item(), actor.center(), direction=self._drop_dir)
+        sound_effects.play_sound(soundref.item_drop)
 
 
 class ActionProvider:
