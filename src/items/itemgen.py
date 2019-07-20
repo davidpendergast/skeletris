@@ -16,7 +16,7 @@ import src.game.debug as debug
 
 CORE_STATS = [StatTypes.ATT, StatTypes.DEF, StatTypes.VIT]
 
-NON_CORE_STATS = []
+NON_CORE_STATS = [StatTypes.HP_ON_KILL]
 
 
 class ItemFactory:
@@ -269,6 +269,7 @@ class ItemStatRanges:
         StatTypes.DEF: _linear_map(16, 1, 8),
         StatTypes.VIT: _linear_map(16, 1, 24),
         StatTypes.SPEED: _linear_map(16, 1, 4),
+        StatTypes.HP_ON_KILL: _linear_map(16, 1, 8)
     }
 
     @staticmethod

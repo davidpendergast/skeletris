@@ -186,7 +186,7 @@ class ActorState(StatProvider):
         nullified = self.is_nullified()
 
         for e in all_effects:
-            if self.status_effects[e] <= 1 or (nullified and not e.ignores_nullification()):
+            if self.status_effects[e] <= 0 or (nullified and not e.ignores_nullification()):
                 del self.status_effects[e]
             else:
                 self.status_effects[e] = self.status_effects[e] - 1
@@ -602,6 +602,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
             world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
             sound_effects.play_sound(soundref.whiff_noise)
     else:
+        was_alive = defender.is_alive()  # bleh
         defender.set_hp(defender.hp() - damage)
 
         if defender_entity is not None and world is not None:
@@ -622,6 +623,10 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         if plus_def_duration > 0:
             new_status_effects_for_attacker.append(statuseffects.new_plus_defenses_effect(plus_def_duration,
                                                                                           unique_key="plus_defense_from_item"))
+        if was_alive and not defender.is_alive():
+            hp_on_kill = attacker.stat_value_with_item(StatTypes.HP_ON_KILL, item_used)
+            if hp_on_kill > 0:
+                new_status_effects_for_attacker.append(statuseffects.new_regen_effect(hp_on_kill, 1, unique_key="hp_on_kill"))
 
         if attacker_entity is not None:
             for s in new_status_effects_for_attacker:

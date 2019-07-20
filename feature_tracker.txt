@@ -15,6 +15,8 @@
     - need to math a little harder here (or just leave it...)
  - it's possible for mapped-item-actions to display their items with the wrong rotation
     - it's probably storing an old ref to the item with a different rotation
+ - can't drop items while walking (increase buffer on item-drop actions?)
+ - opened chests show up on maps
   
 [balance issues]
  - need more sources of healing
@@ -31,15 +33,13 @@
  - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
     - i'm fine with this, cliffhanger for the demo
- - real names for generated zones
- - end-of-blue area boss
  - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
     - HP on kill
     - poison duration
     - confusion duration
  - help panel
-    - even necessary?
+    - even necessary? yes
  
 [architecture]
     - entities should keep a reference to the world they're in

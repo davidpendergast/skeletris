@@ -91,12 +91,15 @@ class StatTypes:
                                  desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
                                  local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")
 
-
-
     PLUS_DEFENSE_ON_HIT = StatType("PLUS_DEFENSE_ON_HIT",
                                    color=colors.BLUE,
                                    desc="+{}".format(balance.STATUS_EFFECT_PLUS_DEFENSE_VAL) + " DEF on Hit (lasts {} turns)",
                                    local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_DEFENSE_VAL) + " DEF on Hit (lasts {} turns)")
+
+    HP_ON_KILL = StatType("HP_ON_KILL",
+                          color=colors.GREEN,
+                          desc="+{} HP on Kill",
+                          local_desc="Kills with this item grant +{} HP")
 
     @staticmethod
     def all_types():
