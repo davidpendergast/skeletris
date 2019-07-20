@@ -563,12 +563,6 @@ class RoboTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.enormous_shadow
 
-    def get_shadow_offset(self):
-        return (0, -8)
-
-    def get_sprite_offset(self):
-        return (0, 6)
-
     def get_level_range(self):
         return [11]
 

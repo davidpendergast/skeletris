@@ -334,9 +334,6 @@ class AnimationEntity(Entity):
             self.fric = self.fric if fric is None else fric
             self.collides = self.collides if collides is None else collides
 
-        def get_depth(self):
-            return super().get_depth() - 32  # gotta win~
-
         def set_finish_behavior(self, mode):
             self.on_finish_mode = mode
 
@@ -498,6 +495,10 @@ class FloatingTextEntity(Entity):
 
     def _build_text_img(self):
         return TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, color=self.color, scale=self.scale)
+
+    def get_depth(self):
+        # should still use depth to sort among other text imgs
+        return -1000000 + super().get_depth()
 
     def update_images(self):
         if self._text_img is None:
