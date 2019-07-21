@@ -309,6 +309,7 @@ class GiantTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 2,
+            StatTypes.HP_REGEN: 2,
             StatTypes.WEALTH: 4
         })
 
@@ -341,7 +342,8 @@ class CrabTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 1
+            StatTypes.WEALTH: 1,
+            StatTypes.GRASP_ON_MELEE_HIT: 2,
         })
 
 

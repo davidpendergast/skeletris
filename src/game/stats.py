@@ -100,8 +100,13 @@ class StatTypes:
     CONFUSION = StatType("CONFUSION", desc="Moving is more difficult", color=colors.RED)
     CONFUSION_ON_HIT = StatType("CONFUSION_ON_HIT", color=colors.RED, desc="Inflicts Confusion on Hit (lasts {} turns)",
                                 local_desc="Inflicts Confusion on Hit (lasts {} turns)", enemy_desc="Confusing")
+
     SLOW_ON_HIT = StatType("SLOW_ON_HIT", color=colors.DARK_YELLOW, desc="Inflicts Slowness on Hit (lasts {} turns)",
                            local_desc="Inflicts Slowness on Hit (lasts {} turns)", enemy_desc="Slowing")
+
+    GRASPED = StatType("GRASPED", desc="Unable to move", color=colors.ORANGE)
+    GRASP_ON_MELEE_HIT = StatType("GRASP_ON_MELEE_HIT", color=colors.ORANGE, desc="Grasps on Melee Hit (lasts {} turns)",
+                                  local_desc="Grasps on Melee Hit (lasts {} turns)", enemy_desc="Grasping")
 
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")

@@ -17,6 +17,7 @@
     - it's probably storing an old ref to the item with a different rotation
  - can't drop items while walking (increase buffer on item-drop actions?)
  - opened chests show up on maps
+ - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
   
 [balance issues]
  - need more sources of healing

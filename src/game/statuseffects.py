@@ -130,3 +130,10 @@ def new_confusion_effect(duration, player_text=None):
     return StatusEffect("Confusion", duration, colors.RED,
                         spriteref.status_sparkles_icon, stats,
                         player_text=player_text, unique_key="confusion")
+
+
+def new_grasped_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.GRASPED, 1)]
+    return StatusEffect("Grasped", duration, colors.ORANGE,
+                        spriteref.status_sparkles_icon, stats,
+                        player_text=player_text, unique_key="grasped")

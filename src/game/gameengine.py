@@ -107,6 +107,9 @@ class ActorState(StatProvider):
     def is_confused(self):
         return self.stat_value(StatTypes.CONFUSION) > 0
 
+    def is_grasped(self):
+        return self.stat_value(StatTypes.GRASPED) > 0
+
     def get_projectile_sprite(self):
         return self.unarmed_projectile_sprite
 
@@ -443,6 +446,10 @@ class MoveToAction(Action):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
+        a_state = self.get_actor().get_actor_state()
+        if a_state.is_grasped():
+            return False
+
         if Utils.dist_manhattan(self.position, pos) != 1:
             return False
         elif world.is_solid(self.position[0], self.position[1], including_entities=True):
@@ -652,6 +659,11 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
         if slow_duration > 0:
             new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration))
 
+        # TODO - the 'on melee hit' thing is not enforced right now
+        grasped_duration = attacker.stat_value_with_item(StatTypes.GRASP_ON_MELEE_HIT, item_used)
+        if grasped_duration > 0:
+            new_status_effects_for_defender.append(statuseffects.new_grasped_effect(grasped_duration))
+
         if defender_entity is not None:
             for s in new_status_effects_for_defender:
                 defender_entity.get_actor_state().add_status_effect(s)
@@ -809,8 +821,11 @@ class MeleeAttackAction(AttackAction):
 
         cur_pos = world.to_grid_coords(*self.get_actor().center())
         end_pos = self._get_end_pos(world)
-        if cur_pos != end_pos and world.is_solid(end_pos[0], end_pos[1], including_entities=True):
-            return False
+        if cur_pos != end_pos:
+            if world.is_solid(end_pos[0], end_pos[1], including_entities=True):
+                return False
+            elif self.get_actor().get_actor_state().is_grasped():
+                return False
 
         return True
 

@@ -732,15 +732,14 @@ class ActorEntity(Entity):
 
         pulse_color = None
 
-        hp_change = 0
-        for eff in a_state.all_status_effects():
-            hp_change += eff.stat_value(stats.StatTypes.HP_REGEN)
-            hp_change -= eff.stat_value(stats.StatTypes.POISON)
+        regen_val = a_state.stat_value(stats.StatTypes.HP_REGEN)
+        pois_val = a_state.stat_value(stats.StatTypes.POISON)
+        hp_change = regen_val - pois_val
 
-            if hp_change > 0:
-                pulse_color = stats.StatTypes.HP_REGEN.get_color()
-            elif hp_change < 0:
-                pulse_color = stats.StatTypes.POISON.get_color()
+        if hp_change > 0:
+            pulse_color = stats.StatTypes.HP_REGEN.get_color()
+        elif hp_change < 0:
+            pulse_color = stats.StatTypes.POISON.get_color()
 
         a_state.set_hp(old_hp + hp_change)
         new_hp = a_state.hp()
