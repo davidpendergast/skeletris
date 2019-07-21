@@ -139,6 +139,24 @@ class UI:
     map_button = None
     help_button = None
 
+    left_button = None
+    up_button = None
+    down_button = None
+    right_button = None
+    skip_button = None
+
+    status_eye_icon = None
+    status_drop_icon = None
+    status_sword_icon = None
+    status_shield_icon = None
+
+    status_sparkles_icon = None
+    status_up_arrow_icon = None
+    status_diagonal_lines_icon = None
+    status_waves_icon = None
+
+    status_hand_icon = None
+
     @staticmethod
     def get_health_bar(pcnt_full):
         return UI.health_bars_with_length[round(pcnt_full * 256)]
@@ -378,16 +396,6 @@ doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]
 cave_horror_faces = [make(368, 336 + i * 32, 32, 32) for i in range(0, 2)]
-
-status_eye_icon = make(400, 208, 16, 16)
-status_drop_icon = make(400, 224, 16, 16)
-status_sword_icon = make(400, 240, 16, 16)
-status_shield_icon = make(400, 256, 16, 16)
-
-status_sparkles_icon = make(416, 208, 16, 16)
-status_up_arrow_icon = make(416, 224, 16, 16)
-status_diagonal_lines_icon = make(416, 240, 16, 16)
-status_waves_icon = make(416, 256, 16, 16)
 
 
 def get_item_entity_sprite(cubes):
@@ -694,6 +702,18 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.inventory_button = make(52, 237, 15, 15, shift=start_pos)
     UI.map_button = make(67, 237, 15, 15, shift=start_pos)
     UI.help_button = make(82, 237, 15, 15, shift=start_pos)
+
+    UI.status_eye_icon = make(256, 240, 16, 16, shift=start_pos)
+    UI.status_drop_icon = make(256, 256, 16, 16, shift=start_pos)
+    UI.status_sword_icon = make(256, 272, 16, 16, shift=start_pos)
+    UI.status_shield_icon = make(256, 288, 16, 16, shift=start_pos)
+
+    UI.status_sparkles_icon = make(272, 240, 16, 16, shift=start_pos)
+    UI.status_up_arrow_icon = make(272, 256, 16, 16, shift=start_pos)
+    UI.status_diagonal_lines_icon = make(272, 256, 16, 16, shift=start_pos)
+    UI.status_waves_icon = make(272, 256, 16, 16, shift=start_pos)
+
+    UI.status_hand_icon = make(288, 240, 16, 16, shift=start_pos)
 
     UI.tooltip_bg = make(48, 232, 2, 2, shift=start_pos)
 

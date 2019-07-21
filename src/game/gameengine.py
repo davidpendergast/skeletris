@@ -1182,6 +1182,8 @@ class PickUpItemAction(Action):
         super().finalize(world)
         ent_to_pickup = self._get_entity_to_pickup(world)
         if ent_to_pickup is None:
+            # this shouldn't be possible if is_possible, start, and finalize are called on the same frame,
+            # but that may not always be the case i suppose
             print("ERROR: item we wanted to pick up isn't there anymore? {}".format(self.get_item()))
         else:
             self.get_actor().get_actor_state().held_item = ent_to_pickup.get_item()
