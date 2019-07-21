@@ -72,7 +72,19 @@ class TooltipFactory:
         e_state = target_enemy.get_actor_state()
 
         text_builder.add_line(e_state.name())
-        text_builder.add_line("Hostile", color=colors.LIGHT_GRAY)
+
+        attributes = [("Hostile", colors.LIGHT_GRAY)]
+        for st in e_state.all_nonzero_stat_types():
+            attrib_name = st.get_enemy_desc(e_state)
+            if attrib_name is not None:
+                attributes.append((attrib_name, st.get_color()))
+
+        for i in range(0, len(attributes)):
+            name = attributes[i][0]
+            color = attributes[i][1]
+            text_builder.add(name, color=color)
+            if i < len(attributes) - 1:
+                text_builder.add(", ", color=color)
 
         text_builder.add_line("")
         att_val = e_state.stat_value(StatTypes.ATT) + e_state.stat_value(StatTypes.UNARMED_ATT)

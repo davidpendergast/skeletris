@@ -9,13 +9,14 @@ _ALL_STAT_TYPES = {}  # stat_id -> StatType
 
 class StatType:
 
-    def __init__(self, stat_id, color=colors.LIGHT_GRAY, desc=None, local_desc=None):
+    def __init__(self, stat_id, color=colors.LIGHT_GRAY, desc=None, local_desc=None, enemy_desc=None):
         self._stat_id = stat_id
         self._color = color
         self._desc = desc
         self._local_desc = local_desc
+        self._enemy_desc = enemy_desc
 
-        _ALL_STAT_TYPES[stat_id] = _ALL_STAT_TYPES
+        _ALL_STAT_TYPES[stat_id] = self
 
     def get_color(self):
         return self._color
@@ -44,6 +45,13 @@ class StatType:
             else:
                 return self._local_desc.format(value)
 
+    def get_enemy_desc(self, stat_provider):
+        value = stat_provider.stat_value(self)
+        if self._enemy_desc is None or value <= 0:
+            return None
+        else:
+            return self._enemy_desc.format(value)
+
     def __eq__(self, other):
         if isinstance(other, StatType):
             return self.get_id() == other.get_id()
@@ -54,6 +62,20 @@ class StatType:
         return hash(self.get_id())
 
 
+class RangedStatType(StatType):
+    def __init__(self):
+        StatType.__init__(self, "UNARMED_RANGE", desc="+{} to Unarmed Range")
+
+    def get_enemy_desc(self, stat_provider):
+        value = stat_provider.stat_value(self)
+        if value <= 0:
+            return None
+        elif stat_provider.stat_value(StatTypes.UNARMED_IS_PROJECTILE) > 0:
+            return "Ranged"
+        else:
+            return "Leaping"
+
+
 class StatTypes:
     ATT = StatType("ATT", color=colors.RED, desc="+{} to All Attacks")
     DEF = StatType("DEF", color=colors.BLUE, desc="+{} Defense")
@@ -61,26 +83,25 @@ class StatTypes:
     SPEED = StatType("SPEED", color=colors.YELLOW, desc="+{} Speed")
 
     UNARMED_ATT = StatType("UNARMED_ATT", color=colors.RED, desc="+{} to Unarmed Attacks")
-    UNARMED_RANGE = StatType("UNARMED_RANGE", desc="+{} to Unarmed Range")
+    UNARMED_RANGE = RangedStatType()
     UNARMED_IS_PROJECTILE = StatType("UNARMED_IS_PROJECTILE", desc="Unarmed Attacks are Projectiles")
-    THROWN_ATT = StatType("THROWN_ATT", color=colors.RED, desc="+{} to Throw Damage",
-                          local_desc="+{} Damage when Thrown")
+    THROWN_ATT = StatType("THROWN_ATT", color=colors.RED, desc="+{} to Throw Damage", local_desc="+{} Damage when Thrown")
     MIN_LIGHT_LEVEL = StatType("MIN_LIGHT_LEVEL")
     LIGHT_LEVEL = StatType("LIGHT_LEVEL", desc="+{} Light Level", color=colors.LIGHT_BLUE)
-    HP_REGEN = StatType("HP_REGEN", desc="+{} HP per Turn", color=colors.GREEN)
+    HP_REGEN = StatType("HP_REGEN", color=colors.GREEN, desc="+{} HP per Turn", enemy_desc="Regenerating")
 
     POISON = StatType("POISON", desc="-{} HP per Turn", color=colors.PURPLE)  # poison that's currently inflicted
     POISON_ON_HIT = StatType("POISON_ON_HIT", color=colors.PURPLE, desc="Inflicts Poison on Hit (lasts {} turns)",
-                             local_desc="Inflicts Poison on Hit (lasts {} turns)")
+                             local_desc="Inflicts Poison on Hit (lasts {} turns)", enemy_desc="Poisonous")
 
     NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
-                             color=colors.WHITE)
+                             color=colors.WHITE, enemy_desc="Nullifying")
 
     CONFUSION = StatType("CONFUSION", desc="Moving is more difficult", color=colors.RED)
     CONFUSION_ON_HIT = StatType("CONFUSION_ON_HIT", color=colors.RED, desc="Inflicts Confusion on Hit (lasts {} turns)",
-                                local_desc="Inflicts Confusion on Hit (lasts {} turns)")
+                                local_desc="Inflicts Confusion on Hit (lasts {} turns)", enemy_desc="Confusing")
     SLOW_ON_HIT = StatType("SLOW_ON_HIT", color=colors.DARK_YELLOW, desc="Inflicts Slowness on Hit (lasts {} turns)",
-                           local_desc="Inflicts Confusion on Hit (lasts {} turns)")
+                           local_desc="Inflicts Slowness on Hit (lasts {} turns)", enemy_desc="Slowing")
 
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")

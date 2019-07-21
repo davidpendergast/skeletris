@@ -46,7 +46,7 @@ class EnemyTemplate:
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 1,
-            StatTypes.DEF: 1,
+            StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1,
         })
@@ -72,11 +72,11 @@ class CaveCrawlerTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 6,
+            StatTypes.VIT: 8,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 0,
+            StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 1
         })
@@ -95,7 +95,7 @@ class SmallFrogTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 3,
+            StatTypes.VIT: 6,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 1,
