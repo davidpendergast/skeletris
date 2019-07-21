@@ -167,6 +167,15 @@ class Utils:
             return pygame.key.name(keycode)
 
     @staticmethod
+    def stringify_keylist(keycodes, or_else=""):
+        """returns: comma separated list of the given keys formatted as strings."""
+        if len(keycodes) == 0:
+            return or_else
+        else:
+            key_strings = [Utils.stringify_key(k) for k in keycodes]
+            return ",".join(key_strings)
+
+    @staticmethod
     def resource_path(relative_path):
         """ Get absolute path to resource, works for dev and for PyInstaller """
         try:

@@ -739,6 +739,12 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 
     UI.locked_door_panel = make(272, 0, 96, 112, shift=start_pos)
 
+    UI.left_button = make(97, 237, 15, 15, shift=start_pos)
+    UI.up_button = make(112, 237, 15, 15, shift=start_pos)
+    UI.down_button = make(127, 237, 15, 15, shift=start_pos)
+    UI.right_button = make(142, 237, 15, 15, shift=start_pos)
+    UI.skip_button = make(157, 237, 30, 15, shift=start_pos)
+
     UI.Cursors.arrow_cursor_sprite = make(24, 312, 24, 24, shift=start_pos)
     UI.Cursors.hand_cursor_sprite = make(48, 336, 16, 16, shift=start_pos)
     UI.Cursors.invis_cursor_sprite = make(72, 336, 8, 8, shift=start_pos)

@@ -18,6 +18,7 @@
  - can't drop items while walking (increase buffer on item-drop actions?)
  - opened chests show up on maps
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
+ - tooltips are kinda funky on 'move' and 'skip' buttons
   
 [balance issues]
  - need more sources of healing
@@ -52,20 +53,21 @@
     - couldn't figure out how how to rotate items
     - i had to explain difference between inventory and equipment grids
     - issues figuring out controls (lot of hand alternating)
-    - filled up entire inventory with garbage items
     - compulsively picking up, equipping items
         - swapping an rearranging items even when their stats were the same
         - became mentally fatigued with arranging them
         - eventually became annoyed whenever an item would drop, would check phone
+        - filled up entire inventory with garbage items
     - thought vitality was different from HP
-    - seemed very bored, playing just to pass time and be polite
-        - obv not a fan of the genre, but concerning none the less
+    - seemed bored, playing to pass the time and be polite
+        - obv not a fan of the genre, but concerning nonetheless
     - story seemed to bore him
     - said art was good, but "programming seems basic"
-        - not sure what this means, possibly just because it's a 2D game
+        - not sure what this means
     - didn't understand why he couldn't pick up items two squares away
     
-    takeaway:
+    takeaways: 
+        - ~early game is slow, easy, confusing, and boring~
         - way too many chests
         - first levels are way too easy to the point of being boring
         - need in-game tutorial

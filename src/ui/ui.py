@@ -951,10 +951,8 @@ class HotbarHelpButton(HotbarSidePanelButton):
 
 class HotbarMoveButton(InteractableImage):
 
-    def __init__(self, rect, icon_sprite, direction):
+    def __init__(self, rect):
         self.rect = rect
-        self.icon_sprite = icon_sprite
-        self.direction = direction
 
         self.disabled_color = colors.DARK_GRAY
         self.ready_color = colors.LIGHT_GRAY
@@ -962,25 +960,141 @@ class HotbarMoveButton(InteractableImage):
         self._icon_img = None
 
     def contains_point(self, x, y):
-        return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
-                self.rect[1] <= y < self.rect[1] + self.rect[3])
+        if self.rect is not None:
+            return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
+                    self.rect[1] <= y < self.rect[1] + self.rect[3])
+        else:
+            return False
+
+    def get_preferred_size(self):
+        return (15, 15)
+
+    def is_dirty(self):
+        return True
 
     def update_images(self):
-        if self._icon_img is None:
-            self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+        icon_sprite = self.get_icon_sprite()
+        if self.rect is not None and icon_sprite is not None:
+            if self._icon_img is None:
+                self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
 
-        self._icon_img = self._icon_img.update(new_model=self.icon_sprite,
-                                               new_depth=FG_DEPTH,
-                                               new_x=self.rect[0],
-                                               new_y=self.rect[1],
-                                               new_color=self.ready_color)
+            if self.is_active():
+                color = self.ready_color
+            else:
+                color = self.disabled_color
+
+            self._icon_img = self._icon_img.update(new_model=icon_sprite,
+                                                   new_depth=FG_DEPTH,
+                                                   new_x=self.rect[0],
+                                                   new_y=self.rect[1],
+                                                   new_color=color)
+        elif self._icon_img is not None:
+                RenderEngine.get_instance().remove(self._icon_img)
+                self._icon_img = None
+
+    def get_icon_sprite(self):
+        return None
+
+    def get_tooltip_text(self):
+        return None
+
+    def is_active(self):
+        return not gs.get_instance().world_updates_paused()
 
     def get_tooltip_target_at(self, x, y):
+        tt_text = self.get_tooltip_text()
+        if tt_text is not None:
+            res = TextBuilder()
+            res.add(tt_text)
+            return res
         return None
 
     def all_bundles(self):
         if self._icon_img is not None:
             yield self._icon_img
+
+
+class HotbarMoveLeftButton(HotbarMoveButton):
+
+    def __init__(self):
+        HotbarMoveButton.__init__(self, None)
+
+    def get_icon_sprite(self):
+        return spriteref.UI.left_button
+
+    def get_tooltip_text(self):
+        keys = Utils.stringify_keylist(gs.get_instance().settings().left_key(), or_else="None")
+        return "Left [{}]".format(keys)
+
+    def on_click(self, x, y, button=1):
+        pass  # TODO - this won't work until gs can access the world
+
+
+class HotbarMoveRightButton(HotbarMoveButton):
+
+    def __init__(self):
+        HotbarMoveButton.__init__(self, None)
+
+    def get_icon_sprite(self):
+        return spriteref.UI.right_button
+
+    def get_tooltip_text(self):
+        keys = Utils.stringify_keylist(gs.get_instance().settings().right_key(), or_else="None")
+        return "Right [{}]".format(keys)
+
+    def handle_pressed(self):
+        pass
+
+
+class HotbarMoveUpButton(HotbarMoveButton):
+
+    def __init__(self):
+        HotbarMoveButton.__init__(self, None)
+
+    def get_icon_sprite(self):
+        return spriteref.UI.up_button
+
+    def get_tooltip_text(self):
+        keys = Utils.stringify_keylist(gs.get_instance().settings().up_key(), or_else="None")
+        return "Up [{}]".format(keys)
+
+    def handle_pressed(self):
+        pass
+
+
+class HotbarMoveDownButton(HotbarMoveButton):
+
+    def __init__(self):
+        HotbarMoveButton.__init__(self, None)
+
+    def get_icon_sprite(self):
+        return spriteref.UI.down_button
+
+    def get_tooltip_text(self):
+        keys = Utils.stringify_keylist(gs.get_instance().settings().down_key(), or_else="None")
+        return "Down [{}]".format(keys)
+
+    def handle_pressed(self):
+        pass
+
+
+class HotbarSkipTurnButton(HotbarMoveButton):
+
+    def __init__(self):
+        HotbarMoveButton.__init__(self, None)
+
+    def get_icon_sprite(self):
+        return spriteref.UI.skip_button
+
+    def get_tooltip_text(self):
+        keys = Utils.stringify_keylist(gs.get_instance().settings().skip_turn_key(), or_else="None")
+        return "Skip [{}]".format(keys)
+
+    def handle_pressed(self):
+        pass
+
+    def get_preferred_size(self):
+        return (30, 15)
 
 
 class HealthBarPanel(InteractableImage):
@@ -1006,6 +1120,13 @@ class HealthBarPanel(InteractableImage):
         self._sidepanel_buttons[0] = HotbarInventoryButton(None)
         self._sidepanel_buttons[1] = HotbarMapButton(None)
         self._sidepanel_buttons[2] = HotbarHelpButton(None)
+
+        self._move_buttons = [None] * 5
+        self._move_buttons[0] = HotbarMoveLeftButton()
+        self._move_buttons[1] = HotbarMoveUpButton()
+        self._move_buttons[2] = HotbarMoveDownButton()
+        self._move_buttons[3] = HotbarMoveRightButton()
+        self._move_buttons[4] = HotbarSkipTurnButton()
 
     def contains_point(self, x, y):
         if super().contains_point(x, y):
@@ -1041,6 +1162,20 @@ class HealthBarPanel(InteractableImage):
 
                 if self._sidepanel_buttons[i].is_dirty():
                     self._sidepanel_buttons[i].update_images()
+
+    def _update_move_buttons(self):
+        x_start = self._rect[0] + self._rect[2] - 67 * 2
+        y_start = self._rect[1] + 16 * 2
+
+        for i in range(0, len(self._move_buttons)):
+            if self._move_buttons[i] is not None:
+                w, h = self._move_buttons[i].get_preferred_size()
+                self._move_buttons[i].rect = [x_start + 15 * 2 * (i % 4),
+                                              y_start + 15 * 2 * (i // 4),
+                                              w * 2, h * 2]
+
+                if self._move_buttons[i].is_dirty():
+                    self._move_buttons[i].update_images()
 
     def _update_action_icons(self):
         x_starts = [self._rect[0] + 87 * 2 + i * 40 * 2 for i in range(0, 3)] + \
@@ -1143,6 +1278,7 @@ class HealthBarPanel(InteractableImage):
         self._update_action_icons()
         self._update_status_effect_icons()
         self._update_sidepanel_buttons()
+        self._update_move_buttons()
 
     def all_child_imgs(self):
         for i in self._action_imgs:
@@ -1151,6 +1287,9 @@ class HealthBarPanel(InteractableImage):
         for i in self._status_imgs:
             yield i
         for i in self._sidepanel_buttons:
+            if i is not None:
+                yield i
+        for i in self._move_buttons:
             if i is not None:
                 yield i
 
@@ -1170,11 +1309,15 @@ class HealthBarPanel(InteractableImage):
             if sidepanel_button is not None:
                 for bun in sidepanel_button.all_bundles():
                     yield bun
+        for move_button in self._move_buttons:
+            if move_button is not None:
+                for bun in move_button.all_bundles():
+                    yield bun
 
 
 class TextBuilder:
-    def __init__(self):
-        self._text = ""
+    def __init__(self, text=""):
+        self._text = text
         self._custom_colors = {}
 
     def add(self, text, color=None):

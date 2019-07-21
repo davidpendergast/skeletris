@@ -186,6 +186,7 @@ class GlobalState:
 
         self._mapped_actions = [None for _ in range(0, 6)]
         self._action_to_target = None
+        self._waiting_for_player = False
 
         self._targetable_coords_in_world = {}  # (x, y) -> color
 
@@ -344,6 +345,12 @@ class GlobalState:
             return None  # TODO - is this dangerous?
         else:
             return self.current_zone.ZONE_ID
+
+    def is_player_turn_to_act(self):
+        return not self.world_updates_paused() and self._waiting_for_player
+
+    def set_player_turn_to_act(self, val):
+        self._waiting_for_player = val
         
     def set_player_state(self, state, controller):
         self._player_state = state

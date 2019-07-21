@@ -577,11 +577,14 @@ class World:
                 if not gs.get_instance().world_updates_paused():
                     if e.is_actor() and not e.get_actor_state().is_alive():
                         e.handle_death(self)
+                        if e.is_player():
+                            gs.get_instance().set_player_turn_to_act(False)
 
                     elif e.is_actor() and near_player:
                         actors_to_process.append(e)
                         if e.is_performing_action():
                             an_actor_is_acting = True
+                            gs.get_instance().set_player_turn_to_act(e.is_player())
 
             elif e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)
@@ -605,6 +608,9 @@ class World:
             for actor in actors_ready_to_act:
                 a_state = actor.get_actor_state()
                 action = actor.request_next_action(self)
+
+                if actor.is_player():
+                    gs.get_instance().set_player_turn_to_act(True)
 
                 if action.is_free():
                     action.pre_start(self)
