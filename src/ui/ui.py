@@ -949,6 +949,40 @@ class HotbarHelpButton(HotbarSidePanelButton):
         return res
 
 
+class HotbarMoveButton(InteractableImage):
+
+    def __init__(self, rect, icon_sprite, direction):
+        self.rect = rect
+        self.icon_sprite = icon_sprite
+        self.direction = direction
+
+        self.disabled_color = colors.DARK_GRAY
+        self.ready_color = colors.LIGHT_GRAY
+
+        self._icon_img = None
+
+    def contains_point(self, x, y):
+        return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
+                self.rect[1] <= y < self.rect[1] + self.rect[3])
+
+    def update_images(self):
+        if self._icon_img is None:
+            self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+
+        self._icon_img = self._icon_img.update(new_model=self.icon_sprite,
+                                               new_depth=FG_DEPTH,
+                                               new_x=self.rect[0],
+                                               new_y=self.rect[1],
+                                               new_color=self.ready_color)
+
+    def get_tooltip_target_at(self, x, y):
+        return None
+
+    def all_bundles(self):
+        if self._icon_img is not None:
+            yield self._icon_img
+
+
 class HealthBarPanel(InteractableImage):
 
     SIZE = (400 * 2, 53 * 2)

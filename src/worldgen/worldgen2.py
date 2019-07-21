@@ -932,7 +932,7 @@ class Features:
 
     CHEST = Feature("chest",
                     FeatureUtils.convert(["W", "-"]),
-                    FeatureUtils.convert(["W", "c"]), can_rotate=True, appear_rate=8)
+                    FeatureUtils.convert(["W", "c"]), can_rotate=True, appear_rate=1)
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["-"]),

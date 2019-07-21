@@ -36,11 +36,44 @@
     - i'm fine with this, cliffhanger for the demo
  - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
-    - HP on kill
     - poison duration
     - confusion duration
  - help panel
     - even necessary? yes
+ - move / skip turn buttons on hotbar
+ 
+[playtesting notes]
+
+ - nervous dog guy (7/21/19)
+    - 45 minutes, made it through 2 levels
+    - thought flashing red dagger meant it would break soon
+    - couldn't figure out how to pick up items (mouse)
+    - couldn't figure out how how to open inventory
+    - couldn't figure out how how to rotate items
+    - i had to explain difference between inventory and equipment grids
+    - issues figuring out controls (lot of hand alternating)
+    - filled up entire inventory with garbage items
+    - compulsively picking up, equipping items
+        - swapping an rearranging items even when their stats were the same
+        - became mentally fatigued with arranging them
+        - eventually became annoyed whenever an item would drop, would check phone
+    - thought vitality was different from HP
+    - seemed very bored, playing just to pass time and be polite
+        - obv not a fan of the genre, but concerning none the less
+    - story seemed to bore him
+    - said art was good, but "programming seems basic"
+        - not sure what this means, possibly just because it's a 2D game
+    - didn't understand why he couldn't pick up items two squares away
+    
+    takeaway:
+        - way too many chests
+        - first levels are way too easy to the point of being boring
+        - need in-game tutorial
+        - shift click to auto-pickup items
+        - better indicator when item is too far away to be picked up
+        - needs to be possible to die in early levels
+        - early levels potentially should be a lot smaller?
+        
  
 [architecture]
     - entities should keep a reference to the world they're in
