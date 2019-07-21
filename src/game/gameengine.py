@@ -356,11 +356,12 @@ class ActionType:
     PICKUP_ITEM = "PICKUP_ITEM"
     DROP_ITEM = "DROP_ITEM"
     THROW_ITEM = "THROW_ITEM"
+    GIVE_ITEM = "GIVE ITEM"
+    CONSUME_ITEM = "CONSUME_ITEM"
     ATTACK = "ATTACK"
     INTERACT = "INTERACT"
     PLAYER_WAIT = "PLAYER_WAIT"  # special command used by player to indicate they're still deciding
     SKIP_TURN = "SKIP_TURN"
-    CONSUME_ITEM = "CONSUME_ITEM"
 
     OPEN_DOOR = "OPEN_DOOR"
 
@@ -949,6 +950,62 @@ class _ThrownItemAnimator:
             world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=3)
 
             world.remove(self._thrown_item_entity)
+
+
+class GiveItemAction(Action):
+
+    def __init__(self, actor, item, position):
+        Action.__init__(self, ActionType.GIVE_ITEM, 10, actor, item=item, position=position)
+        self._recipient_npc = None
+
+    def get_targeting_color(self, for_mouse=False):
+        return colors.PURPLE
+
+    def get_recipient(self, world):
+        pos = self.get_position()
+        recipients = world.get_entities_in_cell(pos[0], pos[1], lambda e: e.is_npc())
+
+        # if there's somehow more than one NPC at the position, just fail. that's a bad state
+        if len(recipients) != 1:
+            return None
+        else:
+            return recipients[0]
+
+    def is_possible(self, world):
+        if self.get_item() is None or self.get_position() is None:
+            return False
+
+        actor = self.get_actor()
+        a_state = actor.get_actor_state()
+        if not (self.item in a_state.inventory() or a_state.held_item == self.item):
+            return False
+
+        actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        pos = self.get_position()
+        if Utils.dist_manhattan(actor_pos, pos) > 1:
+            return False
+
+        recip = self.get_recipient(world)
+        if recip is None:
+            return False
+
+        return recip.accepts_item(self.get_item())
+
+    def start(self, world):
+        self._recipient_npc = self.get_recipient(world)
+
+        a_state = self.get_actor().get_actor_state()
+        removed = a_state.inventory().remove(self.item)
+        if not removed:
+            if a_state.held_item == self.item:
+                a_state.held_item = None
+                removed = True
+
+        if not removed:
+            print("WARN: failed to remove traded item: {}".format(self.item))
+
+    def finalize(self, world):
+        self._recipient_npc.trade_item(self.get_item(), self.get_actor(), world)
 
 
 class ThrowItemAction(Action):

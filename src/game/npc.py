@@ -328,6 +328,30 @@ class ConversationFactory:
             return None
 
 
+class NpcTradeProtocol:
+
+    def accepts_item(self, item):
+        return True
+
+    def do_trade(self, item):
+        return [item]
+
+
+class NpcMirrorTradeProtocol(NpcTradeProtocol):
+
+    def accepts_item(self, item):
+        from src.items.item import ItemTags
+        return ItemTags.CUBES in item.get_type().get_tags()
+
+    def do_trade(self, item):
+        return [item.mirror()]
+
+
+class NpcTradeProtocols:
+    IDENTITY_TRADE = NpcTradeProtocol()
+    MIRROR_TRADE = NpcMirrorTradeProtocol()
+
+
 def get_template(npc_id):
     return TEMPLATES[npc_id]
 
@@ -359,7 +383,8 @@ class NpcFactory:
 
             del npc_id_to_convo[npc_id]
 
-            res.append(entities.NpcEntity(0, 0, template, conversation=convo))
+            res.append(entities.NpcEntity(0, 0, template, conversation=convo,
+                                          trade_protocol=NpcTradeProtocols.MIRROR_TRADE))
 
         return res
 

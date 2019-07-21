@@ -79,6 +79,7 @@ class AppliedStat:
 
 class ItemTags:
     EQUIPMENT = "Equipment"
+    CUBES = "_Cubes"  # the "_" means it won't be shown in tooltips
     WEAPON = "Weapon"
     CONSUMABLE = "Consumable"
     STORY = "Quest Item"
@@ -140,17 +141,17 @@ class ItemTypes:
         else:
             return types_at_level
 
-    STAT_CUBE_5 = _new_type("Small Trinket", tuple([ItemTags.EQUIPMENT]),
+    STAT_CUBE_5 = _new_type("Small Trinket", (ItemTags.EQUIPMENT, ItemTags.CUBES),
                             drop_rate=balance.STAT_CUBE_5_DROP_RATE)
-    STAT_CUBE_6 = _new_type("Medium Relic", tuple([ItemTags.EQUIPMENT]), min_level=1,
+    STAT_CUBE_6 = _new_type("Medium Relic", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=1,
                             drop_rate=balance.STAT_CUBE_6_DROP_RATE)
-    STAT_CUBE_7 = _new_type("Large Artifact", tuple([ItemTags.EQUIPMENT]), min_level=2,
+    STAT_CUBE_7 = _new_type("Large Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=2,
                             drop_rate=balance.STAT_CUBE_7_DROP_RATE)
 
     SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3,
                              drop_rate=balance.WEAPON_DROP_RATE)
     SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
-                             drop_rate=balance.WEAPON_DROP_RATE)
+                              drop_rate=balance.WEAPON_DROP_RATE)
     SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7,
                              drop_rate=balance.WEAPON_DROP_RATE)
     WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
@@ -343,6 +344,21 @@ class StatCubesItem(Item):
         rotation_mapping = CubeUtils.calc_rotation_mapping(self.cubes)
         for cube in self.cubes:
             new_cube = rotation_mapping[cube]
+            new_cubes.append(new_cube)
+            if cube in self.cube_art:
+                new_art[new_cube] = self.cube_art[cube]
+
+        new_cubes = CubeUtils.sort_cubes(new_cubes)
+
+        return StatCubesItem(self.name, self.level, self.stats, new_cubes,
+                             self.color, cube_art=new_art, uuid_str=self.uuid)
+
+    def mirror(self):
+        new_cubes = []
+        new_art = {}
+        mirror_mapping = CubeUtils.calc_mirror_mapping(self.cubes)
+        for cube in self.cubes:
+            new_cube = mirror_mapping[cube]
             new_cubes.append(new_cube)
             if cube in self.cube_art:
                 new_art[new_cube] = self.cube_art[cube]

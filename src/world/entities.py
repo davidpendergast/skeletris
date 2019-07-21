@@ -1624,7 +1624,7 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1)):
+    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1), trade_protocol=None):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
 
@@ -1634,6 +1634,9 @@ class NpcEntity(Entity):
 
         self.color = color
         self._facing_right = True
+
+        self.trade_protocol = trade_protocol
+        self.num_trades_done = 0
 
     def get_shadow_sprite(self):
         return self.get_npc_template().shadow_sprite
@@ -1699,6 +1702,28 @@ class NpcEntity(Entity):
             gs.get_instance().set_story_var(self.conv.get_id(), True)
 
         self.npc_interact_count += 1
+
+    def accepts_item(self, item):
+        if self.trade_protocol is None or self.num_trades_done > 0:
+            return False
+        else:
+            return self.trade_protocol.accepts_item(item)
+
+    def trade_item(self, item, src_entity, world):
+        if not self.accepts_item(item):
+            world.add_item_as_entity(item, self.center())
+        else:
+            res_items = self.trade_protocol.do_trade(item)
+
+            if src_entity is not None:
+                src_pos = src_entity.center()
+                throw_dir = Utils.sub(src_pos, self.center())
+                throw_dir = Utils.set_length(throw_dir, 1.0)
+            else:
+                throw_dir = None
+
+            for it in res_items:
+                    world.add_item_as_entity(it, self.center(), direction=throw_dir)
 
 
 class TriggerBox(Entity):

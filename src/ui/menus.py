@@ -1503,11 +1503,13 @@ class InGameUiState(Menu):
 
         if player is not None:
             if ps.held_item is not None:
-                # first try to throw it
+
                 throw_action = gameengine.ThrowItemAction(player, ps.held_item, world_grid_pos)
                 res.append(throw_action)
 
-                # then just drop it
+                trade_action = gameengine.GiveItemAction(player, ps.held_item, world_grid_pos)
+                res.append(trade_action)
+
                 drop_dir = Utils.sub(world_pos, player.center())
                 drop_action = gameengine.DropItemAction(player, ps.held_item, drop_dir=drop_dir)
                 res.append(drop_action)
