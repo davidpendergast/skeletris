@@ -34,53 +34,62 @@
         - still maybe possible if somehow it really can't place start/finish
  - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
-    - i'm fine with this, cliffhanger for the demo
+    - dialog only? i'm fine with this, cliffhanger for the demo
  - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
     - poison duration
     - confusion duration
  - help panel
     - even necessary? yes
+        - will people even find it? looks unlikely based on testing
  - move / skip turn buttons on hotbar
  
 [playtesting notes]
 
- - nervous dog guy (7/21/19)
+ - coffee shop guy (nervous dog) (7/21/19)
+    situation: asked what i was working on, i offered to let him playtest
     - 45 minutes, made it through 2 levels
     - thought flashing red dagger meant it would break soon
     - couldn't figure out how to pick up items (mouse)
     - couldn't figure out how how to open inventory
     - couldn't figure out how how to rotate items
     - i had to explain difference between inventory and equipment grids
-    - issues figuring out controls (lot of hand alternating)
+    - issues with controls (lot of hand alternating)
     - compulsively picking up, equipping items
         - swapping an rearranging items even when their stats were the same
-        - became mentally fatigued with arranging them
+        - judging items based on color, rather than stats? 
+            - thought a yellow item affected speed.
         - eventually became annoyed whenever an item would drop, would check phone
         - filled up entire inventory with garbage items
     - thought vitality was different from HP
     - seemed bored, playing to pass the time and be polite
         - obv not a fan of the genre, but concerning nonetheless
-    - story seemed to bore him
+    - story seemed to amuse him at first, bore him as time went on
     - said art was good, but "programming seems basic"
-        - not sure what this means
+        - not sure what this means, hurt though lol
     - didn't understand why he couldn't pick up items two squares away
     
     takeaways: 
         - ~early game is slow, easy, confusing, and boring~
         - way too many chests
-        - first levels are way too easy to the point of being boring
         - need in-game tutorial
         - shift click to auto-pickup items
         - better indicator when item is too far away to be picked up
         - needs to be possible to die in early levels
         - early levels potentially should be a lot smaller?
+        - might want to prevent "ATT" items from being pure yellow
         
  
 [architecture]
     - entities should keep a reference to the world they're in
         - instead of passing the world into literally method
     - global state should have a reference to the active world that menus / ui can use
+    
+[design philosophy]
+    - if it doesn't fit, cut it
+    - if you can't draw it in two tries, cut it
+    - don't have two goombas
+    - polish counts
         
 [future features]
  - traps / ground effects

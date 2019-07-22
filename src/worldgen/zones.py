@@ -390,7 +390,8 @@ class ZoneBuilder:
         h = t_grid.h()
         world = World(t_grid.w(), t_grid.h())
 
-        npc_coords = []
+        convo_npc_coords = []
+        trade_npc_coords = []
 
         for x in range(0, w):
             for y in range(0, h):
@@ -407,15 +408,21 @@ class ZoneBuilder:
                         world.set_floor_type(spriteref.FLOOR_CRACKED_ID, xy=(x, y))
 
                 if tile_type == worldgen2.TileType.NPC:
-                    npc_coords.append((x, y))
+                    convo_npc_coords.append((x, y))
+                elif tile_type == worldgen2.TileType.TRADE_NPC:
+                    trade_npc_coords.append((x, y))
                 else:
                     ZoneBuilder._add_entities_for_tile(zone_id, level, x, y, tile_type, world)
 
-        if len(npc_coords) > 0:
-            npc_ents = npc.NpcFactory.get_npcs(level, len(npc_coords))
-            random.shuffle(npc_coords)
-            for i in range(0, len(npc_ents)):
-                world.add(npc_ents[i], gridcell=npc_coords[i])
+        if len(convo_npc_coords) > 0 or len(trade_npc_coords) > 0:
+            convo_npc_ents, trade_npc_ents = npc.NpcFactory.get_npcs(level, len(convo_npc_coords), len(trade_npc_coords))
+            random.shuffle(convo_npc_coords)
+            for i in range(0, len(convo_npc_ents)):
+                world.add(convo_npc_ents[i], gridcell=convo_npc_coords[i])
+
+            random.shuffle(trade_npc_coords)
+            for i in range(0, len(trade_npc_ents)):
+                world.add(trade_npc_ents[i], gridcell=trade_npc_coords[i])
 
         return world
 

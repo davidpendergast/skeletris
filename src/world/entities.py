@@ -231,6 +231,9 @@ class Entity(Updateable):
     def interact(self, world):
         pass
 
+    def can_trade(self):
+        return False
+
     def is_solid(self, world):
         """returns: whether this entity prevents the movement of Actors."""
         return self.is_npc() or self.is_actor() or self.is_interactable(world)
@@ -1624,19 +1627,14 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1), trade_protocol=None):
+    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1)):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
 
         self.npc_template = npc_template
-        self.conv = conversation
-        self.npc_interact_count = 0
 
         self.color = color
         self._facing_right = True
-
-        self.trade_protocol = trade_protocol
-        self.num_trades_done = 0
 
     def get_shadow_sprite(self):
         return self.get_npc_template().shadow_sprite
@@ -1687,11 +1685,22 @@ class NpcEntity(Entity):
 
         self.update_images()
 
+    def get_npc_id(self):
+        return self.get_npc_template().npc_id
+
     def is_npc(self):
         return True
 
     def is_interactable(self, world):
-        return True
+        return False
+
+
+class NpcConversationEntity(NpcEntity):
+
+    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1)):
+        NpcEntity.__init__(self, grid_x, grid_y, npc_template, color=color)
+        self.conv = conversation
+        self.npc_interact_count = 0
 
     def interact(self, world):
         if self.conv is not None:
@@ -1703,17 +1712,51 @@ class NpcEntity(Entity):
 
         self.npc_interact_count += 1
 
-    def accepts_item(self, item):
-        if self.trade_protocol is None or self.num_trades_done > 0:
-            return False
-        else:
-            return self.trade_protocol.accepts_item(item)
+    def is_interactable(self, world):
+        return True
 
-    def trade_item(self, item, src_entity, world):
-        if not self.accepts_item(item):
-            world.add_item_as_entity(item, self.center())
+
+class NpcTradeEntity(NpcEntity):
+
+    def __init__(self, grid_x, grid_y, npc_template, trade_protocol, color=(1, 1, 1)):
+        NpcEntity.__init__(self, grid_x, grid_y, npc_template, color=color)
+        self.trade_protocol = trade_protocol
+        self.num_trades_done = 0
+
+    def can_trade(self):
+        return True
+
+    def is_interactable(self, world):
+        # trades are a 'TradeItemAction', not an 'InteractAction'
+        return False
+
+    def get_trade_protocol(self):
+        return self.trade_protocol
+
+    def try_to_do_trade(self, item, src_entity, world):
+        """returns: True if item was accepted, false otherwise"""
+
+        if item is None:
+            if self.num_trades_done == 0:
+                dia = self.get_trade_protocol().get_explain_dialog(self.get_npc_id())
+            else:
+                dia = self.get_trade_protocol().get_post_success_dialog(self.get_npc_id())
+            gs.get_instance().dialog_manager().set_dialog(dia)
+            return False
+
+        elif self.num_trades_done > 0:
+            dia = self.get_trade_protocol().get_no_more_trades_dialog(self.get_npc_id())
+            gs.get_instance().dialog_manager().set_dialog(dia)
+            return False
+
+        elif not self.get_trade_protocol().accepts_trade(item):
+            dia = self.get_trade_protocol().get_wrong_item_dialog(self.get_npc_id(), item)
+            gs.get_instance().dialog_manager().set_dialog(dia)
+            return False
+
         else:
             res_items = self.trade_protocol.do_trade(item)
+            self.num_trades_done += 1
 
             if src_entity is not None:
                 src_pos = src_entity.center()
@@ -1723,7 +1766,11 @@ class NpcEntity(Entity):
                 throw_dir = None
 
             for it in res_items:
-                    world.add_item_as_entity(it, self.center(), direction=throw_dir)
+                world.add_item_as_entity(it, self.center(), direction=throw_dir)
+
+            dia = self.get_trade_protocol().get_success_dialog(self.get_npc_id(), item)
+            gs.get_instance().dialog_manager().set_dialog(dia)
+            return True
 
 
 class TriggerBox(Entity):

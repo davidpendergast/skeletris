@@ -38,6 +38,9 @@ class NpcTemplate:
         else:
             return None
 
+    def get_trade_protocol(self, level):
+        return None
+
     def get_dialog_sprites(self):
         if self._dialog_sprites is not None and len(self._dialog_sprites) > 0:
             return self._dialog_sprites
@@ -47,21 +50,6 @@ class NpcTemplate:
     def get_map_identifier(self):
         return self.map_id
 
-    def get_dialog_as_list(self, seed, interact_count):
-        text = "Hi! I don't have anything important to say, but it's a pleasure to meet you."
-        if interact_count == 1:
-            text = "It was nice meeting you! Have a nice day!"
-        elif interact_count >= 2:
-            text = "I think you should get going!"
-
-        return [dialog.NpcDialog(text, self.get_dialog_sprites())]
-
-    def handle_interact(self, entity, world, seed, interact_count):
-        dialog_list = self.get_dialog_as_list(seed, interact_count)
-        if dialog_list is not None and len(dialog_list) > 0:
-            dia = dialog.Dialog.link_em_up(dialog_list)
-            gs.get_instance().dialog_manager().set_dialog(dia)
-
 
 class MarySkellyTemplate(NpcTemplate):
 
@@ -69,13 +57,8 @@ class MarySkellyTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.MARY_SKELLY, "Mary Skelly",
                              sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
 
-    def get_dialog_as_list(self, seed, interact_count):
-        text = [
-            "I hope you find a lot of stuff down here! That's what adventurers do, right? They look for stuff? ..to wear?",
-            "I usually just go to the store, but to each their own!"
-        ]
-
-        return [dialog.NpcDialog(text[i], self.get_dialog_sprites()) for i in range(0, len(text))]
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.MIRROR_TRADE
 
 
 class MayorPatchesTemplate(NpcTemplate):
@@ -96,27 +79,11 @@ class GlorpleTemplate(NpcTemplate):
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
-    def get_dialog_as_list(self, seed, interact_count):
-        return [dialog.NpcDialog("You're doing a great job so far!", self.get_dialog_sprites())]
-
 
 class MachineTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces, ("M", colors.YELLOW))
-
-    def get_dialog_as_list(self, seed, interact_count):
-        # TODO - tailor these to the player's actual progress
-        discouragements = [
-            ["Are you expecting to beat the game with that gear? Just curious."],
-            ["Have you beaten the game yet? Oh, I just saw your playtime so I figured... no that's totally fine."],
-            ["I saw that fight back there. Ouch.", "But hey, as long as you're having fun, I can't judge."],
-            ["Be careful, my sensors are detecting some bad RNG ahead."],
-            ["Isn't it usually better to avoid taking damage?"]
-        ]
-
-        choice = discouragements[int(seed * len(discouragements))]
-        return [dialog.NpcDialog(choice[i], self.get_dialog_sprites()) for i in range(0, len(choice))]
 
 
 class DoctorTemplate(NpcTemplate):
@@ -330,21 +297,50 @@ class ConversationFactory:
 
 class NpcTradeProtocol:
 
-    def accepts_item(self, item):
+    def accepts_trade(self, item):
         return True
 
     def do_trade(self, item):
         return [item]
 
+    def get_explain_dialog(self, npc_id):
+        return dialog.NpcDialog("You give me an item, I give it back. Simple.", sprites=get_sprites(npc_id))
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Here's your item! Have a nice day.", sprites=get_sprites(npc_id))
+
+    def get_post_success_dialog(self, npc_id):
+        return dialog.NpcDialog("I hope you're enjoying the item!", sprites=get_sprites(npc_id))
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("I can't accept that type of item.", sprites=get_sprites(npc_id))
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("No more trades today. Sorry!", sprites=get_sprites(npc_id))
+
 
 class NpcMirrorTradeProtocol(NpcTradeProtocol):
 
-    def accepts_item(self, item):
+    def accepts_trade(self, item):
         from src.items.item import ItemTags
         return ItemTags.CUBES in item.get_type().get_tags()
 
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("No, no. Not that kind of item. It needs to be more... how do I describe it... cubelike?", sprites=get_sprites(npc_id))
+
     def do_trade(self, item):
         return [item.mirror()]
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Care to make a trade?", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What's the trade?"),
+             dialog.NpcDialog("It's simple. You give me a piece of equipment, and I'll flip it for you.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("Flip it for me?"),
+             dialog.NpcDialog("You'll see. Interested?", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_success_dialog(self, npc_id, item):
+        return super().get_success_dialog(npc_id, item)
 
 
 class NpcTradeProtocols:
@@ -363,29 +359,45 @@ def get_sprites(npc_id):
 class NpcFactory:
 
     @staticmethod
-    def get_npcs(level, n):
-        res = []
+    def get_npcs(level, n_convo, n_trade):
+        convo_res = []
+        trade_res = []
+
+        npc_types = []
+        for i in range(0, n_convo):
+            npc_types.append(True)
+        for i in range(0, n_trade):
+            npc_types.append(False)
+        random.shuffle(npc_types)
 
         import src.world.entities as entities
 
+        used_npc_ids = []
+
         available_convos = [c for c in Conversations.get_all() if c.is_available(level)]
+        available_traders = [npc_id for npc_id in TEMPLATES if get_template(npc_id).get_trade_protocol(level) is not None]
+
         random.shuffle(available_convos)
+        random.shuffle(available_traders)
 
-        # can only use an NPC once per zone.
-        npc_id_to_convo = {}
-        for c in available_convos:
-            npc_id_to_convo[c.get_npc_id()] = c
+        for t in npc_types:
+            if t:
+                # conversation type
+                while len(available_convos) > 0:
+                    next_convo = available_convos.pop()
+                    npc_id = next_convo.get_npc_id()
+                    if npc_id not in used_npc_ids:
+                        used_npc_ids.append(npc_id)
+                        convo_res.append(entities.NpcConversationEntity(0, 0, get_template(npc_id), next_convo))
+                        break
+            else:
+                # trade type
+                while len(available_traders) > 0:
+                    npc_id = available_traders.pop()
+                    if npc_id not in used_npc_ids:
+                        used_npc_ids.append(npc_id)
+                        template = get_template(npc_id)
+                        trade_res.append(entities.NpcTradeEntity(0, 0, template, template.get_trade_protocol(level)))
+                        break
 
-        while len(res) < n and len(npc_id_to_convo) > 0:
-            npc_id = random.choice(list(npc_id_to_convo.keys()))
-            convo = npc_id_to_convo[npc_id]
-            template = get_template(npc_id)
-
-            del npc_id_to_convo[npc_id]
-
-            res.append(entities.NpcEntity(0, 0, template, conversation=convo,
-                                          trade_protocol=NpcTradeProtocols.MIRROR_TRADE))
-
-        return res
-
-
+        return (convo_res, trade_res)

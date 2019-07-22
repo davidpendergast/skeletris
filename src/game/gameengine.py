@@ -952,7 +952,7 @@ class _ThrownItemAnimator:
             world.remove(self._thrown_item_entity)
 
 
-class GiveItemAction(Action):
+class TradeItemAction(Action):
 
     def __init__(self, actor, item, position):
         Action.__init__(self, ActionType.GIVE_ITEM, 10, actor, item=item, position=position)
@@ -963,7 +963,7 @@ class GiveItemAction(Action):
 
     def get_recipient(self, world):
         pos = self.get_position()
-        recipients = world.get_entities_in_cell(pos[0], pos[1], lambda e: e.is_npc())
+        recipients = world.get_entities_in_cell(pos[0], pos[1], lambda e: e.can_trade())
 
         # if there's somehow more than one NPC at the position, just fail. that's a bad state
         if len(recipients) != 1:
@@ -972,40 +972,51 @@ class GiveItemAction(Action):
             return recipients[0]
 
     def is_possible(self, world):
-        if self.get_item() is None or self.get_position() is None:
+        if self.get_position() is None:
             return False
 
         actor = self.get_actor()
-        a_state = actor.get_actor_state()
-        if not (self.item in a_state.inventory() or a_state.held_item == self.item):
-            return False
-
         actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         pos = self.get_position()
         if Utils.dist_manhattan(actor_pos, pos) > 1:
             return False
 
-        recip = self.get_recipient(world)
-        if recip is None:
+        if self.get_recipient(world) is None:
             return False
 
-        return recip.accepts_item(self.get_item())
+        if self.get_item() is None:
+            return True  # this triggers the trade explanation dialog
+        else:
+            a_state = actor.get_actor_state()
+            if not (self.item in a_state.inventory() or a_state.held_item == self.item):
+                return False
+
+        return True
 
     def start(self, world):
         self._recipient_npc = self.get_recipient(world)
 
-        a_state = self.get_actor().get_actor_state()
-        removed = a_state.inventory().remove(self.item)
-        if not removed:
-            if a_state.held_item == self.item:
-                a_state.held_item = None
-                removed = True
+        item_to_trade = self.get_item()
+        trade_successful = self._recipient_npc.try_to_do_trade(self.get_item(), self.get_actor(), world)
 
-        if not removed:
-            print("WARN: failed to remove traded item: {}".format(self.item))
+        if trade_successful and item_to_trade is not None:
+
+            # XXX the success dialog will freeze world updates, so it'll keep drawing the
+            # held item even though it's been set to None...
+            self.get_actor().set_visually_held_item_override(False)
+
+            a_state = self.get_actor().get_actor_state()
+            removed = a_state.inventory().remove(self.item)
+            if not removed:
+                if a_state.held_item == self.item:
+                    a_state.held_item = None
+                    removed = True
+
+            if not removed:
+                print("WARN: failed to remove traded item: {}".format(self.item))
 
     def finalize(self, world):
-        self._recipient_npc.trade_item(self.get_item(), self.get_actor(), world)
+        self.get_actor().set_visually_held_item_override(None)
 
 
 class ThrowItemAction(Action):

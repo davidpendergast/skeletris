@@ -1408,6 +1408,7 @@ class InGameUiState(Menu):
         import src.game.gameengine as gameengine
 
         yield gameengine.InteractAction(player, move_pos)
+        yield gameengine.TradeItemAction(player, player.get_actor_state().held_item, move_pos)
 
         if not for_click:
             yield gameengine.OpenDoorAction(player, move_pos)
@@ -1507,7 +1508,7 @@ class InGameUiState(Menu):
                 throw_action = gameengine.ThrowItemAction(player, ps.held_item, world_grid_pos)
                 res.append(throw_action)
 
-                trade_action = gameengine.GiveItemAction(player, ps.held_item, world_grid_pos)
+                trade_action = gameengine.TradeItemAction(player, ps.held_item, world_grid_pos)
                 res.append(trade_action)
 
                 drop_dir = Utils.sub(world_pos, player.center())

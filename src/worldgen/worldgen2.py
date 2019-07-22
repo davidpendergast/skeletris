@@ -17,6 +17,7 @@ class TileType:
     EXIT = "e"
     CHEST = "c"
     NPC = "n"
+    TRADE_NPC = "t"
     STRAY_ITEM = "i"
     SIGN = "s"
     DECORATION = "d"
@@ -884,6 +885,7 @@ class FeatureUtils:
                 "c": TileType.CHEST,
                 "i": TileType.STRAY_ITEM,
                 "n": TileType.NPC,
+                "t": TileType.TRADE_NPC,
                 "s": TileType.SIGN,
                 "d": TileType.DECORATION}
 
@@ -946,9 +948,13 @@ class Features:
                    FeatureUtils.convert(["W", "-"]),
                    FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=8)
 
-    QUEST_NPC = Feature("quest_npc",
+    QUEST_NPC = Feature("conversation_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=3)
+                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=1)
+
+    TRADE_NPC = Feature("trade_npc",
+                        FeatureUtils.convert(["?W?", "?-?", "---"]),
+                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=3)
 
     @staticmethod
     def get_random_feature(at_level=None):

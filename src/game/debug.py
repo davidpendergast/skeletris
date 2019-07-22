@@ -8,7 +8,7 @@ _DEBUG = True
 # these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LOOT_LEVELS = False
 _PLAYER_CANT_DIE = True
-_MAP_SEES_ALL = False
+_MAP_SEES_ALL = True
 _HOLY_ARTIFACTS_100x_MORE_LIKELY = False
 
 
