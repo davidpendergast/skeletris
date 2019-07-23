@@ -9,7 +9,7 @@ _DEBUG = True
 _IGNORE_LOOT_LEVELS = True
 _PLAYER_CANT_DIE = True
 _MAP_SEES_ALL = True
-_UNLIMITED_TRADES = True
+_UNLIMITED_TRADES = False
 _HOLY_ARTIFACTS_100x_MORE_LIKELY = True
 
 
@@ -31,6 +31,7 @@ def player_cant_die():
 
 def map_sees_all():
     return is_debug() and _MAP_SEES_ALL
+
 
 def unlimited_trades():
     return is_debug() and _UNLIMITED_TRADES

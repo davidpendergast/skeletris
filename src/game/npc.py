@@ -337,22 +337,20 @@ class NpcMirrorTradeProtocol(NpcTradeProtocol):
         from src.items.item import ItemTags
         return ItemTags.CUBES in item.get_type().get_tags()
 
-    def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("No, no. Not that kind of item. It needs to be more... how do I describe it... cubelike?", sprites=get_sprites(npc_id))
-
     def do_trade(self, item):
         return [item.mirror()]
 
     def get_explain_dialog(self, npc_id):
         d = [dialog.NpcDialog("Care to make a trade?", sprites=get_sprites(npc_id)),
              dialog.PlayerDialog("What's the trade?"),
-             dialog.NpcDialog("It's simple. You give me a piece of equipment, and I'll flip it for you.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("It's simple. You give me an Artifact, and I'll flip it for you.", sprites=get_sprites(npc_id)),
              dialog.PlayerDialog("Flip it for me?"),
              dialog.NpcDialog("You'll see. Interested?", sprites=get_sprites(npc_id))]
         return dialog.Dialog.link_em_up(d)
 
-    def get_success_dialog(self, npc_id, item):
-        return super().get_success_dialog(npc_id, item)
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("No, no. Not that kind of item. It needs to be more... " +
+                                "how do I describe it... cubelike?", sprites=get_sprites(npc_id))
 
 
 class NpcPotionProtocol(NpcTradeProtocol):
@@ -360,15 +358,6 @@ class NpcPotionProtocol(NpcTradeProtocol):
     def accepts_trade(self, item):
         from src.items.item import ItemTags
         return ItemTags.CONSUMABLE in item.get_type().get_tags()
-
-    def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("I can't accept that. Only consumable items.", sprites=get_sprites(npc_id))
-
-    def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", sprites=get_sprites(npc_id)),
-             dialog.PlayerDialog("What's the catch?"),
-             dialog.NpcDialog("No catch. Just an honest deal. How about it?", sprites=get_sprites(npc_id))]
-        return dialog.Dialog.link_em_up(d)
 
     def do_trade(self, item):
         my_level = item.get_level()
@@ -381,6 +370,15 @@ class NpcPotionProtocol(NpcTradeProtocol):
         else:
             print("WARN: failed to generate a potion to trade..?")
             return [item]
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("I can't accept that. Only potions.", sprites=get_sprites(npc_id))
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What's the catch?"),
+             dialog.NpcDialog("No catch. Just an honest deal. How about it?", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
 
     def get_post_success_dialog(self, npc_id):
         return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", sprites=get_sprites(npc_id))
@@ -395,23 +393,34 @@ class NpcRerollCubesProtocol(NpcTradeProtocol):
         from src.items.item import ItemTags
         return ItemTags.CUBES in item.get_type().get_tags()
 
-    def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", sprites=get_sprites(npc_id)),
-             dialog.PlayerDialog("What kind of things?"),
-             dialog.NpcDialog("Items! What else? Come on. Give me one. Quickly.", sprites=get_sprites(npc_id))]
-        return dialog.Dialog.link_em_up(d)
-
-    def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Stop fooling around. Cubes! Give me some cubes.", sprites=get_sprites(npc_id))
-
     def do_trade(self, item):
         return [item.reroll_cubes()]
 
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What kind of things?"),
+             dialog.NpcDialog("Artifacts! What else? Come on. Give me one. Quickly.", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Stop screwing around! An Artifact! Give me an Artifact.", sprites=get_sprites(npc_id))
+
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Look at that! Hope it fits better now.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Look at that! Completely reforged. Does it fit better now?", sprites=get_sprites(npc_id))
 
     def get_no_more_trades_dialog(self, npc_id):
         return dialog.NpcDialog("Sorry kid. I'm spent. Come back another time.", sprites=get_sprites(npc_id))
+
+    def get_post_success_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Enjoying that item I gave you?"),
+             dialog.PlayerDialog("Yeah, it's pretty nice."),
+             dialog.NpcDialog("No need to thank me. I do accept tips though. And positive reviews are appreciated. " +
+                              "And have you seen my twitter?", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("Yeah! yeah. I'll check it out. I gotta... get going, though, ya know."),
+             dialog.NpcDialog("Oh, right, right. Very busy. You will check it out though? " +
+                              "Let me just get you the URL...", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("Yeah! No worries, I'll find it. Thanks! Love the item. Bye!")]
+        return dialog.Dialog.link_em_up(d)
 
 
 class NpcRerollStatsProtocol(NpcTradeProtocol):
@@ -423,6 +432,26 @@ class NpcRerollStatsProtocol(NpcTradeProtocol):
     def do_trade(self, item):
         return [item.reroll_stats()]
 
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Need some help? Give me an Artifact, and I'll re-roll the stats for you.",
+                              sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("That does sound helpful."),
+             dialog.NpcDialog("I'll do my best! But it's unpredictable. " +
+                              "No guarantees it'll improve, I'm afraid.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Care to give it a shot?", sprites=get_sprites(npc_id))
+            ]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Oh, I've confused you. The item needs to be an Artifact.", sprites=get_sprites(npc_id))
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Here you go! I hope you like it.", sprites=get_sprites(npc_id))
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("I can't do any more right now I'm afraid. " +
+                                "But if you see me around, don't hesitate to say hello!", sprites=get_sprites(npc_id))
+
 
 class NpcRerollArtProtocol(NpcTradeProtocol):
 
@@ -432,6 +461,40 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
 
     def do_trade(self, item):
         return [item.reroll_art()]
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Hey, you there! Hey! You! I've got something for you.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("I'm standing right here... no need to yell..."),
+             dialog.NpcDialog("I can do something quite special. Something no one else can do. " +
+                              "Something few can even wrap their minds around.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What are you going to do?"),
+             dialog.NpcDialog("Just give me your best, favorite, Artifact, and then you'll see.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("You can't just tell me?"),
+             dialog.NpcDialog("And spoil the surprise? No way! What do you say?", sprites=get_sprites(npc_id))
+             ]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Ah-ha, see? Look at that. Spectacular.", sprites=get_sprites(npc_id))
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Are you deaf? It's gotta be an artifact. This won't work.", sprites=get_sprites(npc_id))
+
+    def get_post_success_dialog(self, npc_id):
+        d = [dialog.PlayerDialog("Did anything... change?"),
+             dialog.NpcDialog("Ha, ha... you're joking, right? Look at the color! " +
+                              "The designs! It's totally different!", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("Oh. Hmm. I guess... I don't remember how it used to look."),
+             dialog.NpcDialog("What are you, a goldfish? Two seconds pass and everything goes \"poof\"? "
+                              "No one appreciates the little details anymore.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What's a goldfish?"),
+             dialog.NpcDialog("...", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Just astonishing, you turned out to be.", sprites=get_sprites(npc_id))
+            ]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("Only one per customer! I'm very busy you know.", sprites=get_sprites(npc_id))
 
 
 class NpcTradeProtocols:
