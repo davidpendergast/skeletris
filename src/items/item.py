@@ -367,7 +367,41 @@ class StatCubesItem(Item):
 
         return StatCubesItem(self.name, self.level, self.stats, new_cubes,
                              self.color, cube_art=new_art, uuid_str=self.uuid)
-        
+
+    def reroll_cubes(self):
+        import src.items.itemgen as itemgen
+        new_cubes = itemgen.StatCubesItemFactory.gen_cubes(len(self.cubes))
+        new_art = {}
+
+        artless_cubes = [c for c in new_cubes]
+        random.shuffle(artless_cubes)
+        for art_c in self.cube_art:
+            if len(artless_cubes) > 0:  # shouldn't ever have a mismatch here, but ehh
+                new_art[artless_cubes.pop()] = self.cube_art[art_c]
+
+        new_name = itemgen.StatCubesItemFactory.gen_name_for_stats_and_cubes(self.stats, new_cubes)
+
+        return StatCubesItem(new_name, self.level, self.stats, new_cubes,
+                             self.color, cube_art=new_art, uuid_str=self.uuid)
+
+    def reroll_art(self):
+        import src.items.itemgen as itemgen
+        new_color = itemgen.StatCubesItemFactory.gen_color_for_stats(self.stats)
+        new_art = itemgen.StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(self.stats, self.cubes)
+
+        return StatCubesItem(self.name, self.level, self.stats, self.cubes,
+                             new_color, cube_art=new_art, uuid_str=self.uuid)
+
+    def reroll_stats(self):
+        import src.items.itemgen as itemgen
+        new_stats = itemgen.StatCubesItemFactory.gen_stats_for_cubes(self.level, self.cubes)
+        new_name = itemgen.StatCubesItemFactory.gen_name_for_stats_and_cubes(new_stats, self.cubes)
+        new_color = itemgen.StatCubesItemFactory.gen_color_for_stats(new_stats)
+        new_art = itemgen.StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(new_stats, self.cubes)
+
+        return StatCubesItem(new_name, self.level, new_stats, self.cubes,
+                             new_color, cube_art=new_art, uuid_str=self.uuid)
+
     def __str__(self):
         res = "[{}]".format(self.name)
         res += "\n  " + self.uuid

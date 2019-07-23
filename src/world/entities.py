@@ -17,6 +17,7 @@ import src.game.soundref as soundref
 from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
 import src.game.stats as stats
+import src.game.debug as debug
 
 ENTITY_UID_COUNTER = 0
 
@@ -1756,7 +1757,9 @@ class NpcTradeEntity(NpcEntity):
 
         else:
             res_items = self.trade_protocol.do_trade(item)
-            self.num_trades_done += 1
+
+            if not debug.unlimited_trades():
+                self.num_trades_done += 1
 
             if src_entity is not None:
                 src_pos = src_entity.center()

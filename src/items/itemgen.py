@@ -47,11 +47,11 @@ class ItemFactory:
                 return None
 
         if item_type == ItemTypes.STAT_CUBE_5:
-            return StatCubesItemFactory.gen_item(level, n_cubes=5)
+            return StatCubesItemFactory.gen_item(level, 5)
         elif item_type == ItemTypes.STAT_CUBE_6:
-            return StatCubesItemFactory.gen_item(level, n_cubes=6)
+            return StatCubesItemFactory.gen_item(level, 6)
         elif item_type == ItemTypes.STAT_CUBE_7:
-            return StatCubesItemFactory.gen_item(level, n_cubes=7)
+            return StatCubesItemFactory.gen_item(level, 7)
 
         elif item_type == ItemTypes.POTION:
             return PotionItemFactory.gen_item(level)
@@ -217,13 +217,13 @@ class PotionTemplates:
 class PotionItemFactory:
 
     @staticmethod
-    def gen_item(level, template=None):
+    def gen_item(level, template=None, not_templates=()):
         if template is None:
             if debug.ignore_loot_levels():
-                all_temps = [t for t in PotionTemplates.all_templates()]
+                all_temps = [t for t in PotionTemplates.all_templates() if t not in not_templates]
                 template = None if len(all_temps) == 0 else random.choice(all_temps)
             else:
-                all_temps = [t for t in PotionTemplates.all_templates(for_level=level)]
+                all_temps = [t for t in PotionTemplates.all_templates(for_level=level) if t not in not_templates]
                 weighted_temps = []
                 for t in all_temps:
                     for _ in range(0, t.drop_rate):
@@ -306,41 +306,9 @@ class StatCubesItemFactory:
         return res
 
     @staticmethod
-    def gen_item(level, n_cubes=None):
-        primary_stat = StatCubesItemFactory.gen_core_stat(level)
-        n_cubes = n_cubes if n_cubes is not None else 5 + int(2 * random.random())
-        n_secondary_stats = Utils.bound(int((n_cubes - 4) * random.random()), 0, 4)
-
-        secondary_stats = StatCubesItemFactory.gen_non_core_stats(level, n_secondary_stats,
-                                                                  exclude=[primary_stat.stat_type])
-
-        core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
-        non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
-
-        cubes = CubeUtils.gen_cubes(n_cubes)
-        is_holy = CubeUtils.is_holy(cubes)
-
-        if n_cubes >= 7 and not is_holy and debug._HOLY_ARTIFACTS_100x_MORE_LIKELY:
-            for _ in range(0, 100):
-                cubes = CubeUtils.gen_cubes(n_cubes)
-                is_holy = CubeUtils.is_holy(cubes)
-                if is_holy:
-                    break
-
-        if is_holy:
-            name = "Holy Artifact"
-            for stat in core_stats:
-                stat.value = stat.value * 2
-        elif len(cubes) <= 5:
-            name = ItemTypes.STAT_CUBE_5.get_name()
-        elif len(cubes) == 6:
-            name = ItemTypes.STAT_CUBE_6.get_name()
-        else:
-            name = ItemTypes.STAT_CUBE_7.get_name()
-
-        stats = core_stats + non_core_stats
-
+    def gen_color_for_stats(stats):
         color = tuple([0.5 + random.random() * 0.25] * 3)
+        core_stats = [s for s in stats if s.get_type() in CORE_STATS]
         if len(core_stats) > 0:
             rand1 = 0.5 + random.random() * 0.5
             rand2 = 0.5 + random.random() * 0.5
@@ -351,13 +319,71 @@ class StatCubesItemFactory:
                 color = (rand1, 1, rand2)
             elif max_core.stat_type is StatTypes.DEF:
                 color = (rand1, rand2, 1)
+        return color
 
+    @staticmethod
+    def gen_cube_art_for_stats_and_cubes(stats, cubes):
         cube_art = {}
         cubes_copy = [c for c in cubes]
         random.shuffle(cubes_copy)
 
-        for i in range(0, len(core_stats)):
+        for i in range(0, len(stats)):
             if i < len(cubes_copy):
                 cube_art[cubes_copy[i]] = 1 + int(5 * random.random())
+
+        return cube_art
+
+    @staticmethod
+    def gen_stats_for_cubes(level, cubes):
+        n_cubes = len(cubes)
+        primary_stat = StatCubesItemFactory.gen_core_stat(level)
+        n_cubes = n_cubes if n_cubes is not None else 5 + int(2 * random.random())
+        n_secondary_stats = Utils.bound(int((n_cubes - 4) * random.random()), 0, 4)
+
+        secondary_stats = StatCubesItemFactory.gen_non_core_stats(level, n_secondary_stats,
+                                                                  exclude=[primary_stat.stat_type])
+
+        core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
+        non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
+
+        if CubeUtils.is_holy(cubes):
+            for stat in core_stats:
+                stat.value = stat.value * 2
+
+        return core_stats + non_core_stats
+
+
+    @staticmethod
+    def gen_name_for_stats_and_cubes(stats, cubes):
+        if CubeUtils.is_holy(cubes):
+            return "Holy Artifact"
+        elif len(cubes) <= 5:
+            return ItemTypes.STAT_CUBE_5.get_name()
+        elif len(cubes) == 6:
+            return ItemTypes.STAT_CUBE_6.get_name()
+        else:
+            return ItemTypes.STAT_CUBE_7.get_name()
+
+    @staticmethod
+    def gen_cubes(n_cubes):
+        cubes = CubeUtils.gen_cubes(n_cubes)
+        is_holy = CubeUtils.is_holy(cubes)
+
+        if n_cubes >= 7 and not is_holy and debug._HOLY_ARTIFACTS_100x_MORE_LIKELY:
+            for _ in range(0, 100):
+                cubes = CubeUtils.gen_cubes(n_cubes)
+                is_holy = CubeUtils.is_holy(cubes)
+                if is_holy:
+                    break
+
+        return cubes
+
+    @staticmethod
+    def gen_item(level, n_cubes):
+        cubes = StatCubesItemFactory.gen_cubes(n_cubes)
+        stats = StatCubesItemFactory.gen_stats_for_cubes(level, cubes)
+        name = StatCubesItemFactory.gen_name_for_stats_and_cubes(stats, cubes)
+        color = StatCubesItemFactory.gen_color_for_stats(stats)
+        cube_art = StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(stats, cubes)
 
         return StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art)

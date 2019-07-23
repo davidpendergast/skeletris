@@ -67,17 +67,26 @@ class MayorPatchesTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.REROLL_ART
+
 
 class BeanskullTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.REROLL_STATS
+
 
 class GlorpleTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
+
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.REROLL_CUBES
 
 
 class MachineTemplate(NpcTemplate):
@@ -90,6 +99,9 @@ class DoctorTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
+
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.POTION_EXCHANGE
 
 
 class CaveHorrorNpcTemplate(NpcTemplate):
@@ -343,9 +355,93 @@ class NpcMirrorTradeProtocol(NpcTradeProtocol):
         return super().get_success_dialog(npc_id, item)
 
 
+class NpcPotionProtocol(NpcTradeProtocol):
+
+    def accepts_trade(self, item):
+        from src.items.item import ItemTags
+        return ItemTags.CONSUMABLE in item.get_type().get_tags()
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("I can't accept that. Only consumable items.", sprites=get_sprites(npc_id))
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What's the catch?"),
+             dialog.NpcDialog("No catch. Just an honest deal. How about it?", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
+
+    def do_trade(self, item):
+        my_level = item.get_level()
+        drop_as_level = my_level + 5
+
+        from src.items.itemgen import PotionItemFactory
+        res_item = PotionItemFactory.gen_item(drop_as_level)
+        if res_item is not None:
+            return [res_item]
+        else:
+            print("WARN: failed to generate a potion to trade..?")
+            return [item]
+
+    def get_post_success_dialog(self, npc_id):
+        return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", sprites=get_sprites(npc_id))
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("Hey, hey. I think you've had enough pal. Save some for the fishies.", sprites=get_sprites(npc_id))
+
+
+class NpcRerollCubesProtocol(NpcTradeProtocol):
+
+    def accepts_trade(self, item):
+        from src.items.item import ItemTags
+        return ItemTags.CUBES in item.get_type().get_tags()
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("What kind of things?"),
+             dialog.NpcDialog("Items! What else? Come on. Give me one. Quickly.", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Stop fooling around. Cubes! Give me some cubes.", sprites=get_sprites(npc_id))
+
+    def do_trade(self, item):
+        return [item.reroll_cubes()]
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Look at that! Hope it fits better now.", sprites=get_sprites(npc_id))
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("Sorry kid. I'm spent. Come back another time.", sprites=get_sprites(npc_id))
+
+
+class NpcRerollStatsProtocol(NpcTradeProtocol):
+
+    def accepts_trade(self, item):
+        from src.items.item import ItemTags
+        return ItemTags.CUBES in item.get_type().get_tags()
+
+    def do_trade(self, item):
+        return [item.reroll_stats()]
+
+
+class NpcRerollArtProtocol(NpcTradeProtocol):
+
+    def accepts_trade(self, item):
+        from src.items.item import ItemTags
+        return ItemTags.CUBES in item.get_type().get_tags()
+
+    def do_trade(self, item):
+        return [item.reroll_art()]
+
+
 class NpcTradeProtocols:
+
     IDENTITY_TRADE = NpcTradeProtocol()
     MIRROR_TRADE = NpcMirrorTradeProtocol()
+    POTION_EXCHANGE = NpcPotionProtocol()
+    REROLL_CUBES = NpcRerollCubesProtocol()
+    REROLL_STATS = NpcRerollStatsProtocol()
+    REROLL_ART = NpcRerollArtProtocol()
 
 
 def get_template(npc_id):

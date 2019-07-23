@@ -954,7 +954,7 @@ class Features:
 
     TRADE_NPC = Feature("trade_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=3)
+                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=30)
 
     @staticmethod
     def get_random_feature(at_level=None):
