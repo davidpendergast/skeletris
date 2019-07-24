@@ -8,6 +8,8 @@ import src.game.events as events
 import src.game.globalstate as gs
 import src.game.dialog as dialog
 import src.utils.colors as colors
+from src.utils.util import Utils
+import src.game.balance as balance
 
 
 class NpcID(Enum):
@@ -93,6 +95,9 @@ class MachineTemplate(NpcTemplate):
 
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces, ("M", colors.YELLOW))
+
+    def get_trade_protocol(self, level):
+        return NpcTradeProtocols.ITEM_THAT_FITS
 
 
 class DoctorTemplate(NpcTemplate):
@@ -497,6 +502,109 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
         return dialog.NpcDialog("Only one per customer! I'm very busy you know.", sprites=get_sprites(npc_id))
 
 
+class NpcItemThatFitsProtocol(NpcTradeProtocol):
+
+    def accepts_trade(self, item):
+        from src.items.item import ItemTags
+        if ItemTags.CUBES not in item.get_type().get_tags():
+            return False
+
+        # not enough space in grid to create a valid item.
+        if len(self._get_empty_equipment_grid_cell_clusters(min_size=5)) == 0:
+            return False
+
+        return True
+
+    def _get_empty_equipment_grid_cell_clusters(self, min_size=5):
+        """
+        returns: list of groups of connected empty cells in player's equipment grid (aka 'cell clusters').
+        min_size: if a region has less than min_size cells, it's discarded.
+        """
+        player_equip_grid = gs.get_instance().player_state().inventory().get_equip_grid()
+
+        empty_cells = []
+
+        for x in range(0, player_equip_grid.w()):
+            for y in range(0, player_equip_grid.h()):
+                if player_equip_grid.item_at_position((x, y)) is None:
+                    empty_cells.append((x, y))
+
+        clusters = []
+
+        # n^2, don't care. the grid is 5x5
+        for cell in empty_cells:
+            joined_existing_cluster = False
+
+            for cluster in clusters:
+                if any([Utils.dist_manhattan(cell, c) == 1 for c in cluster]):
+                    cluster.append(cell)
+                    joined_existing_cluster = True
+                    break
+
+            if not joined_existing_cluster:
+                # start a new one
+                clusters.append([cell])
+
+        return [cluster for cluster in clusters if len(cluster) >= min_size]
+
+    def _gen_rand_n_cubes(self, max_n_cubes=7):
+        choices = [5] * balance.STAT_CUBE_5_DROP_RATE
+        if max_n_cubes >= 6:
+            choices.extend([6] * balance.STAT_CUBE_6_DROP_RATE)
+        if max_n_cubes >= 7:
+            choices.extend([7] * balance.STAT_CUBE_7_DROP_RATE)
+
+        return random.choice(choices)
+
+    def do_trade(self, item):
+        item_n_cubes = min(len(item.cubes), 7)
+        empty_clusters = self._get_empty_equipment_grid_cell_clusters(min_size=5)
+
+        if len(empty_clusters) == 0:
+            print("ERROR: bad state, no empty cell clusters in equipment grid...")
+            return [item]
+
+        # can't generate an item of size n unless there's a cluster that's big enough
+        max_cluster_size = max([len(cluster) for cluster in empty_clusters])
+
+        # same drop rate as regular item drops
+        n_cubes = self._gen_rand_n_cubes(max_n_cubes=min(item_n_cubes, max_cluster_size))
+
+        big_enough_clusters = [cluster for cluster in empty_clusters if len(cluster) >= n_cubes]
+
+        cluster = list(random.choice(big_enough_clusters))
+        random.shuffle(cluster)
+
+        # now we just need to generate an n-cube item that fits in our cluster
+        res_cubes = [cluster.pop()]
+
+        while len(res_cubes) < n_cubes:
+            did_expand = False
+            for c in res_cubes:
+                # trying to 'expand' off of c to fill the region.
+                c_n = [n for n in Utils.neighbors(c[0], c[1])]
+                random.shuffle(c_n)
+                for n in c_n:
+                    if n in cluster:
+                        res_cubes.insert(0, n)  # want to keep growing off this one if possible
+                        cluster.remove(n)       # makes the result more "snaky"
+                        did_expand = True
+                        break
+
+                if did_expand:
+                    break  # start the process over
+
+            if not did_expand:
+                raise ValueError("failed to expand to fill cluster...?")
+
+        if len(res_cubes) != n_cubes:
+            raise ValueError("res_cubes has incorrect size={}, expected={}".format(len(res_cubes), n_cubes))
+
+        import src.items.itemgen as itemgen
+
+        return [itemgen.StatCubesItemFactory.gen_item_for_cubes(item.get_level(), res_cubes)]
+
+
 class NpcTradeProtocols:
 
     IDENTITY_TRADE = NpcTradeProtocol()
@@ -505,6 +613,7 @@ class NpcTradeProtocols:
     REROLL_CUBES = NpcRerollCubesProtocol()
     REROLL_STATS = NpcRerollStatsProtocol()
     REROLL_ART = NpcRerollArtProtocol()
+    ITEM_THAT_FITS = NpcItemThatFitsProtocol()
 
 
 def get_template(npc_id):
@@ -560,3 +669,10 @@ class NpcFactory:
                         break
 
         return (convo_res, trade_res)
+
+    @staticmethod
+    def gen_trade_npc(npc_id, level):
+        import src.world.entities as entities
+
+        template = get_template(npc_id)
+        return entities.NpcTradeEntity(0, 0, template, template.get_trade_protocol(level))

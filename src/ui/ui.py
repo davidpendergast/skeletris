@@ -315,15 +315,15 @@ class InventoryPanel(SidePanel):
         eq_rect = self.equip_grid_rect
         if Utils.rect_contains(eq_rect, pos_in_panel):
             grid = self.state.equip_grid
-            x = int((pos_in_panel[0] - eq_rect[0])/eq_rect[2]*grid.size[0])
-            y = int((pos_in_panel[1] - eq_rect[1])/eq_rect[3]*grid.size[1])
+            x = int((pos_in_panel[0] - eq_rect[0])/eq_rect[2]*grid.w())
+            y = int((pos_in_panel[1] - eq_rect[1])/eq_rect[3]*grid.h())
             return (grid, (x, y))
 
         inv_rect = self.inv_grid_rect
         if Utils.rect_contains(inv_rect, pos_in_panel):
             grid = self.state.inv_grid
-            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.size[0])
-            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.size[1])
+            x = int((pos_in_panel[0] - inv_rect[0])/inv_rect[2]*grid.w())
+            y = int((pos_in_panel[1] - inv_rect[1])/inv_rect[3]*grid.h())
             return (grid, (x, y))
 
         return (None, None)

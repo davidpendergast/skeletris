@@ -591,6 +591,8 @@ class DesolateCaveZone(Zone):
     RAKE_COLOR = (255, 220, 175)
     DIALOG_TRIGGER_1_COLOR = (255, 95, 95)
 
+    SPECIAL_SPOT = (60, 140, 230)
+
     WALL_SIGNS = {
             (255, 133, 0): ("read", "it's a schedule. it says:\n\nplanted:    5.164  5.162  8.164\n""harvests:       3      9      2"),
             (255, 186, 150): ("[i] to read", "use [i] to pick up items, interact with things, and dismiss text."),
@@ -618,6 +620,12 @@ class DesolateCaveZone(Zone):
             bp.chest_spawns.append((n[0], n[1]))
 
         w = bp.build_world()
+
+        if DesolateCaveZone.SPECIAL_SPOT in unknowns:
+            special_spot = unknowns[DesolateCaveZone.SPECIAL_SPOT][0]
+            ent = npc.NpcFactory.gen_trade_npc(npc.NpcID.MACHINE, 5)
+            w.add(ent, gridcell=special_spot)
+            w.set_geo(special_spot[0], special_spot[1], World.FLOOR)
 
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)

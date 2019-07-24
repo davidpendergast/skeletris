@@ -4,7 +4,7 @@ import collections
 class ItemGrid:
 
     def __init__(self, size):
-        self.size = size
+        self._size = size
         self.items = collections.OrderedDict()  # item -> pos: (int: x, int: y)
 
         self._dirty = False
@@ -13,8 +13,8 @@ class ItemGrid:
         if item in self.items:
             print("WARN: Attempting to place into a grid it's already inside? item={}".format(item))
             return False
-        if (item.w() + pos[0] > self.size[0] or 
-                item.h() + pos[1] > self.size[1]):
+        if (item.w() + pos[0] > self.w() or
+                item.h() + pos[1] > self.h()):
             return False
             
         for cell in self._cells_occupied(item, pos):
@@ -22,6 +22,15 @@ class ItemGrid:
                 return False
                 
         return True
+
+    def w(self):
+        return self._size[0]
+
+    def h(self):
+        return self._size[1]
+
+    def size(self):
+        return self._size
 
     def is_dirty(self):
         return self._dirty
@@ -37,7 +46,7 @@ class ItemGrid:
         return False
             
     def try_to_replace(self, item, pos):
-        if item.w() + pos[0] > self.size[0] or item.h() + pos[1] > self.size[1]:
+        if item.w() + pos[0] > self.w() or item.h() + pos[1] > self.h():
             return None
         
         hit_item = None    
@@ -103,6 +112,12 @@ class InventoryState:
         self.equip_grid.set_clean()
         self.inv_grid.set_clean()
 
+    def get_equip_grid(self):
+        return self.equip_grid
+
+    def get_inv_grid(self):
+        return self.inv_grid
+
     def all_equipped_items(self):
         return self.equip_grid.all_items()
 
@@ -149,6 +164,12 @@ class FakeInventoryState(InventoryState):
         InventoryState.__init__(self)  # TODO - make an actual superclass
         self.equipped_items = []
         self.inv_items = []
+
+    def get_inv_grid(self):
+        raise ValueError("no inv grid in FakeInventoryGrid")
+
+    def get_equip_grid(self):
+        raise ValueError("no equip grid in FakeInventoryGrid")
 
     def all_equipped_items(self):
         return list(self.equipped_items)

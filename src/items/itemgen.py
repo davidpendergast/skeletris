@@ -381,9 +381,14 @@ class StatCubesItemFactory:
     @staticmethod
     def gen_item(level, n_cubes):
         cubes = StatCubesItemFactory.gen_cubes(n_cubes)
+        return StatCubesItemFactory.gen_item_for_cubes(level, cubes)
+
+    @staticmethod
+    def gen_item_for_cubes(level, cubes):
         stats = StatCubesItemFactory.gen_stats_for_cubes(level, cubes)
         name = StatCubesItemFactory.gen_name_for_stats_and_cubes(stats, cubes)
         color = StatCubesItemFactory.gen_color_for_stats(stats)
         cube_art = StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(stats, cubes)
 
         return StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art)
+

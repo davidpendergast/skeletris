@@ -3,14 +3,14 @@ import os
 _IS_DEV = os.path.exists("this_is_dev.txt")
 
 # flip to toggle all debug settings
-_DEBUG = False
+_DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LOOT_LEVELS = True
 _PLAYER_CANT_DIE = True
 _MAP_SEES_ALL = True
-_UNLIMITED_TRADES = False
-_HOLY_ARTIFACTS_100x_MORE_LIKELY = True
+_UNLIMITED_TRADES = True
+_HOLY_ARTIFACTS_100x_MORE_LIKELY = False
 
 
 def is_dev():
