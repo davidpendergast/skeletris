@@ -141,9 +141,9 @@ class ItemTypes:
         else:
             return types_at_level
 
-    STAT_CUBE_5 = _new_type("Small Trinket", (ItemTags.EQUIPMENT, ItemTags.CUBES),
+    STAT_CUBE_5 = _new_type("Small Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES),
                             drop_rate=balance.STAT_CUBE_5_DROP_RATE)
-    STAT_CUBE_6 = _new_type("Medium Relic", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=1,
+    STAT_CUBE_6 = _new_type("Medium Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=1,
                             drop_rate=balance.STAT_CUBE_6_DROP_RATE)
     STAT_CUBE_7 = _new_type("Large Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=2,
                             drop_rate=balance.STAT_CUBE_7_DROP_RATE)

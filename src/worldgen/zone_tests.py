@@ -11,7 +11,7 @@ def test_grids_are_possible(n, level):
     print("INFO: testing {} grids at level {}...".format(n, level))
     for i in range(0, n):
 
-        t_grid = zones.ZoneBuilder.generate_tile_grid(level)
+        t_grid = zones.ZoneBuilder.generate_tile_grid_dangerously(level)
         player_coords = worldgen2.TileGridBuilder.search(t_grid, worldgen2.TileType.PLAYER)
 
         if len(player_coords) != 1:

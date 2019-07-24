@@ -948,13 +948,14 @@ class Features:
                    FeatureUtils.convert(["W", "-"]),
                    FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=8)
 
+    # Nuking these for now, I can't write as it turns out
     QUEST_NPC = Feature("conversation_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=1)
+                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=0)
 
     TRADE_NPC = Feature("trade_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=30)
+                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=3)
 
     @staticmethod
     def get_random_feature(at_level=None):

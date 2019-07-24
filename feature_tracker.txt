@@ -1,4 +1,8 @@
-
+                      
+                        *------------------------*
+                        | Skeletris Planning Doc |
+                        *------------------------*
+                      
 [P1 bugs]
  - OS issues:
     - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
@@ -19,12 +23,13 @@
  - opened chests show up on maps
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
  - tooltips are kinda funky on 'move' and 'skip' buttons
+    - 'move' and 'skip' buttons also aren't implemented ~~ no clicky
   
 [balance issues]
  - need more sources of healing
+    - added HP on kill stat, maybe enough?
  - vit is super underpowered compared to att/def (potentially fine)
  - need some ways to defensively use/alter the world's geometry
- - need enemies that buff other enemies
  
 [current features]
  - need some handling for different resolutions
@@ -43,53 +48,25 @@
     - even necessary? yes
         - will people even find it? looks unlikely based on testing
  - move / skip turn buttons on hotbar
- 
-[playtesting notes]
-
- - coffee shop guy (nervous dog) (7/21/19)
-    situation: asked what i was working on, i offered to let him playtest
-    - 45 minutes, made it through 2 levels
-    - thought flashing red dagger meant it would break soon
-    - couldn't figure out how to pick up items (mouse)
-    - couldn't figure out how how to open inventory
-    - couldn't figure out how how to rotate items
-    - i had to explain difference between inventory and equipment grids
-    - issues with controls (lot of hand alternating)
-    - compulsively picking up, equipping items
-        - swapping an rearranging items even when their stats were the same
-        - judging items based on color, rather than stats? 
-            - thought a yellow item affected speed.
-        - eventually became annoyed whenever an item would drop, would check phone
-        - filled up entire inventory with garbage items
-    - thought vitality was different from HP
-    - seemed bored, playing to pass the time and be polite
-        - obv not a fan of the genre, but concerning nonetheless
-    - story seemed to amuse him at first, bore him as time went on
-    - said art was good, but "programming seems basic"
-        - not sure what this means, hurt though lol
-    - didn't understand why he couldn't pick up items two squares away
+ - need some kind of text popup 'achievement system' like minecraft
+    - "press "R" to open inventory"
+    - "click the item to pick it up"
     
-    takeaways: 
-        - ~early game is slow, easy, confusing, and boring~
-        - way too many chests
-        - need in-game tutorial
-        - shift click to auto-pickup items
-        - better indicator when item is too far away to be picked up
-        - needs to be possible to die in early levels
-        - early levels potentially should be a lot smaller?
-        - might want to prevent "ATT" items from being pure yellow
-        
+    - need a global achievement tracking system to prevent these from popping constantly
+    
  
 [architecture]
     - entities should keep a reference to the world they're in
-        - instead of passing the world into literally method
+        - instead of passing the world into literally every method
     - global state should have a reference to the active world that menus / ui can use
+    
     
 [design philosophy]
     - if it doesn't fit, cut it
     - if you can't draw it in two tries, cut it
-    - don't have two goombas
-    - polish counts
+    - everything in the game should add something unique 
+        - "don't have two goombas"
+        
         
 [future features]
  - traps / ground effects
@@ -110,12 +87,8 @@
         - (not sure what these would be good for, honestly)
  - backstab attack 
     - jump over target, attack from other side (if possible)
- - one boss fight 
- - cinematic stuff (these are currently broken fyi)
- - actual dialog for NPCs
  - quest system
  - some indicator that enemies are still acting
- - in-game map (toggle ascii overlay)
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
  - visual effect when confusion triggers
@@ -131,7 +104,6 @@
  
  
 [~dream features~]
- - many boss fights
  - farming
     - if you can dream it you can meme it
  
@@ -140,6 +112,44 @@
     - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
         - for now, let's just not have any enemies that emit light by default
+        
+[playtesting notes]
+
+ - coffee shop guy (nervous dog) (7/21/19)
+    situation: asked what i was working on, i offered to let him playtest
+    - 45 minutes, made it through 2 levels
+    - thought flashing red dagger meant it would break soon
+    - couldn't figure out how to pick up items (mouse)
+    - couldn't figure out how how to open inventory
+    - couldn't figure out how how to rotate items
+    - avoided ReturnExitEntity, thought it was fire and would kill him
+        - correct behavior, but incorrect reasoning. probably fine?
+    - put dagger into inventory instead of equipment grid
+    - but figured out how to use the dagger from hotbar without help (pressed 1)
+    - lot of awkward hand alternating with controls
+    - compulsively picking up, equipping items
+        - swapping an rearranging items even when their stats were the same
+        - judging items based on color, rather than stats? 
+            - thought a yellow item affected speed.
+        - eventually became seemingly annoyed whenever an item would drop, would check phone, look away, etc
+        - filled up entire inventory with garbage items
+    - thought vitality was different from HP
+    - seemed bored, playing to pass the time and be polite
+        - obv not a fan of the genre, but concerning nonetheless
+    - story seemed to amuse him at first, bore him as time went on
+    - said art was good, but "programming seems basic"
+        - not sure what this means, hurt though lol
+    - didn't understand why he couldn't pick up items two squares away
+    
+    takeaways: 
+        - ~early game is slow, easy, confusing, and boring~
+        - way too many chests
+        - need in-game tutorial
+        - shift click to auto-pickup items
+        - better indicator when item is too far away to be picked up
+        - needs to be possible to die in early levels
+        - early levels potentially should be a lot smaller?
+        - might want to prevent "ATT" items from being pure yellow
         
 
 [game name]

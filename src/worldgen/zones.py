@@ -1,5 +1,6 @@
 import random
 import pygame
+import traceback
 
 from src.world.worldstate import World
 from src.worldgen.worldgen import WorldFactory, WorldBlueprint, RoomFactory, BuilderUtils
@@ -17,6 +18,7 @@ from src.worldgen import worldgen2
 import src.game.npc as npc
 import src.game.decoration as decoration
 import src.utils.colors as colors
+import src.game.debug as debug
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -66,10 +68,10 @@ def init_zones():
         make(zone_instance)
 
     story_zones = []
-    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1"))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2"))
-    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3"))
-    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4"))
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2)))
 
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))
@@ -427,8 +429,26 @@ class ZoneBuilder:
         return world
 
     @staticmethod
-    def generate_tile_grid(level):
-        dims = (3, 3)
+    def generate_tile_grid(level, dims=(3, 3), num_tries=20):
+        for i in range(0, num_tries):
+            try:
+                res = ZoneBuilder.generate_tile_grid_dangerously(level, dims=dims)
+
+                # looks like we did it
+                return res
+
+            except ValueError as e:
+                print("WARN: failed to generate tile grid {} time(s): level={}, dims={}".format(i+1, level, dims))
+                if debug.is_debug():
+                    # y'all better fix this
+                    raise e
+                else:
+                    traceback.print_exc()
+
+    @staticmethod
+    def generate_tile_grid_dangerously(level, dims=(3, 3)):
+        """dangerously = nonzero chance of failing to generate a valid level, and throwing an exception."""
+        dims = dims
         start = (0, 0)
         end = (dims[0] - 1, dims[1] - 1)
         t_size = 12
@@ -522,8 +542,14 @@ class ZoneBuilder:
         return t_grid
 
     @staticmethod
-    def generate_new_world(zone):
-        t_grid = ZoneBuilder.generate_tile_grid(zone.get_level())
+    def generate_new_world(zone, dims=None, min_dims=(3, 3), max_dims=(3, 3)):
+        if dims is not None:
+            grid_dims = dims
+        else:
+            grid_dims = (random.choice([x for x in range(min(max_dims[0], min_dims[0]), max_dims[0] + 1)]),
+                         random.choice([y for y in range(min(min_dims[1], max_dims[1]), max_dims[1] + 1)]))
+
+        t_grid = ZoneBuilder.generate_tile_grid(zone.get_level(), dims=grid_dims)
 
         print("INFO: generated world: level={}".format(zone.get_level()))
         print(t_grid)
@@ -534,11 +560,7 @@ class ZoneBuilder:
         return w
 
     @staticmethod
-    def get_song_for_zone(level):
-        return music.Songs.MENU_THEME
-
-    @staticmethod
-    def make_generated_zone(level, name, zone_id, music_id=None, geo_color=None):
+    def make_generated_zone(level, name, zone_id, dims=None, min_dims=(3, 3), max_dims=(3, 3), music_id=None, geo_color=None):
         zone = Zone(name, level)
         zone.ZONE_ID = zone_id
         zone.zone_id = zone_id
@@ -548,7 +570,7 @@ class ZoneBuilder:
         if geo_color is not None:
             zone.geo_color = geo_color
 
-        zone.build_world = lambda: ZoneBuilder.generate_new_world(zone)
+        zone.build_world = lambda: ZoneBuilder.generate_new_world(zone, dims=dims, min_dims=min_dims, max_dims=max_dims)
         return zone
 
 
