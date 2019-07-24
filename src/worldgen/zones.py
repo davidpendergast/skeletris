@@ -429,13 +429,16 @@ class ZoneBuilder:
         return world
 
     @staticmethod
-    def generate_tile_grid(level, dims=(3, 3), num_tries=20):
+    def generate_tile_grid(level, dims=(3, 3), num_tries=100):
         for i in range(0, num_tries):
             try:
                 res = ZoneBuilder.generate_tile_grid_dangerously(level, dims=dims)
 
                 # looks like we did it
-                return res
+                if res is not None:
+                    return res
+                else:
+                    raise ValueError("got a null level...? level={}, dims={}".format(level, dims))
 
             except ValueError as e:
                 print("WARN: failed to generate tile grid {} time(s): level={}, dims={}".format(i+1, level, dims))
@@ -445,10 +448,15 @@ class ZoneBuilder:
                 else:
                     traceback.print_exc()
 
+        raise ValueError("failed to generate level={} with dims={} " +
+                         "after {} tries, crashing...".format(level, dims, num_tries))
+
     @staticmethod
     def generate_tile_grid_dangerously(level, dims=(3, 3)):
         """dangerously = nonzero chance of failing to generate a valid level, and throwing an exception."""
-        dims = dims
+        if dims[0] < 1 or dims[1] < 1 or dims[0] + dims[1] < 3:
+            raise ValueError("dims are too small: ({}, {})".format(dims[0], dims[1]))
+
         start = (0, 0)
         end = (dims[0] - 1, dims[1] - 1)
         t_size = 12
@@ -480,8 +488,8 @@ class ZoneBuilder:
         worldgen2.TileGridBuilder.add_walls(t_grid)
         worldgen2.TileGridBuilder.fill_empty_islands_with_walls(t_grid)
 
-        if len(empty_rooms) < 4:
-            raise ValueError("super low number of rooms..?")
+        if len(empty_rooms) <= 2:
+            raise ValueError("no rooms..? n={}".format(len(empty_rooms)))
 
         start_placed = False
         for p in path:
@@ -498,7 +506,6 @@ class ZoneBuilder:
                 break
 
         if not start_placed:
-            print("INFO: falling back to non-fancy start")
             for p in path:
                 rooms_in_p = list(room_map.get(p))
                 random.shuffle(rooms_in_p)
