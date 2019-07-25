@@ -533,15 +533,22 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
         # n^2, don't care. the grid is 5x5
         for cell in empty_cells:
-            joined_existing_cluster = False
-
+            touching_clusters = []
             for cluster in clusters:
                 if any([Utils.dist_manhattan(cell, c) == 1 for c in cluster]):
-                    cluster.append(cell)
-                    joined_existing_cluster = True
-                    break
+                    touching_clusters.append(cluster)
 
-            if not joined_existing_cluster:
+            if len(touching_clusters) > 1:
+                mega_cluster = [cell]
+                for cluster in touching_clusters:
+                    clusters.remove(cluster)
+                    mega_cluster.extend(cluster)
+                clusters.append(mega_cluster)
+
+            elif len(touching_clusters) == 1:
+                touching_clusters[0].append(cell)
+                
+            else:
                 # start a new one
                 clusters.append([cell])
 
