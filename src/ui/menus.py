@@ -40,8 +40,10 @@ class MenuManager:
         self._active_menu = TitleMenu()
         self._next_active_menu = menu
 
-    def update(self, world):
+    def update(self):
         render_eng = RenderEngine.get_instance()
+        world = gs.get_instance().get_world()
+
         if self._next_active_menu is not None:
             for bun in self._active_menu.all_bundles():
                 render_eng.remove(bun)
@@ -911,10 +913,10 @@ class DebugZoneSelectMenu(OptionsMenu):
             gs.get_instance().menu_manager().set_active_menu(DebugMenu())
             sound_effects.play_sound(soundref.menu_back)
         elif idx == self.next_page_idx:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1, self.hand_built))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page + 1, self.zone_types))
             sound_effects.play_sound(soundref.menu_select)
         elif idx == self.prev_page_idx:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1, self.hand_built))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1, self.zone_types))
             sound_effects.play_sound(soundref.menu_select)
         elif 0 <= idx < len(self.opts):
             selected_opt = self.opts[idx]

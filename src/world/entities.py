@@ -1721,6 +1721,10 @@ class NpcTradeEntity(NpcEntity):
 
     def __init__(self, grid_x, grid_y, npc_template, trade_protocol, color=(1, 1, 1)):
         NpcEntity.__init__(self, grid_x, grid_y, npc_template, color=color)
+
+        if trade_protocol is None:
+            raise ValueError("made a trade npc with no trade_protocol: {}".format(npc_template.npc_id))
+
         self.trade_protocol = trade_protocol
         self.num_trades_done = 0
 

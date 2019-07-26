@@ -165,6 +165,8 @@ class GlobalState:
         self._player_state = None
         self._player_controller = None
 
+        self._active_world = None
+
         self._world_updates_pause_timer = 0
 
         # TODO remove
@@ -192,6 +194,12 @@ class GlobalState:
 
         # this is the ~very unstructured~ way that "story events" are tracked
         self._story_vars = {}
+
+    def set_world(self, world):
+        self._active_world = world
+
+    def get_world(self):
+        return self._active_world
 
     def settings(self):
         return self._settings
@@ -464,7 +472,8 @@ class GlobalState:
         cam = self.get_actual_camera_xy()
         return (cam[0] + point[0], cam[1] + point[1])
         
-    def update(self, world):
+    def update(self):
+        world = self.get_world()
         if world is not None:
             for e in self.event_queue().all_events():
                 triggers_to_remove = []

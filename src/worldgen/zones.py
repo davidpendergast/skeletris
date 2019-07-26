@@ -236,7 +236,7 @@ class ZoneLoader:
             raise e
 
 
-def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=False):
+def build_world(zone_id, spawn_at_door_with_zone_id=None):
     if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
@@ -254,12 +254,8 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None, spawn_at_save_station=
     p = w.get_player()
     if p is not None:
         spawn_at_entity = None
-        if spawn_at_save_station:
-            for e in w.all_entities(onscreen=False):
-                if e.is_save_station():
-                    spawn_at_entity = e
 
-        elif spawn_at_door_with_zone_id is not None:
+        if spawn_at_door_with_zone_id is not None:
             for e in w.all_entities(onscreen=False):
                 if e.is_exit() and e.get_zone() == spawn_at_door_with_zone_id:
                     e.set_open(True)
@@ -621,7 +617,7 @@ class LootZoneBuilder:
                 pos = unknowns[LootZoneBuilder.TRADE_NPC][i]
                 if i < len(all_temps):
                     template = all_temps[i]
-                    if template.get_trade_protocol(i) is not None:
+                    if template.get_trade_protocol(zone.get_level()) is not None:
                         ent = npc.NpcFactory.gen_trade_npc(template.npc_id, zone.get_level())
                         w.add(ent, gridcell=pos)
 

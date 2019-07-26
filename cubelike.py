@@ -102,8 +102,7 @@ def run():
     import src.game.sound_effects as sound_effects
     import src.game.soundref as soundref
     from src.world.worldview import WorldView
-        
-    world = None
+
     world_view = None
         
     clock = pygame.time.Clock()
@@ -111,7 +110,7 @@ def run():
 
     while running:
         gs.get_instance().event_queue().flip()
-        gs.get_instance().update(world)
+        gs.get_instance().update()
 
         for event in gs.get_instance().event_queue().all_events():
             print("INFO: got event {}".format(event))
@@ -134,6 +133,8 @@ def run():
                 world = zones.build_world(zone_id)
                 world_view = WorldView(world)
 
+                gs.get_instance().set_world(world)
+
             elif event.get_type() == events.EventType.GAME_EXIT:
                 print("INFO: quitting game")
                 running = False
@@ -148,9 +149,11 @@ def run():
                     menu = menus.StartMenu()
 
                 gs.get_instance().save_settings_to_disk()
+                gs.get_instance().set_world(None)  # just to make it clear...
+
                 gs.create_new(menu)
-                world = None
                 world_view = None
+
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
@@ -180,17 +183,14 @@ def run():
 
         world_active = gs.get_instance().menu_manager().should_draw_world()
 
-        if world_active and world is None:
+        if world_active and gs.get_instance().get_world() is None:
             # building the initial world for the game
             render_eng.clear_all_sprites()
-            initial_zone_id = gs.get_instance().initial_zone_id
-            loading_save = initial_zone_id != zones.first_zone_id()
-            world = zones.build_world(gs.get_instance().initial_zone_id, spawn_at_save_station=loading_save)
-            world_view = WorldView(world)
 
-            if len(gs.get_instance().get_cinematics_queue()) > 0:
-                gs.get_instance().menu_manager().update(world)
-                world_active = False
+            world = zones.build_world(gs.get_instance().initial_zone_id)
+
+            gs.get_instance().set_world(world)
+            world_view = WorldView(world)
 
         if debug.is_debug() and input_state.was_pressed(pygame.K_F1):
             # used to help find performance bottlenecks
@@ -214,23 +214,25 @@ def run():
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
-        if world_active:
-            render_eng.set_clear_color(*world.get_bg_color())
+        world = gs.get_instance().get_world()
+        if world is not None:
+            if world_active:
+                render_eng.set_clear_color(*world.get_bg_color())
 
-            world.update_all()
-            world_view.update_all()
+                world.update_all()
+                world_view.update_all()
 
-            gs.get_instance().dialog_manager().update(world)
+                gs.get_instance().dialog_manager().update(world)
 
-            shake = gs.get_instance().get_screenshake()
-            camera = gs.get_instance().get_actual_camera_xy()
-            for layer_id in spriteref.WORLD_LAYERS:
-                render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
+                shake = gs.get_instance().get_screenshake()
+                camera = gs.get_instance().get_actual_camera_xy()
+                for layer_id in spriteref.WORLD_LAYERS:
+                    render_eng.set_layer_offset(layer_id, *Utils.add(camera, shake))
 
-        elif world is not None:
-            world_view.cleanup_active_bundles()
+            elif world_view is not None:
+                world_view.cleanup_active_bundles()
 
-        gs.get_instance().menu_manager().update(world)
+        gs.get_instance().menu_manager().update()
 
         render_eng.render_layers()
 

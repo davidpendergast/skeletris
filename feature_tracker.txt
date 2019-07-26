@@ -24,6 +24,7 @@
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
  - tooltips are kinda funky on 'move' and 'skip' buttons
     - 'move' and 'skip' buttons also aren't implemented ~~ no clicky
+ - enemies double attack when you die (ranged enemies only?)
   
 [balance issues]
  - need more sources of healing
