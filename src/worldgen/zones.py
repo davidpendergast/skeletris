@@ -26,6 +26,8 @@ _ALL_ZONES = {}
 
 _STORYLINE_ZONES = []
 
+_LOOT_ZONES = []
+
 
 def first_zone_id():
     return _FIRST_ZONE_ID
@@ -45,6 +47,18 @@ def get_zone(zone_id):
 
 def all_storyline_zone_ids():
     return [z for z in _STORYLINE_ZONES]
+
+
+def all_loot_zone_ids():
+    return [z for z in _LOOT_ZONES]
+
+
+def all_handbuilt_zone_ids():
+    loot_zones = set()
+    for l in all_loot_zone_ids():
+        loot_zones.add(l)
+
+    return [z for z in _ALL_ZONES if (z not in loot_zones and get_zone(z).get_file() is not None)]
 
 
 def next_storyline_zone(current_id):
@@ -98,6 +112,16 @@ def init_zones():
 
     global _FIRST_ZONE_ID
     _FIRST_ZONE_ID = _STORYLINE_ZONES[0]
+
+    loot_zones = []
+    for i in range(0, 16):
+        loot_zones.append(LootZoneBuilder.make_generated_zone(i))
+
+    _LOOT_ZONES.clear()
+    for z in loot_zones:
+        if z.get_id() not in _ALL_ZONES:
+            _ALL_ZONES[z.get_id()] = z
+        _LOOT_ZONES.append(z.get_id())
 
 
 class ZoneLoader:
@@ -581,6 +605,40 @@ class ZoneBuilder:
         return zone
 
 
+class LootZoneBuilder:
+
+    TRADE_NPC = (255, 140, 230)
+
+    @staticmethod
+    def generate_new_world(zone):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(zone.get_id(), zone.get_file(), zone.get_level())
+
+        w = bp.build_world()
+
+        all_temps = [t for t in npc.all_templates()]
+        if LootZoneBuilder.TRADE_NPC in unknowns:
+            for i in range(0, len(unknowns[LootZoneBuilder.TRADE_NPC])):
+                pos = unknowns[LootZoneBuilder.TRADE_NPC][i]
+                if i < len(all_temps):
+                    template = all_temps[i]
+                    if template.get_trade_protocol(i) is not None:
+                        ent = npc.NpcFactory.gen_trade_npc(template.npc_id, zone.get_level())
+                        w.add(ent, gridcell=pos)
+
+        return w
+
+    @staticmethod
+    def make_generated_zone(level):
+        name = "Loot Zone {}".format((level + 1))
+        zone = Zone(name, level, filename="loot_zone.png")
+
+        zone_id = "loot_zone_{}".format(level)
+        zone.ZONE_ID = zone_id
+        zone.zone_id = zone_id
+
+        zone.build_world = lambda: LootZoneBuilder.generate_new_world(zone)
+        return zone
+
 class DesolateCaveZone(Zone):
     """This is the tutorial / intro zone"""
 
@@ -611,10 +669,6 @@ class DesolateCaveZone(Zone):
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         spawn = bp.player_spawn
-
-        #bp.enemy_spawns.append((spawn[0] - 5, spawn[1]))
-        #bp.enemy_spawns.append((spawn[0] - 7, spawn[1] - 1))
-        #bp.enemy_spawns.append((spawn[0] - 6, spawn[1] + 1))
 
         for n in Utils.neighbors(*spawn, and_diags=True):
             bp.chest_spawns.append((n[0], n[1]))

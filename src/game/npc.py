@@ -145,6 +145,12 @@ TEMPLATES = {
 }
 
 
+def all_templates():
+    for npc_id in TEMPLATES:
+        if npc_id != NpcID.CAVE_HORROR:
+            yield TEMPLATES[npc_id]
+
+
 _ALL_CONVERSATIONS = {}  # conv_type -> Conversation
 
 
@@ -547,7 +553,7 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
             elif len(touching_clusters) == 1:
                 touching_clusters[0].append(cell)
-                
+
             else:
                 # start a new one
                 clusters.append([cell])

@@ -830,11 +830,14 @@ class DebugMenu(OptionsMenu):
 
     def option_activated(self, idx):
         if idx == DebugMenu.STORYLINE_ZONE_JUMP:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, False))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, DebugZoneSelectMenu.STORYLINE))
             sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.SPECIAL_ZONE_JUMP:
-            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, True))
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, DebugZoneSelectMenu.HANDBUILT))
             sound_effects.play_sound(soundref.menu_select)
+        elif idx == DebugMenu.LOOT_ZONE_JUMP:
+            gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, DebugZoneSelectMenu.LOOT))
+
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)
@@ -843,10 +846,14 @@ class DebugMenu(OptionsMenu):
 class DebugZoneSelectMenu(OptionsMenu):
     ZONES_PER_PAGE = 8
 
-    def __init__(self, page, hand_built):
+    STORYLINE = "storyline"
+    HANDBUILT = "hand_built"
+    LOOT = "loot"
+
+    def __init__(self, page, zone_types):
 
         self.page = page
-        self.hand_built = hand_built
+        self.zone_types = zone_types
 
         all_zones = self._zones_to_show()
         start_idx = DebugZoneSelectMenu.ZONES_PER_PAGE * page
@@ -876,10 +883,14 @@ class DebugZoneSelectMenu(OptionsMenu):
 
     def _zones_to_show(self):
         import src.worldgen.zones as zones
-        if self.hand_built:
-            all_zones = [z for z in zones.all_zone_ids() if zones.get_zone(z).get_file() is not None]
-        else:
+        if self.zone_types == DebugZoneSelectMenu.HANDBUILT:
+            all_zones = zones.all_handbuilt_zone_ids()
+        elif self.zone_types == DebugZoneSelectMenu.STORYLINE:
             all_zones = zones.all_storyline_zone_ids()
+        elif self.zone_types == DebugZoneSelectMenu.LOOT:
+            all_zones = zones.all_loot_zone_ids()
+        else:
+            all_zones = []
 
         all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
         return all_zones
