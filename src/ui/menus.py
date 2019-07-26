@@ -17,7 +17,7 @@ import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState
 import src.utils.colors as colors
-import src.game.balance as balance
+import src.game.gameengine as gameengine
 
 
 class MenuManager:
@@ -1095,18 +1095,6 @@ class InGameUiState(Menu):
 
         return (cx, cy)
 
-    def _get_entity_at_world_coords(self, world, world_pos, visible_only=True, cond=None):
-        hover_rad = 32
-        hover_over = world.entities_in_circle(world_pos, hover_rad)
-        if visible_only:
-            hover_over = list(filter(lambda ent: ent.is_visible_in_world(world), hover_over))
-        if cond is not None:
-            hover_over = list(filter(cond, hover_over))
-        if len(hover_over) > 0:
-            return hover_over[0]
-        else:
-            return None
-
     def _get_obj_at_screen_pos(self, world, xy):
         """returns: Item, ItemEntity, EnemyEntity, Entity, or None"""
         if xy is None:
@@ -1120,15 +1108,15 @@ class InGameUiState(Menu):
                     return grid.item_at_position(cell)
             else:
                 world_pos = gs.get_instance().screen_to_world_coords(xy)
-                item_entity = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_item())
+                item_entity = world.get_entity_for_mouseover(world_pos, cond=lambda x: x.is_item())
                 if item_entity is not None:
                     return item_entity
 
-                enemy_entity = self._get_entity_at_world_coords(world, world_pos, cond=lambda x: x.is_enemy())
+                enemy_entity = world.get_entity_for_mouseover(world_pos, cond=lambda x: x.is_enemy())
                 if enemy_entity is not None:
                     return enemy_entity
 
-                return self._get_entity_at_world_coords(world, world_pos)
+                return world.get_entity_for_mouseover(world_pos)
 
     def cursor_style_at(self, world, xy):
         if self.item_on_cursor_info is not None:
@@ -1147,7 +1135,6 @@ class InGameUiState(Menu):
                 if isinstance(obj_at_xy, entities.ItemEntity):
                     player = world.get_player()
                     if player is not None:
-                        import src.game.gameengine as gameengine
                         pos = world.to_grid_coords(*obj_at_xy.center())
                         pickup_action = gameengine.PickUpItemAction(player, obj_at_xy.get_item(), pos)
                         if pickup_action.is_possible(world):
@@ -1375,7 +1362,7 @@ class InGameUiState(Menu):
                 if not absorbed_click:
                     # do click in world then
                     world_pos = gs.get_instance().screen_to_world_coords(screen_pos)
-                    click_actions = self.get_actions_from_click(world, world_pos, button=button)
+                    click_actions = gameengine.get_actions_from_click(world, world_pos, button=button)
 
         self._update_item_on_cursor_info()
         self._update_tooltip(world)
@@ -1417,26 +1404,6 @@ class InGameUiState(Menu):
             if input_state.was_pressed(keys):
                 gs.get_instance().dialog_manager().interact()
 
-    def get_basic_movement_actions(self, player, move_pos, for_click=False):
-        import src.game.gameengine as gameengine
-
-        yield gameengine.InteractAction(player, move_pos)
-        yield gameengine.TradeItemAction(player, player.get_actor_state().held_item, move_pos)
-
-        if not for_click:
-            yield gameengine.OpenDoorAction(player, move_pos)
-            yield gameengine.MoveToAction(player, move_pos)
-
-    def get_confusion_move_actions(self, player, pos):
-        import src.game.gameengine as gameengine
-
-        neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
-        random.shuffle(neighbors)
-
-        for n in neighbors:
-            yield gameengine.OpenDoorAction(player, n)
-            yield gameengine.MoveToAction(player, n)
-
     def send_action_requests(self, player, world, click_actions=None):
         dx = 0
         dy = 0
@@ -1459,9 +1426,8 @@ class InGameUiState(Menu):
 
         res_list = []
         if target_pos is not None:
-            res_list.extend(self.get_keyboard_action_requests(world, player, target_pos))
+            res_list.extend(gameengine.get_keyboard_action_requests(world, player, target_pos))
 
-        import src.game.gameengine as gameengine
         if input_state.is_held(gs.get_instance().settings().skip_turn_key()):
             res_list.append(gameengine.SkipTurnAction(player, position=pos))
 
@@ -1473,106 +1439,32 @@ class InGameUiState(Menu):
         pc.add_requests(res_list)
         pc.add_requests(gameengine.PlayerWaitAction(player, position=target_pos), pc.LOWEST_PRIORITY)
 
-    def get_keyboard_action_requests(self, world, player, target_pos):
-        pos = world.to_grid_coords(*player.center())
-        res = []
-
-        if gs.get_instance().player_state().held_item is None:
-            action_prov = gs.get_instance().get_targeting_action_provider()
-            if action_prov is not None:
-                for i in range(1, 5):
-                    dx = target_pos[0] - pos[0]
-                    dy = target_pos[1] - pos[1]
-                    extended_target_pos = (pos[0] + dx * i, pos[1] + dy * i)
-                    res.append(action_prov.get_action(player, position=extended_target_pos))
-            else:
-                import src.game.gameengine as gameengine
-                if player.get_actor_state().unarmed_is_projectile():
-                    res.append(gameengine.ProjectileAttackAction(player, None, target_pos))
-                else:
-                    res.append(gameengine.MeleeAttackAction(player, None, target_pos))
-
-        if target_pos is not None and gs.get_instance().player_state().is_confused():
-            if random.random() < balance.CONFUSION_CHANCE:
-                for confuse_action in self.get_confusion_move_actions(player, pos):
-                    res.append(confuse_action)
-
-        for basic_action in self.get_basic_movement_actions(player, target_pos, for_click=False):
-            res.append(basic_action)
-
-        return res
-
-    def get_actions_from_click(self, world, world_pos, button=1):
-        world_grid_pos = world.to_grid_coords(*world_pos)
-
-        player = world.get_player()
-        ps = gs.get_instance().player_state()
-
-        if button != 1 or gs.get_instance().world_updates_paused():
-            return []
-
-        import src.game.gameengine as gameengine
-
-        res = []
-
-        if player is not None:
-            if ps.held_item is not None:
-
-                throw_action = gameengine.ThrowItemAction(player, ps.held_item, world_grid_pos)
-                res.append(throw_action)
-
-                trade_action = gameengine.TradeItemAction(player, ps.held_item, world_grid_pos)
-                res.append(trade_action)
-
-                drop_dir = Utils.sub(world_pos, player.center())
-                drop_action = gameengine.DropItemAction(player, ps.held_item, drop_dir=drop_dir)
-                res.append(drop_action)
-
-            else:
-                # picking up items
-                clicked_item = self._get_entity_at_world_coords(world, world_pos, cond=lambda i: i.is_item())
-                if clicked_item is not None:
-                    item_pos = world.to_grid_coords(*clicked_item.center())
-                    pickup_request = gameengine.PickUpItemAction(player, clicked_item.get_item(), item_pos)
-                    res.append(pickup_request)
-
-                # now do attacking and interacting stuff
-                action_prov = gs.get_instance().get_targeting_action_provider()
-                if action_prov is not None:
-                    res.append(action_prov.get_action(player, world_grid_pos))
-                else:
-                    res.append(gameengine.MeleeAttackAction(player, None, world_grid_pos))
-
-                for action in self.get_basic_movement_actions(player, world_grid_pos, for_click=True):
-                    res.append(action)
-
-            return res
-
     def set_visually_targetable_coords_in_world(self, world):
         p = world.get_player()
         target_coords = {}
-        if p is not None:
-            pos = world.to_grid_coords(*p.center())
-            for n in Utils.neighbors(pos[0], pos[1]):
-                actions = self.get_keyboard_action_requests(world, p, n)
-                for act in actions:
-                    if act.is_possible(world):
-                        position = act.get_position()
-                        color = act.get_targeting_color(for_mouse=False)
-                        if position is not None and color is not None:
-                            target_coords[position] = color
-                        break
 
-            mouse_pos = self._get_mouse_pos_in_world()
-            if mouse_pos is not None:
-                actions = self.get_actions_from_click(world, mouse_pos)
-                for act in actions:
-                    if act.is_possible(world):
-                        position = act.get_position()
-                        color = act.get_targeting_color(for_mouse=True)
-                        if position is not None and color is not None:
-                            target_coords[position] = color
-                        break
+        if p is None:
+            return
+
+        pos = world.to_grid_coords(*p.center())
+        for n in Utils.neighbors(pos[0], pos[1]):
+            for act in gameengine.get_keyboard_action_requests(world, p, n, allow_confusion=False):
+                if act.is_possible(world):
+                    position = act.get_position()
+                    color = act.get_targeting_color(for_mouse=False)
+                    if position is not None and color is not None:
+                        target_coords[position] = color
+                    break
+
+        mouse_pos = self._get_mouse_pos_in_world()
+        if mouse_pos is not None:
+            for act in gameengine.get_actions_from_click(world, mouse_pos):
+                if act.is_possible(world):
+                    position = act.get_position()
+                    color = act.get_targeting_color(for_mouse=True)
+                    if position is not None and color is not None:
+                        target_coords[position] = color
+                    break
 
         gs.get_instance().set_targetable_coords_in_world(target_coords)
 

@@ -1443,4 +1443,104 @@ class ItemActions:
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
 
 
+def get_basic_movement_actions(player, current_pos, move_pos, for_click=False, allow_confusion=True):
+    res = []
+
+    if allow_confusion and not for_click and player.get_actor_state().is_confused():
+        if random.random() < balance.CONFUSION_CHANCE:
+            for a in get_confusion_move_actions(player, current_pos):
+                res.append(a)
+
+    res.append(InteractAction(player, move_pos))
+    res.append(TradeItemAction(player, player.get_actor_state().held_item, move_pos))
+
+    if not for_click:
+        res.append(OpenDoorAction(player, move_pos))
+        res.append(MoveToAction(player, move_pos))
+
+    return res
+
+
+def get_confusion_move_actions(player, pos):
+    neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
+    random.shuffle(neighbors)
+
+    res = []
+
+    for n in neighbors:
+        res.append(OpenDoorAction(player, n))
+        res.append(MoveToAction(player, n))
+
+    return res
+
+
+def get_keyboard_action_requests(world, player, target_pos, allow_confusion=True):
+    pos = world.to_grid_coords(*player.center())
+    res = []
+
+    if gs.get_instance().player_state().held_item is None:
+        action_prov = gs.get_instance().get_targeting_action_provider()
+        if action_prov is not None:
+            for i in range(1, 5):
+                dx = target_pos[0] - pos[0]
+                dy = target_pos[1] - pos[1]
+                extended_target_pos = (pos[0] + dx * i, pos[1] + dy * i)
+                res.append(action_prov.get_action(player, position=extended_target_pos))
+        else:
+            if player.get_actor_state().unarmed_is_projectile():
+                res.append(ProjectileAttackAction(player, None, target_pos))
+            else:
+                res.append(MeleeAttackAction(player, None, target_pos))
+
+    for basic_action in get_basic_movement_actions(player, pos, target_pos,
+                                                   for_click=False, allow_confusion=allow_confusion):
+        res.append(basic_action)
+
+    return res
+
+
+def get_actions_from_click(world, world_pos, button=1):
+    world_grid_pos = world.to_grid_coords(*world_pos)
+
+    player = world.get_player()
+    ps = gs.get_instance().player_state()
+
+    if button != 1 or gs.get_instance().world_updates_paused():
+        return []
+
+    res = []
+
+    if player is not None:
+        if ps.held_item is not None:
+
+            throw_action = ThrowItemAction(player, ps.held_item, world_grid_pos)
+            res.append(throw_action)
+
+            trade_action = TradeItemAction(player, ps.held_item, world_grid_pos)
+            res.append(trade_action)
+
+            drop_dir = Utils.sub(world_pos, player.center())
+            drop_action = DropItemAction(player, ps.held_item, drop_dir=drop_dir)
+            res.append(drop_action)
+
+        else:
+            # picking up items
+            clicked_item = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
+            if clicked_item is not None:
+                item_pos = world.to_grid_coords(*clicked_item.center())
+                pickup_request = PickUpItemAction(player, clicked_item.get_item(), item_pos)
+                res.append(pickup_request)
+
+            # now do attacking and interacting stuff
+            action_prov = gs.get_instance().get_targeting_action_provider()
+            if action_prov is not None:
+                res.append(action_prov.get_action(player, world_grid_pos))
+            else:
+                res.append(MeleeAttackAction(player, None, world_grid_pos))
+
+            pos = world.to_grid_coords(*player.center())
+            for action in get_basic_movement_actions(player, pos, world_grid_pos, for_click=True):
+                res.append(action)
+
+    return res
 

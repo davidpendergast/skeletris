@@ -959,6 +959,9 @@ class HotbarMoveButton(InteractableImage):
 
         self._icon_img = None
 
+        self.last_clicked_at = -500
+        self.render_pushed_time = 15
+
     def contains_point(self, x, y):
         if self.rect is not None:
             return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
@@ -972,16 +975,20 @@ class HotbarMoveButton(InteractableImage):
     def is_dirty(self):
         return True
 
+    def get_color(self):
+        clicked_recently = self.last_clicked_at >= gs.get_instance().tick_counter - self.render_pushed_time
+        if self.is_active() and not clicked_recently:
+            return self.ready_color
+        else:
+            return self.disabled_color
+
     def update_images(self):
         icon_sprite = self.get_icon_sprite()
         if self.rect is not None and icon_sprite is not None:
             if self._icon_img is None:
                 self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
 
-            if self.is_active():
-                color = self.ready_color
-            else:
-                color = self.disabled_color
+            color = self.get_color()
 
             self._icon_img = self._icon_img.update(new_model=icon_sprite,
                                                    new_depth=FG_DEPTH,
@@ -998,6 +1005,10 @@ class HotbarMoveButton(InteractableImage):
     def get_tooltip_text(self):
         return None
 
+    def on_click(self, x, y, button=1):
+        if button == 1 and self.is_active():
+            self.last_clicked_at = gs.get_instance().tick_counter
+
     def is_active(self):
         return not gs.get_instance().world_updates_paused()
 
@@ -1013,6 +1024,27 @@ class HotbarMoveButton(InteractableImage):
         if self._icon_img is not None:
             yield self._icon_img
 
+    def send_move_action(self, direction):
+        w = gs.get_instance().get_world()
+        if w is None:
+            return
+
+        player = w.get_player()
+        if player is None:
+            return
+
+        pc = gs.get_instance().player_controller()
+        if pc is None:
+            return  # shouldn't be possible but ehjlkhl
+
+        import src.game.gameengine as gameengine
+
+        pos = w.to_grid_coords(*player.center())
+        new_pos = Utils.add(pos, direction)
+
+        acts = gameengine.get_keyboard_action_requests(w, player, new_pos)
+        pc.add_requests(acts)
+
 
 class HotbarMoveLeftButton(HotbarMoveButton):
 
@@ -1022,12 +1054,10 @@ class HotbarMoveLeftButton(HotbarMoveButton):
     def get_icon_sprite(self):
         return spriteref.UI.left_button
 
-    def get_tooltip_text(self):
-        keys = Utils.stringify_keylist(gs.get_instance().settings().left_key(), or_else="None")
-        return "Left [{}]".format(keys)
-
     def on_click(self, x, y, button=1):
-        pass  # TODO - this won't work until gs can access the world
+        super().on_click(x, y, button=1)
+        if button == 1:
+            super().send_move_action((-1, 0))
 
 
 class HotbarMoveRightButton(HotbarMoveButton):
@@ -1038,12 +1068,10 @@ class HotbarMoveRightButton(HotbarMoveButton):
     def get_icon_sprite(self):
         return spriteref.UI.right_button
 
-    def get_tooltip_text(self):
-        keys = Utils.stringify_keylist(gs.get_instance().settings().right_key(), or_else="None")
-        return "Right [{}]".format(keys)
-
-    def handle_pressed(self):
-        pass
+    def on_click(self, x, y, button=1):
+        super().on_click(x, y, button=1)
+        if button == 1:
+            super().send_move_action((1, 0))
 
 
 class HotbarMoveUpButton(HotbarMoveButton):
@@ -1054,12 +1082,10 @@ class HotbarMoveUpButton(HotbarMoveButton):
     def get_icon_sprite(self):
         return spriteref.UI.up_button
 
-    def get_tooltip_text(self):
-        keys = Utils.stringify_keylist(gs.get_instance().settings().up_key(), or_else="None")
-        return "Up [{}]".format(keys)
-
-    def handle_pressed(self):
-        pass
+    def on_click(self, x, y, button=1):
+        super().on_click(x, y, button=1)
+        if button == 1:
+            super().send_move_action((0, -1))
 
 
 class HotbarMoveDownButton(HotbarMoveButton):
@@ -1070,12 +1096,10 @@ class HotbarMoveDownButton(HotbarMoveButton):
     def get_icon_sprite(self):
         return spriteref.UI.down_button
 
-    def get_tooltip_text(self):
-        keys = Utils.stringify_keylist(gs.get_instance().settings().down_key(), or_else="None")
-        return "Down [{}]".format(keys)
-
-    def handle_pressed(self):
-        pass
+    def on_click(self, x, y, button=1):
+        super().on_click(x, y, button=1)
+        if button == 1:
+            super().send_move_action((0, 1))
 
 
 class HotbarSkipTurnButton(HotbarMoveButton):
@@ -1086,12 +1110,26 @@ class HotbarSkipTurnButton(HotbarMoveButton):
     def get_icon_sprite(self):
         return spriteref.UI.skip_button
 
-    def get_tooltip_text(self):
-        keys = Utils.stringify_keylist(gs.get_instance().settings().skip_turn_key(), or_else="None")
-        return "Skip [{}]".format(keys)
+    def on_click(self, x, y, button=1):
+        super().on_click(x, y, button=1)
+        if button == 1:
+            w = gs.get_instance().get_world()
+            if w is None:
+                return
 
-    def handle_pressed(self):
-        pass
+            player = w.get_player()
+            if player is None:
+                return
+
+            pc = gs.get_instance().player_controller()
+            if pc is None:
+                return  # shouldn't be possible but ehjlkhl
+
+            import src.game.gameengine as gameengine
+
+            pos = w.to_grid_coords(*player.center())
+
+            pc.add_requests([gameengine.SkipTurnAction(player, pos)])
 
     def get_preferred_size(self):
         return (30, 15)
