@@ -1738,8 +1738,8 @@ class NpcTradeEntity(NpcEntity):
     def get_trade_protocol(self):
         return self.trade_protocol
 
-    def try_to_do_trade(self, item, src_entity, world):
-        """returns: True if item was accepted, false otherwise"""
+    def try_to_do_trade(self, item, src_entity, world, and_drop_item=True):
+        """returns: list of received Items if item was accepted, None otherwise"""
 
         if item is None:
             if self.num_trades_done == 0:
@@ -1747,17 +1747,17 @@ class NpcTradeEntity(NpcEntity):
             else:
                 dia = self.get_trade_protocol().get_post_success_dialog(self.get_npc_id())
             gs.get_instance().dialog_manager().set_dialog(dia)
-            return False
+            return None
 
         elif self.num_trades_done > 0:
             dia = self.get_trade_protocol().get_no_more_trades_dialog(self.get_npc_id())
             gs.get_instance().dialog_manager().set_dialog(dia)
-            return False
+            return None
 
         elif not self.get_trade_protocol().accepts_trade(item):
             dia = self.get_trade_protocol().get_wrong_item_dialog(self.get_npc_id(), item)
             gs.get_instance().dialog_manager().set_dialog(dia)
-            return False
+            return None
 
         else:
             res_items = self.trade_protocol.do_trade(item)
@@ -1765,19 +1765,22 @@ class NpcTradeEntity(NpcEntity):
             if not debug.unlimited_trades():
                 self.num_trades_done += 1
 
-            if src_entity is not None:
-                src_pos = src_entity.center()
-                throw_dir = Utils.sub(src_pos, self.center())
-                throw_dir = Utils.set_length(throw_dir, 1.0)
-            else:
-                throw_dir = None
+            if and_drop_item is True:
 
-            for it in res_items:
-                world.add_item_as_entity(it, self.center(), direction=throw_dir)
+                if src_entity is not None:
+                    src_pos = src_entity.center()
+                    throw_dir = Utils.sub(src_pos, self.center())
+                    throw_dir = Utils.set_length(throw_dir, 1.0)
+                else:
+                    throw_dir = None
+
+                for it in res_items:
+                    world.add_item_as_entity(it, self.center(), direction=throw_dir)
 
             dia = self.get_trade_protocol().get_success_dialog(self.get_npc_id(), item)
             gs.get_instance().dialog_manager().set_dialog(dia)
-            return True
+
+            return res_items
 
 
 class TriggerBox(Entity):

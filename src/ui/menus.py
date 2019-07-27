@@ -839,7 +839,7 @@ class DebugMenu(OptionsMenu):
             sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.LOOT_ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, DebugZoneSelectMenu.LOOT))
-
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)

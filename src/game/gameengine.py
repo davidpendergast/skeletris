@@ -110,6 +110,9 @@ class ActorState(StatProvider):
     def is_grasped(self):
         return self.stat_value(StatTypes.GRASPED) > 0
 
+    def is_prevented_from_moving_due_to_status_effect(self):
+        return self.is_grasped()
+
     def get_projectile_sprite(self):
         return self.unarmed_projectile_sprite
 
@@ -448,7 +451,7 @@ class MoveToAction(Action):
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
         a_state = self.get_actor().get_actor_state()
-        if a_state.is_grasped():
+        if a_state.is_prevented_from_moving_due_to_status_effect():
             return False
 
         if Utils.dist_manhattan(self.position, pos) != 1:
@@ -825,7 +828,7 @@ class MeleeAttackAction(AttackAction):
         if cur_pos != end_pos:
             if world.is_solid(end_pos[0], end_pos[1], including_entities=True):
                 return False
-            elif self.get_actor().get_actor_state().is_grasped():
+            elif self.get_actor().get_actor_state().is_prevented_from_moving_due_to_status_effect():
                 return False
 
         return True
@@ -957,6 +960,7 @@ class TradeItemAction(Action):
     def __init__(self, actor, item, position):
         Action.__init__(self, ActionType.GIVE_ITEM, 10, actor, item=item, position=position)
         self._recipient_npc = None
+        self._received_items = None
 
     def get_targeting_color(self, for_mouse=False):
         return colors.PURPLE
@@ -997,9 +1001,10 @@ class TradeItemAction(Action):
         self._recipient_npc = self.get_recipient(world)
 
         item_to_trade = self.get_item()
-        trade_successful = self._recipient_npc.try_to_do_trade(self.get_item(), self.get_actor(), world)
+        self._received_items = self._recipient_npc.try_to_do_trade(self.get_item(), self.get_actor(), world,
+                                                                   and_drop_item=False)  # we drop in finalize
 
-        if trade_successful and item_to_trade is not None:
+        if self._received_items is not None and item_to_trade is not None:
 
             # XXX the success dialog will freeze world updates, so it'll keep drawing the
             # held item even though it's been set to None...
@@ -1017,6 +1022,26 @@ class TradeItemAction(Action):
 
     def finalize(self, world):
         self.get_actor().set_visually_held_item_override(None)
+
+        if self._received_items is not None and len(self._received_items) > 0:
+            actor_pos = self.get_actor().get_render_center()
+            actor_pos = [actor_pos[0], actor_pos[1] + 10]  # want it to land slightly in front of actor
+
+            trader_pos = self._recipient_npc.get_render_center()
+            trader_pos = [trader_pos[0], trader_pos[1] + 10]
+
+            actor_grid_pos = world.to_grid_coords(*self.get_actor().center())
+            trader_grid_pos = world.to_grid_coords(*self._recipient_npc.center())
+            if actor_grid_pos[0] == trader_grid_pos[0]:
+                # offset the x pos during vertical trades, or else the character sprites will
+                # block the item sprites.
+                actor_pos[0] = actor_pos[0] + 30 - random.random() * 60
+
+            throw_dir = Utils.sub(actor_pos, trader_pos)
+            throw_dir = Utils.set_length(throw_dir, 1.0)
+
+            for it in self._received_items:
+                world.add_item_as_entity(it, trader_pos, direction=throw_dir)
 
 
 class ThrowItemAction(Action):

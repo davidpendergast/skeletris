@@ -4,7 +4,6 @@ import random
 
 import src.game.spriteref as sr
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
-import src.game.events as events
 import src.game.globalstate as gs
 import src.game.dialog as dialog
 import src.utils.colors as colors
@@ -60,7 +59,7 @@ class MarySkellyTemplate(NpcTemplate):
                              sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 1:
+        if level >= 7:
             return NpcTradeProtocols.MIRROR_TRADE
 
 
@@ -71,7 +70,7 @@ class MayorPatchesTemplate(NpcTemplate):
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
     def get_trade_protocol(self, level):
-        if level >= 5:
+        if level >= 9:
             return NpcTradeProtocols.REROLL_ART
 
 
@@ -81,7 +80,7 @@ class BeanskullTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 2:
+        if level >= 3:
             return NpcTradeProtocols.REROLL_STATS
 
 
@@ -91,7 +90,7 @@ class GlorpleTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 4:
             return NpcTradeProtocols.REROLL_CUBES
 
 
@@ -111,7 +110,7 @@ class DoctorTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 2:
             return NpcTradeProtocols.POTION_EXCHANGE
 
 

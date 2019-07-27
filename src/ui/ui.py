@@ -1010,7 +1010,15 @@ class HotbarMoveButton(InteractableImage):
             self.last_clicked_at = gs.get_instance().tick_counter
 
     def is_active(self):
-        return not gs.get_instance().world_updates_paused()
+        if gs.get_instance().world_updates_paused():
+            return False
+
+        ps = gs.get_instance().player_state()
+        if ps is not None:
+            if ps.is_prevented_from_moving_due_to_status_effect():
+                return False
+
+        return True
 
     def get_tooltip_target_at(self, x, y):
         tt_text = self.get_tooltip_text()
@@ -1133,6 +1141,9 @@ class HotbarSkipTurnButton(HotbarMoveButton):
 
     def get_preferred_size(self):
         return (30, 15)
+
+    def is_active(self):
+        return not gs.get_instance().world_updates_paused()
 
 
 class HealthBarPanel(InteractableImage):
