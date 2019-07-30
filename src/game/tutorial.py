@@ -65,8 +65,11 @@ class TutorialStage:
         self._is_waiting = True
         self._is_complete = False
 
+    def is_waiting(self):
+        return self._is_waiting
+
     def is_started(self):
-        return not self._is_waiting and not self.is_complete()
+        return not self.is_waiting() and not self.is_complete()
 
     def is_complete(self):
         return self._is_complete
@@ -84,6 +87,9 @@ class TutorialStage:
 
     def get_ticks_waiting(self):
         return self._ticks_waiting
+
+    def reset_ticks_waiting(self):
+        self._ticks_waiting = 0
 
     def update(self):
         if self.is_complete():
@@ -140,11 +146,11 @@ class EntityNotificationTutorialStage(TutorialStage):
             hover_entity.set_target_entity(entity)
             hover_entity.set_text(message)
 
-    def get_target_entity(self):
-        return None
-
     def cleanup(self):
         self._destroy_text_entity()
+
+    def get_target_entity(self):
+        return None
 
     def update(self):
         super().update()
@@ -193,7 +199,64 @@ class HowToMoveStage(EntityNotificationTutorialStage):
             if len(key_val) > 0:
                 keystr = keystr + Utils.stringify_key(key_val[0])
 
-        return "[{}] to Move".format(keystr)
+        return "Use [{}] to move.".format(keystr)
+
+
+class HowToPickUpItemStage(EntityNotificationTutorialStage):
+
+    def __init__(self, delay=60):
+        super().__init__()
+        self.delay = delay
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if w is None or p is None:
+            return None
+        else:
+            for it in w.entities_in_circle(p.center(), w.cellsize() * 1.5, onscreen=True,
+                                           cond=lambda e: e.is_item()):
+                it_pos = w.to_grid_coords(*it.center())
+                pickup_act = gameengine.PickUpItemAction(p, it.get_item(), it_pos)
+                if pickup_act.is_possible(w):
+                    return it
+            return None
+
+    def get_message(self):
+        return "Use mouse to pick up items."
+
+    def update(self):
+        super().update()
+
+        w, p = gs.get_instance().get_world_and_player()
+        if w is None or p is None:
+            return
+
+        def is_item_pickup_action(act_evt):
+            if act_evt.get_action_type() == gameengine.ActionType.PICKUP_ITEM:
+                if act_evt.get_uid() == p.get_uid():
+                    return True
+            return False
+
+        if gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
+                                                     predicate=is_item_pickup_action):
+            self.complete()
+            return
+
+        item_ent = self.get_target_entity()
+        if item_ent is None:
+            self.update_hover_text(None, "")
+
+            if self.is_waiting():
+                self.reset_ticks_waiting()
+
+        if item_ent is not None:
+            if self.is_waiting() and self.get_ticks_waiting() >= self.delay:
+                self.start()
+
+            if self.is_started():
+                self.update_hover_text(p, self.get_message())
+            else:
+                self.update_hover_text(None, "")
 
 
 class TutorialFactory:
@@ -202,7 +265,8 @@ class TutorialFactory:
     def get(tut_id):
         if tut_id == TutorialID.MOVE_AND_INV:
             return TutorialPlugin(tut_id, [
-                HowToMoveStage(90)
+                HowToMoveStage(90),
+                HowToPickUpItemStage()
             ])
 
         return None

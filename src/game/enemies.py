@@ -620,7 +620,7 @@ class CaveHorrorTemplate(EnemyTemplate):
 
             def get_next_action(self, actor, world):
                 pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-                return gameengine.SkipTurnAction(actor, position=pos)
+                return gameengine.SkipTurnAction(actor, pos)
 
         return _CaveHorrorController()
 

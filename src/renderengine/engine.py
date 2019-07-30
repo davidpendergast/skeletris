@@ -111,11 +111,12 @@ class _Layer:
 
         n_sprites = len(self.images)
 
-        self.vertices.resize(8 * n_sprites)
-        self.tex_coords.resize(8 * n_sprites)
-        self.indices.resize(6 * n_sprites)
+        # need refcheck to be false or else Pycharm's debugger can cause this to fail (due to holding a ref)
+        self.vertices.resize(8 * n_sprites, refcheck=False)
+        self.tex_coords.resize(8 * n_sprites, refcheck=False)
+        self.indices.resize(6 * n_sprites, refcheck=False)
         if self.uses_color():
-            self.colors.resize(4 * 3 * n_sprites)
+            self.colors.resize(4 * 3 * n_sprites, refcheck=False)
 
         for i in range(0, n_sprites):
             bundle = bundle_lookup[self.images[i]]

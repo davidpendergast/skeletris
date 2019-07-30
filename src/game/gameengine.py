@@ -202,7 +202,7 @@ class ActorController:
 
     def get_next_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        return SkipTurnAction(actor, position=pos)
+        return SkipTurnAction(actor, pos)
 
 
 class PlayerController(ActorController):
@@ -350,7 +350,7 @@ class EnemyController(ActorController):
             return movement_action
 
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-        return SkipTurnAction(actor, position=pos)
+        return SkipTurnAction(actor, pos)
 
 
 class ActionType:
@@ -1282,6 +1282,9 @@ class PickUpItemAction(Action):
 
         return True
 
+    def start(self, world):
+        super().start(world)
+
     def finalize(self, world):
         super().finalize(world)
         ent_to_pickup = self._get_entity_to_pickup(world)
@@ -1326,7 +1329,7 @@ class DropItemAction(Action):
                 self.get_actor().set_facing_right(False)
 
     def finalize(self, world):
-        # purposely *NOT* calling super's finalize because this isn't a 'real' action.
+        super().finalize(world)
         actor = self.get_actor()
         a_state = actor.get_actor_state()
         if a_state.held_item == self.get_item():
@@ -1383,7 +1386,7 @@ class ActionProvider:
                     yield n
 
     def get_action(self, actor, position=None, item=None):
-        return SkipTurnAction()
+        return SkipTurnAction(actor, position)
 
 
 class ItemActionProvider(ActionProvider):

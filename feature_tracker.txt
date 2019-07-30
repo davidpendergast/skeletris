@@ -23,6 +23,8 @@
  - opened chests show up on maps
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
  - enemies double attack when you die (ranged enemies only?)
+ - HoverTextEntity has some render issues:
+    - squished text, misaligned border, overlap issues; def needs some love
   
 [balance issues]
  - need more sources of healing
