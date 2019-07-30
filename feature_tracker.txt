@@ -22,8 +22,6 @@
  - can't drop items while walking (increase buffer on item-drop actions?)
  - opened chests show up on maps
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
- - tooltips are kinda funky on 'move' and 'skip' buttons
-    - 'move' and 'skip' buttons also aren't implemented ~~ no clicky
  - enemies double attack when you die (ranged enemies only?)
   
 [balance issues]
@@ -35,9 +33,6 @@
 [current features]
  - need some handling for different resolutions
     - tried once, failed. see awful_resize_diff.txt (on desktop)
- - level generation
-    - add auto-retry logic _just_in_case_ level generation fails
-        - still maybe possible if somehow it really can't place start/finish
  - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the demo
@@ -52,7 +47,6 @@
  - need some kind of text popup 'achievement system' like minecraft
     - "press "R" to open inventory"
     - "click the item to pick it up"
-    
     - need a global achievement tracking system to prevent these from popping constantly
     
  

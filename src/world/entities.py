@@ -1189,7 +1189,7 @@ class PickupEntity(Entity):
 
     @staticmethod
     def rand_vel(speed=None, direction=None):
-        speed = speed if speed is not None else 2 + random.random() * 3
+        speed = speed if speed is not None else 3 + random.random() * 2
         if direction is None:
             direction = (0, 0)  # becomes random
         direction = Utils.set_length(direction, 1.0)
@@ -1519,6 +1519,9 @@ class ReturnExitEntity(ExitEntity):
             return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
         else:
             return None
+
+    def get_map_identifier(self):
+        return None
 
     def get_sprite(self):
         sprites = spriteref.return_door_smoke
@@ -1892,17 +1895,16 @@ class HoverTextEntity(Entity):
 
         if self.target_entity is not None:
             t_center = self.target_entity.center()
-            x_pos = t_center[0]
-            y_pos = t_center[1]
+            x_pos = t_center[0] + self.offset[0]
+            y_pos = t_center[1] + self.offset[1]
             if self.center() != (x_pos, y_pos):
                 changed = True
                 self.set_center(x_pos, y_pos)
 
-        if gs is not None:
-            new_bob_height = round(self._y_bob_range + (0.5 * self._y_bob_range * math.cos(6.28 * gs.get_instance().anim_tick / 15)))
-            if new_bob_height != self.bob_height:
-                changed = True
-                self.bob_height = new_bob_height
+        new_bob_height = round(self._y_bob_range + (0.5 * self._y_bob_range * math.cos(6.28 * gs.get_instance().anim_tick / 15)))
+        if new_bob_height != self.bob_height:
+            changed = True
+            self.bob_height = new_bob_height
 
         return changed
 
@@ -2012,10 +2014,12 @@ class HoverTextEntity(Entity):
 
         self._dirty = False
 
-    def set_target_entity(self, entity, offset=(0, 0)):
-        self.target_entity = entity
-        self.offset = offset
-        self._dirty = True
+    def set_target_entity(self, entity, offset=None):
+        if self.target_entity != entity:
+            self.target_entity = entity
+            self._dirty = True
+        if offset is not None:
+            self.offset = offset
 
     def set_text(self, text):
         if text != self.text:

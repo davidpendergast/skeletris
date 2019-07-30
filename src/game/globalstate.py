@@ -166,6 +166,7 @@ class GlobalState:
         self._player_controller = None
 
         self._active_world = None
+        self._active_tutorial = None
 
         self._world_updates_pause_timer = 0
 
@@ -201,6 +202,14 @@ class GlobalState:
     def get_world(self):
         return self._active_world
 
+    def get_world_and_player(self):
+        """returns: (None, None) or (World, None) or (World, PlayerEntity)"""
+        w = self.get_world()
+        if w is None:
+            return (None, None)
+        else:
+            return (w, w.get_player())
+
     def settings(self):
         return self._settings
 
@@ -225,8 +234,12 @@ class GlobalState:
     def prepare_for_new_zone(self, zone):
         self.player_controller().clear_requests()
         self.clear_triggers(events.EventListenerScope.ZONE)
+        self._active_tutorial = None
 
         self.current_zone = zone
+
+    def set_active_tutorial(self, tutorial):
+        self._active_tutorial = tutorial
 
     def set_active_sidepanel(self, panel_id, play_sound=True):
         if play_sound and self.active_sidepanel_id != panel_id:
@@ -490,6 +503,9 @@ class GlobalState:
 
                 for t in triggers_to_remove:
                     self._event_triggers[t.event_type].remove(t)
+
+        if self._active_tutorial is not None:
+            self._active_tutorial.update()
 
         if len(self._current_screenshakes) > 0:
             any_empty = False

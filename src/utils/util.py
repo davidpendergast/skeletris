@@ -164,7 +164,11 @@ class Utils:
             num = keycode.replace("MOUSE_BUTTON_", "")
             return "M{}".format(num)
         else:
-            return pygame.key.name(keycode)
+            res = pygame.key.name(keycode)
+            if len(res) == 1 and res.islower():
+                return res.upper()
+            else:
+                return res
 
     @staticmethod
     def stringify_keylist(keycodes, or_else=""):

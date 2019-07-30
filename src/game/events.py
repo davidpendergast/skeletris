@@ -72,11 +72,13 @@ class EventType(Enum):
     STORY_EVENT = "STORY_EVENT",
     PLAYER_DIED = "PLAYER_DIED",
     DOOR_OPENED = "DOOR_OPENED",
+    ACTION_STARTED = "ACTION_STARTED",
     ACTION_FINISHED = "ACTION_FINISHED",
     DIALOG_EXIT = "DIALOG_EXIT",
     ENTERED_BOX = "ENTERED_BOX",
     EXITED_BOX = "EXITED_BOX",
     TRIGGERED_BOX = "TRIGGERED_BOX",
+    ITEM_DROPPED = "ITEM_DROPPED"
 
     # these are "please do something" events
     PLAY_SOUND = "PLAY_SOUND"
@@ -220,6 +222,22 @@ class ActionFinishedEvent(Event):
         return self.get_data()[2]
 
 
+class ActionStartedEvent(Event):
+
+    def __init__(self, action):
+        data = (action.get_actor().get_uid(), action.get_type(), action.get_position())
+        Event.__init__(self, EventType.ACTION_STARTED, data, description="action started")
+
+    def get_uid(self):
+        return self.get_data()[0]
+
+    def get_action_type(self):
+        return self.get_data()[1]
+
+    def get_position(self):
+        return self.get_data()[2]
+
+
 class PlayerDiedEvent(Event):
 
     def __init__(self):
@@ -240,3 +258,16 @@ class EnemyDiedEvent(Event):
 
     def get_position(self):
         return self.get_data()[2]
+
+
+class ItemDroppedEvent(Event):
+
+    def __init__(self, item, dropped_by=None):
+        data = (item, dropped_by)
+        Event.__init__(self, EventType.ITEM_DROPPED, data, description="item dropped")
+
+    def get_item(self):
+        return self.get_data()[0]
+
+    def get_dropped_by(self):
+        return self.get_data()[1]

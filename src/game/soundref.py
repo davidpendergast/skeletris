@@ -594,6 +594,7 @@ _soft_blip_2 = (sfx_movement_ladder1b, 0.2)
 
 newgame_start = (sfx_sound_mechanicalnoise4, 0.2)
 game_quit = (sfx_sound_shutdown1, 0.4)
+tutorial_stage_complete = (sfx_sounds_fanfare2, 0.1)
 
 menu_move = _soft_blip_1
 menu_select = _soft_blip_2

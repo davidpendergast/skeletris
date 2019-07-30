@@ -160,7 +160,7 @@ class PotionTemplate:
 
 
 HEALING = PotionTemplate("Potion of Healing", "That was refreshing.",
-                         min_level=0, drop_rate=10,
+                         min_level=1, drop_rate=10,
                          status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
                                                                balance.POTION_SMALL_HEAL_DURATION))
 

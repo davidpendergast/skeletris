@@ -430,7 +430,8 @@ class Action:
                 self.get_actor().set_facing_right(False)
 
     def start(self, world):
-        pass
+        evt = events.ActionStartedEvent(self)
+        gs.get_instance().event_queue().add(evt)
 
     def finalize(self, world):
         evt = events.ActionFinishedEvent(self)
@@ -462,6 +463,7 @@ class MoveToAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         self.start_pos = self.actor_entity.center()
 
     def animate_in_world(self, progress, world):
@@ -502,6 +504,7 @@ class ConsumeItemAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         a_state = self.actor_entity.get_actor_state()
         removed = a_state.inventory().remove(self.item)
         if not removed:
@@ -738,6 +741,7 @@ class AttackAction(Action):
                                          world=world, item_used=self.item)
 
     def start(self, world):
+        super().start(world)
         target = world.get_actor_in_cell(self.position[0], self.position[1])
         t_state = target.get_actor_state()
         a_state = self.get_actor().get_actor_state()
@@ -998,6 +1002,7 @@ class TradeItemAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         self._recipient_npc = self.get_recipient(world)
 
         item_to_trade = self.get_item()
@@ -1113,6 +1118,7 @@ class ThrowItemAction(Action):
                 target.get_actor_state().add_status_effect(consume_effect)
 
     def start(self, world):
+        super().start(world)
         a_state = self.actor_entity.get_actor_state()
 
         removed = a_state.inventory().remove(self.item)
@@ -1201,8 +1207,8 @@ class InteractAction(Action):
         return world.get_interactable_in_cell(self.position[0], self.position[1]) is not None
 
     def start(self, world):
+        super().start(world)
         self.target = world.get_interactable_in_cell(self.position[0], self.position[1])
-        print("INFO: interacted with {}".format(self.target))
         self.target.interact(world)
 
     def animate_in_world(self, world, progress):
@@ -1222,6 +1228,11 @@ class PlayerWaitAction(Action):
 
     def is_possible(self, world):
         return True
+
+    def start(self, world):
+        # note that we're purposely *NOT* calling super's start
+        # because we don't want to spam action_started events.
+        pass
 
     def finalize(self, world):
         # note that we're purposely *NOT* calling super's finalize
@@ -1307,6 +1318,7 @@ class DropItemAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         if self._drop_dir is not None:
             if self._drop_dir[0] > 0.1:
                 self.get_actor().set_facing_right(True)

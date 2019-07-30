@@ -156,7 +156,7 @@ class ItemTypes:
                              drop_rate=balance.WEAPON_DROP_RATE)
     WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
                             drop_rate=balance.WEAPON_DROP_RATE)
-    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE),
+    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=1,
                               drop_rate=balance.WEAPON_DROP_RATE)
     AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9,
                            drop_rate=balance.WEAPON_DROP_RATE)
