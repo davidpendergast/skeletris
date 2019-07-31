@@ -1864,14 +1864,15 @@ class MessageTriggerBox(TriggerBox):
 
 class HoverTextEntity(Entity):
 
-    def __init__(self, text, target_entity, offset=(0, 0), bounds=None):
+    def __init__(self, text, target_entity, offset=(0, 0)):
         Entity.__init__(self, 0, 0, 8, 8)
         self.text = text
         self.target_entity = target_entity
         self.offset = offset
         self.anchor_point = (0.5, 1.0)
+        self.text_sc = 1
+        self.sc = 2
         self.inset = 5
-        self.bounds = bounds
 
         self._text_img = None
         self._border_imgs = [None] * 9  # [TL, T, TR, L, C, R, BL, None, BR]
@@ -1879,13 +1880,6 @@ class HoverTextEntity(Entity):
         self._y_bob_range = 8
         self.bob_height = 0
         self._update_position()
-        self._dirty = True
-
-    def should_remove(self):
-        if self.bounds is not None:
-            return not Utils.rect_contains(self.bounds, self.center())
-
-        return False
 
     def _update_position(self):
         """sets self.center to target_entity.center() + offset
@@ -1909,121 +1903,119 @@ class HoverTextEntity(Entity):
         return changed
 
     def update(self, world):
-        if self._dirty:
-            if self._text_img is not None:
-                render_eng = RenderEngine.get_instance()
-                for bun in self._text_img.all_bundles():
-                    render_eng.remove(bun)
-                self._text_img = None
-
-        sc = 2
-        text_sc = 1
+        if self.text is None or len(self.text) == 0:
+            self.text = "?"
 
         if self._text_img is None:
-            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=text_sc)
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER)
 
         for i in range(0, len(self._border_imgs)):
             if i == 7:
                 continue  # bottom border is more complicated
             if self._border_imgs[i] is None:
-                self._border_imgs[i] = img.ImageBundle(spriteref.UI.hover_text_edges[i], 0, 0, scale=sc,
+                self._border_imgs[i] = img.ImageBundle(spriteref.UI.hover_text_edges[i], 0, 0,
                                                        layer=spriteref.ENTITY_LAYER)
 
         if self._bottom_imgs[0] is None:
-            self._bottom_imgs[0] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc,
+            self._bottom_imgs[0] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0,
                                                    layer=spriteref.ENTITY_LAYER)
         if self._bottom_imgs[1] is None:
-            self._bottom_imgs[1] = img.ImageBundle(spriteref.UI.hover_text_bottom_arrow, 0, 0, scale=sc,
+            # this hover_text_bottom_arrow may get 'doubled' later
+            self._bottom_imgs[1] = img.ImageBundle(spriteref.UI.hover_text_bottom_arrow, 0, 0,
                                                    layer=spriteref.ENTITY_LAYER)
         if self._bottom_imgs[2] is None:
-            self._bottom_imgs[2] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0, scale=sc,
+            self._bottom_imgs[2] = img.ImageBundle(spriteref.UI.hover_text_edges[7], 0, 0,
                                                    layer=spriteref.ENTITY_LAYER)
 
-        moved = self._update_position()
+        self._update_position()
 
-        if self.should_remove():
-            world.remove(self)
-            return
+        if self.target_entity is not None:
+            depth = self.target_entity.get_depth()
+        else:
+            depth = self.get_depth()
 
-        if self._dirty or moved:
+        actual_text_size = self._text_img.size()
+        text_w, text_h = actual_text_size
+        text_w += self.inset * 2
+        text_h += self.inset * 2
 
-            if self.target_entity is not None:
-                depth = self.target_entity.get_depth()
+        # borders are made up of squares, so text area's dimensions need to be multiples of those squares
+        border_size_x = spriteref.UI.hover_text_edges[4].size()[0] * self.sc
+        border_size_y = spriteref.UI.hover_text_edges[4].size()[1] * self.sc
+        if text_w % border_size_x != 0:
+            text_w += border_size_x - text_w % border_size_x
+        if text_h % border_size_y != 0:
+            text_h += border_size_y - text_h % border_size_y
+
+        text_x = round(self.center()[0] - text_w * self.anchor_point[0] + self.offset[0])
+        text_y = round(self.center()[1] - text_h * self.anchor_point[1] + self.offset[1] + self.bob_height)
+
+        self._text_img = self._text_img.update(new_x=round(text_x + text_w / 2 - actual_text_size[0] / 2),
+                                               new_y=round(text_y + text_h / 2 - actual_text_size[1] / 2),
+                                               new_depth=depth, new_scale=self.text_sc)
+
+        tl_pos = (text_x - border_size_x, text_y - border_size_y)
+
+        h_ratio = int(text_w / border_size_x)  # these should already be ints if all went well above
+        v_ratio = int(text_h / border_size_y)
+
+        if self._border_imgs[0] is not None:  # TL
+            self._border_imgs[0] = self._border_imgs[0].update(new_x=tl_pos[0], new_y=tl_pos[1],
+                                                               new_depth=depth, new_scale=self.sc)
+
+        if self._border_imgs[1] is not None:  # T
+            self._border_imgs[1] = self._border_imgs[1].update(new_x=text_x, new_y=tl_pos[1],
+                                                               new_ratio=(h_ratio, 1),
+                                                               new_depth=depth, new_scale=self.sc)
+        if self._border_imgs[2] is not None:  # TR,
+            self._border_imgs[2] = self._border_imgs[2].update(new_x=text_x + text_w, new_y=tl_pos[1],
+                                                               new_depth=depth, new_scale=self.sc)
+
+        if self._border_imgs[3] is not None:  # L,
+            self._border_imgs[3] = self._border_imgs[3].update(new_x=tl_pos[0], new_y=text_y,
+                                                               new_ratio=(1, v_ratio),
+                                                               new_depth=depth, new_scale=self.sc)
+        if self._border_imgs[4] is not None:  # C,
+            self._border_imgs[4] = self._border_imgs[4].update(new_x=text_x, new_y=text_y,
+                                                               new_ratio=(h_ratio, v_ratio),
+                                                               new_depth=depth, new_scale=self.sc)
+        if self._border_imgs[5] is not None:  # R,
+            self._border_imgs[5] = self._border_imgs[5].update(new_x=text_x + text_w, new_y=text_y,
+                                                               new_ratio=(1, v_ratio),
+                                                               new_depth=depth, new_scale=self.sc)
+        if self._border_imgs[6] is not None:  # BL
+            self._border_imgs[6] = self._border_imgs[6].update(new_x=tl_pos[0], new_y=text_y + text_h,
+                                                               new_depth=depth, new_scale=self.sc)
+        if self._border_imgs[8] is not None:  # BR
+            self._border_imgs[8] = self._border_imgs[8].update(new_x=text_x + text_w, new_y=text_y + text_h,
+                                                               new_depth=depth, new_scale=self.sc)
+
+        if self._bottom_imgs[1] is not None:  # Bottom Middle (the little arrow)
+            if h_ratio % 2 == 0:
+                arrow_model = spriteref.UI.hover_text_bottom_arrow_double
             else:
-                depth = self.get_depth()
+                arrow_model = spriteref.UI.hover_text_bottom_arrow
 
-            text_size = self._text_img.size()
-            text_x = self.center()[0] - text_size[0] * self.anchor_point[0] + self.offset[0]
-            text_y = self.center()[1] - text_size[1] * self.anchor_point[1] + self.offset[1] + self.bob_height
-            self._text_img = self._text_img.update(new_x=text_x, new_y=text_y, new_depth=depth)
-            text_w, text_h = self._text_img.size()
+            bm_w = arrow_model.width() * self.sc
+            bm_x = text_x + text_w / 2 - bm_w / 2
 
-            text_x -= self.inset
-            text_y -= self.inset
-            text_w += self.inset * 2
-            text_h += self.inset * 2
-
-            border_size = spriteref.UI.hover_text_edges[4].size()[0] * sc
-
-            tl_pos = (text_x - border_size, text_y - border_size)
-
-            if self._border_imgs[0] is not None:  # TL
-                self._border_imgs[0] = self._border_imgs[0].update(new_x=tl_pos[0], new_y=tl_pos[1], new_depth=depth)
-
-            if self._border_imgs[1] is not None:  # T
-                self._border_imgs[1] = self._border_imgs[1].update(new_x=text_x, new_y=tl_pos[1],
-                                                                   new_ratio=(text_w / border_size, 1),
-                                                                   new_depth=depth)
-            if self._border_imgs[2] is not None:  # TR,
-                self._border_imgs[2] = self._border_imgs[2].update(new_x=text_x + text_w, new_y=tl_pos[1],
-                                                                   new_depth=depth)
-
-            if self._border_imgs[3] is not None:  # L,
-                self._border_imgs[3] = self._border_imgs[3].update(new_x=tl_pos[0], new_y=text_y,
-                                                                   new_ratio=(1, text_h / border_size),
-                                                                   new_depth=depth)
-            if self._border_imgs[4] is not None:  # C,
-                ratio = (text_w / border_size, text_h / border_size)
-                self._border_imgs[4] = self._border_imgs[4].update(new_x=text_x, new_y=text_y,
-                                                                   new_ratio=ratio,
-                                                                   new_depth=depth)
-            if self._border_imgs[5] is not None:  # R,
-                self._border_imgs[5] = self._border_imgs[5].update(new_x=text_x + text_w, new_y=text_y,
-                                                                   new_ratio=(1, text_h / border_size),
-                                                                   new_depth=depth)
-            if self._border_imgs[6] is not None:  # BL
-                self._border_imgs[6] = self._border_imgs[6].update(new_x=tl_pos[0], new_y=text_y + text_h,
-                                                                   new_depth=depth)
-            if self._border_imgs[8] is not None:  # BR
-                self._border_imgs[8] = self._border_imgs[8].update(new_x=text_x + text_w, new_y=text_y + text_h,
-                                                                   new_depth=depth)
-
-            if self._bottom_imgs[1] is not None:  # Bottom Middle
-                bm_w = self._bottom_imgs[1].width()
-                bm_x = text_x + text_w / 2 - bm_w / 2
-                self._bottom_imgs[1] = self._bottom_imgs[1].update(new_x=bm_x, new_y=text_y + text_h,
-                                                                   new_depth=depth)
-                if self._bottom_imgs[0] is not None:  # Bottom Left
-                    ratio = ((bm_x - text_x) / border_size, 1)
-                    self._bottom_imgs[0] = self._bottom_imgs[0].update(new_x=text_x, new_y=text_y + text_h,
-                                                                       new_ratio=ratio, new_depth=depth)
-                if self._bottom_imgs[2] is not None:  # Bottom Right
-                    ratio = ((bm_x - text_x) / border_size, 1)
-                    self._bottom_imgs[2] = self._bottom_imgs[2].update(new_x=bm_x + bm_w, new_y=text_y + text_h,
-                                                                       new_ratio=ratio, new_depth=depth)
-
-        self._dirty = False
+            self._bottom_imgs[1] = self._bottom_imgs[1].update(new_model=arrow_model, new_x=bm_x, new_y=text_y + text_h,
+                                                               new_depth=depth, new_scale=self.sc)
+            if self._bottom_imgs[0] is not None:  # Bottom Left
+                ratio = (int((bm_x - text_x) / border_size_x), 1)
+                self._bottom_imgs[0] = self._bottom_imgs[0].update(new_x=text_x, new_y=text_y + text_h,
+                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
+            if self._bottom_imgs[2] is not None:  # Bottom Right
+                ratio = (int((bm_x - text_x) / border_size_x), 1)
+                self._bottom_imgs[2] = self._bottom_imgs[2].update(new_x=bm_x + bm_w, new_y=text_y + text_h,
+                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
 
     def set_target_entity(self, entity, offset=None):
-        if self.target_entity != entity:
-            self.target_entity = entity
-            self._dirty = True
+        self.target_entity = entity
         if offset is not None:
             self.offset = offset
 
     def set_text(self, text):
-        if text != self.text:
-            self._dirty = True
         self.text = text
 
     def all_bundles(self):

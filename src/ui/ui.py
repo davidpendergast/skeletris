@@ -1506,13 +1506,17 @@ class TextImage:
 
             idx += len(chunk)
 
-    def update(self, new_text=None, new_x=None, new_y=None, new_depth=None, new_color=None, new_custom_colors=None):
+    def update(self, new_text=None, new_x=None, new_y=None, new_scale=None,
+               new_depth=None, new_color=None, new_custom_colors=None):
         dx = 0 if new_x is None else new_x - self.x
         dy = 0 if new_y is None else new_y - self.y
         self.custom_colors = new_custom_colors if new_custom_colors is not None else self.custom_colors
         self.color = new_color if new_color is not None else self.color
 
-        if new_text is not None and new_text != self.text:
+        text_changed = new_text is not None and new_text != self.text
+        scale_changed = new_scale is not None and new_scale != self.scale
+
+        if text_changed or scale_changed:
             render_eng = RenderEngine.get_instance()
             for bun in self._letter_images:
                 if bun is not None:
@@ -1520,7 +1524,8 @@ class TextImage:
             self._letter_images.clear()
             self._letter_image_indexes.clear()
 
-            self.text = new_text
+            self.text = new_text if new_text is not None else self.text
+            self.scale = new_scale if new_scale is not None else self.scale
             self._build_images()
 
         new_imgs = []
