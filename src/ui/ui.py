@@ -440,7 +440,12 @@ class InventoryPanel(SidePanel):
         if super().on_click(x, y, button=button):
             return True
 
-        ps = gs.get_instance().player_state()
+        w, player = gs.get_instance().get_world_and_player()
+        if player is None:
+            return
+
+        ps = player.get_actor_state()
+        pc = player.get_controller()
         screen_pos = (x, y)
 
         if button == 1:
@@ -455,33 +460,28 @@ class InventoryPanel(SidePanel):
             grid, cell = self.get_grid_and_cell_at_pos(*grid_click_pos)
 
             if grid is not None and cell is not None:
+                import src.game.gameengine as gameengine
                 if ps.held_item is not None:
-                    if grid.can_place(ps.held_item, cell):
-                        grid.place(ps.held_item, cell)
-                        ps.held_item = None
-                        sound_effects.play_sound(soundref.item_place)
+                    put_item_action = gameengine.AddItemToGridAction(player, ps.held_item, cell, grid)
+
+                    if put_item_action.is_possible(w):
+                        pc.add_requests(put_item_action, priority=pc.HIGHEST_PRIORITY)
                     else:
-                        replaced_with = grid.try_to_replace(ps.held_item, cell)
-                        if replaced_with is not None:
-                            ps.held_item = replaced_with
-                            sound_effects.play_sound(soundref.item_replace)
-                        else:
-                            sound_effects.play_sound(soundref.item_cant_place)
+                        sound_effects.play_sound(soundref.item_cant_place)
+
                 else:
                     clicked_item = grid.item_at_position(cell)
                     if clicked_item is not None:
-                        grid.remove(clicked_item)
-                        gs.get_instance().player_state().held_item = clicked_item
-                        sound_effects.play_sound(soundref.item_pickup)
+                        take_item_action = gameengine.RemoveItemFromGridAction(player, clicked_item, grid)
+                        pc.add_requests(take_item_action, priority=pc.HIGHEST_PRIORITY)
 
         elif button == 3:
             if ps.held_item is None:
                 clicked_item = self.get_item_at_pos(x, y)
                 if clicked_item is not None:
                     import src.game.gameengine as gameengine
-                    consume_aciton = gameengine.ConsumeItemAction(None, clicked_item)
-                    pc = gs.get_instance().player_controller()
-                    pc.add_requests(consume_aciton, priority=pc.HIGHEST_PRIORITY)
+                    consume_action = gameengine.ConsumeItemAction(None, clicked_item)
+                    pc.add_requests(consume_action, priority=pc.HIGHEST_PRIORITY)
 
         return True  # need to prevent clicks from falling through to world
 

@@ -9,17 +9,24 @@ class ItemGrid:
 
         self._dirty = False
     
-    def can_place(self, item, pos):
+    def can_place(self, item, pos, allow_replace=False):
         if item in self.items:
             print("WARN: Attempting to place into a grid it's already inside? item={}".format(item))
             return False
         if (item.w() + pos[0] > self.w() or
                 item.h() + pos[1] > self.h()):
             return False
-            
+
+        hit_item = None
         for cell in self._cells_occupied(item, pos):
-            if self.item_at_position(cell) is not None:
-                return False
+            item_in_cell = self.item_at_position(cell)
+            if item_in_cell is not None:
+                if not allow_replace:
+                    return False
+                elif hit_item is None:
+                    hit_item = item_in_cell
+                elif hit_item is not item_in_cell:
+                    return False  # overlapping two items
                 
         return True
 
@@ -32,6 +39,9 @@ class ItemGrid:
     def size(self):
         return self._size
 
+    def __contains__(self, item):
+        return item in self.items
+
     def is_dirty(self):
         return self._dirty
 
@@ -39,7 +49,7 @@ class ItemGrid:
         self._dirty = False
         
     def place(self, item, pos):
-        if self.can_place(item, pos):
+        if self.can_place(item, pos, allow_replace=False):
             self.items[item] = pos
             self._dirty = True
             return True
@@ -125,10 +135,10 @@ class InventoryState:
         return self.inv_grid.all_items()
 
     def is_equipped(self, item):
-        return self.equip_grid.get_pos(item) is not None
+        return item in self.equip_grid
 
     def is_in_inventory(self, item):
-        return self.inv_grid.get_pos(item) is not None
+        return item in self.inv_grid
 
     def __contains__(self, item):
         return self.is_equipped(item) or self.is_in_inventory(item)
@@ -144,7 +154,6 @@ class InventoryState:
         return False
 
     def add_to_equipment(self, item, pos=(0, 0)):
-
         if self.equip_grid.place(item, pos):
             return True
         return False

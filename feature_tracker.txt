@@ -10,8 +10,6 @@
     - near-zero mac testing (mac friends on git say it's ok though...)
 
 [P2 bugs]
- - can equip items/mess with inv while perfoming other actions
-    - should implement this as an action
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol, should test on other systems
@@ -20,12 +18,11 @@
  - it's possible for mapped-item-actions to display their items with the wrong rotation
     - it's probably storing an old ref to the item with a different rotation
  - can't drop items while walking (increase buffer on item-drop actions?)
+    - this may actually be OK?
  - opened chests show up on maps
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
  - enemies double attack when you die (ranged enemies only?)
- - HoverTextEntity has some render issues:
-    - squished text, misaligned border, overlap issues; def needs some love
-  
+
 [balance issues]
  - need more sources of healing
     - added HP on kill stat, maybe enough?
@@ -45,11 +42,8 @@
  - help panel
     - even necessary? yes
         - will people even find it? looks unlikely based on testing
- - move / skip turn buttons on hotbar
- - need some kind of text popup 'achievement system' like minecraft
-    - "press "R" to open inventory"
-    - "click the item to pick it up"
-    - need a global achievement tracking system to prevent these from popping constantly
+ - need some kind of tutorial system
+    - will have hover text pop up when certain actions become available
     
  
 [architecture]

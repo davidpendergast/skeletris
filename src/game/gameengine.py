@@ -360,6 +360,8 @@ class ActionType:
     DROP_ITEM = "DROP_ITEM"
     THROW_ITEM = "THROW_ITEM"
     GIVE_ITEM = "GIVE ITEM"
+    ADD_ITEM_TO_GRID = "ADD_ITEM_TO_GRID"
+    REMOVE_ITEM_FROM_GRID = "REMOVE_ITEM_FROM_GRID"
     CONSUME_ITEM = "CONSUME_ITEM"
     ATTACK = "ATTACK"
     INTERACT = "INTERACT"
@@ -1339,6 +1341,101 @@ class DropItemAction(Action):
 
         world.add_item_as_entity(self.get_item(), actor.center(), direction=self._drop_dir)
         sound_effects.play_sound(soundref.item_drop)
+
+
+class AddItemToGridAction(Action):
+
+    def __init__(self, actor, item, position, grid):
+        """position: unlike every other action, this position refers to the grid position, not world position..."""
+        Action.__init__(self, ActionType.ADD_ITEM_TO_GRID, 1, actor, item=item, position=position)
+        self._grid = grid
+
+    def get_grid(self):
+        return self._grid
+
+    def is_free(self):
+        return True
+
+    def is_possible(self, world):
+        if not self.get_actor().is_player():
+            return False  # for now...
+
+        a_state = self.get_actor().get_actor_state()
+        if a_state.held_item != self.get_item():
+            return False
+
+        grid = self.get_grid()
+        if grid is None:
+            return False
+
+        if not grid.can_place(self.get_item(), self.get_position(), allow_replace=True):
+            return False
+
+        return True
+
+    def start(self, world):
+        grid = self.get_grid()
+
+        if grid.can_place(self.get_item(), self.get_position(), allow_replace=False):
+            grid.place(self.get_item(), self.get_position())
+            self.get_actor().get_actor_state().held_item = None
+            sound_effects.play_sound(soundref.item_place)
+        else:
+            swapped_with = self.get_grid().try_to_replace(self.get_item(), self.get_position())
+            if swapped_with is not None:
+                sound_effects.play_sound(soundref.item_replace)
+                self.get_actor().get_actor_state().held_item = swapped_with
+            else:
+                # this really shouldn't be happening at this point
+                print("WARN: failed to place item into grid {}".format(self.get_item()))
+                sound_effects.play_sound(soundref.item_cant_place)
+
+
+class RemoveItemFromGridAction(Action):
+
+    def __init__(self, actor, item, grid):
+        Action.__init__(self, ActionType.REMOVE_ITEM_FROM_GRID, 1, actor, item=item)
+        self._grid = grid
+
+    def is_free(self):
+        return True
+
+    def get_grid(self):
+        return self._grid
+
+    def is_possible(self, world):
+        if not self.get_actor().is_player():
+            return False  # for now...
+
+        a_state = self.get_actor().get_actor_state()
+        if a_state.held_item is not None:
+            # can't pick up an item while holding an item
+            # (that's an AddItemToGridAction)
+            return False
+
+        grid = self.get_grid()
+        if grid is None:
+            return False
+
+        if self.get_item() is None:
+            return False
+
+        if self.get_item() not in self.get_grid():
+            return False
+
+        return True
+
+    def start(self, world):
+        grid = self.get_grid()
+        my_item = self.get_item()
+
+        # should always succeed but just in case...
+        rem_success = grid.remove(my_item)
+        if rem_success:
+            sound_effects.play_sound(soundref.item_pickup)
+            self.get_actor().get_actor_state().held_item = my_item
+        else:
+            print("ERROR: failed to remove item from grid: {}".format(my_item))
 
 
 class ActionProvider:
