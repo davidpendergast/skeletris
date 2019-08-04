@@ -1,11 +1,19 @@
 import collections
 
 
+class ItemGridType:
+
+    INVENTORY = "INVENTORY"
+    EQUIPMENT = "EQUIPMENT"
+    MISC = "MISC"
+
+
 class ItemGrid:
 
-    def __init__(self, size):
+    def __init__(self, size, grid_type=ItemGridType.MISC):
         self._size = size
         self.items = collections.OrderedDict()  # item -> pos: (int: x, int: y)
+        self._grid_type = grid_type
 
         self._dirty = False
     
@@ -29,6 +37,12 @@ class ItemGrid:
                     return False  # overlapping two items
                 
         return True
+
+    def is_inventory(self):
+        return self._grid_type == ItemGridType.INVENTORY
+
+    def is_equipment(self):
+        return self._grid_type == ItemGridType.EQUIPMENT
 
     def w(self):
         return self._size[0]
@@ -112,8 +126,8 @@ class InventoryState:
     def __init__(self):
         self.rows = 8
         self.cols = 9
-        self.equip_grid = ItemGrid((5, 5))
-        self.inv_grid = ItemGrid((self.cols, self.rows))
+        self.equip_grid = ItemGrid((5, 5), grid_type=ItemGridType.EQUIPMENT)
+        self.inv_grid = ItemGrid((self.cols, self.rows), grid_type=ItemGridType.INVENTORY)
 
     def is_dirty(self):
         return self.equip_grid.is_dirty() or self.inv_grid.is_dirty()

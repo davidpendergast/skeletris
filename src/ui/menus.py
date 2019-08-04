@@ -1296,9 +1296,12 @@ class InGameUiState(Menu):
         if did_rotate_input and not gs.get_instance().world_updates_paused():
             if ps.held_item is not None and ps.held_item.can_rotate():
                 ps.held_item = ps.held_item.rotate()
+
                 if not destroy_image:  # so you can't flicker the image after death basically
                     create_image = True
                 destroy_image = True
+
+                gs.get_instance().event_queue().add(events.RotatedItemEvent(ps.held_item))
                 sound_effects.play_sound(soundref.item_rotate)
 
         if destroy_image and self.item_on_cursor_info is not None:

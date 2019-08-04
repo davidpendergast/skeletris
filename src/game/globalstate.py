@@ -256,8 +256,10 @@ class GlobalState:
     def toggle_sidepanel(self, panel_id, play_sound=True):
         if self.get_active_sidepanel() == panel_id:
             self.set_active_sidepanel(None, play_sound=play_sound)
+            self.event_queue().add(events.ToggledSidepanelEvent(panel_id, False))
         else:
             self.set_active_sidepanel(panel_id, play_sound=play_sound)
+            self.event_queue().add(events.ToggledSidepanelEvent(panel_id, True))
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:

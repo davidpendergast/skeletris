@@ -69,7 +69,6 @@ class EventQueue:
 class EventType(Enum):
     # these are "something happened" events
     ENEMY_KILLED = "ENEMY_KILLED",
-    STORY_EVENT = "STORY_EVENT",
     PLAYER_DIED = "PLAYER_DIED",
     DOOR_OPENED = "DOOR_OPENED",
     ACTION_STARTED = "ACTION_STARTED",
@@ -79,9 +78,10 @@ class EventType(Enum):
     EXITED_BOX = "EXITED_BOX",
     TRIGGERED_BOX = "TRIGGERED_BOX",
     ITEM_DROPPED = "ITEM_DROPPED"
+    TOGGLED_SIDEPANEL = "TOGGLED_SIDEPANEL"
+    ROTATED_ITEM = "ROTATED_ITEM"
 
     # these are "please do something" events
-    PLAY_SOUND = "PLAY_SOUND"
     NEW_ZONE = "NEW_ZONE"
     GAME_EXIT = "GAME_EXIT"
     NEW_GAME = "NEW_GAME"
@@ -142,6 +142,7 @@ class DoorOpenEvent(Event):
         return self.get_data()[0]
 
 
+# TODO - not really used
 class TriggerBoxEvent(Event):
     def __init__(self, box_id, event_type, desc):
         Event.__init__(self, event_type, box_id, description=desc)
@@ -244,6 +245,29 @@ class PlayerDiedEvent(Event):
         Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")
 
 
+class ToggledSidepanelEvent(Event):
+
+    def __init__(self, panel_type, opened):
+        Event.__init__(self, EventType.TOGGLED_SIDEPANEL, (panel_type, opened), description="toggled sidepanel")
+
+    def get_panel_type(self):
+        return self.get_data()[0]
+
+    def get_opened(self):
+        """returns: bool, True if the panel was opened, False otherwise."""
+        return self.get_data()[1]
+
+
+class RotatedItemEvent(Event):
+
+    def __init__(self, item):
+        Event.__init__(self, EventType.ROTATED_ITEM, (item,), description="rotated item")
+
+    def get_item(self):
+        return self.get_data()[0]
+
+
+# TODO - not used
 class EnemyDiedEvent(Event):
 
     def __init__(self, enemy_uid, template, location):
@@ -260,6 +284,7 @@ class EnemyDiedEvent(Event):
         return self.get_data()[2]
 
 
+# TODO - not used
 class ItemDroppedEvent(Event):
 
     def __init__(self, item, dropped_by=None):
@@ -271,3 +296,36 @@ class ItemDroppedEvent(Event):
 
     def get_dropped_by(self):
         return self.get_data()[1]
+
+
+def play_game(p1_target, p2_target):
+    import random
+
+    rolls = [random.random() < 0.5 for _ in range(0, len(p1_target))]
+    while True:
+        if p1_target == rolls:
+            return True
+        elif p2_target == rolls:
+            return False
+        else:
+            new_roll = random.random() < 0.5
+            rolls.append(new_roll)
+            rolls.pop(0)
+
+
+if __name__ == "__main__":
+    p1_target = [True, False, True]
+    p2_target = [False, False, True]
+
+    p1_wins = 0
+    p2_wins = 0
+
+    n = 100000
+
+    for i in range(0, n):
+        if play_game(p1_target, p2_target):
+            p1_wins += 1
+        else:
+            p2_wins += 1
+
+    print("p1 wins: {}%\np2 wins: {}%".format(p1_wins / n, p2_wins / n))
