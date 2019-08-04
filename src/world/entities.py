@@ -1130,7 +1130,10 @@ class ChestEntity(Entity):
         return True
 
     def get_map_identifier(self):
-        return ("c", colors.PURPLE)
+        if self.is_open():
+            return None
+        else:
+            return ("c", colors.PURPLE)
     
     def get_shadow_sprite(self):
         return spriteref.chest_shadow
