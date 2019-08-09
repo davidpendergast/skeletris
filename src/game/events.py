@@ -298,15 +298,17 @@ class ItemDroppedEvent(Event):
         return self.get_data()[1]
 
 
-def play_game(p1_target, p2_target):
+def play_game(p1_target, p2_target, p3_target):
     import random
 
     rolls = [random.random() < 0.5 for _ in range(0, len(p1_target))]
     while True:
         if p1_target == rolls:
-            return True
+            return 0
         elif p2_target == rolls:
-            return False
+            return 1
+        elif p3_target == rolls:
+            return 2
         else:
             new_roll = random.random() < 0.5
             rolls.append(new_roll)
@@ -314,18 +316,19 @@ def play_game(p1_target, p2_target):
 
 
 if __name__ == "__main__":
-    p1_target = [True, False, True]
-    p2_target = [False, False, True]
+    H = True
+    T = False
+    p1_target = [H, T, T]
+    p2_target = [T, T, H]
+    p3_target = [H, T, H]
 
-    p1_wins = 0
-    p2_wins = 0
+    wins = [0, 0, 0]
 
     n = 100000
 
     for i in range(0, n):
-        if play_game(p1_target, p2_target):
-            p1_wins += 1
-        else:
-            p2_wins += 1
+        wins[play_game(p1_target, p2_target, p3_target)] += 1
 
-    print("p1 wins: {}%\np2 wins: {}%".format(p1_wins / n, p2_wins / n))
+    print("{} wins: {}%\n{} wins: {}%\n{} wins: {}".format(p1_target, wins[0] / n,
+                                                           p2_target, wins[1] / n,
+                                                           p3_target, wins[2] / n))

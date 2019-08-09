@@ -108,8 +108,9 @@ class TutorialStage:
 
 class EntityNotificationTutorialStage(TutorialStage):
 
-    def __init__(self):
+    def __init__(self, delay=60):
         TutorialStage.__init__(self)
+        self.delay = delay
         self._hover_text_ent_id = None
 
     def _destroy_text_entity(self):
@@ -149,47 +150,61 @@ class EntityNotificationTutorialStage(TutorialStage):
     def cleanup(self):
         self._destroy_text_entity()
 
-    def get_target_entity(self):
-        return None
-
     def update(self):
         super().update()
+
+        if not self.is_complete() and self.test_completed():
+            self.complete()
+            return
+
+        target_ent = self.get_target_entity()
+        message = self.get_message()
+
+        if target_ent is None or message is None or len(message) == 0:
+            self.update_hover_text(None, "")
+
+            if self.is_waiting():
+                self.reset_ticks_waiting()
+
+        if not self.is_started():
+            if self.get_ticks_waiting() >= self.delay:
+                self.start()
+
+        if self.is_started():
+            self.update_hover_text(target_ent, message)
+
+    def get_target_entity(self):
+        """Override this to return a valid target entity for the tutorial (if there is one)."""
+        return None
+
+    def test_completed(self):
+        """Override this to test for a completion condition."""
+        return False
+
+    def get_message(self):
+        """Override this to provide the hover text's message."""
+        return super().get_message()
 
 
 class HowToMoveStage(EntityNotificationTutorialStage):
 
-    def __init__(self, delay):
-        EntityNotificationTutorialStage.__init__(self)
-        self.wait_delay = delay
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        return p
 
-    def update(self):
-        super().update()
-
-        p = self.get_target_entity()
+    def test_completed(self):
+        w, p = gs.get_instance().get_world_and_player()
         if p is None:
-            return
+            return False
 
-        def is_player_move_action(act_evt):
+        def _is_player_move_action(act_evt):
             if act_evt.get_action_type() == gameengine.ActionType.MOVE_TO:
                 if act_evt.get_uid() == p.get_uid():
                     return True
             return False
 
-        if gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                     predicate=is_player_move_action):
-            self.complete()
-            return
-
-        if not self.is_started():
-            if self.get_ticks_waiting() >= self.wait_delay:
-                self.start()
-
-        if self.is_started():
-            self.update_hover_text(p, self.get_message())
-
-    def get_target_entity(self):
-        w, p = gs.get_instance().get_world_and_player()
-        return p
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
+                                                         predicate=_is_player_move_action)
 
     def get_message(self):
         keystr = ""
@@ -204,10 +219,6 @@ class HowToMoveStage(EntityNotificationTutorialStage):
 
 class HowToPickUpItemStage(EntityNotificationTutorialStage):
 
-    def __init__(self, delay=60):
-        super().__init__()
-        self.delay = delay
-
     def get_target_entity(self):
         w, p = gs.get_instance().get_world_and_player()
         if w is None or p is None:
@@ -218,18 +229,14 @@ class HowToPickUpItemStage(EntityNotificationTutorialStage):
                 it_pos = w.to_grid_coords(*it.center())
                 pickup_act = gameengine.PickUpItemAction(p, it.get_item(), it_pos)
                 if pickup_act.is_possible(w):
-                    return it
+                    # considered putting the hover text on the item itself, but it feels kinda awkward.
+                    return p
             return None
 
-    def get_message(self):
-        return "Use mouse to pick up items."
-
-    def update(self):
-        super().update()
-
+    def test_completed(self):
         w, p = gs.get_instance().get_world_and_player()
-        if w is None or p is None:
-            return
+        if p is None:
+            return False
 
         def is_item_pickup_action(act_evt):
             if act_evt.get_action_type() == gameengine.ActionType.PICKUP_ITEM:
@@ -237,26 +244,78 @@ class HowToPickUpItemStage(EntityNotificationTutorialStage):
                     return True
             return False
 
-        if gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                     predicate=is_item_pickup_action):
-            self.complete()
-            return
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
+                                                         predicate=is_item_pickup_action)
 
-        item_ent = self.get_target_entity()
-        if item_ent is None:
-            self.update_hover_text(None, "")
+    def get_message(self):
+        return "Use mouse to pick up items."
 
-            if self.is_waiting():
-                self.reset_ticks_waiting()
 
-        if item_ent is not None:
-            if self.is_waiting() and self.get_ticks_waiting() >= self.delay:
-                self.start()
+class HowToOpenInventoryPanelStage(EntityNotificationTutorialStage):
 
-            if self.is_started():
-                self.update_hover_text(p, self.get_message())
-            else:
-                self.update_hover_text(None, "")
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        return p
+
+    def test_completed(self):
+        from src.ui.ui import SidePanelTypes
+        return gs.get_instance().event_queue().has_event(types=events.EventType.TOGGLED_SIDEPANEL,
+                                                         predicate=lambda evt: evt.get_panel_type() == SidePanelTypes.INVENTORY)
+
+    def get_message(self):
+        inv_keys = gs.get_instance().settings().inventory_key()
+        if len(inv_keys) > 0:
+            inv_key = Utils.stringify_key(inv_keys[0])
+        else:
+            inv_key = "None"
+        return "Press [{}] to open Inventory.".format(inv_key)
+
+
+class HowToEquipItemStage(EntityNotificationTutorialStage):
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is not None:
+            held_item = p.get_actor_state().held_item
+            from src.items.item import ItemTags
+            if held_item is not None and held_item.get_type().has_tag(ItemTags.EQUIPMENT):
+                return p
+        return None
+
+    def test_completed(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return False
+
+        all_equipped = [e for e in p.get_actor_state().inventory().all_equipped_items()]
+        return len(all_equipped) > 0
+
+    def get_message(self):
+        return "Place the item into the Equipment grid."
+
+
+class HowToRotateItemStage(EntityNotificationTutorialStage):
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is not None:
+            held_item = p.get_actor_state().held_item
+            from src.items.item import ItemTags
+            if held_item is not None and held_item.can_rotate():
+                return p
+        return None
+
+    def test_completed(self):
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ROTATED_ITEM)
+
+    def get_message(self):
+        rotate_keys = gs.get_instance().settings().rotate_cw_key()
+        if len(rotate_keys) > 0:
+            rotate_key = Utils.stringify_key(rotate_keys[0])
+        else:
+            rotate_key = "None"
+
+        return "Press [{}] to rotate the item.".format(rotate_key)
 
 
 class TutorialFactory:
@@ -265,8 +324,11 @@ class TutorialFactory:
     def get(tut_id):
         if tut_id == TutorialID.MOVE_AND_INV:
             return TutorialPlugin(tut_id, [
-                HowToMoveStage(90),
-                HowToPickUpItemStage()
+                HowToMoveStage(delay=90),
+                HowToPickUpItemStage(),
+                HowToRotateItemStage(delay=30),
+                HowToOpenInventoryPanelStage(),
+                HowToEquipItemStage(delay=30)
             ])
 
         return None
