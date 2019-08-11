@@ -1182,6 +1182,7 @@ class SkipTurnAction(Action):
     def __init__(self, actor, position):
         Action.__init__(self, ActionType.SKIP_TURN, 25, actor, position=position)
         self._did_enemy_jump = False
+        self._did_sound = False
 
     def animate_in_world(self, progress, world):
         actor = self.get_actor()
@@ -1195,6 +1196,11 @@ class SkipTurnAction(Action):
             if not self._did_enemy_jump:
                 self._did_enemy_jump = True
                 actor.perturb_z(jump_height=15, jump_duration=10)
+
+        if not self._did_sound:
+            sound = soundref.player_skip_turn if actor.is_player() else soundref.enemy_skip_turn
+            sound_effects.play_sound(sound)
+            self._did_sound = True
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()

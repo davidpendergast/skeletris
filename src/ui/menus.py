@@ -1431,7 +1431,7 @@ class InGameUiState(Menu):
         if target_pos is not None:
             res_list.extend(gameengine.get_keyboard_action_requests(world, player, target_pos))
 
-        if input_state.is_held(gs.get_instance().settings().skip_turn_key()):
+        if input_state.was_pressed(gs.get_instance().settings().skip_turn_key()):
             res_list.append(gameengine.SkipTurnAction(player, pos))
 
         pc = gs.get_instance().player_controller()

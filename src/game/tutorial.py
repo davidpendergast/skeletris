@@ -263,8 +263,7 @@ class HowToOpenInventoryPanelStage(EntityNotificationTutorialStage):
 
     def test_completed(self):
         from src.ui.ui import SidePanelTypes
-        return gs.get_instance().event_queue().has_event(types=events.EventType.TOGGLED_SIDEPANEL,
-                                                         predicate=lambda evt: evt.get_panel_type() == SidePanelTypes.INVENTORY)
+        return gs.get_instance().get_active_sidepanel() == SidePanelTypes.INVENTORY
 
     def get_message(self):
         inv_keys = gs.get_instance().settings().inventory_key()

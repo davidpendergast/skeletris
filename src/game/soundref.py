@@ -618,6 +618,8 @@ whiff_noise = (sfx_sounds_impact10, 0.1)
 chest_open = (sfx_sounds_fanfare3, 0.1)
 potion_drink = (sfx_sounds_powerup6, 0.3)
 item_throw_start = None
+player_skip_turn = _soft_blip_1
+enemy_skip_turn = _soft_blip_2
 
 item_pickup = (sfx_movement_ladder5b, 0.3)
 item_place = (sfx_movement_ladder5a, 0.3)
