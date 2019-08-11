@@ -85,9 +85,9 @@ def init_zones():
 
     story_zones = []
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(4, 1), tutorial_id=TutorialID.MOVE_AND_INV))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(5, 1)))
-    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2)))
-    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(5, 1), tutorial_id=TutorialID.SKIP_TURN_AND_FIGHT))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), tutorial_id=TutorialID.HOW_TO_USE_POTIONS))
+    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2), tutorial_id=TutorialID.HOW_TO_THROW_ITEMS))
 
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))

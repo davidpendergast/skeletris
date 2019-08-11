@@ -13,6 +13,7 @@ from src.game.events import EventType
 import src.game.debug as debug
 import src.game.sound_effects as sound_effects
 import src.game.soundref as soundref
+import src.game.gameengine as gameengine
 
 
 BG_DEPTH = 10
@@ -460,7 +461,6 @@ class InventoryPanel(SidePanel):
             grid, cell = self.get_grid_and_cell_at_pos(*grid_click_pos)
 
             if grid is not None and cell is not None:
-                import src.game.gameengine as gameengine
                 if ps.held_item is not None:
                     put_item_action = gameengine.AddItemToGridAction(player, ps.held_item, cell, grid)
 
@@ -479,7 +479,6 @@ class InventoryPanel(SidePanel):
             if ps.held_item is None:
                 clicked_item = self.get_item_at_pos(x, y)
                 if clicked_item is not None:
-                    import src.game.gameengine as gameengine
                     consume_action = gameengine.ConsumeItemAction(None, clicked_item)
                     pc.add_requests(consume_action, priority=pc.HIGHEST_PRIORITY)
 
@@ -1045,8 +1044,6 @@ class HotbarMoveButton(InteractableImage):
         if pc is None:
             return  # shouldn't be possible but ehjlkhl
 
-        import src.game.gameengine as gameengine
-
         pos = w.to_grid_coords(*player.center())
         new_pos = Utils.add(pos, direction)
 
@@ -1132,8 +1129,6 @@ class HotbarSkipTurnButton(HotbarMoveButton):
             pc = gs.get_instance().player_controller()
             if pc is None:
                 return  # shouldn't be possible but ehjlkhl
-
-            import src.game.gameengine as gameengine
 
             pos = w.to_grid_coords(*player.center())
 

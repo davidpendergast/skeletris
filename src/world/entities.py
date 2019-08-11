@@ -551,6 +551,9 @@ class ActorEntity(Entity):
         self._facing_right = random.random() > 0.5
         self.base_color = (1, 1, 1)
 
+        # used by actions that require a custom animation.
+        self._sprites_override = None
+
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
 
@@ -656,6 +659,12 @@ class ActorEntity(Entity):
 
     def set_visually_held_item_override(self, val):
         pass
+
+    def set_sprite_override(self, sprites):
+        if sprites is None:
+            self._sprites_override = None
+        else:
+            self._sprites_override = Utils.listify(sprites)
 
     def is_performing_action(self):
         return self.executing_action is not None
@@ -780,7 +789,11 @@ class ActorEntity(Entity):
     def get_sprite(self):
         tick = gs.get_instance().anim_tick
         anim_rate = 2 if self.was_moving_recently() else 4
-        return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
+
+        if self._sprites_override is not None and len(self._sprites_override) > 0:
+            return self._sprites_override[(tick // anim_rate) % len(self._sprites_override)]
+        else:
+            return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
 
     def set_facing_right(self, facing_right):
         self._facing_right = facing_right
@@ -855,10 +868,14 @@ class Player(ActorEntity):
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
         anim_rate = 2 if self.was_moving_recently() else 4
-        holding_item = self.get_visually_held_item() is not None
-        player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
 
-        return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+        if self._sprites_override is not None and len(self._sprites_override) > 0:
+            return self._sprites_override[(anim_tick // anim_rate) % len(self._sprites_override)]
+        else:
+            holding_item = self.get_visually_held_item() is not None
+            player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
+
+            return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
 
     def get_death_sound(self):
         return soundref.rand_deathscream_human()

@@ -1180,12 +1180,33 @@ class ThrowItemAction(Action):
 class SkipTurnAction(Action):
 
     def __init__(self, actor, position):
-        Action.__init__(self, ActionType.SKIP_TURN, 10, actor, position=position)
+        Action.__init__(self, ActionType.SKIP_TURN, 25, actor, position=position)
+        self._did_enemy_jump = False
+
+    def animate_in_world(self, progress, world):
+        actor = self.get_actor()
+        if actor.is_player():
+            jump_sprites = spriteref.player_attacks
+            idx = int(Utils.bound(progress, 0.0, 0.99) * len(jump_sprites))
+            actor.set_sprite_override(jump_sprites[idx])
+            actor.set_visually_held_item_override(False)
+
+        elif not self._did_enemy_jump:
+            if not self._did_enemy_jump:
+                self._did_enemy_jump = True
+                actor.perturb_z(jump_height=15, jump_duration=10)
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
         return pos == self.position
+
+    def finalize(self, world):
+        super().finalize(world)
+
+        if self.get_actor().is_player():
+            self.get_actor().set_sprite_override(None)
+            self.get_actor().set_visually_held_item_override(None)
 
 
 class InteractAction(Action):

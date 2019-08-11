@@ -8,7 +8,11 @@ from src.utils.util import Utils
 
 
 class TutorialID:
-    MOVE_AND_INV = "move_and_inv"
+    MOVE_AND_INV = "how_to_move_and_inv"
+    SKIP_TURN_AND_FIGHT = "how_to_skip_turn"
+    HOW_TO_USE_POTIONS = "how_to_use_potions"
+    HOW_TO_THROW_ITEMS = "how_to_throw_items"
+    HOW_TO_TRADE = "how_to_trade"
 
 
 class TutorialPlugin:
@@ -318,6 +322,36 @@ class HowToRotateItemStage(EntityNotificationTutorialStage):
         return "Press [{}] to rotate the item.".format(rotate_key)
 
 
+class HowToSkipTurnStage(EntityNotificationTutorialStage):
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        return p
+
+    def test_completed(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return False
+
+        def _is_skip_turn_action(act_evt):
+            if act_evt.get_action_type() == gameengine.ActionType.SKIP_TURN:
+                if act_evt.get_uid() == p.get_uid():
+                    return True
+            return False
+
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
+                                                         predicate=_is_skip_turn_action)
+
+    def get_message(self):
+        skip_keys = gs.get_instance().settings().skip_turn_key()
+        if len(skip_keys) > 0:
+            skip_key = Utils.stringify_key(skip_keys[0])
+        else:
+            skip_key = "None"
+
+        return "Press [{}] to skip turn.".format(skip_key)
+
+
 class TutorialFactory:
 
     @staticmethod
@@ -328,8 +362,17 @@ class TutorialFactory:
                 HowToPickUpItemStage(),
                 HowToRotateItemStage(delay=30),
                 HowToOpenInventoryPanelStage(),
-                HowToEquipItemStage(delay=30)
+                HowToEquipItemStage(delay=30),
             ])
+        elif tut_id == TutorialID.SKIP_TURN_AND_FIGHT:
+            return TutorialPlugin(tut_id, [
+                HowToSkipTurnStage(delay=60)
+            ])
+        elif tut_id == TutorialID.HOW_TO_USE_POTIONS:
+            pass
+        elif tut_id == TutorialID.HOW_TO_THROW_ITEMS:
+            pass
+
 
         return None
 
