@@ -166,6 +166,8 @@ class GlobalState:
         self._player_controller = None
 
         self._active_world = None
+
+        self._inactive_tutorials = []
         self._active_tutorial = None
 
         self._world_updates_pause_timer = 0
@@ -235,8 +237,12 @@ class GlobalState:
         self.player_controller().clear_requests()
         self.clear_triggers(events.EventListenerScope.ZONE)
         self._active_tutorial = None
+        self._inactive_tutorials = []
 
         self.current_zone = zone
+
+    def set_inactive_tutorials(self, tutorials):
+        self._inactive_tutorials = tutorials
 
     def set_active_tutorial(self, tutorial):
         self._active_tutorial = tutorial
@@ -509,6 +515,18 @@ class GlobalState:
         if self._active_tutorial is not None:
             self._active_tutorial.update()
 
+            if self._active_tutorial.is_complete():
+                print("INFO: completed tutorial: {}".format(self._active_tutorial.get_id()))
+                self.settings().set_tutorial_finished(self._active_tutorial.get_id(), True)
+                self._active_tutorial = None
+        else:
+            for tut in self._inactive_tutorials:
+                tut.is_ready()
+                print("INFO: activating tutorial: {}".format(tut.get_id()))
+                self._active_tutorial = tut
+                self._inactive_tutorials.remove(tut)
+                break
+
         if len(self._current_screenshakes) > 0:
             any_empty = False
             for shake_stack in self._current_screenshakes:
@@ -530,7 +548,7 @@ class GlobalState:
             self.anim_tick += 1
 
 
-def create_new(menu, from_pw=None):
+def create_new(menu):
     import src.ui.menus as menus
     menu_manager = menus.MenuManager(menu)
 
@@ -549,34 +567,6 @@ def create_new(menu, from_pw=None):
     player_controller = gameengine.PlayerController()
 
     new_instance.set_player_state(player_state, player_controller)
-
-    loaded_from_pw = False
-
-    if from_pw is not None:
-        save_data = SaveDataBlob.load_from_disk(from_pw)
-        if save_data is not None:
-            loaded_from_pw = True
-
-            for xy in save_data.equipment_positions:
-                item = save_data.equipment_positions[xy]
-                if player_state.inventory().equip_grid.can_place(item, xy):
-                    player_state.inventory().equip_grid.place(item, xy)
-                else:
-                    print("ERROR: cannot place equipment item at position ({}, {}):\n{}".format(xy[0], xy[1], item))
-
-            for xy in save_data.inventory_positions:
-                item = save_data.inventory_positions[xy]
-                if player_state.inventory().inv_grid.can_place(item, xy):
-                    player_state.inventory().inv_grid.place(item, xy)
-                else:
-                    print("ERROR: cannot place inventory item at position ({}, {}):\n{}".format(xy[0], xy[1], item))
-
-            player_state.set_hp(player_state.max_hp())
-
-            new_instance._story_state = save_data.story_state
-
-            if save_data.zone_id in zones._ALL_ZONES:
-                new_instance.initial_zone_id = save_data.zone_id
 
     set_instance(new_instance)
 

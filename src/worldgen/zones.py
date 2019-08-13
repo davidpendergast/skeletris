@@ -81,13 +81,11 @@ def init_zones():
         zone_instance.zone_id = zone_cls.ZONE_ID
         make(zone_instance)
 
-    from src.game.tutorial import TutorialID
-
     story_zones = []
-    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(4, 1), tutorial_id=TutorialID.MOVE_AND_INV))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(5, 1), tutorial_id=TutorialID.SKIP_TURN_AND_FIGHT))
-    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), tutorial_id=TutorialID.HOW_TO_USE_POTIONS))
-    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2), tutorial_id=TutorialID.HOW_TO_THROW_ITEMS))
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(4, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(5, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2)))
 
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))
@@ -247,8 +245,9 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None):
     music.play_song(zone.get_music_id())
 
     from src.game.tutorial import TutorialFactory
-    tutorial = TutorialFactory.get(zone.get_tutorial_id())
-    gs.get_instance().set_active_tutorial(tutorial)
+    tutorials = TutorialFactory.get_tutorials_for_level(zone.get_level(), non_complete_only=True)
+    gs.get_instance().set_inactive_tutorials(tutorials)
+    gs.get_instance().set_active_tutorial(None)
 
     w = zone.build_world()
     w.set_geo_color(zone.get_color())
@@ -292,7 +291,7 @@ def make(zone):
 
 class Zone:
 
-    def __init__(self, name, level, filename=None, bg_color=None, tutorial_id=None):
+    def __init__(self, name, level, filename=None, bg_color=None):
         self.name = name
         self.zone_id = None  # gets set by init_zones()
         self.bg_color = bg_color if bg_color is not None else colors.BLACK
@@ -300,7 +299,6 @@ class Zone:
         self.blueprint_file = filename
         self.music_id = music.Songs.SILENCE
         self.geo_color = colors.WHITE
-        self.tutorial_id = tutorial_id
 
     def get_name(self):
         return self.name
@@ -328,10 +326,6 @@ class Zone:
 
     def is_boss_zone(self):
         return False
-
-    def get_tutorial_id(self):
-        """returns: a TutorialID for the zone, or None."""
-        return self.tutorial_id
 
     def get_enemies(self):
         """List of templates of enemies that can (randomly) spawn here."""
@@ -599,11 +593,10 @@ class ZoneBuilder:
 
     @staticmethod
     def make_generated_zone(level, name, zone_id, dims=None, min_dims=(3, 3), max_dims=(3, 3),
-                            music_id=None, geo_color=None, tutorial_id=None):
+                            music_id=None, geo_color=None):
         zone = Zone(name, level)
         zone.ZONE_ID = zone_id
         zone.zone_id = zone_id
-        zone.tutorial_id = tutorial_id
 
         if music_id is not None:
             zone.music_id = music_id

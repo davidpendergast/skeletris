@@ -40,8 +40,10 @@
  - help panel
     - even necessary? yes
         - will people even find it? looks unlikely based on testing
+            - CUT IT
  - need some kind of tutorial system
     - will have hover text pop up when certain actions become available
+ - limit equipped weapons to 2
     
  
 [architecture]

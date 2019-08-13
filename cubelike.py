@@ -148,6 +148,9 @@ def run():
                 else:
                     menu = menus.StartMenu()
 
+                if debug.reset_tutorials_each_game():
+                    gs.get_instance().settings().clear_finished_tutorials()
+
                 gs.get_instance().save_settings_to_disk()
                 gs.get_instance().set_world(None)  # just to make it clear...
 

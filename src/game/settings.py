@@ -72,6 +72,8 @@ MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
                        cleaner=lambda val: Utils.bound(int(val), 0, 100),
                        on_set=lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100))
 
+FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
+
 
 class Settings:
 
@@ -174,3 +176,18 @@ class Settings:
 
     def action_key(self, num):
         return self.get(KEY_MAPPED_ACTIONS[num])
+
+    def clear_finished_tutorials(self):
+        self.set(FINISHED_TUTORIALS, [])
+
+    def get_tutorial_finished(self, tut_id):
+        return tut_id in self.get(FINISHED_TUTORIALS)
+
+    def set_tutorial_finished(self, tut_id, val):
+        if self.get_tutorial_finished(tut_id) != val:
+            all_finished_tuts = self.get(FINISHED_TUTORIALS)
+            if val is False:
+                all_finished_tuts.remove(tut_id)
+            else:
+                all_finished_tuts.append(tut_id)
+            self.set(FINISHED_TUTORIALS, all_finished_tuts)

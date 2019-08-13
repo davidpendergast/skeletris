@@ -210,7 +210,7 @@ class NewGameEvent(Event):
 class ActionFinishedEvent(Event):
 
     def __init__(self, action):
-        data = (action.get_actor().get_uid(), action.get_type(), action.get_position())
+        data = (action.get_actor().get_uid(), action.get_type(), action.get_position(), action.get_item())
         Event.__init__(self, EventType.ACTION_FINISHED, data, description="action completed")
 
     def get_uid(self):
@@ -222,11 +222,14 @@ class ActionFinishedEvent(Event):
     def get_position(self):
         return self.get_data()[2]
 
+    def get_item(self):
+        return self.get_data()[3]
+
 
 class ActionStartedEvent(Event):
 
     def __init__(self, action):
-        data = (action.get_actor().get_uid(), action.get_type(), action.get_position())
+        data = (action.get_actor().get_uid(), action.get_type(), action.get_position(), action.get_item())
         Event.__init__(self, EventType.ACTION_STARTED, data, description="action started")
 
     def get_uid(self):
@@ -237,6 +240,9 @@ class ActionStartedEvent(Event):
 
     def get_position(self):
         return self.get_data()[2]
+
+    def get_item(self):
+        return self.get_data()[3]
 
 
 class PlayerDiedEvent(Event):
