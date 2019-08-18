@@ -7,6 +7,7 @@ from src.world.worldstate import World
 from src.utils.util import Utils
 from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
+from src.game.windowstate import WindowState
 
 
 class WorldView:
@@ -155,7 +156,7 @@ class WorldView:
 
             color, alpha = fade_state
             sprite = spriteref.get_floor_lighting(1-alpha)
-            scr_size = gs.get_instance().screen_size
+            scr_size = WindowState.get_instance().get_screen_size()
             ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + scr_size[1] / sprite.height()))
 
             self._fade_overlay_bundle = self._fade_overlay_bundle.update(new_model=sprite, new_x=0, new_y=0,

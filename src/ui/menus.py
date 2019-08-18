@@ -18,6 +18,7 @@ from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState
 import src.utils.colors as colors
 import src.game.gameengine as gameengine
+from src.game.windowstate import WindowState
 
 
 class MenuManager:
@@ -267,15 +268,15 @@ class OptionsMenu(Menu):
                 total_height += opt.size()[1] + self.spacing
         total_height -= self.spacing
 
-        y_pos = gs.get_instance().screen_size[1] // 2 - total_height // 2
+        y_pos = WindowState.get_instance().get_screen_size()[1] // 2 - total_height // 2
         if self._title_img is not None:
-            title_x = gs.get_instance().screen_size[0] // 2 - self._title_img.size()[0] // 2
+            title_x = WindowState.get_instance().get_screen_size()[0] // 2 - self._title_img.size()[0] // 2
             self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
             y_pos += self._title_img.size()[1] + self.title_spacing
 
         for i in range(0, self.get_num_options()):
             if self._option_imgs[i] is not None:
-                opt_x = gs.get_instance().screen_size[0] // 2 - self._option_imgs[i].size()[0] // 2
+                opt_x = WindowState.get_instance().get_screen_size()[0] // 2 - self._option_imgs[i].size()[0] // 2
                 self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
                 y_pos += self._option_imgs[i].size()[1] + self.spacing
 
@@ -967,8 +968,8 @@ class TitleMenu(Menu):
 
         # it shouldn't be necessary to center the image because it's expected to
         # perfectly fill the screen, but we do it anyways just in case~
-        x = gs.get_instance().screen_size[0] // 2 - model.size()[0] * self.title_img.scale() // 2
-        y = gs.get_instance().screen_size[1] // 2 - model.size()[1] * self.title_img.scale() // 2
+        x = WindowState.get_instance().get_screen_size()[0] // 2 - model.size()[0] * self.title_img.scale() // 2
+        y = WindowState.get_instance().get_screen_size()[1] // 2 - model.size()[1] * self.title_img.scale() // 2
 
         self.title_img = self.title_img.update(new_model=model, new_x=x, new_y=y, new_depth=50)
 
@@ -983,7 +984,7 @@ class TitleMenu(Menu):
                 self.title_fade_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, depth=-10)
 
             sprite = spriteref.get_floor_lighting(title_alpha)
-            scr_size = gs.get_instance().screen_size
+            scr_size = WindowState.get_instance().get_screen_size()
             ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + (scr_size[1] // 3) / sprite.height()))
 
             self.title_fade_img = self.title_fade_img.update(new_model=sprite, new_x=0, new_y=0,
@@ -1000,7 +1001,7 @@ class TitleMenu(Menu):
                 self.world_fade_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, depth=-10)
 
             sprite = spriteref.get_floor_lighting(world_alpha)
-            scr_size = gs.get_instance().screen_size
+            scr_size = WindowState.get_instance().get_screen_size()
             ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + ((scr_size[1] * 2) // 3) / sprite.height()))
 
             self.world_fade_img = self.world_fade_img.update(new_model=sprite, new_x=0, new_y=scr_size[1] // 3,
@@ -1015,8 +1016,8 @@ class TitleMenu(Menu):
         if self.press_any_key_img is not None:
             text_w = self.press_any_key_img.w()
             text_h = self.press_any_key_img.h()
-            text_x = gs.get_instance().screen_size[0] // 2 - text_w // 2
-            text_y = (gs.get_instance().screen_size[1] * 15) // 16 - text_h // 2
+            text_x = WindowState.get_instance().get_screen_size()[0] // 2 - text_w // 2
+            text_y = (WindowState.get_instance().get_screen_size()[1] * 15) // 16 - text_h // 2
             text_color = gs.get_instance().get_pulsing_color(colors.RED)
 
             self.press_any_key_img = self.press_any_key_img.update(new_x=text_x, new_y=text_y, new_color=text_color)
@@ -1082,7 +1083,7 @@ class InGameUiState(Menu):
             be pushed to the right so that the player's visibily is restricted evenly between the left and right.
         """
 
-        screen_w, screen_h = gs.get_instance().screen_size
+        screen_w, screen_h = WindowState.get_instance().get_screen_size()
         if self.sidepanel is not None:
             inv_w = self.sidepanel.get_rect()[2]
         else:
@@ -1186,10 +1187,10 @@ class InGameUiState(Menu):
             if current_tooltip is not None:
                 tt_width = current_tooltip.get_rect()[2]
                 tt_height = current_tooltip.get_rect()[3]
-                tt_x = min(screen_pos[0], gs.get_instance().screen_size[0] - tt_width)
+                tt_x = min(screen_pos[0], WindowState.get_instance().get_screen_size()[0] - tt_width)
 
                 y_offs = 24
-                if screen_pos[1] + y_offs + tt_height > gs.get_instance().screen_size[1]:
+                if screen_pos[1] + y_offs + tt_height > WindowState.get_instance().get_screen_size()[1]:
                     if screen_pos[1] - y_offs - tt_height >= 0:
                         tt_y = screen_pos[1] - y_offs - tt_height
                     else:

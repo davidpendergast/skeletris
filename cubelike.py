@@ -23,16 +23,22 @@ print("INFO: initializing sounds...")
 pygame.mixer.pre_init(44100, -16, 1, 2048)
 
 
-from src.game.windowstate import WindowState
-
-SCREEN_SIZE = (800, 600)
-WindowState.create_instance(False, SCREEN_SIZE)
+SCREEN_SIZE = (1200, 600)
 
 
 def run():
     pygame.mixer.init()
     pygame.init()
 
+    # fyi this needs to happen before any calls to set_mode
+    info = pygame.display.Info()
+    monitor_size = (info.current_w, info.current_h)
+
+    global SCREEN_SIZE
+    from src.game.windowstate import WindowState
+    WindowState.create_instance(fullscreen=False, resizeable=True,
+                                screen_size=SCREEN_SIZE, window_size=SCREEN_SIZE,
+                                fullscreen_size=monitor_size)
     WindowState.get_instance().set_caption(NAME_OF_THE_GAME)
     WindowState.get_instance().show_window()
 
@@ -178,6 +184,10 @@ def run():
             elif event.type == pygame.MOUSEBUTTONUP:
                 input_state.set_mouse_down(False, button=event.button)
                 input_state.set_mouse_pos(event.pos)
+            elif event.type == pygame.VIDEORESIZE:
+                WindowState.get_instance().set_screen_size(event.w, event.h)
+                WindowState.get_instance().set_window_size(event.w, event.h, forcefully=True)
+                RenderEngine.get_instance().resize(event.w, event.h)
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
@@ -203,7 +213,14 @@ def run():
 
         if input_state.was_pressed(pygame.K_F4):
             win = WindowState.get_instance()
-            win.set_fullscreen(not win.get_fullscreen())
+            fullscreen = not win.get_fullscreen()
+            win.set_fullscreen(fullscreen, forcefully=True)
+
+            new_size = win.get_display_size()
+            if not fullscreen:
+                win.set_window_size(*new_size, forcefully=True)
+            win.set_screen_size(*new_size)
+            RenderEngine.get_instance().resize(*new_size)
 
         if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())

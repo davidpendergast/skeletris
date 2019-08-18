@@ -283,6 +283,7 @@ class RenderEngine:
         glOrtho(0, width, height, 0, 1, -1)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
+        glViewport(0, 0, width, height)
         self.size = (width, height)
 
     def set_clear_color(self, r, g, b):

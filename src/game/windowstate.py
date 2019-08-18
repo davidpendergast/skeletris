@@ -6,18 +6,25 @@ _INSTANCE = None
 
 class WindowState:
 
-    def __init__(self, fullscreen, window_size):
+    def __init__(self, fullscreen, screen_size, window_size, fullscreen_size, resizeable):
         self._is_fullscreen = fullscreen
+
+        self._fullscreen_size = fullscreen_size  # AKA the monitor's size
         self._window_size = window_size
+
         self._window_visible = False
+        self._is_resizeable = resizeable
+        self._screen_size = screen_size
 
     @staticmethod
-    def create_instance(fullscreen, window_size):
+    def create_instance(fullscreen=False, resizeable=False,
+                        screen_size=(640, 480), window_size=(640, 480), fullscreen_size=(640, 480)):
+
         global _INSTANCE
         if _INSTANCE is not None:
             raise ValueError("WindowState instance is already created")
         else:
-            _INSTANCE = WindowState(fullscreen, window_size)
+            _INSTANCE = WindowState(fullscreen, screen_size, window_size, fullscreen_size, resizeable)
 
     @staticmethod
     def get_instance():
@@ -27,11 +34,17 @@ class WindowState:
         if self.get_fullscreen():
             return pygame.FULLSCREEN | pygame.OPENGL
         else:
-            return pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
+            res = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
+
+            if self._is_resizeable:
+                res = res | pygame.RESIZABLE
+
+            return res
 
     def show_window(self):
         self._window_visible = True
-        pygame.display.set_mode(self.get_size(), self._get_mods())
+        display_size = self.get_display_size()
+        pygame.display.set_mode(display_size, self._get_mods())
 
     def set_caption(self, title):
         pygame.display.set_caption(title)
@@ -39,23 +52,40 @@ class WindowState:
     def set_icon(self, surface):
         pygame.display.set_icon(surface)
 
-    def get_size(self):
+    def get_window_size(self):
         return self._window_size
 
-    def set_size(self, w, h):
+    def get_display_size(self):
+        if self._is_fullscreen:
+            return self._fullscreen_size
+        else:
+            return self._window_size
+
+    def set_window_size(self, w, h, forcefully=False):
         self._window_size = (w, h)
+
+        if forcefully:
+            self.show_window()
+
+    def get_screen_size(self):
+        return self._screen_size
+
+    def set_screen_size(self, w, h):
+        self._screen_size = (w, h)
 
     def get_fullscreen(self):
         return self._is_fullscreen
 
-    def set_fullscreen(self, val, new_size=None):
-        if self.get_fullscreen() == val:
-            print("WARN: is_fullscreen already {}".format(val))
-
+    def set_fullscreen(self, val, forcefully=True):
         self._is_fullscreen = val
 
-        if new_size is not None:
-            self._window_size = (new_size[0], new_size[1])
+        if forcefully:
+            self.show_window()
 
+    def get_resizeable(self):
+        return self._is_resizeable
+
+    def set_resizeable(self, val):
+        self._is_resizeable = val
         self.show_window()
 

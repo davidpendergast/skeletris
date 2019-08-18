@@ -10,6 +10,7 @@ from src.utils.util import Utils
 import src.utils.passwordgen as passwordgen
 import src.game.soundref as soundref
 import src.game.sound_effects as sound_effects
+from src.game.windowstate import WindowState
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -146,8 +147,6 @@ class SaveDataBlob:
 class GlobalState:
 
     def __init__(self, initial_zone_id, menu_manager, dialog_manager, story_state):
-        self.screen_size = [800, 600]
-    
         self.tick_counter = 0
         self.anim_tick = 0
         self.turn_counter = 0
@@ -160,7 +159,8 @@ class GlobalState:
         self._settings.load_from_file(self._path_to_settings())
 
         self._camera_center_in_world = (0, 0)
-        self._camera_center_on_screen = (self.screen_size[0] // 2, self.screen_size[1] // 2)
+        win = WindowState.get_instance()
+        self._camera_center_on_screen = (win.get_screen_size()[0] // 2, win.get_screen_size()[0] // 2)
         self._player_state = None
         self._player_controller = None
 
@@ -476,17 +476,17 @@ class GlobalState:
     
     def get_actual_camera_xy(self):
         cam_center = self.get_actual_camera_center()
-        offs_x = cam_center[0] - self.screen_size[0] // 2
-        offs_y = cam_center[1] - self.screen_size[1] // 2
+        offs_x = cam_center[0] - WindowState.get_instance().get_screen_size()[0] // 2
+        offs_y = cam_center[1] - WindowState.get_instance().get_screen_size()[1] // 2
         return (offs_x, offs_y)
 
     def get_actual_camera_center(self):
-        x = self._camera_center_in_world[0] - (self._camera_center_on_screen[0] - self.screen_size[0] // 2)
-        y = self._camera_center_in_world[1] - (self._camera_center_on_screen[1] - self.screen_size[1] // 2)
+        x = self._camera_center_in_world[0] - (self._camera_center_on_screen[0] - WindowState.get_instance().get_screen_size()[0] // 2)
+        y = self._camera_center_in_world[1] - (self._camera_center_on_screen[1] - WindowState.get_instance().get_screen_size()[1] // 2)
         return (x, y)
 
     def get_world_camera_size(self):
-        return self.screen_size
+        return WindowState.get_instance().get_screen_size()
         
     def screen_to_world_coords(self, point):
         cam = self.get_actual_camera_xy()
