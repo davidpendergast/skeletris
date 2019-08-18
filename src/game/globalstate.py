@@ -147,7 +147,6 @@ class GlobalState:
 
     def __init__(self, initial_zone_id, menu_manager, dialog_manager, story_state):
         self.screen_size = [800, 600]
-        self.is_fullscreen = False
     
         self.tick_counter = 0
         self.anim_tick = 0

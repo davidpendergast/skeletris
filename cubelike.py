@@ -22,18 +22,19 @@ if debug.is_dev():
 print("INFO: initializing sounds...")
 pygame.mixer.pre_init(44100, -16, 1, 2048)
 
+
+from src.game.windowstate import WindowState
+
 SCREEN_SIZE = (800, 600)
+WindowState.create_instance(False, SCREEN_SIZE)
 
 
 def run():
     pygame.mixer.init()
     pygame.init()
 
-    mods = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
-
-    pygame.display.set_caption(NAME_OF_THE_GAME)
-
-    pygame.display.set_mode(SCREEN_SIZE, mods)
+    WindowState.get_instance().set_caption(NAME_OF_THE_GAME)
+    WindowState.get_instance().show_window()
 
     from src.renderengine.engine import RenderEngine
     render_eng = RenderEngine.create_instance()
@@ -54,7 +55,7 @@ def run():
 
     window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
     window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
-    pygame.display.set_icon(window_icon)
+    WindowState.get_instance().set_icon(window_icon)
 
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
@@ -201,12 +202,8 @@ def run():
             profiling.get_instance().toggle()
 
         if input_state.was_pressed(pygame.K_F4):
-            size = gs.get_instance().screen_size
-            if gs.get_instance().is_fullscreen:
-                pygame.display.set_mode(size, pygame.OPENGL)
-            else:
-                pygame.display.set_mode(size, pygame.FULLSCREEN | pygame.OPENGL)
-            gs.get_instance().is_fullscreen = not gs.get_instance().is_fullscreen
+            win = WindowState.get_instance()
+            win.set_fullscreen(not win.get_fullscreen())
 
         if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
