@@ -9,6 +9,7 @@
     - gotta setup my windows machine to test, need to handle resolution scaling issues
     - near-zero mac testing (mac friends on git say it's ok though...)
 
+
 [P2 bugs]
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
@@ -21,11 +22,30 @@
  - enemies double attack when you die (ranged enemies only?)
  - can interact with things from above (looks weird if they're hidden)
 
+
 [balance issues]
  - need more sources of healing
     - added HP on kill stat, maybe enough?
  - vit is super underpowered compared to att/def (potentially fine)
  - need some ways to defensively use/alter the world's geometry
+    - "need" ?
+ 
+ 
+[what's stressing me out?]
+ - won't ever finish
+    - potentially true. it's up to you
+ - "it took you X months to make this?"
+    - it's hard to predict reception. don't let it paralyze you.
+ - won't be able to fix screen resolution scaling issues
+    - *this* is the problem you give up on?
+ - new players will struggle and quit
+    - you'll playtest the tutorial system before release, and you might be 
+        surprised at how well players can figure this stuff out.
+ - boss fights aren't very interesting
+    - you weren't even supposed to *have* those in the first place, remember? 
+        just having them at all is more interesting than not, and they don't 
+        necessarily need to play a huge role in the game to be memorable.
+ 
  
 [current features]
  - need some handling for different resolutions
@@ -33,6 +53,8 @@
  - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the demo
+    - it's been like 6 months, and you haven't figured out how to implement this
+        as a fight. Let's have the boss say some lines, and 
  - need way to add/remove bindings to each keybinding
  - new (secondary) item stats
     - poison duration
