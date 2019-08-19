@@ -63,6 +63,10 @@ def run():
     window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
     WindowState.get_instance().set_icon(window_icon)
 
+    # for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
+    # at max screen size, which isn't what we want.
+    ignore_videoresize_events_this_frame = False
+
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
     height = img_surface.get_height()
@@ -176,21 +180,26 @@ def run():
                 input_state.set_key(event.key, True)
             elif event.type == pygame.KEYUP:
                 input_state.set_key(event.key, False)
-            elif event.type == pygame.MOUSEMOTION:
-                input_state.set_mouse_pos(event.pos)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                input_state.set_mouse_down(True, button=event.button)
-                input_state.set_mouse_pos(event.pos)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                input_state.set_mouse_down(False, button=event.button)
-                input_state.set_mouse_pos(event.pos)
-            elif event.type == pygame.VIDEORESIZE:
-                WindowState.get_instance().set_screen_size(event.w, event.h)
+            elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                scr_pos = WindowState.get_instance().window_to_screen_pos(event.pos)
+                input_state.set_mouse_pos(scr_pos)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    input_state.set_mouse_down(True, button=event.button)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    input_state.set_mouse_down(False, button=event.button)
+
+            elif event.type == pygame.VIDEORESIZE and not ignore_videoresize_events_this_frame:
+                # XXX ideally we'd set the window size to no smaller than the min size
+                # but that seems to break resizing entirely on linux so... (._.)
                 WindowState.get_instance().set_window_size(event.w, event.h, forcefully=True)
-                RenderEngine.get_instance().resize(event.w, event.h)
+                screen_size = (max(800, event.w), max(600, event.h))
+                WindowState.get_instance().set_screen_size(*screen_size)
+                RenderEngine.get_instance().resize(*screen_size)
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
+
+        ignore_videoresize_events_this_frame = False
 
         input_state.update(gs.get_instance().tick_counter)
         sound_effects.update()
@@ -216,9 +225,9 @@ def run():
             fullscreen = not win.get_fullscreen()
             win.set_fullscreen(fullscreen, forcefully=True)
 
+            ignore_videoresize_events_this_frame = True
+
             new_size = win.get_display_size()
-            if not fullscreen:
-                win.set_window_size(*new_size, forcefully=True)
             win.set_screen_size(*new_size)
             RenderEngine.get_instance().resize(*new_size)
 
@@ -256,7 +265,7 @@ def run():
         pygame.display.flip()
 
         if debug.is_dev() and input_state.is_held(pygame.K_TAB):
-            # if holding tab in dev activate slo-mo
+            # activate slo-mo
             clock.tick(15)
         else:
             clock.tick(60)

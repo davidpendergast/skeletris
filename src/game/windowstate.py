@@ -32,7 +32,7 @@ class WindowState:
 
     def _get_mods(self):
         if self.get_fullscreen():
-            return pygame.FULLSCREEN | pygame.OPENGL
+            return pygame.FULLSCREEN | pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE | pygame.RESIZABLE
         else:
             res = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
 
@@ -44,7 +44,10 @@ class WindowState:
     def show_window(self):
         self._window_visible = True
         display_size = self.get_display_size()
-        pygame.display.set_mode(display_size, self._get_mods())
+        mods = self._get_mods()
+
+        print("INFO: called pygame.display.set_mode({}, {})".format(display_size, mods))
+        pygame.display.set_mode(display_size, mods)
 
     def set_caption(self, title):
         pygame.display.set_caption(title)
@@ -77,6 +80,7 @@ class WindowState:
         return self._is_fullscreen
 
     def set_fullscreen(self, val, forcefully=True):
+        print("INFO: setting fullscreen to {}".format(val))
         self._is_fullscreen = val
 
         if forcefully:
@@ -88,4 +92,13 @@ class WindowState:
     def set_resizeable(self, val):
         self._is_resizeable = val
         self.show_window()
+
+    def window_to_screen_pos(self, pos):
+        if pos is None:
+            return None
+        else:
+            # screen is anchored at bottom left corner of window.
+            # no real reason for that, it's just what happened
+            dy = self.get_screen_size()[1] - self.get_window_size()[1]
+            return (pos[0], pos[1] + dy)
 
