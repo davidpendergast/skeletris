@@ -21,6 +21,8 @@
  - enemy tooltips don't update when they get a new 'ability' (like regeneration from a potion)
  - enemies double attack when you die (ranged enemies only?)
  - can interact with things from above (looks weird if they're hidden)
+ - possible to get window into an un-resizeable state after disabling fullscreen
+    - (potentially linux only - goes back to normal when you toggle fullscreen again) 
 
 
 [balance issues]

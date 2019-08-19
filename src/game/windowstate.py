@@ -99,6 +99,6 @@ class WindowState:
         else:
             # screen is anchored at bottom left corner of window.
             # no real reason for that, it's just what happened
-            dy = self.get_screen_size()[1] - self.get_window_size()[1]
+            dy = self.get_screen_size()[1] - self.get_display_size()[1]
             return (pos[0], pos[1] + dy)
 
