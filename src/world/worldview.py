@@ -165,9 +165,10 @@ class WorldView:
 
     def update_all(self):
         cam_center = gs.get_instance().get_camera_center_in_world()
+        cam_rect = gs.get_instance().get_world_camera_rect(fudge=int(self.world.cellsize() * 1.5))
 
         new_onscreens = set()
-        for e in self.world.visible_entities(cam_center):
+        for e in self.world.visible_entities(cam_rect, onscreen=True):
             new_onscreens.add(e)
             if e in self._onscreen_entities:
                 self._onscreen_entities.remove(e)

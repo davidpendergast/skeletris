@@ -1338,6 +1338,9 @@ class DoorEntity(Entity):
         self.sprites = None
         self.open_prog = 0
 
+    def visible_in_darkness(self):
+        return True
+
     def update_images(self, world):
         if self._is_horz is None or self.sprites is None:
             print("tried to update door image before _is_horz was calculated...")

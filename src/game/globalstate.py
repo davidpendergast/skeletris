@@ -487,6 +487,14 @@ class GlobalState:
 
     def get_world_camera_size(self):
         return WindowState.get_instance().get_screen_size()
+
+    def get_world_camera_rect(self, fudge=0):
+        cam_xy = self.get_actual_camera_xy()
+        cam_size = self.get_world_camera_size()
+        return [cam_xy[0] - fudge,
+                cam_xy[1] - fudge,
+                cam_size[0] + 2*fudge,
+                cam_size[1] + 2*fudge]
         
     def screen_to_world_coords(self, point):
         cam = self.get_actual_camera_xy()

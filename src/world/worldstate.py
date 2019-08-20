@@ -41,6 +41,9 @@ class World:
         self._ents_to_add = []
         self._onscreen_entities = set()
 
+        # entities within this distance from player receive updates
+        self._entity_update_range = 600
+
         self._wall_type = spriteref.WALL_NORMAL_ID
         self._floor_type = spriteref.FLOOR_NORMAL_ID
 
@@ -179,9 +182,9 @@ class World:
 
         return res
 
-    def visible_entities(self, cam_center):
-        for e in self.all_entities(onscreen=True):
-            on_camera = Utils.dist(e.center(), cam_center) <= 800
+    def visible_entities(self, camera_rect, onscreen=True):
+        for e in self.all_entities(onscreen=onscreen):
+            on_camera = Utils.rect_contains(camera_rect, e.center())
 
             if on_camera and e.is_visible_in_world(self):
                 yield e
@@ -571,7 +574,7 @@ class World:
 
         self._ents_to_remove.clear()
 
-        cam_center = gs.get_instance().get_actual_camera_center()
+        cam_rect = gs.get_instance().get_world_camera_rect(fudge=int(self.cellsize() * 1.5))
 
         an_actor_is_acting = False
         actors_to_process = []
@@ -579,10 +582,14 @@ class World:
         player = self.get_player()
 
         for e in self.entities:
-            on_camera = Utils.dist(e.center(), cam_center) <= 600
-            near_player = player is not None and Utils.dist(e.center(), player.center()) <= 600
+            on_camera = Utils.rect_contains(cam_rect, e.center())
 
-            if on_camera or near_player:
+            if player is not None:
+                should_update = Utils.dist(e.center(), player.center()) <= self._entity_update_range
+            else:
+                should_update = on_camera
+
+            if on_camera or should_update:
                 e.update(self)
                 self._onscreen_entities.add(e)
 
@@ -592,7 +599,7 @@ class World:
                         if e.is_player():
                             gs.get_instance().set_player_turn_to_act(False)
 
-                    elif e.is_actor() and near_player:
+                    elif e.is_actor() and should_update:
                         actors_to_process.append(e)
                         if e.is_performing_action():
                             an_actor_is_acting = True

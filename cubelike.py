@@ -63,8 +63,8 @@ def run():
     window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
     WindowState.get_instance().set_icon(window_icon)
 
-    # for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
-    # at max screen size, which isn't what we want.
+    # XXX for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
+    # at max screen size, which isn't what we want (on linux at least~)
     ignore_videoresize_events_this_frame = False
 
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
