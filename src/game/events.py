@@ -68,15 +68,16 @@ class EventQueue:
 
 class EventType(Enum):
     # these are "something happened" events
-    ENEMY_KILLED = "ENEMY_KILLED",
-    PLAYER_DIED = "PLAYER_DIED",
-    DOOR_OPENED = "DOOR_OPENED",
-    ACTION_STARTED = "ACTION_STARTED",
-    ACTION_FINISHED = "ACTION_FINISHED",
-    DIALOG_EXIT = "DIALOG_EXIT",
-    ENTERED_BOX = "ENTERED_BOX",
-    EXITED_BOX = "EXITED_BOX",
-    TRIGGERED_BOX = "TRIGGERED_BOX",
+    ENEMY_KILLED = "ENEMY_KILLED"
+    PLAYER_DIED = "PLAYER_DIED"
+    GAME_WIN = "GAME_WIN"
+    DOOR_OPENED = "DOOR_OPENED"
+    ACTION_STARTED = "ACTION_STARTED"
+    ACTION_FINISHED = "ACTION_FINISHED"
+    DIALOG_EXIT = "DIALOG_EXIT"
+    ENTERED_BOX = "ENTERED_BOX"
+    EXITED_BOX = "EXITED_BOX"
+    TRIGGERED_BOX = "TRIGGERED_BOX"
     ITEM_DROPPED = "ITEM_DROPPED"
     TOGGLED_SIDEPANEL = "TOGGLED_SIDEPANEL"
     ROTATED_ITEM = "ROTATED_ITEM"
@@ -249,6 +250,12 @@ class PlayerDiedEvent(Event):
 
     def __init__(self):
         Event.__init__(self, EventType.PLAYER_DIED, None, description="player died")
+
+
+class GameWinEvent(Event):
+
+    def __init__(self):
+        Event.__init__(self, EventType.GAME_WIN, None, description="game win")
 
 
 class ToggledSidepanelEvent(Event):

@@ -279,6 +279,28 @@ class Utils:
             yield (x - dist, y - dist)
 
     @staticmethod
+    def ticks_to_time_string(n_ticks, fps):
+        seconds = max(0, n_ticks // fps)
+        hours = seconds // 3600
+        seconds = seconds % 3600
+        minutes = seconds // 60
+        seconds = seconds % 60
+
+        res = str(seconds)
+        if seconds < 10:
+            res = ":0" + res
+        else:
+            res = ":" + res
+
+        res = str(minutes) + res
+        if hours == 0:
+            return res
+        elif minutes < 10:
+            return str(hours) + ":0" + res
+        else:
+            return str(hours) + ":" + res
+
+    @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):
         if key not in json_blob or json_blob[key] is None:
             print("returning default {} for key {}".format(default, key))

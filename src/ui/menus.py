@@ -36,6 +36,8 @@ class MenuManager:
     TEXT_MENU = 10
     TITLE_MENU = 11
     REALLY_QUIT = 12
+    YOU_WIN_MENU = 13
+    CREDITS_MENU = 14
 
     def __init__(self, menu):
         self._active_menu = TitleMenu()
@@ -749,49 +751,73 @@ class CinematicMenu(Menu):
                 yield bun
 
 
-class DeathMenu(OptionsMenu):
-    """Displays some flavor text, then becomes a death option menu"""
+class FadingInFlavorMenu(OptionsMenu):
+    """Displays some flavor text, then becomes a new menu"""
 
-    ALL_FLAVOR = [
-        "epic run!",
-        "ouch!"
-    ]
+    def __init__(self, menu_type, flavor_text, next_menu, auto_next=False):
+        OptionsMenu.__init__(self, menu_type, flavor_text, ["~hidden~"], title_size=3)
+        self._flavor_full_brightness_duration = 100
+        self._total_duration = 120
+        self._flavor_tick = 0
+        self._auto_next = auto_next
+
+        self._next_menu = next_menu
 
     def get_clear_color(self):
         return (0, 0, 0)
-
-    def _get_flavor_text(self):
-        idx = int(random.random() * len(DeathMenu.ALL_FLAVOR))
-        return DeathMenu.ALL_FLAVOR[idx]
 
     def get_flavor_progress(self):
         return Utils.bound(self._flavor_tick / self._flavor_full_brightness_duration, 0.0, 1.0)
 
     def get_title_color(self):
-        # fade in
         return Utils.linear_interp(self.get_clear_color(), (1, 1, 1), self.get_flavor_progress())
 
     def get_option_color(self, idx):
         return self.get_clear_color()
 
-    def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEATH_MENU, self._get_flavor_text(), ["~hidden~"], title_size=3)
-        self._flavor_full_brightness_duration = 100
-        self._total_duration = 120
-        self._flavor_tick = 0
-
     def update(self, world):
         OptionsMenu.update(self, world)
 
         self._flavor_tick += 1
-        if self._flavor_tick >= self._total_duration:
-            gs.get_instance().menu_manager().set_active_menu(DeathOptionMenu())
+
+        if self._flavor_tick > 5 and InputState.get_instance().was_anything_pressed():
+            sound_effects.play_sound(soundref.menu_select)
+            if self._flavor_tick >= self._total_duration - 10:
+                gs.get_instance().menu_manager().set_active_menu(self._next_menu)
+            else:
+                self._flavor_tick = self._total_duration - 10
+                self._auto_next = True
+
+        elif self._flavor_tick >= self._total_duration and self._auto_next:
+            gs.get_instance().menu_manager().set_active_menu(self._next_menu)
 
     def get_song(self):
         return None
 
     def option_activated(self, idx):
         pass
+
+
+class DeathMenu(FadingInFlavorMenu):
+
+    ALL_FLAVOR = [
+        "pain!",
+        "fail!",
+        "dead!",
+        "bad!",
+        "no!",
+        "you died!",
+        "epic run!",
+        "ouch!"
+    ]
+
+    def get_flavor_text(self):
+        idx = int(random.random() * len(DeathMenu.ALL_FLAVOR))
+        return DeathMenu.ALL_FLAVOR[idx]
+
+    def __init__(self):
+        FadingInFlavorMenu.__init__(self, MenuManager.DEATH_MENU, self.get_flavor_text(),
+                                    DeathOptionMenu(), auto_next=True)
 
 
 class DeathOptionMenu(OptionsMenu):
@@ -844,6 +870,134 @@ class DebugMenu(OptionsMenu):
         elif idx == DebugMenu.EXIT_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)
+
+
+class YouWinMenu(FadingInFlavorMenu):
+
+    def __init__(self, total_time, turn_count, kill_count):
+        FadingInFlavorMenu.__init__(self, MenuManager.YOU_WIN_MENU, "You Win!",
+                                    YouWinStats(total_time, turn_count, kill_count),
+                                    auto_next=True)
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+
+class YouWinStats(FadingInFlavorMenu):
+
+    def __init__(self, total_time, turn_count, kill_count):
+        text = ["Time:  {}".format(Utils.ticks_to_time_string(total_time, 60)),
+                "Turns: {}".format(turn_count),
+                "Kills: {}".format(kill_count)]
+
+        FadingInFlavorMenu.__init__(self, MenuManager.YOU_WIN_MENU, "\n".join(text), CreditsMenu(), auto_next=False)
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+
+class CreditsMenu(Menu):
+
+    SMALL = 2
+    NORMAL = 3
+
+    SLIDE_TEXT = [
+        ("created by", SMALL),
+        "David Pendergast",
+        ("2019", SMALL),
+        "",
+        ("art, programming, design, and music by", SMALL),
+        "David Pendergast",
+        "",
+        ("twitter", SMALL),
+        "@Ghast_NEOH",
+        "",
+        ("github", SMALL),
+        "davidpendergast",
+        "",
+        # why does the name have to be sooo long omg
+        #("sound effects from", SMALL),
+        #("The Essential Retro Video Game ", NORMAL),
+        #("Sound Effects Collection", NORMAL),
+        #("by Juhani Junkala", SMALL),
+        #("released under CC0", SMALL),
+        #"",
+        ("made with pygame <3", SMALL)
+    ]
+
+    def __init__(self):
+        Menu.__init__(self, MenuManager.CREDITS_MENU)
+        self.scroll_speeds = (1.5, 4)  # pixels per tick
+        self.scroll_speed_idx = 0
+        self.tick_count = 0
+        self.empty_line_height = 160
+        self.text_y_spacing = 10
+
+        self.scroll_y_pos = 0  # distance from bottom of screen
+
+        self._text_lines = [l for l in CreditsMenu.SLIDE_TEXT]
+        self._all_images = []
+
+        self._onscreen_img_indexes = set()
+
+        self.build_images()
+
+    def _scroll_speed(self):
+        return self.scroll_speeds[self.scroll_speed_idx]
+
+    def build_images(self):
+        for line in self._text_lines:
+            if line == "":
+                self._all_images.append(None)
+            else:
+                if isinstance(line, tuple):
+                    text = line[0]
+                    size = line[1]
+                else:
+                    text = line
+                    size = CreditsMenu.NORMAL
+
+                self._all_images.append(TextImage(0, 0, text, spriteref.UI_0_LAYER, scale=size))
+
+    def update(self, world):
+        self.tick_count += 1
+
+        enter_keys = gs.get_instance().settings().enter_key()
+        if self.tick_count > 5 and InputState.get_instance().was_pressed(enter_keys):
+            self.scroll_speed_idx = (self.scroll_speed_idx + 1) % len(self.scroll_speeds)
+
+        self.scroll_y_pos += self._scroll_speed()
+
+        screen_size = WindowState.get_instance().get_screen_size()
+        y_pos = screen_size[1] - int(self.scroll_y_pos)
+
+        for i in range(0, len(self._all_images)):
+            text_img = self._all_images[i]
+            if text_img is None:
+                y_pos += self.empty_line_height
+            else:
+                w = text_img.w()
+                x_pos = screen_size[0] // 2 - w // 2
+                text_img = text_img.update(new_x=x_pos, new_y=y_pos)
+                self._all_images[i] = text_img
+
+                RenderEngine.get_instance().update(text_img)
+
+                y_pos += text_img.h() + self.text_y_spacing
+
+        if y_pos < 0:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        for text_img in self._all_images:
+            if text_img is not None:
+                for bun in text_img.all_bundles():
+                    yield bun
+
+    def get_song(self):
+        return music.Songs.MENU_THEME
 
 
 class DebugZoneSelectMenu(OptionsMenu):

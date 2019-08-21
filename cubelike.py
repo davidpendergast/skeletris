@@ -150,6 +150,19 @@ def run():
                 print("INFO: quitting game")
                 running = False
                 continue
+
+            elif event.get_type() == events.EventType.GAME_WIN:
+                print("INFO: won game!")
+                tick_count = gs.get_instance().tick_counter
+                kill_count = gs.get_instance().kill_counter
+                turn_count = gs.get_instance().turn_counter
+                win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)
+                gs.get_instance().menu_manager().set_active_menu(win_menu)
+
+            elif event.get_type() == events.EventType.ENEMY_KILLED:
+                # TODO - this event isn't actually ever sent
+                gs.get_instance().kill_counter += 1
+
             elif event.get_type() == events.EventType.NEW_GAME:
                 print("INFO: starting fresh game")
                 render_eng.clear_all_sprites()
@@ -239,6 +252,9 @@ def run():
             manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
+
+        if debug.is_debug() and input_state.was_pressed(pygame.K_F10):
+            gs.get_instance().event_queue().add(events.GameWinEvent())
 
         world = gs.get_instance().get_world()
         if world is not None:

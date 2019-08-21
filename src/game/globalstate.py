@@ -150,6 +150,7 @@ class GlobalState:
         self.tick_counter = 0
         self.anim_tick = 0
         self.turn_counter = 0
+        self.kill_counter = 0
 
         self.initial_zone_id = initial_zone_id
         self.current_zone = None
@@ -519,7 +520,7 @@ class GlobalState:
                 for t in triggers_to_remove:
                     self._event_triggers[t.event_type].remove(t)
 
-        if self._active_tutorial is not None:
+        if self._active_tutorial is not None and not self.menu_manager().pause_world_updates():
             self._active_tutorial.update()
 
             if self._active_tutorial.is_complete():

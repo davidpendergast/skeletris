@@ -23,6 +23,7 @@
  - can interact with things from above (looks weird if they're hidden)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
+ - enemy kill count isn't hooked up
 
 
 [balance issues]
@@ -54,7 +55,7 @@
     - tried once, failed. see awful_resize_diff.txt (on desktop)
  - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
-    - dialog only? i'm fine with this, cliffhanger for the demo
+    - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines, and 
  - need way to add/remove bindings to each keybinding
