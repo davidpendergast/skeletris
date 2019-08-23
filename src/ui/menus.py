@@ -602,7 +602,6 @@ class ControlsMenu(OptionsMenu):
             return "back"
         else:
             opt = ControlsMenu.OPTS[idx]
-
             cur_values = gs.get_instance().settings().get(opt[1])
 
             if len(cur_values) == 0:

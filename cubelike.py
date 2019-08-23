@@ -23,7 +23,7 @@ print("INFO: initializing sounds...")
 pygame.mixer.pre_init(44100, -16, 1, 2048)
 
 
-SCREEN_SIZE = (1200, 600)
+SCREEN_SIZE = (800, 600)
 
 
 def run():
