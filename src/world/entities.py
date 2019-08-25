@@ -1511,19 +1511,22 @@ class ExitEntity(Entity):
                     gs.get_instance().do_fade_sequence(0, 1, end_fade_tick - start_fade_tick + 1)
 
             else:
-                new_zone_event = self.make_new_zone_event()
+                new_zone_event = self.make_open_event()
                 gs.get_instance().event_queue().add(new_zone_event)
 
         self.update_images(world)
 
-    def make_new_zone_event(self):
+    def make_open_event(self):
         return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
 
     def is_interactable(self, world):
-        return True
+        return not self._is_opening
+
+    def can_open(self):
+        return self.get_zone() is not None
 
     def interact(self, world):
-        if self.next_zone_id is not None:
+        if self.can_open():
             self._is_opening = True
             sound_effects.play_sound(soundref.exit_door_open)
         else:
@@ -1537,7 +1540,7 @@ class ReturnExitEntity(ExitEntity):
         ExitEntity.__init__(self, grid_x, grid_y, next_zone_id)
         self.set_y((grid_y + 1) * 64)
 
-    def make_new_zone_event(self):
+    def make_open_event(self):
         if self.next_zone_id is not None:
             return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
         else:
@@ -1554,8 +1557,12 @@ class ReturnExitEntity(ExitEntity):
     def sprite_offset(self, sprite, scale):
         return (0, -64)
 
-    def is_exit(self):
+    def can_open(self):
         # maybe one day, but not now~
+        return False
+
+    def is_exit(self):
+        # disabled until these can be used
         return False
 
 
@@ -1566,6 +1573,18 @@ class BossExitEntity(ExitEntity):
 
     def opening_sprites(self):
         return spriteref.boss_door_opening
+
+
+class EndGameExitEnitity(ExitEntity):
+
+    def __init__(self, grid_x, grid_y):
+        ExitEntity.__init__(self, grid_x, grid_y, None)
+
+    def can_open(self):
+        return True
+
+    def make_open_event(self):
+        return events.GameWinEvent()
 
 
 class DecorationEntity(Entity):

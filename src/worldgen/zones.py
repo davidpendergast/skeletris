@@ -28,6 +28,9 @@ _STORYLINE_ZONES = []
 
 _LOOT_ZONES = []
 
+# used by zones that "end" the game when they're completed.
+_END_OF_GAME_ZONE_ID = "END_GAME"
+
 
 def first_zone_id():
     return _FIRST_ZONE_ID
@@ -71,7 +74,7 @@ def next_storyline_zone(current_id):
             return _STORYLINE_ZONES[idx + 1]
         else:
             # we hit the end
-            return None
+            return _END_OF_GAME_ZONE_ID
 
 
 def init_zones():
@@ -193,7 +196,9 @@ class ZoneLoader:
                         bp.return_exit_spawns.append((x, y))
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
-                        if exit_id in _ALL_ZONES:
+                        if exit_id == _END_OF_GAME_ZONE_ID:
+                            bp.end_of_game_spawns.append((x, y))
+                        elif exit_id in _ALL_ZONES:
                             if _ALL_ZONES[exit_id].is_boss_zone():
                                 bp.boss_exit_spawns[exit_id] = (x, y)
                             else:
@@ -391,14 +396,17 @@ class ZoneBuilder:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
             next_zone_id = next_storyline_zone(zone_id)
-            actual_zone = get_zone(next_zone_id)
-            if actual_zone is not None:
-                if actual_zone.is_boss_zone():
-                    world.add(entities.BossExitEntity(x, y, next_zone_id))
-                else:
-                    world.add(entities.ExitEntity(x, y, next_zone_id))
+            if next_zone_id == _END_OF_GAME_ZONE_ID:
+                world.add(entities.EndGameExitEnitity(x, y))
             else:
-                print("ERROR: invalid next zone \"{}\"".format(next_zone_id))
+                actual_zone = get_zone(next_zone_id)
+                if actual_zone is not None:
+                    if actual_zone.is_boss_zone():
+                        world.add(entities.BossExitEntity(x, y, next_zone_id))
+                    else:
+                        world.add(entities.ExitEntity(x, y, next_zone_id))
+                else:
+                    print("ERROR: invalid next zone \"{}\"".format(next_zone_id))
         elif tile_type == worldgen2.TileType.NPC:
             print("WARN: attempted to add an NPC using add_entities_for_tile")
             pass
@@ -835,8 +843,8 @@ class FrogLairZone(Zone):
 
     ZONE_ID = "frog_lair"
 
-    FROG_BOSS_SPAWN = (255, 203, 203)
-    FROG_SPAWN = (255, 230, 230)
+    FROG_BOSS_SPAWN = (255, 170, 170)
+    FROG_SPAWN = (255, 194, 194)
 
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
@@ -856,13 +864,7 @@ class FrogLairZone(Zone):
                 frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SMALL_FROG, self.get_level())
                 w.add(frog_entity, gridcell=frog_spawn)
 
-        # TODO this doesn't work
-        # gs.get_instance().get_cinematics_queue().extend(cinematics.frog_intro)
-
         return w
-
-    def frog_dead_song(self):
-        return music.Songs.SILENCE
 
     def get_music_id(self):
         return music.Songs.AMPHIBIAN
@@ -902,11 +904,11 @@ class RoboLairZone(Zone):
 
 class CaveHorrorZone(Zone):
 
-    ZONE_ID = "cave_lair"
+    ZONE_ID = "cave_horror_lair"
 
     def __init__(self):
         Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
-        self._tree_color = (255, 203, 203)
+        self._tree_color = (255, 170, 170)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -916,6 +918,8 @@ class CaveHorrorZone(Zone):
         tree_pos = unknowns[self._tree_color][0]
         tree_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level())
         w.add(tree_entity, gridcell=tree_pos)
+
+
 
         return w
 

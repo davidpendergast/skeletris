@@ -3,8 +3,7 @@ import random
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
 from src.world.entities import Player, ExitEntity, SensorDoorEntity, \
-    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, NpcEntity
-import src.game.npc as npc
+    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, EndGameExitEnitity
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -187,6 +186,7 @@ class WorldBlueprint:
         self.chest_spawns = []
         self.exit_spawns = {}         # zone_id -> (x, y)
         self.boss_exit_spawns = {}    # zone_id -> (x, y)
+        self.end_of_game_spawns = []  # list of (x, y)
         self.return_exit_spawns = []  # list of (x, y)
         self.save_station = None
         self.sensor_doors = []
@@ -292,6 +292,10 @@ class WorldBlueprint:
         if len(self.return_exit_spawns) > 0:
             for return_pos in self.return_exit_spawns:
                 w.add(ReturnExitEntity(return_pos[0], return_pos[1], None))
+
+        if len(self.end_of_game_spawns) > 0:
+            for pos in self.end_of_game_spawns:
+                w.add(EndGameExitEnitity(pos[0], pos[1]))
 
         w.flush_new_entity_additions()
         return w
