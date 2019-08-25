@@ -996,7 +996,7 @@ class CreditsMenu(Menu):
                     yield bun
 
     def get_song(self):
-        return music.Songs.MENU_THEME
+        return music.Songs.CONTINUE_CURRENT
 
 
 class DebugZoneSelectMenu(OptionsMenu):

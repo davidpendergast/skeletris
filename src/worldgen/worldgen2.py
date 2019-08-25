@@ -926,15 +926,15 @@ class Features:
 
     SMALL_MONSTER = Feature("monster_2x2",
                             FeatureUtils.convert(["--", "--"]),
-                            FeatureUtils.convert(["m-", "--"]), appear_rate=10)
+                            FeatureUtils.convert(["m-", "--"]), appear_rate=13)
 
     LARGE_MONSTER = Feature("monster_3x3",
                             FeatureUtils.convert(["---", "---", "---"]),
-                            FeatureUtils.convert(["m--", "--m", "-m-"]), appear_rate=6)
+                            FeatureUtils.convert(["m--", "--m", "-m-"]), appear_rate=9)
 
     CHEST = Feature("chest",
                     FeatureUtils.convert(["W", "-"]),
-                    FeatureUtils.convert(["W", "c"]), can_rotate=True, appear_rate=1)
+                    FeatureUtils.convert(["W", "c"]), can_rotate=True, appear_rate=2)
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["-"]),
@@ -946,7 +946,7 @@ class Features:
 
     SIGN = Feature("sign",
                    FeatureUtils.convert(["W", "-"]),
-                   FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=8)
+                   FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=4)
 
     # Nuking these for now, I can't write as it turns out
     QUEST_NPC = Feature("conversation_npc",
