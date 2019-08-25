@@ -40,6 +40,9 @@ class TutorialPlugin:
         self.min_level = min_level
         self.stages = stages
 
+    def __repr__(self):
+        return self.tut_id
+
     def get_id(self):
         return self.tut_id
 
@@ -69,9 +72,19 @@ class TutorialPlugin:
             if active_stage.is_complete():
                 active_stage.cleanup()
 
-                # don't play sound if the tutorial was silently completed
                 if has_started:
                     sound_effects.play_sound(soundref.tutorial_stage_complete)
+                else:
+                    i = 0
+                    next_stage = self.get_active_stage()
+                    while next_stage is not None and next_stage.should_complete_silently_if_prev_stage_did():
+                        next_stage.complete()
+                        next_stage = self.get_active_stage()
+
+                        # while loops scare me i'm sorry
+                        i += 1
+                        if i > 999:
+                            raise ValueError("infinite loop in tutorial silently-complete loop")
 
     def cleanup(self):
         active_stage = self.get_active_stage()
@@ -129,6 +142,18 @@ class TutorialStage:
 
     def get_message(self):
         return "Do the thing! Quick!"
+
+    def should_complete_silently_if_prev_stage_did(self):
+        return False
+
+
+def make_action_predicate(action_type, actor_uid=None):
+    def _is_item_action(act_evt):
+        if act_evt.get_action_type() == action_type:
+            if actor_uid is None or act_evt.get_uid() == actor_uid:
+                return True
+        return False
+    return _is_item_action
 
 
 class EntityNotificationTutorialStage(TutorialStage):
@@ -225,14 +250,9 @@ class HowToMoveStage(EntityNotificationTutorialStage):
         if p is None:
             return False
 
-        def _is_player_move_action(act_evt):
-            if act_evt.get_action_type() == gameengine.ActionType.MOVE_TO:
-                if act_evt.get_uid() == p.get_uid():
-                    return True
-            return False
-
+        cond = make_action_predicate(gameengine.ActionType.MOVE_TO, p.get_uid())
         return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                         predicate=_is_player_move_action)
+                                                         predicate=cond)
 
     def get_message(self):
         keystr = ""
@@ -243,6 +263,28 @@ class HowToMoveStage(EntityNotificationTutorialStage):
                 keystr = keystr + Utils.stringify_key(key_val[0])
 
         return "Use [{}] to move.".format(keystr)
+
+
+class MessageOnlyStage(HowToMoveStage):
+
+    def __init__(self, message, min_sustain=30, delay=10):
+        super().__init__(delay=delay)
+        self._message = message
+        self._sustain = min_sustain
+
+        self._did_move = False
+
+    def test_completed(self):
+        if not self._did_move:
+            self._did_move = super().test_completed()
+
+        return self.get_ticks_started() >= self._sustain and self._did_move
+
+    def get_message(self):
+        return self._message
+
+    def should_complete_silently_if_prev_stage_did(self):
+        return True
 
 
 class HowToPickUpItemStage(EntityNotificationTutorialStage):
@@ -387,14 +429,9 @@ class HowToSkipTurnStage(EntityNotificationTutorialStage):
         if p is None:
             return False
 
-        def _is_skip_turn_action(act_evt):
-            if act_evt.get_action_type() == gameengine.ActionType.SKIP_TURN:
-                if act_evt.get_uid() == p.get_uid():
-                    return True
-            return False
-
+        cond = make_action_predicate(gameengine.ActionType.SKIP_TURN, p.get_uid())
         return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                         predicate=_is_skip_turn_action)
+                                                         predicate=cond)
 
     def get_message(self):
         skip_keys = gs.get_instance().settings().skip_turn_key()
@@ -426,17 +463,122 @@ class HowToConsumeItemStage(EntityNotificationTutorialStage):
         if p is None:
             return False
 
-        def _is_consume_item_action(act_evt):
-            if act_evt.get_action_type() == gameengine.ActionType.CONSUME_ITEM:
-                if act_evt.get_uid() == p.get_uid():
-                    return True
-            return False
-
-        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                         predicate=_is_consume_item_action)
+        cond = make_action_predicate(gameengine.ActionType.CONSUME_ITEM, p.get_uid())
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED, predicate=cond)
 
     def get_message(self):
         return "Right-click to use the potion."
+
+
+class _HowToGetInActionRangeOfEnemyStage(EntityNotificationTutorialStage):
+
+    def __init__(self, delay=60):
+        super().__init__(delay=delay)
+        self.search_range = 500
+
+    def get_test_action(self, world, player, enemy):
+        raise ValueError("not implemented")
+
+    def get_message(self):
+        raise ValueError("not implemented")
+
+    def _candidate_enemies(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return
+
+        enemies_in_range = w.entities_in_circle(p.center(), self.search_range, onscreen=True,
+                                                cond=lambda ent: ent.is_enemy() and ent.is_visible_in_world(w))
+        for e in enemies_in_range:
+            yield e
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return None
+
+        # if there's any enemy nearby, show the tutorial
+        for _ in self._candidate_enemies():
+            return p
+
+        return None
+
+    def test_completed(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return False
+
+        for e in self._candidate_enemies():
+            act = self.get_test_action(w, p, e)
+            if act is not None and act.is_possible(w):
+                return True
+
+        return False
+
+
+class HowToGetInThrowRangeOfEnemyStage(_HowToGetInActionRangeOfEnemyStage):
+
+    def get_test_action(self, world, player, enemy):
+        e_pos = world.to_grid_coords(*enemy.center())
+        held_item = player.get_actor_state().held_item
+
+        return gameengine.ThrowItemAction(player, held_item, e_pos)
+
+    def get_message(self):
+        return "This item can be thrown at enemies. (too far away)"
+
+    def get_target_entity(self):
+        res = super().get_target_entity()
+        if res is None:
+            return None
+        else:
+            w, p = gs.get_instance().get_world_and_player()
+            if p is None:
+                return None
+
+            held_item = p.get_actor_state().held_item
+            if held_item is None or not held_item.get_type().has_tag(ItemTags.THROWABLE):
+                return None
+            else:
+                return res
+
+
+class HowToThrowItemStage(EntityNotificationTutorialStage):
+
+    def __init__(self, delay=60):
+        super().__init__(delay=delay)
+        self.search_range = 500
+
+    def get_message(self):
+        return "Click enemy to throw item."
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+
+        if p is None:
+            return None
+
+        held_item = p.get_actor_state().held_item
+        if held_item is None or not held_item.get_type().has_tag(ItemTags.THROWABLE):
+            return None
+
+        enemies_in_range = w.entities_in_circle(p.center(), self.search_range, onscreen=True,
+                                                cond=lambda ent: ent.is_enemy() and ent.is_visible_in_world(w))
+        for e in enemies_in_range:
+            e_pos = w.to_grid_coords(*e.center())
+            act = gameengine.ThrowItemAction(p, held_item, e_pos)
+            if act.is_possible(w):
+                return p
+
+        return None
+
+    def test_completed(self):
+        w, p = gs.get_instance().get_world_and_player()
+        if p is None:
+            return False
+
+        cond = make_action_predicate(gameengine.ActionType.THROW_ITEM, p.get_uid())
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED, predicate=cond)
 
 
 class TutorialFactory:
@@ -467,6 +609,7 @@ class TutorialFactory:
                 HowToPickUpItemStage(delay=90, item_tag=ItemTags.EQUIPMENT, message="Use mouse to pick up equipment."),
                 HowToOpenInventoryPanelStage(delay=20),
                 HowToPutItemInGridStage(delay=20, item_tag=ItemTags.EQUIPMENT, grid_type=ItemGridType.EQUIPMENT),
+                MessageOnlyStage("Equipment makes you stronger.")
             ])
         elif tut_id == TutorialID.HOW_TO_ROTATE:
             return TutorialPlugin(tut_id, 0, [
@@ -480,7 +623,11 @@ class TutorialFactory:
                 HowToConsumeItemStage(delay=20)
             ])
         elif tut_id == TutorialID.HOW_TO_THROW_ITEMS:
-            pass
+            return TutorialPlugin(tut_id, 3, [
+                HowToGetInThrowRangeOfEnemyStage(delay=20),
+                HowToThrowItemStage(delay=20),
+                MessageOnlyStage("Potions and certain weapons can be thrown.")
+            ])
 
         return None
 

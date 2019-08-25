@@ -124,7 +124,6 @@ def run():
         gs.get_instance().update()
 
         for event in gs.get_instance().event_queue().all_events():
-            print("INFO: got event {}".format(event))
             if event.get_type() == events.EventType.NEW_ZONE:
                 render_eng.clear_all_sprites()
 

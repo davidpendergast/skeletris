@@ -520,20 +520,21 @@ class GlobalState:
                 for t in triggers_to_remove:
                     self._event_triggers[t.event_type].remove(t)
 
-        if self._active_tutorial is not None and not self.menu_manager().pause_world_updates():
-            self._active_tutorial.update()
+        if not self.menu_manager().pause_world_updates():
+            if self._active_tutorial is not None:
+                self._active_tutorial.update()
 
-            if self._active_tutorial.is_complete():
-                print("INFO: completed tutorial: {}".format(self._active_tutorial.get_id()))
-                self.settings().set_tutorial_finished(self._active_tutorial.get_id(), True)
-                self._active_tutorial = None
-        else:
-            for tut in self._inactive_tutorials:
-                tut.is_ready()
-                print("INFO: activating tutorial: {}".format(tut.get_id()))
-                self._active_tutorial = tut
-                self._inactive_tutorials.remove(tut)
-                break
+                if self._active_tutorial.is_complete():
+                    print("INFO: completed tutorial: {}".format(self._active_tutorial.get_id()))
+                    self.settings().set_tutorial_finished(self._active_tutorial.get_id(), True)
+                    self._active_tutorial = None
+            else:
+                for tut in self._inactive_tutorials:
+                    if tut.is_ready():
+                        print("INFO: activating tutorial: {}".format(tut.get_id()))
+                        self._active_tutorial = tut
+                        self._inactive_tutorials.remove(tut)
+                        break
 
         if len(self._current_screenshakes) > 0:
             any_empty = False
