@@ -130,7 +130,7 @@
 [playtesting notes]
 
  - coffee shop guy (nervous dog) (7/21/19)
-    situation: asked what i was working on, i offered to let him playtest
+    situation: stranger, asked what i was working on, i offered to let him playtest
     - 45 minutes, made it through 2 levels
     - thought flashing red dagger meant it would break soon
     - couldn't figure out how to pick up items (mouse)
@@ -164,6 +164,35 @@
         - needs to be possible to die in early levels
         - early levels potentially should be a lot smaller?
         - might want to prevent "ATT" items from being pure yellow
+        
+ - jeff (home) (8/25/19)
+    situation: friend, invited him to playtest
+        - 35 minutes, played four games, died at caves 2 or 3 each time
+        - most early tutorials in place, game was untuned, pretty hard
+    good:
+        - equipment and rotation tutorials worked!
+        - used item tooltips to decide what to replace when equip space ran out
+    neutral:
+        - scared of enemies at first, wouldn't fight anything
+        - used mouse + inventory hotbar button to open inventory thereafter
+    bad:
+        - pressed arrow keys before "[WASD]" message appeared, used them throughout
+        - had to instruct how to use potions (tried dragging it onto player)
+            - didn't really get to see tutorial text because it was on mouse while trying to use it.
+        - often tried moving items via drag-n-drop instead of click-move-click
+        - rapidly mashed movement keys while fighting, didn't seem to grasp concept of turn-basedness
+            - kept doing it after i explained why it wasn't necessary, kept doing it anyways
+            - perhaps more of a mental tic in response to stress
+        - ran past enemies even whenever possible, causing him to recieve no potions and die in later levels
+        - didn't realize you could attack enemies by running into them
+        - struggled to equip dagger
+            - tried dragging it onto player
+            - tried right-clicking it in inventory
+            - confused about what "Throwable" meant
+            - had to instruct how to select it (there's no in-game explanation for this currently)
+        - noticed Zzz's on enemies, but didn't understand what it meant or how to take advantage
+            - even after explanation and demonstration, couldn't (immediately~) start fighting slow enemies safely 
+        - never tried hovering over enemies to see stats
         
 
 [game name]
