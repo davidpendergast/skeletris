@@ -24,6 +24,7 @@
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - enemy kill count isn't hooked up
+ - machine has no trade text
 
 
 [balance issues]

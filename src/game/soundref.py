@@ -663,7 +663,7 @@ def rand_damage_hit_small():
 
 def rand_heal_small():
     choices = [sfx_sounds_powerup10]
-    return (random.choice(choices), 0.4)
+    return (random.choice(choices), 0.3)
 
 
 def rand_explosion_short():

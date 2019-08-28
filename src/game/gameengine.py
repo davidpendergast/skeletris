@@ -72,7 +72,7 @@ class ActorState(StatProvider):
         return res
 
     def hp(self):
-        return self.current_hp
+        return min(self.current_hp, self.max_hp())
 
     def turn_duration_modifier(self, action_type):
         if self.alignment == 0:
