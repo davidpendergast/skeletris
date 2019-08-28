@@ -741,31 +741,40 @@ class ActorEntity(Entity):
 
     def _apply_status_effects(self, world):
         a_state = self.get_actor_state()
-        old_hp = a_state.hp()
-
-        pulse_color = None
 
         regen_val = a_state.stat_value(stats.StatTypes.HP_REGEN)
         pois_val = a_state.stat_value(stats.StatTypes.POISON)
         hp_change = regen_val - pois_val
 
-        if hp_change > 0:
-            pulse_color = stats.StatTypes.HP_REGEN.get_color()
-        elif hp_change < 0:
-            pulse_color = stats.StatTypes.POISON.get_color()
+        if hp_change != 0:
+            if hp_change > 0:
+                pulse_color = stats.StatTypes.HP_REGEN.get_color()
+                sound = soundref.rand_heal_small()
+            else:
+                pulse_color = stats.StatTypes.POISON.get_color()
+                sound = soundref.rand_damage_hit_small()
 
+            self.apply_hp_change(hp_change, world, sound=sound, pulse_color=pulse_color, show_text=True)
+
+    def apply_hp_change(self, hp_change, world, sound=None, pulse_color=None, show_text=True):
+        a_state = self.get_actor_state()
+        old_hp = a_state.hp()
         a_state.set_hp(old_hp + hp_change)
         new_hp = a_state.hp()
 
-        if new_hp != old_hp and pulse_color is not None:
+        if old_hp == new_hp:
+            return
+
+        if pulse_color is not None:
             self.perturb_color(pulse_color, 30)
+
+        if sound is not None:
+            sound_effects.play_sound(sound)
 
         if new_hp > old_hp:
             world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 3, self)
-            sound_effects.play_sound(soundref.rand_heal_small())
         elif new_hp < old_hp:
             world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 3, self)
-            sound_effects.play_sound(soundref.rand_damage_hit_small())
 
     def update(self, world):
         Entity.update(self, world)
@@ -1497,6 +1506,9 @@ class ExitEntity(Entity):
     def is_exit(self):
         return True
 
+    def does_level_end_heal(self):
+        return True
+
     def update(self, world):
         if self._is_opening:
             # pause game while door is opening
@@ -1529,6 +1541,15 @@ class ExitEntity(Entity):
         if self.can_open():
             self._is_opening = True
             sound_effects.play_sound(soundref.exit_door_open)
+
+            if self.does_level_end_heal():
+                p = world.get_player()
+                if p is not None:
+                    heal_amt = p.get_actor_state().stat_value(stats.StatTypes.HEAL_AT_LEVEL_END)
+                    p.apply_hp_change(heal_amt, world,
+                                      pulse_color=stats.StatTypes.HEAL_AT_LEVEL_END.get_color(),
+                                      sound=None,  # the sound is kind of distracting
+                                      show_text=True)
         else:
             dia = Dialog("This path doesn't lead anywhere...")
             gs.get_instance().dialog_manager().set_dialog(dia)

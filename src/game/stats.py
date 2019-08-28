@@ -108,6 +108,8 @@ class StatTypes:
     GRASP_ON_MELEE_HIT = StatType("GRASP_ON_MELEE_HIT", color=colors.ORANGE, desc="Grasps on Melee Hit (lasts {} turns)",
                                   local_desc="Grasps on Melee Hit (lasts {} turns)", enemy_desc="Grasping")
 
+    HEAL_AT_LEVEL_END = StatType("HEAL_AT_LEVEL_END", desc="+{} HP at End of Level", color=colors.GREEN)
+
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
     WEALTH = StatType("WEALTH")
@@ -163,7 +165,8 @@ def default_player_stats():
         StatTypes.LIGHT_LEVEL: 4,
         StatTypes.MIN_LIGHT_LEVEL: 2,
         StatTypes.SPEED: 4,
-        StatTypes.INTELLIGENCE: 5  # affects nothing, but there's no reason to be mean
+        StatTypes.HEAL_AT_LEVEL_END: 5,
+        StatTypes.INTELLIGENCE: 5,  # affects nothing, but there's no reason to be mean
     })
 
 
