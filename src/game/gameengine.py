@@ -43,7 +43,8 @@ class ActorState(StatProvider):
         self.unarmed_projectile_sprite = None
 
     def get_all_mappable_action_providers(self):
-        yield ItemActions.UNARMED_ATTACK
+        # yield ItemActions.UNARMED_ATTACK  # this is unnecessary, confusing
+        # TODO - sort these
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable():

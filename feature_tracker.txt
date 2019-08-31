@@ -25,6 +25,7 @@
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - enemy kill count isn't hooked up
  - machine has no trade text
+ - splash screen fade is misaligned on non-standard window sizes
 
 
 [balance issues]
@@ -194,6 +195,17 @@
         - noticed Zzz's on enemies, but didn't understand what it meant or how to take advantage
             - even after explanation and demonstration, couldn't (immediately~) start fighting slow enemies safely 
         - never tried hovering over enemies to see stats
+        
+    takeaways:
+        - need to streamline the way weapons are equipped. 
+            - it should *just work* when you put a weapon into the equipment grid
+            - only two attacks available, and a maximum of two weapons equipped
+        - there should be a way to recover life at the end of a level
+        - drag-n-drop should work
+        - disable arrow keys as default controls, it just screws people up
+        - need some non-enemy challenges in early levels, to introduce the movement and turn system
+        - clicking a potion onto yourself should probably just use it~
+        - clicking an equipment onto yourself should equip it if possible
         
 
 [game name]

@@ -139,6 +139,7 @@ class UI:
     inventory_button = None
     map_button = None
     help_button = None
+    single_char_outline = None
 
     left_button = None
     up_button = None
@@ -703,6 +704,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.inventory_button = make(52, 237, 15, 15, shift=start_pos)
     UI.map_button = make(67, 237, 15, 15, shift=start_pos)
     UI.help_button = make(82, 237, 15, 15, shift=start_pos)
+    UI.single_char_outline = make(187, 233, 12, 19, shift=start_pos)
 
     UI.status_eye_icon = make(256, 240, 16, 16, shift=start_pos)
     UI.status_drop_icon = make(256, 256, 16, 16, shift=start_pos)

@@ -184,6 +184,11 @@ class Settings:
         return len(KEY_MAPPED_ACTIONS)
 
     def action_key(self, num):
+        if num < 0 or num >= self.num_mapped_actions():
+            print("WARN: num out of range for {} mapped actions: {}".format(
+                self.num_mapped_actions(), num))
+            return []
+
         return self.get(KEY_MAPPED_ACTIONS[num])
 
     def clear_finished_tutorials(self):

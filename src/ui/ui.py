@@ -745,6 +745,9 @@ class MappedActionImage(InteractableImage):
         self._border_img = None
         self._icon_img = None
 
+        self._keybind_border_img = None
+        self._keybind_key_img = None
+
     def contains_point(self, x, y):
         if self.action_prov is None:
             return False
@@ -773,11 +776,37 @@ class MappedActionImage(InteractableImage):
     def is_dirty(self):
         return True
 
+    def get_hotbar_idx(self):
+        if self.action_prov is None:
+            return None
+        else:
+            for i in range(0, 6):
+                if gs.get_instance().get_mapped_action(i) == self.action_prov:
+                    return i
+            return None
+
+    def get_keybind_character(self):
+        my_idx = self.get_hotbar_idx()
+        if my_idx is None:
+            return None
+        else:
+            n_settings = gs.get_instance().settings().num_mapped_actions()
+            if my_idx <= n_settings:
+                keys = gs.get_instance().settings().action_key(my_idx)
+                if len(keys) == 0:
+                    return None
+                else:
+                    keyfull = Utils.stringify_key(keys[0])
+                    if len(keyfull) > 1:
+                        return keyfull[0]  # not really ideal but there's just no room
+                    else:
+                        return keyfull
+
     def update_images(self):
         if self.action_prov is None:
             RenderEngine.get_instance().remove(self._border_img)
-            RenderEngine.get_instance().remove(self._icon_img)
             self._border_img = None
+            RenderEngine.get_instance().remove(self._icon_img)
             self._icon_img = None
         else:
             targeting_action = gs.get_instance().get_targeting_action_provider()
@@ -792,11 +821,45 @@ class MappedActionImage(InteractableImage):
             self._border_img = self._border_img.update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
                                                        new_x=self.rect[0], new_y=self.rect[1])
 
+        keybind_char = self.get_keybind_character()
+        if keybind_char is None or self.action_prov is None:
+            if self._keybind_border_img is not None:
+                RenderEngine.get_instance().remove(self._keybind_border_img)
+                self._keybind_border_img = None
+            if self._keybind_key_img is not None:
+                for bun in self._keybind_key_img.all_bundles():
+                    RenderEngine.get_instance().remove(bun)
+                self._keybind_key_img = None
+        else:
+            sc = 1.5
+            if self._keybind_key_img is None:
+                self._keybind_border_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER)
+            if self._keybind_key_img is None:
+                self._keybind_key_img = TextImage(0, 0, keybind_char, spriteref.UI_0_LAYER)
+
+            border_sprite = spriteref.UI.single_char_outline
+            x_pos = self.rect[0] + self.rect[2] - (border_sprite.width() * sc) // 2
+            y_pos = self.rect[1] + self.rect[3] - (border_sprite.height() * sc * 3) // 4
+
+            self._keybind_border_img = self._keybind_border_img.update(new_model=border_sprite, new_scale=sc,
+                                                                       new_x=x_pos, new_y=y_pos,
+                                                                       new_depth=FG_DEPTH - 1)
+
+            self._keybind_key_img = self._keybind_key_img.update(new_text=keybind_char, new_scale=sc,
+                                                                 new_x=x_pos + 2 * sc,
+                                                                 new_y=y_pos + 2 * sc,
+                                                                 new_depth=FG_DEPTH - 2)
+
     def all_bundles(self):
         if self._border_img is not None:
             yield self._border_img
         if self._icon_img is not None:
             yield self._icon_img
+        if self._keybind_border_img is not None:
+            yield self._keybind_border_img
+        if self._keybind_key_img is not None:
+            for bun in self._keybind_key_img.all_bundles():
+                yield bun
 
 
 class StatusEffectImage(InteractableImage):
