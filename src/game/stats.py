@@ -113,6 +113,8 @@ class StatTypes:
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
     WEALTH = StatType("WEALTH")
+    POTION_AFFINITY = StatType("POTION_AFFINITY", color=colors.LIGHT_BLUE, enemy_desc="Potion User")
+    THROW_AFFINITY = StatType("THROW_AFFINITY", color=colors.LIGHT_RED, enemy_desc="Thrower")
 
     PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",
                                  color=colors.YELLOW,

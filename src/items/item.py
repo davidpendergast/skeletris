@@ -213,7 +213,7 @@ class Item(StatProvider):
         return 0
 
     def can_equip(self):
-        return False
+        return self.get_type().has_tag(ItemTags.EQUIPMENT)
 
     def can_rotate(self):
         return self._can_rotate
@@ -334,9 +334,6 @@ class StatCubesItem(Item):
     
     def level_string(self):
         return "lvl:{}".format(self.level + 1)
-
-    def can_equip(self):
-        return True
 
     def rotate(self):
         new_cubes = []

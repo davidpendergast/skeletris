@@ -262,26 +262,33 @@ class EnemyController(ActorController):
     def __init__(self):
         ActorController.__init__(self)
 
-    def _get_positions_to_attack(self, actor, world):
+    def _get_nearby_positions_with_actors(self, actor, world, same_alignment=None, min_dist=None, max_dist=None):
         res = []
-        for nearby_actor in world.entities_in_circle(actor.center(), 400,
-                                                     onscreen=False, cond=lambda e: e.is_actor()):
-            if nearby_actor.get_actor_state().alignment != actor.get_actor_state().alignment:
-                nearby_actor_center = nearby_actor.center()
-                res.append(world.to_grid_coords(nearby_actor_center[0], nearby_actor_center[1]))
 
-        actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+        actor_pos = world.to_grid_coords(*actor.center())
+        for nearby_actor in world.entities_in_circle(actor.center(), 400, onscreen=False,
+                                                     cond=lambda e: e is not actor and e.is_actor()):
+
+            has_same_alignment = (nearby_actor.get_actor_state().alignment == actor.get_actor_state().alignment)
+            if same_alignment is None or has_same_alignment == same_alignment:
+
+                nearby_actor_pos = world.to_grid_coords(*nearby_actor.center())
+                dist = Utils.dist_manhattan(actor_pos, nearby_actor_pos)
+                if (min_dist is None or min_dist <= dist) and (max_dist is None or dist <= max_dist):
+                    res.append(nearby_actor_pos)
+
         res.sort(key=lambda pos: Utils.dist_manhattan(pos, actor_pos))
 
         return res
 
     def _get_attack_action(self, actor, world):
-        target_positions = self._get_positions_to_attack(actor, world)
+        a_state = actor.get_actor_state()
+
+        target_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=False)
         if len(target_positions) == 0:
             return None
 
         # smart enemies use their items to attack
-        a_state = actor.get_actor_state()
         if a_state.intelligence() >= 5:
             import src.items.item as item
             weapons = []
@@ -341,7 +348,89 @@ class EnemyController(ActorController):
             if res.is_possible(world):
                 return res
 
+    def _get_item_consume_action(self, actor, world):
+        a_state = actor.get_actor_state()
+
+        if a_state.intelligence() >= 4 and a_state.hp() <= 2 * a_state.max_hp() // 3:
+            import src.items.item as item
+            for it in a_state.inventory().all_inv_items():
+                consume_effect = it.get_consume_effect()
+                if consume_effect is not None and consume_effect.stat_value(StatTypes.HP_REGEN) > 0:
+                    consume_action = ConsumeItemAction(actor, it)
+
+                    # should probably always be possible, but could depend on other things in the future
+                    if consume_action.is_possible(world):
+                        return consume_action
+        return None
+
+    def _get_item_throw_action(self, actor, world):
+        a_state = actor.get_actor_state()
+
+        all_throwables = []
+        for it in a_state.inventory().all_inv_items():
+            if it.can_throw():
+                all_throwables.append(it)
+
+        if len(all_throwables) == 0:
+            return None
+
+        # throw weapons at player
+        if a_state.stat_value(StatTypes.THROW_AFFINITY) > 0:
+            target_throw_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=False, min_dist=2)
+            if len(target_throw_positions) > 0:
+
+                for it in all_throwables:
+                    if it.can_equip():
+                        for pos in target_throw_positions:
+                            throw_action = ThrowItemAction(actor, it, pos)
+                            if throw_action.is_possible(world):
+                                return throw_action
+
+        # throw bad potions at player
+        if a_state.stat_value(StatTypes.POTION_AFFINITY) > 0:
+            target_throw_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=False)
+            if len(target_throw_positions) > 0:
+                for it in all_throwables:
+                    consume_effect = it.get_consume_effect()
+                    if consume_effect is not None and consume_effect.is_debuff():
+                        for pos in target_throw_positions:
+                            throw_action = ThrowItemAction(actor, it, pos)
+                            if throw_action.is_possible(world):
+                                return throw_action
+
+        # throw good potions at allies
+        if a_state.intelligence() >= 4 and a_state.stat_value(StatTypes.POTION_AFFINITY) > 0:
+            target_throw_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=True)
+            if len(target_throw_positions) > 0:
+                for it in all_throwables:
+                    consume_effect = it.get_consume_effect()
+                    if consume_effect is not None and not consume_effect.is_debuff():
+                        for pos in target_throw_positions:
+
+                            # don't heal allies with mostly full HP already.
+                            if consume_effect.stat_value(StatTypes.HP_REGEN) > 0:
+                                target_actor = world.get_actor_in_cell(*pos)
+                                if target_actor is not None:
+                                    pcnt_hp = target_actor.get_actor_state().hp() / target_actor.get_actor_state().max_hp()
+                                    if pcnt_hp > 2 / 3:
+                                        continue
+
+                            throw_action = ThrowItemAction(actor, it, pos)
+                            if throw_action.is_possible(world):
+                                return throw_action
+
     def get_next_action(self, actor, world):
+        is_visible = actor.is_visible_in_world(world)
+
+        if is_visible:
+            consume_action = self._get_item_consume_action(actor, world)
+            if consume_action is not None and consume_action.is_possible(world):
+                return consume_action
+
+            throw_action = self._get_item_throw_action(actor, world)
+            if throw_action is not None and throw_action.is_possible(world):
+                return throw_action
+
         attack_action = self._get_attack_action(actor, world)
         if attack_action is not None and attack_action.is_possible(world):
             return attack_action
@@ -1094,7 +1183,7 @@ class ThrowItemAction(Action):
                 return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
-        if target is None or target.get_actor_state().alignment == actor.get_actor_state().alignment:
+        if target is None:
             return False
 
         return True
@@ -1442,7 +1531,7 @@ class AddItemToGridAction(Action):
             if not grid.can_place(self.get_item(), self.get_position(), allow_replace=True):
                 return False
         else:
-            if self._search_for_valid_position() is None:
+            if grid.search_for_valid_position_to_place(self.get_item()) is None:
                 return False
             if not self._find_item(world, and_remove_it=False):
                 return False
@@ -1456,7 +1545,7 @@ class AddItemToGridAction(Action):
         pos = self.get_position()
         res = False
         if pos is None:
-            auto_pos = self._search_for_valid_position()
+            auto_pos = grid.search_for_valid_position_to_place(it)
             self._find_item(world, and_remove_it=True)
             res = grid.place(it, auto_pos)
             sound_effects.play_sound(soundref.item_place)
@@ -1474,18 +1563,6 @@ class AddItemToGridAction(Action):
 
         if not res:
             raise ValueError("failed to place item {} in grid {}".format(it, grid))
-
-    def _search_for_valid_position(self):
-        grid = self.get_grid()
-        it = self.get_item()
-
-        grid_size = grid.size()
-        for y in range(0, grid_size[1]):
-            for x in range(0, grid_size[0]):
-                if grid.can_place(it, (x, y), allow_replace=False):
-                    return (x, y)
-
-        return None
 
 
 class RemoveItemFromGridAction(Action):

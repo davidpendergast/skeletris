@@ -119,6 +119,13 @@ class ItemGrid:
             return self.items[item]
         else:
             return None
+
+    def search_for_valid_position_to_place(self, item):
+        for y in range(0, self.h()):
+            for x in range(0, self.w()):
+                if self.can_place(item, (x, y), allow_replace=False):
+                    return (x, y)
+        return None
         
 
 class InventoryState:
@@ -162,14 +169,26 @@ class InventoryState:
             return True
         return False
 
-    def add_to_inv(self, item, pos=(0, 0)):
+    def add_to_inv(self, item, pos=None):
+        if pos is None:
+            pos = self.inv_grid.search_for_valid_position_to_place(item)
+            if pos is None:
+                return False
+
         if self.inv_grid.place(item, pos):
             return True
+
         return False
 
-    def add_to_equipment(self, item, pos=(0, 0)):
+    def add_to_equipment(self, item, pos=None):
+        if pos is None:
+            pos = self.equip_grid.search_for_valid_position_to_place(item)
+            if pos is None:
+                return False
+
         if self.equip_grid.place(item, pos):
             return True
+
         return False
 
     def all_items(self):
@@ -179,38 +198,6 @@ class InventoryState:
         for i in self.all_inv_items():
             res.append(i)
         return res
-
-
-class FakeInventoryState(InventoryState):
-
-    def __init__(self):
-        InventoryState.__init__(self)  # TODO - make an actual superclass
-        self.equipped_items = []
-        self.inv_items = []
-
-    def get_inv_grid(self):
-        raise ValueError("no inv grid in FakeInventoryGrid")
-
-    def get_equip_grid(self):
-        raise ValueError("no equip grid in FakeInventoryGrid")
-
-    def all_equipped_items(self):
-        return list(self.equipped_items)
-
-    def all_inv_items(self):
-        return list(self.inv_items)
-
-    def add_to_equipment(self, item, pos=(0, 0)):
-        self.equipped_items.append(item)
-
-    def add_to_inv(self, item, pos=(0, 0)):
-        self.inv_items.append(item)
-
-    def is_equipped(self, item):
-        return item in self.equipped_items
-
-    def is_in_inventory(self, item):
-        return item in self.inv_items
 
 
 

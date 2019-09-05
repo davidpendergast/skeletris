@@ -17,7 +17,7 @@ def _new_unique_key():
 class StatusEffect(StatProvider):
 
     def __init__(self, name, duration, color, icon, applied_stats, unique_key=None, player_text=None,
-                 ignore_nullification=False):
+                 ignore_nullification=False, is_debuff=False):
         self.name = name
         self.duration = duration
         self.color = color
@@ -25,6 +25,7 @@ class StatusEffect(StatProvider):
         self.applied_stats = applied_stats
         self.player_text = player_text
         self._ignore_nullifcation = ignore_nullification
+        self._is_debuff = is_debuff
         self.unique_key = unique_key if unique_key is not None else _new_unique_key()
 
     def stat_value(self, stat_type, local=False):
@@ -43,6 +44,9 @@ class StatusEffect(StatProvider):
 
     def all_applied_stats(self):
         return self.applied_stats
+
+    def is_debuff(self):
+        return self._is_debuff
 
     def ignores_nullification(self):
         return self._ignore_nullifcation
@@ -79,42 +83,42 @@ def new_night_vision_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.LIGHT_LEVEL, val)]
     return StatusEffect("Night Vision", duration, StatTypes.LIGHT_LEVEL.get_color(),
                         spriteref.UI.status_eye_icon, stats, unique_key=unique_key,
-                        player_text=player_text)
+                        player_text=player_text, is_debuff=False)
 
 
 def new_plus_defenses_effect(duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.DEF, balance.STATUS_EFFECT_PLUS_DEFENSE_VAL)]
     return StatusEffect("Increased Defenses", duration, StatTypes.DEF.get_color(),
                         spriteref.UI.status_shield_icon, stats, unique_key=unique_key,
-                        player_text=player_text)
+                        player_text=player_text, is_debuff=False)
 
 
 def new_regen_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.HP_REGEN, val)]
     return StatusEffect("Regeneration", duration, StatTypes.HP_REGEN.get_color(),
                         spriteref.UI.status_sparkles_icon, stats, unique_key=unique_key,
-                        player_text=player_text,)
+                        player_text=player_text, is_debuff=False)
 
 
 def new_poison_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.POISON, val)]
     return StatusEffect("Poison", duration, StatTypes.POISON.get_color(),
                         spriteref.UI.status_drop_icon, stats, unique_key=unique_key,
-                        player_text=player_text)
+                        player_text=player_text, is_debuff=True)
 
 
 def new_speed_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, val)]
     return StatusEffect("Increased Speed", duration, StatTypes.SPEED.get_color(),
                         spriteref.UI.status_up_arrow_icon, stats, unique_key=unique_key,
-                        player_text=player_text)
+                        player_text=player_text, is_debuff=False)
 
 
 def new_slow_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, -val)]
     return StatusEffect("Reduced Speed", duration, colors.DARK_YELLOW,
                         spriteref.UI.status_diagonal_lines_icon, stats, unique_key=unique_key,
-                        player_text=player_text)
+                        player_text=player_text, is_debuff=True)
 
 
 def new_nullification_effect(duration, player_text=None, unique_key=None):
@@ -122,18 +126,18 @@ def new_nullification_effect(duration, player_text=None, unique_key=None):
     return StatusEffect("Nullification", duration, colors.LIGHT_GRAY,
                         spriteref.UI.status_diagonal_lines_icon, stats,
                         player_text=player_text, unique_key=unique_key,
-                        ignore_nullification=True)
+                        ignore_nullification=True, is_debuff=True)
 
 
 def new_confusion_effect(duration, player_text=None):
     stats = [AppliedStat(StatTypes.CONFUSION, 1)]
     return StatusEffect("Confusion", duration, colors.RED,
                         spriteref.UI.status_sparkles_icon, stats,
-                        player_text=player_text, unique_key="confusion")
+                        player_text=player_text, unique_key="confusion", is_debuff=True)
 
 
 def new_grasped_effect(duration, player_text=None):
     stats = [AppliedStat(StatTypes.GRASPED, 1)]
     return StatusEffect("Grasped", duration, colors.ORANGE,
                         spriteref.UI.status_hand_icon, stats,
-                        player_text=player_text, unique_key="grasped")
+                        player_text=player_text, unique_key="grasped", is_debuff=True)

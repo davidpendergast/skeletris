@@ -78,7 +78,8 @@ class CaveCrawlerTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.WEALTH: 1
+            StatTypes.WEALTH: 1,
+            StatTypes.THROW_AFFINITY: 1
         })
 
 
@@ -304,11 +305,12 @@ class WitchTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 15,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 3,
             StatTypes.DEF: 5,
-            StatTypes.INTELLIGENCE: 5,
-            StatTypes.WEALTH: 3
+            StatTypes.INTELLIGENCE: 4,
+            StatTypes.WEALTH: 3,
+            StatTypes.POTION_AFFINITY: 2
         })
 
 
@@ -715,15 +717,31 @@ class EnemyFactory:
 
     @staticmethod
     def get_state(template, level):
-        inv = inventory.FakeInventoryState()
+        inv = inventory.InventoryState()
 
         wealth = template.get_base_stats().stat_value(StatTypes.WEALTH)
-
         for _ in range(0, wealth):
             if random.random() < balance.ENEMY_ITEM_CHANCE_PER_WEALTH:
                 loot_item = itemgen.ItemFactory.gen_item(level, item_type=None)
                 if loot_item is not None:
                     inv.add_to_inv(loot_item)
+
+        # spawn with one random, unique potion per potion_affinity point.
+        potion_affinity = template.get_base_stats().stat_value(StatTypes.POTION_AFFINITY)
+        for _ in range(0, potion_affinity):
+            templates_to_use = itemgen.PotionTemplates.all_templates(level)
+            if len(templates_to_use) > potion_affinity:
+                templates_to_use = random.choices(templates_to_use, k=potion_affinity)
+
+            for t in templates_to_use:
+                potion = itemgen.PotionItemFactory.gen_item(level, t)
+                if potion is not None:
+                    inv.add_to_inv(potion)
+
+        # gets a free dagger if it can throw them
+        if template.get_base_stats().stat_value(StatTypes.THROW_AFFINITY) > 0:
+            dagger = itemgen.WeaponItemFactory.gen_item(level, item.ItemTypes.DAGGER_WEAPON)
+            inv.add_to_inv(dagger)
 
         import src.game.gameengine as gameengine
         a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)

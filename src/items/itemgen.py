@@ -231,7 +231,6 @@ class PotionItemFactory:
                 template = None if len(weighted_temps) == 0 else random.choice(weighted_temps)
 
         if template is None:
-            print("WARN: no valid potion templates for level: {}".format(level))
             return None
 
         from src.game.gameengine import ItemActions
