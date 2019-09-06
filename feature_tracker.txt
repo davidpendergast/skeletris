@@ -26,6 +26,7 @@
  - enemy kill count isn't hooked up
  - machine has no trade text
  - splash screen fade is misaligned on non-standard window sizes
+ - HP on kill doesn't trigger when you kill an enemy with poison
 
 
 [balance issues]

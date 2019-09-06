@@ -85,10 +85,10 @@ def init_zones():
         make(zone_instance)
 
     story_zones = []
-    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(4, 1)))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(5, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1)))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1)))
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2)))
-    story_zones.append(ZoneBuilder.make_generated_zone(3, "Caves IV", "caves_4", dims=(3, 2)))
+    # TODO put some handbuilt scenery piece for caves_4
 
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))

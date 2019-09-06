@@ -334,7 +334,7 @@ class GiantTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 28,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 6,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 3,
@@ -481,13 +481,14 @@ class ScorpionTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 12,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 4,
             StatTypes.WEALTH: 2,
-            StatTypes.POISON_ON_HIT: 2
+            StatTypes.POISON_ON_HIT: 2,
+            StatTypes.GRASP_ON_MELEE_HIT: 1,
         })
 
 
