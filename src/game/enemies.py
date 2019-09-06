@@ -770,7 +770,8 @@ class EnemyFactory:
 
 
 if __name__ == "__main__":
-    print("INFO: enemy spawn ranges:")
+
+    print("INFO: #  BASIC SPAWN RANGES  #\n")
     for i in range(0, 16):
         line = "{}:\t".format(i)
         temps = [t for t in RAND_SPAWN_TEMPLATES if i in t.get_level_range()]
@@ -778,4 +779,23 @@ if __name__ == "__main__":
         line = line + "[" + ", ".join([t.get_name() for t in temps]) + "]"
         print("INFO: {}".format(line))
 
+    import src.worldgen.zones as zones
+    zones.init_zones()
+
+    print("\n\nINFO: #  STORY SPAWN RANGES  #\n")
+    for story_id in zones.all_storyline_zone_ids():
+        z = zones.get_zone(story_id)
+        if z.is_boss_zone():
+            print("INFO: BOSS ZONE")
+        else:
+            i = z.get_level()
+            line = "{}:\t".format(i)
+            temps = [t for t in RAND_SPAWN_TEMPLATES if i in t.get_level_range()]
+            temps.sort(key=lambda t: t.get_level_range()[0])
+            line = line + "[" + ", ".join([t.get_name() for t in temps]) + "]"
+
+            if z.get_file() is not None:
+                print("INFO: {} (FROM FILE)".format(line))
+            else:
+                print("INFO: {}".format(line))
 

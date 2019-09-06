@@ -291,7 +291,6 @@ def get_zone_name(zone_id):
 
 def make(zone):
     _ALL_ZONES[zone.get_id()] = zone
-    print("INFO: created zone: {}".format(zone.get_id()))
 
 
 class Zone:
@@ -900,6 +899,9 @@ class RoboLairZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_BLUE
+
+    def is_boss_zone(self):
+        return True
 
 
 class CaveHorrorZone(Zone):
