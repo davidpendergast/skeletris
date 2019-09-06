@@ -20,13 +20,17 @@
     - it's probably storing an old ref to the item with a different rotation
  - enemy tooltips don't update when stats change (HP is most important)
  - enemies double attack when you die (ranged enemies only?)
- - can interact with things from above (looks weird if they're hidden)
+ - can interact with things from above
+    - should at least prevent this when they're hidden
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
+ - machine has generic trade text
+    - consider making maching preserve # of cubes in the item
+    - it's really quite rare to be helpful otherwise
  - enemy kill count isn't hooked up
- - machine has no trade text
- - splash screen fade is misaligned on non-standard window sizes
  - HP on kill doesn't trigger when you kill an enemy with poison
+    - possibly OK?
+    - it should definitely still go towards the kill count though.
 
 
 [balance issues]
