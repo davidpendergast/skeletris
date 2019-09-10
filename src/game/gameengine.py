@@ -1323,14 +1323,14 @@ class InteractAction(Action):
         if Utils.dist_manhattan(pos, self.position) != 1:
             return False
 
-        if not world.is_solid(*pos, including_entities=False):
-            if world.get_hidden(*pos):
-                return False
-        else:
-            if world.get_hidden(pos[0], pos[1] + 1):
-                return False
+        interactable = world.get_interactable_in_cell(self.position[0], self.position[1])
+        if interactable is None:
+            return False
 
-        return world.get_interactable_in_cell(self.position[0], self.position[1]) is not None
+        if self.get_actor().is_player() and not interactable.is_visible_in_world(world):
+            return False
+
+        return True
 
     def start(self, world):
         super().start(world)
