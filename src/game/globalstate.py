@@ -259,6 +259,12 @@ class GlobalState:
             if panel_id is None:
                 sound_effects.play_sound(soundref.sidepanel_out)
             else:
+                from src.ui.ui import SidePanelTypes
+                if panel_id == SidePanelTypes.INVENTORY:
+                    self.inc_run_statistic(RunStatisticTypes.OPENED_INVENTORY_COUNT)
+                elif panel_id == SidePanelTypes.MAP:
+                    self.inc_run_statistic((RunStatisticTypes.OPENED_MAP_COUNT))
+
                 sound_effects.play_sound(soundref.sidepanel_in)
 
         self.active_sidepanel_id = panel_id

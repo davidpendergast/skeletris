@@ -57,16 +57,15 @@
         - frog boss tests the player's ability to sidestep attacks
         - mecha boss tests player's ability to use CC
         
- 
- 
+
 [current features]
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines, and 
- - need some kind of tutorial system
-    - still need "how to open map"
+ - tutorial system
     - still "how to use weapon"  (could also fix this with a UI redesign)
+ - 'grasped' effect should end if there's no enemy adjacent to you anymore.
     
  
 [architecture]

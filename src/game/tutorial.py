@@ -361,7 +361,13 @@ class HowToOpenMapPanelStage(EntityNotificationTutorialStage):
 
     def test_completed(self):
         from src.ui.ui import SidePanelTypes
-        return gs.get_instance().get_active_sidepanel() == SidePanelTypes.MAP
+        if gs.get_instance().get_active_sidepanel() == SidePanelTypes.MAP:
+            return True
+        elif gs.get_instance().get_run_statistic(gs.RunStatisticTypes.OPENED_MAP_COUNT) > 0:
+            # if you've ever opened the map this run, skip the tutorial.
+            return True
+
+        return False
 
     def get_message(self):
         map_keys = gs.get_instance().settings().map_key()
