@@ -50,7 +50,8 @@ class TooltipFactory:
                     added_newline = True
                 text_builder.add_line(str(stat), color=stat.color())
 
-        in_inv = target_item in gs.get_instance().player_state().inventory()
+        w, p = gs.get_instance().get_world_and_player()
+
         if target_item.can_consume():
             consume_effect = target_item.get_consume_effect()
             text_builder.add_line("")
@@ -58,10 +59,21 @@ class TooltipFactory:
                 text_builder.add("Gives ")
                 text_builder.add(consume_effect.get_name(), color=consume_effect.get_color())
                 text_builder.add_line(" when consumed ({} turns).".format(consume_effect.get_duration()))
-            if in_inv:
-                if consume_effect is not None:
-                    text_builder.add_line("")
-                text_builder.add_line("(Right-Click to Consume)", color=colors.LIGHT_GRAY)
+
+        if p is not None:
+            right_click_action = gameengine.get_right_click_action_for_item(target_item)
+            if right_click_action is not None and right_click_action.is_possible(w):
+                text_builder.add_line("")
+
+                if isinstance(right_click_action, gameengine.ConsumeItemAction):
+                    text_builder.add_line("(Right-Click to Consume)", color=colors.LIGHT_GRAY)
+                elif isinstance(right_click_action, gameengine.AddItemToGridAction):
+                    if right_click_action.get_grid() == p.get_actor_state().inventory().get_equip_grid():
+                        text_builder.add_line("(Right-Click to Equip)", color=colors.LIGHT_GRAY)
+                    else:
+                        text_builder.add_line("(Right-Click to Store)", color=colors.LIGHT_GRAY)
+                else:
+                    text_builder.add_line("(Right-Click to Use)", color=colors.LIGHT_GRAY)
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=target_item, xy=xy, layer=layer)

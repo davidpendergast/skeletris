@@ -101,7 +101,7 @@ class InteractableImage:
 class SidePanelTypes:
     INVENTORY = "INVENTORY"
     MAP = "MAP"
-    HELP = "HELP"
+    # HELP = "HELP"
 
 
 class SidePanel(InteractableImage):
@@ -1231,7 +1231,7 @@ class HealthBarPanel(InteractableImage):
         self._sidepanel_buttons = [None] * 8
         self._sidepanel_buttons[0] = HotbarInventoryButton(None)
         self._sidepanel_buttons[1] = HotbarMapButton(None)
-        self._sidepanel_buttons[2] = HotbarHelpButton(None)
+        # self._sidepanel_buttons[2] = HotbarHelpButton(None)  # not ready, need to cut
 
         self._move_buttons = [None] * 5
         self._move_buttons[0] = HotbarMoveLeftButton()

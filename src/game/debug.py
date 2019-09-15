@@ -12,6 +12,7 @@ _MAP_SEES_ALL = False
 _UNLIMITED_TRADES = False
 _HOLY_ARTIFACTS_100x_MORE_LIKELY = False
 _RESET_TUTORIALS_ON_NEWGAME = False
+_NEVER_SHOW_TUTORIALS = False
 
 
 def is_dev():
@@ -40,3 +41,6 @@ def unlimited_trades():
 
 def reset_tutorials_each_game():
     return is_debug() and _RESET_TUTORIALS_ON_NEWGAME
+
+def never_show_tutorials():
+    return is_debug() and _NEVER_SHOW_TUTORIALS

@@ -439,7 +439,7 @@ class StartMenu(OptionsMenu):
 class PauseMenu(OptionsMenu):
 
     CONTINUE_IDX = 0
-    HELP_IDX = 1
+    CONTROLS_IDX = 1
     SOUND_IDX = 2
     EXIT_IDX = 3
 
@@ -450,7 +450,7 @@ class PauseMenu(OptionsMenu):
         if idx == PauseMenu.EXIT_IDX:
             gs.get_instance().menu_manager().set_active_menu(ReallyQuitMenu())
             sound_effects.play_sound(soundref.menu_select)
-        elif idx == PauseMenu.HELP_IDX:
+        elif idx == PauseMenu.CONTROLS_IDX:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.IN_GAME_MENU))
             sound_effects.play_sound(soundref.menu_select)
         elif idx == PauseMenu.CONTINUE_IDX:
@@ -586,7 +586,7 @@ class ControlsMenu(OptionsMenu):
         ("rotate item", settings.KEY_ROTATE_CW),
         ("inventory", settings.KEY_INVENTORY),
         ("map", settings.KEY_MAP),
-        ("help", settings.KEY_HELP)
+        # ("help", settings.KEY_HELP)
     ]
     BACK_OPT_IDX = len(OPTS)
 
@@ -1379,8 +1379,8 @@ class InGameUiState(Menu):
             gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().map_key()):
             gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP)
-        elif InputState.get_instance().was_pressed(gs.get_instance().settings().help_key()):
-            gs.get_instance().toggle_sidepanel(SidePanelTypes.HELP)
+        #elif InputState.get_instance().was_pressed(gs.get_instance().settings().help_key()):
+        #    gs.get_instance().toggle_sidepanel(SidePanelTypes.HELP)
 
         # TODO - add 'close' key
 
@@ -1485,8 +1485,6 @@ class InGameUiState(Menu):
             self.sidepanel = InventoryPanel()
         elif panel_id == SidePanelTypes.MAP:
             self.sidepanel = MapPanel()
-        elif panel_id == SidePanelTypes.HELP:
-            self.sidepanel = None  # TODO - help panel
         else:
             self.sidepanel = None
 

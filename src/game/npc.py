@@ -400,7 +400,7 @@ class NpcPotionProtocol(NpcTradeProtocol):
         return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", sprites=get_sprites(npc_id))
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("Hey, hey. I think you've had enough pal.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Hey, hey. I think you've had enough.", sprites=get_sprites(npc_id))
 
 
 class NpcRerollCubesProtocol(NpcTradeProtocol):

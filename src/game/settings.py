@@ -60,7 +60,7 @@ KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_SPACE], cleaner=clean_key
 KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r], cleaner=clean_keys)
 KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e], cleaner=clean_keys)
 KEY_MAP = Setting("map", "MAP", [pygame.K_m], cleaner=clean_keys)
-KEY_HELP = Setting("help", "HELP", [pygame.K_h], cleaner=clean_keys)
+# KEY_HELP = Setting("help", "HELP", [pygame.K_h], cleaner=clean_keys)
 
 num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
@@ -161,8 +161,8 @@ class Settings:
     def map_key(self):
         return self.get(KEY_MAP)
 
-    def help_key(self):
-        return self.get(KEY_HELP)
+    #def help_key(self):
+    #    return self.get(KEY_HELP)
 
     def all_direction_keys(self):
         res = []
