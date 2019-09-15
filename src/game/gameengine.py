@@ -535,9 +535,12 @@ class Action:
 
 class MoveToAction(Action):
 
-    def __init__(self, actor, position):
+    def __init__(self, actor, position, perturb_color=None):
         Action.__init__(self, ActionType.MOVE_TO, 22, actor, position=position)
         self.start_pos = None  # this is a pixel position, used for animating
+
+        self._did_perturb_color = False
+        self._perturb_color = perturb_color
 
     def is_possible(self, world):
         pix_pos = self.actor_entity.center()
@@ -564,6 +567,10 @@ class MoveToAction(Action):
 
         new_pos = Utils.linear_interp(self.start_pos, end_pos, progress)
         self.actor_entity.move_to(round(new_pos[0]), round(new_pos[1]))
+
+        if not self._did_perturb_color and self._perturb_color is not None:
+            self._did_perturb_color = True
+            self.get_actor().perturb_color(self._perturb_color, 30)
 
     def finalize(self, world):
         super().finalize(world)
@@ -622,8 +629,8 @@ class ConsumeItemAction(Action):
 
 class OpenDoorAction(MoveToAction):
 
-    def __init__(self, actor, position):
-        MoveToAction.__init__(self, actor, position)
+    def __init__(self, actor, position, perturb_color=None):
+        MoveToAction.__init__(self, actor, position, perturb_color=perturb_color)
         self.door_entity = None
         self._did_sound = False
 
@@ -1285,13 +1292,17 @@ class ThrowItemAction(Action):
 
 class SkipTurnAction(Action):
 
-    def __init__(self, actor, position):
+    def __init__(self, actor, position, perturb_color=None):
         Action.__init__(self, ActionType.SKIP_TURN, 25, actor, position=position)
         self._did_enemy_jump = False
         self._did_sound = False
+        self._did_color_perturb = False
+
+        self._perturb_color = perturb_color
 
     def animate_in_world(self, progress, world):
         actor = self.get_actor()
+
         if actor.is_player():
             jump_sprites = spriteref.player_attacks
             idx = int(Utils.bound(progress, 0.0, 0.99) * len(jump_sprites))
@@ -1302,6 +1313,10 @@ class SkipTurnAction(Action):
             if not self._did_enemy_jump:
                 self._did_enemy_jump = True
                 actor.perturb_z(jump_height=15, jump_duration=10)
+
+        if not self._did_color_perturb and self._perturb_color is not None:
+            self._did_color_perturb = True
+            actor.perturb_color(self._perturb_color, 25)
 
         if not self._did_sound:
             sound = soundref.player_skip_turn if actor.is_player() else soundref.enemy_skip_turn
@@ -1786,16 +1801,20 @@ class ItemActions:
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
 
 
-def get_basic_movement_actions(player, current_pos, move_pos, for_click=False, allow_confusion=True):
+def get_basic_movement_actions(player, current_pos, move_pos, for_click=False, allow_status_effects_to_interfere=True):
     res = []
-
-    if allow_confusion and not for_click and player.get_actor_state().is_confused():
-        if random.random() < balance.CONFUSION_CHANCE:
-            for a in get_confusion_move_actions(player, current_pos):
-                res.append(a)
 
     res.append(InteractAction(player, move_pos))
     res.append(TradeItemAction(player, player.get_actor_state().held_item, move_pos))
+
+    if allow_status_effects_to_interfere and not for_click:
+        if player.get_actor_state().is_confused():
+            if random.random() < balance.CONFUSION_CHANCE:
+                for a in get_confusion_move_actions(player, current_pos, move_pos):
+                    res.append(a)
+        if player.get_actor_state().is_grasped():
+            color = statuseffects.StatTypes.GRASPED.get_color()
+            res.append(SkipTurnAction(player, current_pos, perturb_color=color))
 
     if not for_click:
         res.append(OpenDoorAction(player, move_pos))
@@ -1804,20 +1823,23 @@ def get_basic_movement_actions(player, current_pos, move_pos, for_click=False, a
     return res
 
 
-def get_confusion_move_actions(player, pos):
+def get_confusion_move_actions(player, pos, target_pos):
     neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
     random.shuffle(neighbors)
 
     res = []
 
+    color = statuseffects.StatTypes.CONFUSION.get_color()
+
     for n in neighbors:
-        res.append(OpenDoorAction(player, n))
-        res.append(MoveToAction(player, n))
+        if n != target_pos:
+            res.append(OpenDoorAction(player, n, perturb_color=color))
+            res.append(MoveToAction(player, n, perturb_color=color))
 
     return res
 
 
-def get_keyboard_action_requests(world, player, target_pos, allow_confusion=True):
+def get_keyboard_action_requests(world, player, target_pos, allow_status_effects_to_interfere=True):
     pos = world.to_grid_coords(*player.center())
     res = []
 
@@ -1835,8 +1857,8 @@ def get_keyboard_action_requests(world, player, target_pos, allow_confusion=True
             else:
                 res.append(MeleeAttackAction(player, None, target_pos))
 
-    for basic_action in get_basic_movement_actions(player, pos, target_pos,
-                                                   for_click=False, allow_confusion=allow_confusion):
+    for basic_action in get_basic_movement_actions(player, pos, target_pos, for_click=False,
+                                                   allow_status_effects_to_interfere=allow_status_effects_to_interfere):
         res.append(basic_action)
 
     return res

@@ -65,7 +65,6 @@
         as a fight. Let's have the boss say some lines, and 
  - tutorial system
     - still "how to use weapon"  (could also fix this with a UI redesign)
- - 'grasped' effect should end if there's no enemy adjacent to you anymore.
     
  
 [architecture]
