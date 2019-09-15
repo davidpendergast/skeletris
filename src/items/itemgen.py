@@ -286,25 +286,6 @@ class ItemStatRanges:
 class StatCubesItemFactory:
 
     @staticmethod
-    def gen_core_stat(lvl):
-        stat = CORE_STATS[int(random.random() * len(CORE_STATS))]
-        low, high = ItemStatRanges.get_range(stat, lvl)
-
-        return AppliedStat(stat, random.randint(low, high))
-
-    @staticmethod
-    def gen_non_core_stats(lvl, n, exclude=()):
-        res = []
-        choices = [x for x in NON_CORE_STATS + CORE_STATS if x not in exclude]
-        while len(res) < n and len(choices) > 0:
-            choice = choices[int(len(choices) * random.random())]
-            low, high = ItemStatRanges.get_range(choice, lvl)
-            res.append(AppliedStat(choice, random.randint(low, high)))
-            choices.remove(choice)
-
-        return res
-
-    @staticmethod
     def gen_color_for_stats(stats):
         color = tuple([0.5 + random.random() * 0.25] * 3)
         core_stats = [s for s in stats if s.get_type() in CORE_STATS]
@@ -333,24 +314,36 @@ class StatCubesItemFactory:
         return cube_art
 
     @staticmethod
-    def gen_stats_for_cubes(level, cubes):
-        n_cubes = len(cubes)
-        primary_stat = StatCubesItemFactory.gen_core_stat(level)
-        n_cubes = n_cubes if n_cubes is not None else 5 + int(2 * random.random())
-        n_secondary_stats = Utils.bound(int((n_cubes - 4) * random.random()), 0, 4)
+    def gen_stat_types_for_cubes(level, cubes):
+        # require at least one core stat
+        res = [random.choice(CORE_STATS), ]
 
-        secondary_stats = StatCubesItemFactory.gen_non_core_stats(level, n_secondary_stats,
-                                                                  exclude=[primary_stat.stat_type])
+        choices = [s for s in CORE_STATS + NON_CORE_STATS if s != res[0]]
 
-        core_stats = [primary_stat] + [x for x in secondary_stats if x.stat_type in CORE_STATS]
-        non_core_stats = [x for x in secondary_stats if x.stat_type in NON_CORE_STATS]
+        n_secondary_stats = int((balance.max_stats_for_n_cubes(len(cubes))) * random.random())
+
+        for i in range(0, n_secondary_stats):
+            if len(choices) > 0:
+                next_stat = random.choice(choices)
+                choices.remove(next_stat)
+
+                res.append(next_stat)
+
+        return res
+
+    @staticmethod
+    def gen_applied_stats_for_cubes_and_stat_types(level, cubes, stat_types):
+        res = []
+        for stat_type in stat_types:
+            low, high = ItemStatRanges.get_range(stat_type, level)
+            res.append(AppliedStat(stat_type, random.randint(low, high)))
 
         if CubeUtils.is_holy(cubes):
-            for stat in core_stats:
-                stat.value = stat.value * 2
+            for stat in res:
+                if stat.get_type() in CORE_STATS:
+                    stat.value = stat.value * 2
 
-        return core_stats + non_core_stats
-
+        return res
 
     @staticmethod
     def gen_name_for_stats_and_cubes(stats, cubes):
@@ -384,7 +377,14 @@ class StatCubesItemFactory:
 
     @staticmethod
     def gen_item_for_cubes(level, cubes):
-        stats = StatCubesItemFactory.gen_stats_for_cubes(level, cubes)
+        stat_types = StatCubesItemFactory.gen_stat_types_for_cubes(level, cubes)
+        stats = StatCubesItemFactory.gen_applied_stats_for_cubes_and_stat_types(level, cubes, stat_types)
+        return StatCubesItemFactory.gen_item_for_cubes_and_stats(level, cubes, stats)
+
+    @staticmethod
+    def gen_item_for_cubes_and_stats(level, cubes, stats):
+        cubes = CubeUtils.clean_cubes(cubes)
+
         name = StatCubesItemFactory.gen_name_for_stats_and_cubes(stats, cubes)
         color = StatCubesItemFactory.gen_color_for_stats(stats)
         cube_art = StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(stats, cubes)

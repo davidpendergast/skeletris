@@ -20,17 +20,15 @@
     - it's probably storing an old ref to the item with a different rotation
  - enemy tooltips don't update when stats change (HP is most important)
  - enemies double attack when you die (ranged enemies only?)
- - can interact with things from above
-    - should at least prevent this when they're hidden
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - machine has generic trade text
-    - consider making maching preserve # of cubes in the item
+    - consider making machine preserve # of cubes in the item
     - it's really quite rare to be helpful otherwise
- - enemy kill count isn't hooked up
  - HP on kill doesn't trigger when you kill an enemy with poison
     - possibly OK?
     - it should definitely still go towards the kill count though.
+ - tutorial text can become faded. looks like a render order issue
 
 
 [balance issues]
@@ -64,13 +62,13 @@
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines, and 
  - tutorial system
-    - still "how to use weapon"  (could also fix this with a UI redesign)
+    - "how to use weapon"  (could also fix this with a UI redesign)
+ - confusion and grasp effects should play a sound when they 'activate'
     
  
 [architecture]
     - entities should keep a reference to the world they're in
         - instead of passing the world into literally every method
-    - global state should have a reference to the active world that menus / ui can use
     
     
 [design philosophy]

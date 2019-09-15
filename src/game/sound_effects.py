@@ -72,6 +72,6 @@ def play_sound(sound):
 
     if effect is not None:
         _RECENTLY_PLAYED[effect_path] = 0
-        print("INFO: playing sound effect: {}".format(effect_path))
+        # print("INFO: playing sound effect: {}".format(effect_path))
         effect.play()
 

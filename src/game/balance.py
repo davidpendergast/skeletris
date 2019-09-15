@@ -43,3 +43,17 @@ STAT_CUBE_6_DROP_RATE = 5
 STAT_CUBE_7_DROP_RATE = 2
 WEAPON_DROP_RATE = 5
 POTION_DROP_RATE = 7
+
+"""Item Gen Stuff"""
+STAT_CUBE_5_MAX_NUM_STATS = 1
+STAT_CUBE_6_MAX_NUM_STATS = 2
+STAT_CUBE_7_MAX_NUM_STATS = 3
+
+
+def max_stats_for_n_cubes(n_cubes):
+    if n_cubes <= 5:
+        return STAT_CUBE_5_MAX_NUM_STATS
+    elif n_cubes == 6:
+        return STAT_CUBE_6_MAX_NUM_STATS
+    else:
+        return STAT_CUBE_7_MAX_NUM_STATS

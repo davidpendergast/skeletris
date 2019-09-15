@@ -566,13 +566,19 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         return [cluster for cluster in clusters if len(cluster) >= min_size]
 
     def _gen_rand_n_cubes(self, max_n_cubes=7):
-        choices = [5] * balance.STAT_CUBE_5_DROP_RATE
-        if max_n_cubes >= 6:
-            choices.extend([6] * balance.STAT_CUBE_6_DROP_RATE)
-        if max_n_cubes >= 7:
-            choices.extend([7] * balance.STAT_CUBE_7_DROP_RATE)
+        # mirroring the actual drop rates is pretty brutal...
+        #
+        # choices = [5] * balance.STAT_CUBE_5_DROP_RATE
+        # if max_n_cubes >= 6:
+        #    choices.extend([6] * balance.STAT_CUBE_6_DROP_RATE)
+        # if max_n_cubes >= 7:
+        #    choices.extend([7] * balance.STAT_CUBE_7_DROP_RATE)
 
-        return random.choice(choices)
+        choices = [x for x in range(5, max_n_cubes + 1)]
+        if len(choices) > 0:
+            return random.choice(choices)
+        else:
+            raise ValueError("illegal argument max_n_cubes: {}".format(max_n_cubes))
 
     def do_trade(self, item):
         item_n_cubes = min(len(item.cubes), 7)
@@ -585,7 +591,6 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         # can't generate an item of size n unless there's a cluster that's big enough
         max_cluster_size = max([len(cluster) for cluster in empty_clusters])
 
-        # same drop rate as regular item drops
         n_cubes = self._gen_rand_n_cubes(max_n_cubes=min(item_n_cubes, max_cluster_size))
 
         big_enough_clusters = [cluster for cluster in empty_clusters if len(cluster) >= n_cubes]
@@ -620,7 +625,36 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
         import src.items.itemgen as itemgen
 
-        return [itemgen.StatCubesItemFactory.gen_item_for_cubes(item.get_level(), res_cubes)]
+        stat_types = []
+        for applied_stat in item.all_applied_stats():
+            if applied_stat.get_type() not in stat_types:  # there shouldn't be dupes, but nuke them just in case.
+                stat_types.append(applied_stat.get_type())
+
+        # might need to delete stats if we lost cubes.
+        n_stats_to_remove = len(stat_types) - balance.max_stats_for_n_cubes(len(res_cubes))
+        if n_stats_to_remove > 0:
+            core_stats = [s for s in stat_types if s in itemgen.CORE_STATS]
+            if len(core_stats) > 0:
+                protected_core_stat = random.choice(core_stats)
+            else:
+                protected_core_stat = None  # weird but ok...
+
+            deletable_stat_types = [s for s in stat_types if s != protected_core_stat]
+
+            while n_stats_to_remove > 0 and len(deletable_stat_types) > 0:
+                to_del = random.choice(deletable_stat_types)
+                deletable_stat_types.remove(to_del)
+                stat_types.remove(to_del)
+
+                n_stats_to_remove -= 1
+
+        new_applied_stats = itemgen.StatCubesItemFactory.gen_applied_stats_for_cubes_and_stat_types(
+            item.get_level(), res_cubes, stat_types)
+
+        new_item = itemgen.StatCubesItemFactory.gen_item_for_cubes_and_stats(
+            item.get_level(), res_cubes, new_applied_stats)
+
+        return [new_item]
 
 
 class NpcTradeProtocols:
