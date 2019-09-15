@@ -585,13 +585,13 @@ class FrogBossTemplate(EnemyTemplate):
 class RoboTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Mecha Robo")
+        EnemyTemplate.__init__(self, "S.K.U.L.")
 
     def get_sprites(self):
         return spriteref.Bosses.robo_idle
 
     def get_map_identifier(self):
-        return ("R", colors.RED)
+        return ("S", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.enormous_shadow
