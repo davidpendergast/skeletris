@@ -1070,7 +1070,7 @@ class HotbarMoveButton(InteractableImage):
         return None
 
     def get_tooltip_text(self):
-        return None
+        return ""
 
     def on_click(self, x, y, button=1):
         if button == 1 and self.is_active():
@@ -1089,7 +1089,7 @@ class HotbarMoveButton(InteractableImage):
 
     def get_tooltip_target_at(self, x, y):
         tt_text = self.get_tooltip_text()
-        if tt_text is not None:
+        if tt_text is not None and len(tt_text) > 0:
             res = TextBuilder()
             res.add(tt_text)
             return res

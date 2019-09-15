@@ -25,9 +25,6 @@
  - machine has generic trade text
     - consider making machine preserve # of cubes in the item
     - it's really quite rare to be helpful otherwise
- - HP on kill doesn't trigger when you kill an enemy with poison
-    - possibly OK?
-    - it should definitely still go towards the kill count though.
  - tutorial text can become faded. looks like a render order issue
 
 
@@ -60,10 +57,16 @@
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
-        as a fight. Let's have the boss say some lines, and 
+        as a fight. Let's have the boss say some lines and show a game over screen
+        
+        "Hello child. How I've missed you..." 
+        *absorbs you*
+        You Win!
+        
  - tutorial system
     - "how to use weapon"  (could also fix this with a UI redesign)
  - confusion and grasp effects should play a sound when they 'activate'
+ - when you equip a weapon it should become active
     
  
 [architecture]
@@ -125,6 +128,8 @@
     - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
         - for now, let's just not have any enemies that emit light by default
+    - HP on kill doesn't trigger when you kill an enemy with poison
+        - I think this makes the game better. leave it.
         
 [playtesting notes]
 

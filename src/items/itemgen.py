@@ -361,7 +361,7 @@ class StatCubesItemFactory:
         cubes = CubeUtils.gen_cubes(n_cubes)
         is_holy = CubeUtils.is_holy(cubes)
 
-        if n_cubes >= 7 and not is_holy and debug._HOLY_ARTIFACTS_100x_MORE_LIKELY:
+        if n_cubes >= 7 and not is_holy and debug.holy_artifacts_100x_more_likely():
             for _ in range(0, 100):
                 cubes = CubeUtils.gen_cubes(n_cubes)
                 is_holy = CubeUtils.is_holy(cubes)

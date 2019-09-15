@@ -11,7 +11,7 @@ _PLAYER_CANT_DIE = True
 _MAP_SEES_ALL = False
 _UNLIMITED_TRADES = False
 _HOLY_ARTIFACTS_100x_MORE_LIKELY = False
-_RESET_TUTORIALS_ON_NEWGAME = True
+_RESET_TUTORIALS_ON_NEWGAME = False
 _NEVER_SHOW_TUTORIALS = False
 
 
@@ -33,6 +33,10 @@ def player_cant_die():
 
 def map_sees_all():
     return is_debug() and _MAP_SEES_ALL
+
+
+def holy_artifacts_100x_more_likely():
+    return is_debug() and _HOLY_ARTIFACTS_100x_MORE_LIKELY
 
 
 def unlimited_trades():

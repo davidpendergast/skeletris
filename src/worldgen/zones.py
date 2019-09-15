@@ -13,7 +13,6 @@ import src.game.dialog as dialog
 import src.game.music as music
 import src.game.cinematics as cinematics
 import src.game.globalstate as gs
-from src.game.storystate import StoryStateKey
 from src.worldgen import worldgen2
 import src.game.npc as npc
 import src.game.decoration as decoration

@@ -69,13 +69,6 @@ class AppliedStat:
     def get_value(self):
         return self.value
 
-    def to_json(self):
-        return [self.stat_type, self.value]
-
-    @staticmethod
-    def from_json(blob):
-        pass
-
 
 class ItemTags:
     EQUIPMENT = "Equipment"
@@ -391,10 +384,14 @@ class StatCubesItem(Item):
 
     def reroll_stats(self):
         import src.items.itemgen as itemgen
-        new_stats = itemgen.StatCubesItemFactory.gen_stats_for_cubes(self.level, self.cubes)
-        new_name = itemgen.StatCubesItemFactory.gen_name_for_stats_and_cubes(new_stats, self.cubes)
-        new_color = itemgen.StatCubesItemFactory.gen_color_for_stats(new_stats)
-        new_art = itemgen.StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(new_stats, self.cubes)
+
+        factory_clz = itemgen.StatCubesItemFactory
+
+        new_stat_types = factory_clz.gen_stat_types_for_cubes(self.level, self.cubes)
+        new_stats = factory_clz.gen_applied_stats_for_cubes_and_stat_types(self.level, self.cubes, new_stat_types)
+        new_name = factory_clz.gen_name_for_stats_and_cubes(new_stats, self.cubes)
+        new_color = factory_clz.gen_color_for_stats(new_stats)
+        new_art = factory_clz.gen_cube_art_for_stats_and_cubes(new_stats, self.cubes)
 
         return StatCubesItem(new_name, self.level, new_stats, self.cubes,
                              new_color, cube_art=new_art, uuid_str=self.uuid)
@@ -418,58 +415,6 @@ class StatCubesItem(Item):
 
     def get_entity_sprite(self):
         return spriteref.get_item_entity_sprite(self.cubes)
-
-    def to_json(self):
-        blob = {
-            "name": self.name,
-            "level": self.level,
-            "cubes": self.cubes,
-            "color": self.color,
-            "cube_art": [],
-            "stats": [],
-            "uuid": self.uuid
-        }
-
-        for xy in self.cube_art:
-            blob["cube_art"].append((xy[0], xy[1], self.cube_art[xy]))
-
-        for stat in self.stats:
-            as_json = stat.to_json()
-            blob["stats"].append(as_json)
-
-        return blob
-
-    @staticmethod
-    def from_json(blob):
-        name = str(blob["name"])
-        level = int(blob["level"])
-
-        cubes = []
-        for cube_blob in blob["cubes"]:
-            c_x = int(cube_blob[0])
-            c_y = int(cube_blob[1])
-            cubes.append((c_x, c_y))
-
-        color_r = float(blob["color"][0])
-        color_g = float(blob["color"][1])
-        color_b = float(blob["color"][2])
-        color = (color_r, color_g, color_b)
-
-        cube_art = {}
-        for cube_art_blob in blob["cube_art"]:
-            x = int(cube_art_blob[0])
-            y = int(cube_art_blob[1])
-            art_id = int(cube_art_blob[2])
-            cube_art[(x, y)] = art_id
-
-        stats = []
-        for stat_blob in blob["stats"]:
-            stat = AppliedStat.from_json(stat_blob)
-            stats.append(stat)
-
-        uuid_str = str(blob["uuid"])
-
-        return StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art, uuid_str=uuid_str)
 
     def test_equals(self, other):
         try:

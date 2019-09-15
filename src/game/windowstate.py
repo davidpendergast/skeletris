@@ -46,7 +46,7 @@ class WindowState:
         display_size = self.get_display_size()
         mods = self._get_mods()
 
-        print("INFO: called pygame.display.set_mode({}, {})".format(display_size, mods))
+        # print("INFO: called pygame.display.set_mode({}, {})".format(display_size, mods))
         pygame.display.set_mode(display_size, mods)
 
     def set_caption(self, title):

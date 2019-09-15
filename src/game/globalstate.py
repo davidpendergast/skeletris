@@ -5,9 +5,7 @@ import os
 
 import src.game.events as events
 import src.game.settings as settings
-from src.game.storystate import StoryStateKey, StoryState
 from src.utils.util import Utils
-import src.utils.passwordgen as passwordgen
 import src.game.soundref as soundref
 import src.game.sound_effects as sound_effects
 from src.game.windowstate import WindowState
@@ -28,122 +26,6 @@ def set_instance(new_instance):
     _GLOBAL_STATE_INSTANCE = new_instance
 
 
-class SaveDataBlob:
-
-    def __init__(self, zone_id, kill_count, num_potions, equipment_positions, inventory_positions, story_state):
-        """
-        zone_id: str
-        kill_count: int
-        num_potions: int
-        equipment_positions: map (int x, int y) -> Item
-        inventory_positions: map (int x, int y) -> Item
-        story_state_blob: json blob
-        """
-        self.zone_id = zone_id
-        self.kill_count = kill_count
-        self.num_potions = num_potions
-
-        self.story_state = story_state
-
-        self.equipment_positions = equipment_positions
-        self.inventory_positions = inventory_positions
-
-    @staticmethod
-    def get_current_passwords_from_disk():
-        res = []
-        try:
-            for file in os.listdir(os.path.join("save_data", "saved_games")):
-                if file.endswith(".json"):
-                    pw = file[:(len(file)-5)]
-                    res.append(pw)
-        except:
-            print("ERROR: failure while trying to fetch already-used passwords")
-            traceback.print_exc()
-        return res
-
-    def save_to_disk(self, password):
-        path = SaveDataBlob.filepath_for_password(password)
-        try:
-            as_json = self.to_json()
-            Utils.save_json_to_path(as_json, path)
-            return True
-        except:
-            print("ERROR: failed to save {}".format(path))
-            traceback.print_exc()
-        return False
-
-    @staticmethod
-    def load_from_disk(password):
-        path = SaveDataBlob.filepath_for_password(password)
-        try:
-            blob = Utils.load_json_from_path(path)
-            return SaveDataBlob.from_json(blob)
-        except:
-            print("ERROR: failed to load {}".format(path))
-            traceback.print_exc()
-
-        return None
-
-    def to_json(self):
-        equipment = []
-        for xy in self.equipment_positions:
-            item_as_json = self.equipment_positions[xy].to_json()
-            equipment.append((xy[0], xy[1], item_as_json))
-
-        inventory = []
-        for xy in self.inventory_positions:
-            item_as_json = self.inventory_positions[xy].to_json()
-            inventory.append((xy[0], xy[1], item_as_json))
-
-        story_state_blob = self.story_state.to_json()
-
-        return {
-            "kill_count": self.kill_count,
-            "num_potions": self.num_potions,
-            "zone_id": self.zone_id,
-            "equipment": equipment,
-            "inventory": inventory,
-            "story_state": story_state_blob
-        }
-
-    @staticmethod
-    def from_json(blob):
-        kill_count = int(blob["kill_count"])
-        num_potions = int(blob["num_potions"])
-        zone_id = str(blob["zone_id"])
-
-        from src.items.item import StatCubesItem
-        equipment_positions = {}
-        for x_y_item in blob["equipment"]:
-            try:
-                x = int(x_y_item[0])
-                y = int(x_y_item[1])
-                item = StatCubesItem.from_json(x_y_item[2])
-                equipment_positions[(x, y)] = item
-            except:
-                print("ERROR: couldn't deserialize item: {}".format(x_y_item))
-                traceback.print_exc()
-
-        inventory_positions = {}
-        for x_y_item in blob["inventory"]:
-            try:
-                x = int(x_y_item[0])
-                y = int(x_y_item[1])
-                item = StatCubesItem.from_json(x_y_item[2])
-                inventory_positions[(x, y)] = item
-            except:
-                print("ERROR: couldn't deserialize item: {}".format(x_y_item))
-                traceback.print_exc()
-
-        story_state_blob = blob["story_state"]
-        story_state = StoryState.from_json(story_state_blob)
-
-        return SaveDataBlob(zone_id, kill_count, num_potions, equipment_positions, inventory_positions, story_state)
-
-    def __repr__(self):
-        return str(self.to_json())
-
-
 class RunStatisticTypes:
     KILL_COUNT = "KILL_COUNT"
     TURN_COUNT = "TURN_COUNT"
@@ -155,7 +37,7 @@ class RunStatisticTypes:
 
 class GlobalState:
 
-    def __init__(self, initial_zone_id, menu_manager, dialog_manager, story_state):
+    def __init__(self, initial_zone_id, menu_manager, dialog_manager):
         self.tick_counter = 0
         self.anim_tick = 0
 
@@ -179,8 +61,6 @@ class GlobalState:
 
         self._world_updates_pause_timer = 0
 
-        # TODO remove these
-        self._story_state = story_state
         self._story_vars = {}
 
         self._run_statistics = {}
@@ -332,12 +212,6 @@ class GlobalState:
     def get_targetable_coords_in_world(self):
         return self._targetable_coords_in_world
 
-    def dialog_manager(self):
-        return self._dialog_manager
-
-    def story_state(self):
-        return self._story_state
-
     def get_story_var(self, key, as_bool=False):
         if key in self._story_vars:
             return (self._story_vars[key] != 0) if as_bool else self._story_vars[key]
@@ -360,35 +234,8 @@ class GlobalState:
                 print("INFO: setting story var \"{}\" to {}".format(key, value))
                 self._story_vars[key] = value
 
-    def save_game_to_disk(self, password=None):
-        """
-        return: (bool, str)
-            bool: True if save is successful, False otherwise
-            str: password used for successful save.
-        """
-        if self.current_zone is None:
-            print("ERROR: cannot save game if current_zone is None")
-            return (False, None)
-
-        if password is None:
-            already_used = SaveDataBlob.get_current_passwords_from_disk()
-            password = passwordgen.gen_unique_password(already_used)
-
-        # equip_items = self.player_state().inventory().equip_grid.to_map()
-        # inv_items = self.player_state().inventory().inv_grid.to_map()
-
-        save_blob = SaveDataBlob(self.current_zone.ZONE_ID,
-                                 10,
-                                 5,
-                                 None,  # equip_items,
-                                 None,  # inv_items,
-                                 self.story_state())
-
-        res = save_blob.save_to_disk(password)
-        if res:
-            self.save_settings_to_disk()
-
-        return (res, password)
+    def dialog_manager(self):
+        return self._dialog_manager
 
     def get_zone_level(self):
         if self.current_zone is None:
@@ -592,7 +439,7 @@ def create_new(menu):
     dialog_manager = dialog.DialogManager()
 
     import src.worldgen.zones as zones
-    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, StoryState())
+    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager)
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()
