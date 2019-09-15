@@ -68,7 +68,7 @@ class EventQueue:
 
 class EventType(Enum):
     # these are "something happened" events
-    ENEMY_KILLED = "ENEMY_KILLED"
+    ACTOR_KILLED = "ACTOR_KILLED"
     PLAYER_DIED = "PLAYER_DIED"
     GAME_WIN = "GAME_WIN"
     DOOR_OPENED = "DOOR_OPENED"
@@ -280,21 +280,21 @@ class RotatedItemEvent(Event):
         return self.get_data()[0]
 
 
-# TODO - not used
-class EnemyDiedEvent(Event):
+class ActorKilledEvent(Event):
 
-    def __init__(self, enemy_uid, template, location):
-        data = (enemy_uid, template, location)
-        Event.__init__(self, EventType.ENEMY_KILLED, data, description="enemy killed")
+    def __init__(self, actor_uid, killer_uid):
+        if killer_uid == actor_uid:
+            # just makes things simpler this way
+            killer_uid = None
 
-    def get_uid(self):
+        data = (actor_uid, killer_uid)
+        Event.__init__(self, EventType.ACTOR_KILLED, data, description="actor killed")
+
+    def get_actor_uid(self):
         return self.get_data()[0]
 
-    def get_template(self):
+    def get_killer_uid(self):
         return self.get_data()[1]
-
-    def get_position(self):
-        return self.get_data()[2]
 
 
 # TODO - not used

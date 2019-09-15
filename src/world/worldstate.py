@@ -644,7 +644,7 @@ class World:
                     actor.set_and_start_action(action, dur, self)
 
                     if actor.is_player():
-                        gs.get_instance().turn_counter += 1
+                        gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
 
                 not_visible = not actor.is_visible_in_world(self)
                 action_pos = action.get_position()

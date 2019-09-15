@@ -54,28 +54,19 @@
         just having them at all is more interesting than not, and they don't 
         necessarily need to play a huge role in the game to be memorable.
     - also they're actually better than they seem
-        - frog boss tests the player's ability to sidestep
+        - frog boss tests the player's ability to sidestep attacks
         - mecha boss tests player's ability to use CC
         
  
  
 [current features]
- - enemies consuming / throwing items (intelligence >= 5)
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines, and 
- - new (secondary) item stats
-    - poison duration
-    - confusion duration
- - help panel
-    - even necessary? yes
-        - will people even find it? looks unlikely based on testing
-            - CUT IT
  - need some kind of tutorial system
     - still need "how to open map"
     - still "how to use weapon"  (could also fix this with a UI redesign)
- - limit equipped weapons to 2
     
  
 [architecture]
@@ -110,6 +101,9 @@
         - (not sure what these would be good for, honestly)
  - backstab attack 
     - jump over target, attack from other side (if possible)
+ - new (secondary) item stats
+    - poison duration
+    - confusion duration
  - quest system
  - some indicator that enemies are still acting
  - permanent effects (aka curses)

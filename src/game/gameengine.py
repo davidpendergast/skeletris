@@ -700,8 +700,19 @@ def determine_damage_dealt(attacker, defender, item_used=None, is_thrown=False):
     return len(atts)
 
 
-def apply_damage_and_hit_effects(damage, attacker, defender,
-                                 world=None, attacker_entity=None, defender_entity=None, item_used=False):
+def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
+                                 attacker_entity=None, defender_entity=None, item_used=False,
+                                 responsible_entity=None):
+    """
+    :param damage: Amount of damage to deal. If less than 1, the attack is a miss.
+    :param attacker: The offensive stats_provider, which may contribute secondary offensive effects.
+    :param defender: The defensive stats_provider, which may contribute secondary defensive effects.
+    :param world: The world in which the attack is occurring.
+    :param attacker_entity: The entity delivering the attack.
+    :param defender_entity: The entity receiving the attack.
+    :param item_used: The item used in the attack, which may contribute secondary offensive effects.
+    :param responsible_entity: The entity that will be credited with the attack or kill.
+    """
     if damage <= 0:
         if defender_entity is not None and world is not None:
             world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
@@ -729,6 +740,10 @@ def apply_damage_and_hit_effects(damage, attacker, defender,
             new_status_effects_for_attacker.append(statuseffects.new_plus_defenses_effect(plus_def_duration,
                                                                                           unique_key="plus_defense_from_item"))
         if was_alive and not defender.is_alive():
+            killer_uid = responsible_entity.get_uid() if responsible_entity is not None else None
+            kill_event = events.ActorKilledEvent(defender_entity.get_uid(), killer_uid)
+            gs.get_instance().event_queue().add(kill_event)
+
             hp_on_kill = attacker.stat_value_with_item(StatTypes.HP_ON_KILL, item_used)
             if hp_on_kill > 0:
                 new_status_effects_for_attacker.append(statuseffects.new_regen_effect(hp_on_kill, 1, unique_key="hp_on_kill"))
@@ -829,6 +844,7 @@ class AttackAction(Action):
 
             apply_damage_and_hit_effects(damage, attacker, defender,
                                          attacker_entity=self.get_actor(), defender_entity=target,
+                                         responsible_entity=self.get_actor(),
                                          world=world, item_used=self.item)
 
     def start(self, world):
@@ -1201,6 +1217,7 @@ class ThrowItemAction(Action):
 
             apply_damage_and_hit_effects(damage, attacker, defender,
                                          attacker_entity=None, defender_entity=target,
+                                         responsible_entity=self.get_actor(),
                                          world=world, item_used=self.item)
 
             consume_effect = self.item.get_consume_effect()

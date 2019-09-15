@@ -22,6 +22,7 @@ class TutorialID:
     HOW_TO_USE_POTIONS = _make_tut_id("how_to_use_potions")
     HOW_TO_THROW_ITEMS = _make_tut_id("how_to_throw_items")
     HOW_TO_ROTATE = _make_tut_id("how_to_rotate")
+    HOW_TO_OPEN_MAP = _make_tut_id("how_to_open_map")
 
     @staticmethod
     def all_ids():
@@ -352,6 +353,25 @@ class HowToOpenInventoryPanelStage(EntityNotificationTutorialStage):
         return "Press [{}] to open Inventory.".format(inv_key)
 
 
+class HowToOpenMapPanelStage(EntityNotificationTutorialStage):
+
+    def get_target_entity(self):
+        w, p = gs.get_instance().get_world_and_player()
+        return p
+
+    def test_completed(self):
+        from src.ui.ui import SidePanelTypes
+        return gs.get_instance().get_active_sidepanel() == SidePanelTypes.MAP
+
+    def get_message(self):
+        map_keys = gs.get_instance().settings().map_key()
+        if len(map_keys) > 0:
+            map_key = Utils.stringify_key(map_keys[0])
+        else:
+            map_key = "None"
+        return "Press [{}] to open Map.".format(map_key)
+
+
 class HowToPutItemInGridStage(EntityNotificationTutorialStage):
 
     def __init__(self, delay=60, item_tag=None, grid_type=None):
@@ -627,6 +647,10 @@ class TutorialFactory:
                 HowToGetInThrowRangeOfEnemyStage(delay=20),
                 HowToThrowItemStage(delay=20),
                 MessageOnlyStage("Potions and certain weapons can be thrown.")
+            ])
+        elif tut_id == TutorialID.HOW_TO_OPEN_MAP:
+            return TutorialPlugin(tut_id, 5, [
+                HowToOpenMapPanelStage(delay=120)
             ])
 
         return None

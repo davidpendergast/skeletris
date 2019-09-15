@@ -153,14 +153,17 @@ def run():
             elif event.get_type() == events.EventType.GAME_WIN:
                 print("INFO: won game!")
                 tick_count = gs.get_instance().tick_counter
-                kill_count = gs.get_instance().kill_counter
-                turn_count = gs.get_instance().turn_counter
+                kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
+                turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
                 win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)
                 gs.get_instance().menu_manager().set_active_menu(win_menu)
 
-            elif event.get_type() == events.EventType.ENEMY_KILLED:
-                # TODO - this event isn't actually ever sent
-                gs.get_instance().kill_counter += 1
+            elif event.get_type() == events.EventType.ACTOR_KILLED:
+                killer_uid = event.get_killer_uid()
+                if killer_uid is not None:
+                    w, p = gs.get_instance().get_world_and_player()
+                    if p is not None and p.get_uid() == killer_uid:
+                        gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
 
             elif event.get_type() == events.EventType.NEW_GAME:
                 print("INFO: starting fresh game")

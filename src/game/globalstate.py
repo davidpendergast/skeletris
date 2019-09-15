@@ -144,13 +144,20 @@ class SaveDataBlob:
         return str(self.to_json())
 
 
+class RunStatisticTypes:
+    KILL_COUNT = "KILL_COUNT"
+    TURN_COUNT = "TURN_COUNT"
+
+    # used to skip tutorials
+    OPENED_INVENTORY_COUNT = "OPENED_INV_COUNT"
+    OPENED_MAP_COUNT = "OPENED_MAP_COUNT"
+
+
 class GlobalState:
 
     def __init__(self, initial_zone_id, menu_manager, dialog_manager, story_state):
         self.tick_counter = 0
         self.anim_tick = 0
-        self.turn_counter = 0
-        self.kill_counter = 0
 
         self.initial_zone_id = initial_zone_id
         self.current_zone = None
@@ -172,8 +179,11 @@ class GlobalState:
 
         self._world_updates_pause_timer = 0
 
-        # TODO remove
+        # TODO remove these
         self._story_state = story_state
+        self._story_vars = {}
+
+        self._run_statistics = {}
 
         self._menu_manager = menu_manager
         self._dialog_manager = dialog_manager
@@ -194,9 +204,6 @@ class GlobalState:
         self._waiting_for_player = False
 
         self._targetable_coords_in_world = {}  # (x, y) -> color
-
-        # this is the ~very unstructured~ way that "story events" are tracked
-        self._story_vars = {}
 
     def set_world(self, world):
         self._active_world = world
@@ -255,6 +262,20 @@ class GlobalState:
                 sound_effects.play_sound(soundref.sidepanel_in)
 
         self.active_sidepanel_id = panel_id
+
+    def get_run_statistic(self, run_stat_type):
+        if run_stat_type in self._run_statistics:
+            return self._run_statistics[run_stat_type]
+        else:
+            return 0
+
+    def set_run_statistic(self, run_stat_type, val):
+        self._run_statistics[run_stat_type] = val
+
+    def inc_run_statistic(self, run_stat_type, val=1):
+        cur_value = self.get_run_statistic(run_stat_type)
+        self.set_run_statistic(run_stat_type, cur_value + val)
+        return self.get_run_statistic(run_stat_type)
 
     def get_active_sidepanel(self):
         return self.active_sidepanel_id
