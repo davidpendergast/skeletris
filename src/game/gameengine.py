@@ -586,19 +586,18 @@ class ConsumeItemAction(Action):
             return (1, 1, 1)
 
     def is_possible(self, world):
-        if self.item is None or not self.item.can_consume():
+        it = self.get_item()
+        if it is None or not it.can_consume():
             return False
 
-        a_state = self.actor_entity.get_actor_state()
-        if self.item not in a_state.inventory():
+        if not _find_accessible_item(it, self.get_actor(), world, and_remove_it=False):
             return False
 
         return True
 
     def start(self, world):
         super().start(world)
-        a_state = self.actor_entity.get_actor_state()
-        removed = a_state.inventory().remove(self.item)
+        removed = _find_accessible_item(self.get_item(), self.get_actor(), world, and_remove_it=True)
         if not removed:
             print("WARN: failed to remove consumable?: {}".format(self.item))
 
@@ -1467,57 +1466,61 @@ class DropItemAction(Action):
         sound_effects.play_sound(soundref.item_drop)
 
 
+def _find_accessible_item(item, actor, world, and_remove_it=False):
+    a_state = actor.get_actor_state()
+    it = item
+    if a_state.held_item is not None and a_state.held_item == it:
+        if and_remove_it:
+            a_state.held_item = None
+        return True
+
+    inv_state = a_state.inventory()
+    if inv_state.is_in_inventory(it):
+        if and_remove_it:
+            rm_result = inv_state.get_inv_grid().remove(it)
+            if not rm_result:
+                raise ValueError("failed to remove {} from inventory grid even though it's there...".format(it))
+        return True
+
+    if inv_state.is_equipped(it):
+        if and_remove_it:
+            rm_result = inv_state.get_equip_grid().remove(it)
+            if not rm_result:
+                raise ValueError("failed to remove {} from equipment grid even though it's equipped...".format(it))
+        return True
+
+    pos = actor.center()
+    items_in_range = world.entities_in_circle(pos, world.cellsize() * 3, cond=lambda e: e.is_item())
+    for item_ent in items_in_range:
+        if item_ent.get_item() == it:
+            actor_grid_pos = world.to_grid_coords(*actor.center())
+            item_ent_grid_pos = world.to_grid_coords(*item_ent.center())
+            sub = Utils.sub(actor_grid_pos, item_ent_grid_pos)
+            if max(abs(sub[0]), abs(sub[1])) <= 1:
+                if and_remove_it:
+                    world.remove(item_ent)
+                return True
+    return False
+
+
 class AddItemToGridAction(Action):
 
-    def __init__(self, actor, item, grid, position=None):
-        """position: Unlike every other action, this position refers to the grid position, not world position...
-                     if None, tries to find a legit position.
-        """
+    def __init__(self, actor, item, grid, grid_position=None, position=None):
         Action.__init__(self, ActionType.ADD_ITEM_TO_GRID, 1, actor, item=item, position=position)
         self._grid = grid
+        self._grid_position = grid_position
 
     def get_grid(self):
         return self._grid
 
+    def get_grid_position(self):
+        return self._grid_position
+
+    def get_targeting_color(self, for_mouse=False):
+        return (1, 1, 1)
+
     def is_free(self):
         return True
-
-    def _find_item(self, world, and_remove_it=False):
-        a_state = self.get_actor().get_actor_state()
-        it = self.get_item()
-        if a_state.held_item is not None and a_state.held_item == it:
-            if and_remove_it:
-                a_state.held_item = None
-            return True
-
-        inv_state = a_state.inventory()
-        if inv_state.is_in_inventory(it):
-            if and_remove_it:
-                rm_result = inv_state.get_inv_grid().remove(it)
-                if not rm_result:
-                    raise ValueError("failed to remove {} from inventory grid even though it's there...".format(it))
-            return True
-
-        if inv_state.is_equipped(it):
-            if and_remove_it:
-                rm_result = inv_state.get_equip_grid().remove(it)
-                if not rm_result:
-                    raise ValueError("failed to remove {} from equipment grid even though it's equipped...".format(it))
-            return True
-
-        pos = self.get_actor().center()
-        items_in_range = world.entities_in_circle(pos, world.cellsize() * 3, cond=lambda e: e.is_item())
-        for item_ent in items_in_range:
-            if item_ent.get_item() == it:
-                actor_grid_pos = world.to_grid_coords(*self.get_actor().center())
-                item_ent_grid_pos = world.to_grid_coords(*item_ent.center())
-                sub = Utils.sub(actor_grid_pos, item_ent_grid_pos)
-                if max(abs(sub[0]), abs(sub[1])) <= 1:
-                    if and_remove_it:
-                        world.remove(item_ent)
-                    return True
-
-        return False
 
     def is_possible(self, world):
         if not self.get_actor().is_player():
@@ -1532,15 +1535,20 @@ class AddItemToGridAction(Action):
             return False
 
         if self.get_position() is not None:
+            actor_pos = world.to_grid_coords(*self.get_actor().center())
+            if actor_pos != self.get_position():
+                return False
+
+        if self.get_grid_position() is not None:
             # direct positioning must be done via a held_item
             if self.get_actor().get_actor_state().held_item != self.get_item():
                 return False
-            if not grid.can_place(self.get_item(), self.get_position(), allow_replace=True):
+            if not grid.can_place(self.get_item(), self.get_grid_position(), allow_replace=True):
                 return False
         else:
             if grid.search_for_valid_position_to_place(self.get_item()) is None:
                 return False
-            if not self._find_item(world, and_remove_it=False):
+            if not _find_accessible_item(self.get_item(), self.get_actor(), world, and_remove_it=False):
                 return False
 
         return True
@@ -1549,11 +1557,11 @@ class AddItemToGridAction(Action):
         grid = self.get_grid()
         it = self.get_item()
 
-        pos = self.get_position()
+        pos = self.get_grid_position()
         res = False
         if pos is None:
             auto_pos = grid.search_for_valid_position_to_place(it)
-            self._find_item(world, and_remove_it=True)
+            _find_accessible_item(it, self.get_actor(), world, and_remove_it=True)
             res = grid.place(it, auto_pos)
             sound_effects.play_sound(soundref.item_place)
         else:
@@ -1562,7 +1570,7 @@ class AddItemToGridAction(Action):
                 res = grid.place(it, pos)
                 sound_effects.play_sound(soundref.item_place)
             else:
-                swapped_with = self.get_grid().try_to_replace(it, self.get_position())
+                swapped_with = self.get_grid().try_to_replace(it, self.get_grid_position())
                 if swapped_with is not None:
                     self.get_actor().get_actor_state().held_item = swapped_with
                     sound_effects.play_sound(soundref.item_replace)
@@ -1822,33 +1830,32 @@ def get_right_click_action_for_item(clicked_item):
     if w is None or p is None:
         return None
 
-    inv_state = p.get_actor_state().inventory()
-
     from src.items.item import ItemTags
 
-    if clicked_item in inv_state and clicked_item.can_consume():
+    if clicked_item.can_consume():
         consume_action = ConsumeItemAction(p, clicked_item)
-        return consume_action
+        if consume_action.is_possible(w):
+            return consume_action
 
     inv_state = p.get_actor_state().inventory()
 
     # right clicking an equippable item will move it between equipment grid and inventory grid
     if clicked_item.get_type().has_tag(ItemTags.EQUIPMENT):
         if inv_state.is_equipped(clicked_item):
-            return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, position=None)
+            return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, grid_position=None)
         elif inv_state.is_in_inventory(clicked_item):
-            return AddItemToGridAction(p, clicked_item, inv_state.equip_grid, position=None)
+            return AddItemToGridAction(p, clicked_item, inv_state.equip_grid, grid_position=None)
         else:
             # try to equip it, then try to inventory it
-            to_equip_action = AddItemToGridAction(p, clicked_item, inv_state.equip_grid, position=None)
+            to_equip_action = AddItemToGridAction(p, clicked_item, inv_state.equip_grid, grid_position=None)
             if to_equip_action.is_possible(w):
                 return to_equip_action
             else:
-                return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, position=None)
+                return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, grid_position=None)
 
     # just add anything else to the inventory
     elif not inv_state.is_in_inventory(clicked_item):
-        return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, position=None)
+        return AddItemToGridAction(p, clicked_item, inv_state.inv_grid, grid_position=None)
 
     return None
 
@@ -1865,41 +1872,52 @@ def get_actions_from_click(world, world_pos, button=1):
     res = []
 
     if player is not None:
-        if ps.held_item is not None:
-            if button == 1:
+        if button == 1:
+            if ps.held_item is not None:
                 throw_action = ThrowItemAction(player, ps.held_item, world_grid_pos)
                 res.append(throw_action)
 
                 trade_action = TradeItemAction(player, ps.held_item, world_grid_pos)
                 res.append(trade_action)
 
+                # clicking the player places the item into inventory
+                if world_grid_pos == world.to_grid_coords(*player.center()):
+                    put_in_inv_act = AddItemToGridAction(player, ps.held_item, ps.inventory().get_inv_grid(),
+                                                         grid_position=None,
+                                                         position=world_grid_pos)
+                    res.append(put_in_inv_act)
+
                 drop_dir = Utils.sub(world_pos, player.center())
                 drop_action = DropItemAction(player, ps.held_item, drop_dir=drop_dir)
                 res.append(drop_action)
-
-        elif button == 1:
-            # picking up items
-            clicked_item = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
-            if clicked_item is not None:
-                item_pos = world.to_grid_coords(*clicked_item.center())
-                pickup_request = PickUpItemAction(player, clicked_item.get_item(), item_pos)
-                res.append(pickup_request)
-
-            # now do attacking and interacting stuff
-            action_prov = gs.get_instance().get_targeting_action_provider()
-            if action_prov is not None:
-                res.append(action_prov.get_action(player, world_grid_pos))
             else:
-                res.append(MeleeAttackAction(player, None, world_grid_pos))
+                # picking up items
+                clicked_item = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
+                if clicked_item is not None:
+                    item_pos = world.to_grid_coords(*clicked_item.center())
+                    pickup_request = PickUpItemAction(player, clicked_item.get_item(), item_pos)
+                    res.append(pickup_request)
 
-            pos = world.to_grid_coords(*player.center())
-            for action in get_basic_movement_actions(player, pos, world_grid_pos, for_click=True):
-                res.append(action)
+                # now do attacking and interacting stuff
+                action_prov = gs.get_instance().get_targeting_action_provider()
+                if action_prov is not None:
+                    res.append(action_prov.get_action(player, world_grid_pos))
+                else:
+                    res.append(MeleeAttackAction(player, None, world_grid_pos))
+
+                pos = world.to_grid_coords(*player.center())
+                for action in get_basic_movement_actions(player, pos, world_grid_pos, for_click=True):
+                    res.append(action)
 
         elif button == 3:
-            clicked_item = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
-            if clicked_item is not None:
-                right_click_action = get_right_click_action_for_item(clicked_item.get_item())
+            item_to_apply = ps.held_item
+            if item_to_apply is None:
+                clicked_item_entity = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
+                if clicked_item_entity is not None:
+                    item_to_apply = clicked_item_entity.get_item()
+
+            if item_to_apply is not None:
+                right_click_action = get_right_click_action_for_item(item_to_apply)
                 if right_click_action is not None and right_click_action.is_possible(world):
                     res.append(right_click_action)
                 else:

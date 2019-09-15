@@ -46,8 +46,6 @@
     - potentially true. it's up to you
  - "it took you X months to make this?"
     - it's hard to predict reception. don't let it paralyze you.
- - won't be able to fix screen resolution scaling issues
-    - *this* is the problem you give up on?
  - new players will struggle and quit
     - you'll playtest the tutorial system before release, and you might be 
         surprised at how well players can figure this stuff out.
@@ -55,6 +53,10 @@
     - you weren't even supposed to *have* those in the first place, remember? 
         just having them at all is more interesting than not, and they don't 
         necessarily need to play a huge role in the game to be memorable.
+    - also they're actually better than they seem
+        - frog boss tests the player's ability to sidestep
+        - mecha boss tests player's ability to use CC
+        
  
  
 [current features]
