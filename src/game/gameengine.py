@@ -774,6 +774,10 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         if confuse_duration > 0:
             new_status_effects_for_defender.append(statuseffects.new_confusion_effect(confuse_duration))
 
+        blindness_duration = attacker.stat_value_with_item(StatTypes.BLINDNESS_ON_HIT, item_used)
+        if blindness_duration > 0:
+            new_status_effects_for_defender.append(statuseffects.new_blindness_effect(blindness_duration))
+
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)
         slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:

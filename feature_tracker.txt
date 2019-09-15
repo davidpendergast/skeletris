@@ -50,7 +50,7 @@
         necessarily need to play a huge role in the game to be memorable.
     - also they're actually better than they seem
         - frog boss tests the player's ability to sidestep attacks
-        - mecha boss tests player's ability to use CC
+        - robot boss tests player's ability to use CC
         
 
 [current features]
@@ -58,10 +58,7 @@
     - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines and show a game over screen
-        
-        "Hello child. How I've missed you..." 
-        *absorbs you*
-        You Win!
+ - many status effects have placeholder icons
         
  - tutorial system
     - "how to use weapon"  (could also fix this with a UI redesign)

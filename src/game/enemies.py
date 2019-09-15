@@ -241,7 +241,7 @@ class MuncherTemplate(EnemyTemplate):
         return spriteref.large_shadow
 
     def get_level_range(self):
-        return range(10, 16)
+        return range(10, 14)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -476,7 +476,7 @@ class ScorpionTemplate(EnemyTemplate):
         return ("w", colors.RED)
 
     def get_level_range(self):
-        return range(9, 16)
+        return range(9, 14)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -485,7 +485,7 @@ class ScorpionTemplate(EnemyTemplate):
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 2,
-            StatTypes.INTELLIGENCE: 4,
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.POISON_ON_HIT: 2,
             StatTypes.GRASP_ON_MELEE_HIT: 1,
@@ -516,7 +516,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 4,
-            StatTypes.INTELLIGENCE: 5,
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.UNARMED_RANGE: 3,
             StatTypes.UNARMED_IS_PROJECTILE: 1,
@@ -545,6 +545,32 @@ class FungoiTemplate(EnemyTemplate):
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 2
         })
+
+
+class OysterTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Screeching Oyster")
+
+    def get_sprites(self):
+        return spriteref.enemy_oyster_all
+
+    def get_level_range(self):
+        return range(13, 16)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 12,
+            StatTypes.SPEED: 6,
+            StatTypes.ATT: 0,
+            StatTypes.UNARMED_ATT: 5,
+            StatTypes.DEF: 2,
+            StatTypes.INTELLIGENCE: 2,
+            StatTypes.BLINDNESS_ON_HIT: 3
+        })
+
+    def get_map_identifier(self):
+        return ("O", colors.RED)
 
 
 class FrogBossTemplate(EnemyTemplate):
@@ -606,7 +632,7 @@ class RoboTemplate(EnemyTemplate):
             StatTypes.ATT: 7,
             StatTypes.UNARMED_ATT: 0,
             StatTypes.DEF: 10,
-            StatTypes.INTELLIGENCE: 2,
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 5,
             StatTypes.UNARMED_RANGE: 2,
             StatTypes.UNARMED_IS_PROJECTILE: 1
@@ -676,6 +702,7 @@ TEMPLATE_SLUG = SlugTemplate()
 TEMPLATE_GIANT = GiantTemplate()
 TEMPLATE_CRAB = CrabTemplate()
 TEMPLATE_WITCH = WitchTemplate()
+TEMPLATE_OYSTER = OysterTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -697,7 +724,8 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_SCORPION,
                         TEMPLATE_GHAST,
                         TEMPLATE_GIANT,
-                        TEMPLATE_WITCH]
+                        TEMPLATE_WITCH,
+                        TEMPLATE_OYSTER]
 
 
 def get_rand_template_for_level(level, rand_val):

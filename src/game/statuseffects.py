@@ -141,3 +141,10 @@ def new_grasped_effect(duration, player_text=None):
     return StatusEffect("Grasped", duration, colors.ORANGE,
                         spriteref.UI.status_hand_icon, stats,
                         player_text=player_text, unique_key="grasped", is_debuff=True)
+
+
+def new_blindness_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.LIGHT_LEVEL, -4)]
+    return StatusEffect("Blindness", duration, colors.DARK_BLUE,
+                        spriteref.UI.status_eye_icon, stats,
+                        player_text=player_text, unique_key="blinded", is_debuff=True)

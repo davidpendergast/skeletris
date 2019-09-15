@@ -17,6 +17,7 @@ ORANGE = (1, 0.85, 0.65)
 
 DARK_GREEN = (0.35, 0.85, 0.35)
 DARK_YELLOW = (0.85, 0.85, 0.35)
+DARK_BLUE = (0.35, 0.35, 0.85)
 
 # for 'floating text in world'
 R_TEXT_COLOR = (0.65, 0.1, 0.1)

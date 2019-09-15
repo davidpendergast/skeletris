@@ -108,6 +108,9 @@ class StatTypes:
     GRASP_ON_MELEE_HIT = StatType("GRASP_ON_MELEE_HIT", color=colors.ORANGE, desc="Grasps on Melee Hit (lasts {} turns)",
                                   local_desc="Grasps on Melee Hit (lasts {} turns)", enemy_desc="Grasping")
 
+    BLINDNESS_ON_HIT = StatType("BLINDNESS_ON_HIT", color=colors.DARK_BLUE, desc="Inflicts Blindness on Hit (lasts {} turns)",
+                                local_desc="Inflicts Blindness on Hit (lasts {} turns)", enemy_desc="Blinding")
+
     HEAL_AT_LEVEL_END = StatType("HEAL_AT_LEVEL_END", desc="+{} HP at End of Level", color=colors.GREEN)
 
     # these are currently only used to control enemy behavior.

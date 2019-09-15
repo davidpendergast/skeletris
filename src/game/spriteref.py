@@ -330,7 +330,7 @@ door_h = [make(736 + i*16, 16, 16, 32) for i in range(0, 7)]
 door_h_locked = [make(736 + i*16, 64, 16, 32) for i in range(0, 7)]
 door_h_sensor = [make(736 + i*16, 112, 16, 32) for i in range(0, 7)]
 
-return_door_smoke = [make(608 + i*16, 240, 16, 16) for i in range(0, 16)]
+return_door_smoke = [make(608 + i*16, 160, 16, 16) for i in range(0, 16)]
 
 boss_door_idle = [make(224 + i*16, 80, 16, 32) for i in range(0, 2)]
 boss_door_opening = [make(256 + i*16, 80, 16, 32) for i in range(0, 7)]
@@ -376,6 +376,7 @@ enemy_slug_all = [make(528, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_giant_all = [make(560, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_crab_all = [make(496, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_witch_all = [make(544 + i * 16, 160, 16, 48) for i in range(0, 2)]
+enemy_oyster_all = [make(592, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
