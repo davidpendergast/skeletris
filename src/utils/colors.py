@@ -7,6 +7,7 @@ WHITE = (1, 1, 1)
 LIGHT_BLUE = (0.85, 0.85, 1)
 LIGHT_RED = (1, 0.85, 0.85)
 LIGHT_GREEN = (0.85, 1, 0.85)
+LIGHT_PURPLE = (1, 0.85, 1)
 
 RED = (1, 0.65, 0.65)
 GREEN = (0.65, 1, 0.65)

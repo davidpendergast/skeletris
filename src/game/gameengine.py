@@ -282,32 +282,33 @@ class EnemyController(ActorController):
         return res
 
     def _get_attack_action(self, actor, world):
-        a_state = actor.get_actor_state()
 
         target_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=False)
         if len(target_positions) == 0:
             return None
 
         # smart enemies use their items to attack
-        if a_state.intelligence() >= 5:
-            import src.items.item as item
-            weapons = []
-            for it in a_state.inventory().all_equipped_items():
-                if item.ItemTags.WEAPON in it.get_tags():
-                    weapons.append(it)
-            random.shuffle(weapons)
+        # TODO - need to think hard about this. player has no way of knowing what items an enemy has,
+        # TODO - so from their POV it would just hit way harder for seemingly no reason. scrap this?
+        #if a_state.intelligence() >= 5:
+        #    import src.items.item as item
+        #    weapons = []
+        #    for it in a_state.inventory().all_equipped_items():
+        #        if item.ItemTags.WEAPON in it.get_tags():
+        #            weapons.append(it)
+        #    random.shuffle(weapons)
 
-            attack_action_providers = []
-            for wep in weapons:
-                for action_prov in wep.all_actions():
-                    if action_prov.get_type() == ActionType.ATTACK:
-                        attack_action_providers.append(action_prov)
+        #    attack_action_providers = []
+        #    for wep in weapons:
+        #        for action_prov in wep.all_actions():
+        #            if action_prov.get_type() == ActionType.ATTACK:
+        #                attack_action_providers.append(action_prov)
 
-            for action_prov in attack_action_providers:
-                for target in target_positions:
-                    act = action_prov.get_action(actor, position=target)
-                    if act.is_possible(world):
-                        return act
+        #    for action_prov in attack_action_providers:
+        #        for target in target_positions:
+        #            act = action_prov.get_action(actor, position=target)
+        #            if act.is_possible(world):
+        #                return act
 
         # falling back to an unarmed attack
         for target in target_positions:

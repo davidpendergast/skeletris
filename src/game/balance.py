@@ -28,7 +28,7 @@ POTION_CONFUSION_DURATION = 8
 
 """Enemy AI Stuff"""
 ENEMY_SMART_PATHING_RANGE = 8
-ENEMY_PATHING_SKILL = (0.0, 0.7, 0.95, 0.95, 0.95)  # value for each level of intelligence
+ENEMY_PATHING_SKILL = (0.0, 0.7, 0.95, 0.95, 1.0)  # value for each level of intelligence
 CONFUSION_CHANCE = 0.75
 
 """Drop Rate Stuff"""

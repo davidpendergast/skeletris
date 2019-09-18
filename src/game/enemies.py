@@ -55,6 +55,9 @@ class EnemyTemplate:
         from src.game.gameengine import EnemyController
         return EnemyController()
 
+    def is_always_updating(self):
+        return False
+
 
 class CaveCrawlerTemplate(EnemyTemplate):
 
@@ -639,6 +642,40 @@ class RoboTemplate(EnemyTemplate):
         })
 
 
+class NamelessTemplate(EnemyTemplate):
+
+    def __init__(self, invincible):
+        EnemyTemplate.__init__(self, "???")
+        self._invincible = invincible
+
+    def get_sprites(self):
+        return spriteref.Bosses.nameless_idle
+
+    def get_map_identifier(self):
+        return ("?", colors.RED)
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+    def get_level_range(self):
+        return []  # special enemy
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 999 if self._invincible else 60,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 99 if self._invincible else 8,
+            StatTypes.DEF: 99 if self._invincible else 5,
+            StatTypes.INTELLIGENCE: 5,
+            StatTypes.SUPER_PATHING: 1,
+            StatTypes.NULLIFICATION: 1 if self._invincible else 0,
+            StatTypes.WEALTH: 0,
+        })
+
+    def is_always_updating(self):
+        return self._invincible
+
+
 class CaveHorrorTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -703,6 +740,8 @@ TEMPLATE_GIANT = GiantTemplate()
 TEMPLATE_CRAB = CrabTemplate()
 TEMPLATE_WITCH = WitchTemplate()
 TEMPLATE_OYSTER = OysterTemplate()
+TEMPLATE_NAMELESS = NamelessTemplate(False)
+TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()

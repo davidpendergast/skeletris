@@ -94,7 +94,7 @@ class StatTypes:
     POISON_ON_HIT = StatType("POISON_ON_HIT", color=colors.PURPLE, desc="Inflicts Poison on Hit (lasts {} turns)",
                              local_desc="Inflicts Poison on Hit (lasts {} turns)", enemy_desc="Poisonous")
 
-    NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects and Curses",
+    NULLIFICATION = StatType("NULLIFICATION", desc="Unaffected by Status Effects",
                              color=colors.WHITE, enemy_desc="Nullifying")
 
     CONFUSION = StatType("CONFUSION", desc="Moving is more difficult", color=colors.RED)
@@ -115,6 +115,7 @@ class StatTypes:
 
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
+    SUPER_PATHING = StatType("SUPER_PATHING")
     WEALTH = StatType("WEALTH")
     POTION_AFFINITY = StatType("POTION_AFFINITY", color=colors.LIGHT_BLUE, enemy_desc="Potion User")
     THROW_AFFINITY = StatType("THROW_AFFINITY", color=colors.LIGHT_RED, enemy_desc="Thrower")

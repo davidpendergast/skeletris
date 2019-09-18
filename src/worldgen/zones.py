@@ -104,6 +104,7 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color))
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
+    story_zones.append(get_zone(NamelessLairZone.ZONE_ID))
 
     _STORYLINE_ZONES.clear()
 
@@ -903,6 +904,78 @@ class RoboLairZone(Zone):
         return True
 
 
+class NamelessLairZone(Zone):
+
+    ZONE_ID = "???_lair"
+
+    def __init__(self):
+        Zone.__init__(self, "The Undergrowth", 15, filename="???_lair.png")
+        self._nameless_color = (255, 170, 170)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        # pick one of n spawn positions randomly
+        nameless_spawns = unknowns[self._nameless_color]
+        nameless_pos = random.choice(nameless_spawns)
+
+        # remove enemies in same room as nameless
+        enemy_spawns_to_rem = []
+        for e_pos in bp.enemy_spawns:
+            if Utils.dist(e_pos, nameless_pos) <= 5:
+                enemy_spawns_to_rem.append(e_pos)
+        for e_pos in enemy_spawns_to_rem:
+            bp.enemy_spawns.remove(e_pos)
+
+        min_dist = 10
+        min_dist_chance = 0.25
+        max_dist = 75
+        max_dist_chance = 0.75
+
+        mushroom_positions = []
+
+        for x in range(0, bp.width()):
+            for y in range(0, bp.height()):
+                geo = bp.get(x, y)
+                if geo == World.EMPTY:
+                    continue
+
+                # the closer we are, the more mushroomy and cracked it is
+                dist = Utils.dist((x, y), nameless_pos)
+                dist = Utils.bound(dist, min_dist, max_dist)
+                dist_pct = (dist - min_dist) / (max_dist - min_dist)
+
+                chance_to_fungify = min_dist_chance + dist_pct * (max_dist_chance - min_dist_chance)
+
+                if geo == World.FLOOR:
+                    if random.random() < chance_to_fungify or (x, y) == bp.player_spawn:
+                        bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
+                    if y != 0 and bp.get(x, y - 1) == World.WALL:
+                        if random.random() < chance_to_fungify:
+                            mushroom_positions.append((x, y))
+                elif geo == World.WALL:
+                    if random.random() < chance_to_fungify:
+                        bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
+
+        w = bp.build_world()
+
+        nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
+        w.add(nameless_entity, gridcell=nameless_pos)
+
+        for xy in mushroom_positions:
+            mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+            mushroom_entity = entities.DecorationEntity.wall_decoration(mushroom_sprite, xy[0], xy[1])
+            w.add(mushroom_entity)
+
+        return w
+
+    def is_boss_zone(self):
+        return True
+
+    def get_color(self):
+        return colors.LIGHT_PURPLE
+
+
 class CaveHorrorZone(Zone):
 
     ZONE_ID = "cave_horror_lair"
@@ -919,8 +992,6 @@ class CaveHorrorZone(Zone):
         tree_pos = unknowns[self._tree_color][0]
         tree_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level())
         w.add(tree_entity, gridcell=tree_pos)
-
-
 
         return w
 
