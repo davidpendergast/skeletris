@@ -2,6 +2,7 @@ import math
 
 import src.utils.colors as colors
 import src.game.balance as balance
+import src.game.debug as debug
 
 
 _ALL_STAT_TYPES = {}  # stat_id -> StatType
@@ -162,7 +163,7 @@ class StatProvider:
 
 
 def default_player_stats():
-    return BasicStatLookup({
+    stats = {
         StatTypes.ATT: 0,
         StatTypes.VIT: 8,
         StatTypes.DEF: 1,
@@ -173,7 +174,12 @@ def default_player_stats():
         StatTypes.SPEED: 4,
         StatTypes.HEAL_AT_LEVEL_END: 5,
         StatTypes.INTELLIGENCE: 5,  # affects nothing, but there's no reason to be mean
-    })
+    }
+
+    if debug.insta_kill():
+        stats[StatTypes.ATT] = 99
+
+    return BasicStatLookup(stats)
 
 
 class BasicStatLookup(StatProvider):

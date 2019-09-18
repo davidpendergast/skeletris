@@ -337,7 +337,7 @@ class GiantTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 28,
-            StatTypes.SPEED: 3,
+            StatTypes.SPEED: 2,
             StatTypes.ATT: 6,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 3,
