@@ -766,7 +766,7 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
 
     Bosses.robo_idle = [make(i * 64, 320, 64, 80, shift=start_pos) for i in range(0, 2)]
 
-    Bosses.nameless_idle = [make(128 + i * 48, 352, 48, 48, shift=start_pos) for i in range(0, 2)]
+    Bosses.nameless_idle = [make(i * 48, 400, 48, 64, shift=start_pos) for i in range(0, 7)]
 
     Bosses.frog_idle_1 = [make(0 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
