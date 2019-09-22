@@ -1613,6 +1613,11 @@ class InGameUiState(Menu):
             for act in gameengine.get_actions_from_click(world, mouse_pos):
                 if act.is_possible(world):
                     position = act.get_position()
+
+                    if position is None:
+                        # some actions have no positions (like applying items to the player).
+                        position = world.to_grid_coords(*mouse_pos)
+
                     color = act.get_targeting_color(for_mouse=True)
                     if position is not None and color is not None:
                         target_coords[position] = color

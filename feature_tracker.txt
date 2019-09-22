@@ -64,6 +64,8 @@
     - "how to use weapon"  (could also fix this with a UI redesign)
  - confusion and grasp effects should play a sound when they 'activate'
  - when you equip a weapon it should become active
+ - make enemies move at the same time as you...?
+    - maybe there's a reason why all other roguelikes do this...
     
  
 [architecture]

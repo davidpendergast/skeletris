@@ -1876,12 +1876,12 @@ def get_right_click_action_for_item(clicked_item):
 
     from src.items.item import ItemTags
 
-    if clicked_item.can_consume():
+    inv_state = p.get_actor_state().inventory()
+
+    if inv_state.is_in_inventory(clicked_item) and clicked_item.can_consume():
         consume_action = ConsumeItemAction(p, clicked_item)
         if consume_action.is_possible(w):
             return consume_action
-
-    inv_state = p.get_actor_state().inventory()
 
     # right clicking an equippable item will move it between equipment grid and inventory grid
     if clicked_item.get_type().has_tag(ItemTags.EQUIPMENT):
@@ -1924,12 +1924,15 @@ def get_actions_from_click(world, world_pos, button=1):
                 trade_action = TradeItemAction(player, ps.held_item, world_grid_pos)
                 res.append(trade_action)
 
-                # clicking the player places the item into inventory
+                # clicking the player either consumes the item or places it into the inventory
                 if world_grid_pos == world.to_grid_coords(*player.center()):
-                    put_in_inv_act = AddItemToGridAction(player, ps.held_item, ps.inventory().get_inv_grid(),
-                                                         grid_position=None,
-                                                         position=world_grid_pos)
-                    res.append(put_in_inv_act)
+                    if ps.held_item.can_consume():
+                        consume_action = ConsumeItemAction(player, ps.held_item)
+                        res.append(consume_action)
+
+                    right_click_action = get_right_click_action_for_item(ps.held_item)
+                    if right_click_action is not None:
+                        res.append(right_click_action)
 
                 drop_dir = Utils.sub(world_pos, player.center())
                 drop_action = DropItemAction(player, ps.held_item, drop_dir=drop_dir)
