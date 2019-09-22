@@ -538,12 +538,16 @@ class FloatingTextEntity(Entity):
 
 class ActorEntity(Entity):
 
-    def __init__(self, idle_sprites, map_id=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+    def __init__(self, idle_sprites, map_id=None, idle_anim_rate=4, moving_anim_rate=2,
+                 sprite_offset=(0, 0), shadow_offset=(0, 0)):
         Entity.__init__(self, 0, 0, 24, 24)
 
         self.executing_action = None
         self.executing_action_duration = 1
         self.executing_action_ticks = 0
+
+        self.idle_anim_rate = idle_anim_rate
+        self.moving_anim_rate = moving_anim_rate
 
         self.map_id = map_id
 
@@ -584,6 +588,12 @@ class ActorEntity(Entity):
 
     def get_map_identifier(self):
         return self.map_id
+
+    def get_anim_rate(self):
+        if self.was_moving_recently():
+            return self.moving_anim_rate
+        else:
+            return self.idle_anim_rate
 
     def get_shadow_offset(self):
         return self._shadow_offset
@@ -797,7 +807,7 @@ class ActorEntity(Entity):
 
     def get_sprite(self):
         tick = gs.get_instance().anim_tick
-        anim_rate = 2 if self.was_moving_recently() else 4
+        anim_rate = self.get_anim_rate()
 
         if self._sprites_override is not None and len(self._sprites_override) > 0:
             return self._sprites_override[(tick // anim_rate) % len(self._sprites_override)]
@@ -858,7 +868,8 @@ class ActorEntity(Entity):
 class Player(ActorEntity):
 
     def __init__(self, x, y):
-        ActorEntity.__init__(self, spriteref.player_idle_all, map_id=("p", colors.WHITE))
+        ActorEntity.__init__(self, spriteref.player_idle_all, map_id=("p", colors.WHITE),
+                             idle_anim_rate=4, moving_anim_rate=2)
         self.set_x(x)
         self.set_y(y)
 
@@ -876,7 +887,7 @@ class Player(ActorEntity):
 
     def get_sprite(self):
         anim_tick = gs.get_instance().anim_tick
-        anim_rate = 2 if self.was_moving_recently() else 4
+        anim_rate = self.get_anim_rate()
 
         if self._sprites_override is not None and len(self._sprites_override) > 0:
             return self._sprites_override[(anim_tick // anim_rate) % len(self._sprites_override)]
@@ -1033,8 +1044,9 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites, map_id, controller, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
-        ActorEntity.__init__(self, sprites, map_id=map_id, sprite_offset=sprite_offset, shadow_offset=shadow_offset)
+    def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+        ActorEntity.__init__(self, sprites, map_id=map_id, idle_anim_rate=idle_anim_rate, moving_anim_rate=moving_anim_rate,
+                             sprite_offset=sprite_offset, shadow_offset=shadow_offset)
         self._enemy_state = state
         self._enemy_controller = controller
         self.set_x(x)

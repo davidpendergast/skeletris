@@ -58,6 +58,12 @@ class EnemyTemplate:
     def is_always_updating(self):
         return False
 
+    def get_idle_anim_rate(self):
+        return 2
+
+    def get_moving_anim_rate(self):
+        return 4
+
 
 class CaveCrawlerTemplate(EnemyTemplate):
 
@@ -675,6 +681,12 @@ class NamelessTemplate(EnemyTemplate):
     def is_always_updating(self):
         return self._invincible
 
+    def get_idle_anim_rate(self):
+        return 1
+
+    def get_moving_anim_rate(self):
+        return 1
+
 
 class CaveHorrorTemplate(EnemyTemplate):
 
@@ -828,7 +840,10 @@ class EnemyFactory:
 
         res = []
         for _ in range(0, n):
-            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(), template.get_map_identifier(), template.get_controller(),
+            res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(),
+                             template.get_map_identifier(), template.get_controller(),
+                             idle_anim_rate=template.get_idle_anim_rate(),
+                             moving_anim_rate=template.get_moving_anim_rate(),
                              sprite_offset=template.get_sprite_offset(),
                              shadow_sprite=template.get_shadow_sprite(),
                              shadow_offset=template.get_shadow_offset()))
