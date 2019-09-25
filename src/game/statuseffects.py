@@ -148,3 +148,19 @@ def new_blindness_effect(duration, player_text=None):
     return StatusEffect("Blindness", duration, colors.DARK_BLUE,
                         spriteref.UI.status_eye_icon, stats,
                         player_text=player_text, unique_key="blinded", is_debuff=True)
+
+
+def new_flinch_effect(player_text=None):
+    stats = [AppliedStat(StatTypes.FLINCHED, 1)]
+    return StatusEffect("Flinched", 1, StatTypes.FLINCHED.get_color(),
+                        spriteref.UI.status_sparkles_icon, stats,
+                        player_text=player_text, unique_key="flinched", is_debuff=True,
+                        ignore_nullification=True)
+
+
+def new_flinch_recovery_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.UNFLINCHING, 1)]
+    return StatusEffect("Unflinching", duration, StatTypes.UNFLINCHING.get_color(),
+                        spriteref.UI.status_sparkles_icon, stats,
+                        player_text=player_text, unique_key="unflinching", is_debuff=False,
+                        ignore_nullification=True)

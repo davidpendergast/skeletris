@@ -111,8 +111,8 @@ class ActorState(StatProvider):
     def is_grasped(self):
         return self.stat_value(StatTypes.GRASPED) > 0
 
-    def is_prevented_from_moving_due_to_status_effect(self):
-        return self.is_grasped()
+    def is_flinched(self):
+        return self.stat_value(StatTypes.FLINCHED) > 0
 
     def get_projectile_sprite(self):
         return self.unarmed_projectile_sprite
@@ -123,6 +123,9 @@ class ActorState(StatProvider):
 
     def is_nullified(self):
         return self.stat_value(StatTypes.NULLIFICATION) > 0
+
+    def is_unflinching(self):
+        return self.stat_value(StatTypes.UNFLINCHING) > 0
 
     def set_ready_to_act(self, val):
         self._ready_to_act = val
@@ -190,16 +193,63 @@ class ActorState(StatProvider):
 
     def countdown_status_effects(self):
         all_effects = self.all_status_effects()
-        nullified = self.is_nullified()
+        self.is_nullified()
+
+        add_flinch_recovery = False
 
         for e in all_effects:
-            if self.status_effects[e] <= 0 or (nullified and not e.ignores_nullification()):
+            expired = self.status_effects[e] <= 1
+            nullified = self.is_nullified() and not e.ignores_nullification()
+            unflinched = e.stat_value(StatTypes.FLINCHED) > 0 and self.is_unflinching()
+
+            if expired or nullified or unflinched:
                 del self.status_effects[e]
+
+                if e.stat_value(StatTypes.FLINCHED) > 0 and expired and not unflinched:
+                    add_flinch_recovery = True
             else:
                 self.status_effects[e] = self.status_effects[e] - 1
 
+        if add_flinch_recovery:
+            self.add_status_effect(statuseffects.new_flinch_recovery_effect(1))
+
 
 class ActorController:
+
+    def get_actual_next_action(self, actor, world):
+        """This is where action-mutating status effects are applied."""
+
+        next_action = self.get_next_action(actor, world)
+
+        if next_action.is_free():
+            return next_action
+
+        a_state = actor.get_actor_state()
+        a_pos = world.to_grid_coords(*actor.center())
+        import src.game.stats as stats
+
+        if a_state.is_flinched() and not next_action.is_skip_turn_action():
+            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.FLINCHED.get_color())
+
+        # intentionally still letting you do things like lunge-attack while grasped, for flavor...
+        if a_state.is_grasped() and next_action.is_move_action():
+            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.GRASPED.get_color())
+
+        if a_state.is_confused() and next_action.is_move_action():
+            if random.random() < balance.CONFUSION_CHANCE:
+                pos = next_action.get_position()
+                neighbors = [n for n in Utils.neighbors(a_pos[0], a_pos[1]) if n != pos]
+                random.shuffle(neighbors)
+                for n in neighbors:
+                    if actor.is_player():
+                        open_door_action = OpenDoorAction(actor, n, perturb_color=stats.StatTypes.CONFUSION.get_color())
+                        if open_door_action.is_possible(world):
+                            return open_door_action
+                    move_action = MoveToAction(actor, n, perturb_color=stats.StatTypes.CONFUSION.get_color())
+                    if move_action.is_possible(world):
+                        return move_action
+
+        return next_action
 
     def get_next_action(self, actor, world):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
@@ -290,6 +340,7 @@ class EnemyController(ActorController):
         # smart enemies use their items to attack
         # TODO - need to think hard about this. player has no way of knowing what items an enemy has,
         # TODO - so from their POV it would just hit way harder for seemingly no reason. scrap this?
+        # TODO - well a diligent player could read the enemy's stats...
         #if a_state.intelligence() >= 5:
         #    import src.items.item as item
         #    weapons = []
@@ -324,9 +375,6 @@ class EnemyController(ActorController):
         pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
         skilled_enough = random.random() < balance.ENEMY_PATHING_SKILL[actor.get_actor_state().intelligence() - 1]
 
-        if actor.get_actor_state().is_confused() and random.random() < balance.CONFUSION_CHANCE:
-            skilled_enough = False
-
         if not world.get_hidden(*pos) and skilled_enough:
             p = world.get_player()
             if p is not None:
@@ -353,7 +401,6 @@ class EnemyController(ActorController):
         a_state = actor.get_actor_state()
 
         if a_state.intelligence() >= 4 and a_state.hp() <= 2 * a_state.max_hp() // 3:
-            import src.items.item as item
             for it in a_state.inventory().all_inv_items():
                 consume_effect = it.get_consume_effect()
                 if consume_effect is not None and consume_effect.stat_value(StatTypes.HP_REGEN) > 0:
@@ -507,6 +554,9 @@ class Action:
     def is_move_action(self):
         return self.get_type() == ActionType.MOVE_TO
 
+    def is_skip_turn_action(self):
+        return self.get_type() == ActionType.SKIP_TURN
+
     def animate_in_world(self, progress, world):
         pass
 
@@ -548,8 +598,6 @@ class MoveToAction(Action):
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
         a_state = self.get_actor().get_actor_state()
-        if a_state.is_prevented_from_moving_due_to_status_effect():
-            return False
 
         if Utils.dist_manhattan(self.position, pos) != 1:
             return False
@@ -779,6 +827,11 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         if blindness_duration > 0:
             new_status_effects_for_defender.append(statuseffects.new_blindness_effect(blindness_duration))
 
+        flinch_chance = attacker.stat_value_with_item(StatTypes.FLINCH_ON_HIT, item_used)
+        is_unflinching = defender.stat_value(StatTypes.UNFLINCHING) > 0
+        if not is_unflinching and random.random() <= flinch_chance / 10:
+            new_status_effects_for_defender.append(statuseffects.new_flinch_effect())
+
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)
         slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:
@@ -950,8 +1003,6 @@ class MeleeAttackAction(AttackAction):
         end_pos = self._get_end_pos(world)
         if cur_pos != end_pos:
             if world.is_solid(end_pos[0], end_pos[1], including_entities=True):
-                return False
-            elif self.get_actor().get_actor_state().is_prevented_from_moving_due_to_status_effect():
                 return False
 
         return True
@@ -1806,20 +1857,11 @@ class ItemActions:
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
 
 
-def get_basic_movement_actions(player, current_pos, move_pos, for_click=False, allow_status_effects_to_interfere=True):
+def get_basic_movement_actions(player, current_pos, move_pos, for_click=False):
     res = []
 
     res.append(InteractAction(player, move_pos))
     res.append(TradeItemAction(player, player.get_actor_state().held_item, move_pos))
-
-    if allow_status_effects_to_interfere and not for_click:
-        if player.get_actor_state().is_confused():
-            if random.random() < balance.CONFUSION_CHANCE:
-                for a in get_confusion_move_actions(player, current_pos, move_pos):
-                    res.append(a)
-        if player.get_actor_state().is_grasped():
-            color = statuseffects.StatTypes.GRASPED.get_color()
-            res.append(SkipTurnAction(player, current_pos, perturb_color=color))
 
     if not for_click:
         res.append(OpenDoorAction(player, move_pos))
@@ -1844,7 +1886,7 @@ def get_confusion_move_actions(player, pos, target_pos):
     return res
 
 
-def get_keyboard_action_requests(world, player, target_pos, allow_status_effects_to_interfere=True):
+def get_keyboard_action_requests(world, player, target_pos):
     pos = world.to_grid_coords(*player.center())
     res = []
 
@@ -1862,8 +1904,7 @@ def get_keyboard_action_requests(world, player, target_pos, allow_status_effects
             else:
                 res.append(MeleeAttackAction(player, None, target_pos))
 
-    for basic_action in get_basic_movement_actions(player, pos, target_pos, for_click=False,
-                                                   allow_status_effects_to_interfere=allow_status_effects_to_interfere):
+    for basic_action in get_basic_movement_actions(player, pos, target_pos, for_click=False):
         res.append(basic_action)
 
     return res

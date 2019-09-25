@@ -626,7 +626,7 @@ class World:
 
             for actor in actors_ready_to_act:
                 a_state = actor.get_actor_state()
-                action = actor.request_next_action(self)
+                action = actor.get_controller().get_actual_next_action(actor, self)
 
                 if actor.is_player():
                     gs.get_instance().set_player_turn_to_act(True)

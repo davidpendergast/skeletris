@@ -383,6 +383,7 @@ class CrabTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
             StatTypes.GRASP_ON_MELEE_HIT: 2,
+            StatTypes.UNFLINCHING: 1,
         })
 
 
@@ -405,13 +406,14 @@ class CyclopsTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 10,
+            StatTypes.VIT: 15,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 2
+            StatTypes.WEALTH: 2,
+            StatTypes.FLINCH_ON_HIT: 2,
         })
 
 
@@ -675,6 +677,7 @@ class NamelessTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 5,
             StatTypes.SUPER_PATHING: 1,
             StatTypes.NULLIFICATION: 1 if self._invincible else 0,
+            StatTypes.UNFLINCHING: 1 if self._invincible else 0,
             StatTypes.WEALTH: 0,
         })
 

@@ -1600,7 +1600,7 @@ class InGameUiState(Menu):
 
         pos = world.to_grid_coords(*p.center())
         for n in Utils.neighbors(pos[0], pos[1]):
-            for act in gameengine.get_keyboard_action_requests(world, p, n, allow_status_effects_to_interfere=False):
+            for act in gameengine.get_keyboard_action_requests(world, p, n):
                 if act.is_possible(world):
                     position = act.get_position()
                     color = act.get_targeting_color(for_mouse=False)

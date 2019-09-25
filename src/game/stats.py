@@ -136,6 +136,19 @@ class StatTypes:
                           desc="+{} HP on Kill",
                           local_desc="Kills with this item grant +{} HP")
 
+    FLINCHED = StatType("FLINCHED", color=colors.PINK, desc="Unable to Act")
+
+    UNFLINCHING = StatType("UNFLINCHING",
+                           color=NULLIFICATION.get_color(),
+                           desc="Cannot be Flinched",
+                           enemy_desc="Unflinching")
+
+    FLINCH_ON_HIT = StatType("FLINCH_ON_HIT",
+                             color=colors.PINK,
+                             desc="{}0% Chance to Flinch on Hit",
+                             local_desc="{}0% Chance to Flinch on Hit",
+                             enemy_desc="Flinching")
+
     @staticmethod
     def all_types():
         for stat_id in _ALL_STAT_TYPES:

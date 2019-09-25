@@ -1082,7 +1082,7 @@ class HotbarMoveButton(InteractableImage):
 
         ps = gs.get_instance().player_state()
         if ps is not None:
-            if ps.is_prevented_from_moving_due_to_status_effect():
+            if ps.is_flinched() or ps.is_grasped():
                 return False
 
         return True

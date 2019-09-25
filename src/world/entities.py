@@ -645,9 +645,6 @@ class ActorEntity(Entity):
     def get_controller(self):
         pass
 
-    def request_next_action(self, world):
-        return self.get_controller().get_next_action(self, world)
-
     def is_actor(self):
         return True
 
@@ -1003,9 +1000,6 @@ class Player(ActorEntity):
         ActorEntity.update(self, world)
         self.update_held_item_image()
         self.update_targeting_entities(world)
-
-    def request_next_action(self, world):
-        return ActorEntity.request_next_action(self, world)
         
     def is_player(self):
         return True
