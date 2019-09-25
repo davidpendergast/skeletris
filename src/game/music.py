@@ -11,6 +11,7 @@ class Songs:
     AMPHIBIAN = "03_amphibian.ogg"
     TREE_THEME = "04_tree_theme.ogg"
     DEAD_CITY = "06_dead_city.ogg"
+    UNEARTHED = "07_unearthed.ogg"
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
 
