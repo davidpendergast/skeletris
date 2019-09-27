@@ -23,8 +23,6 @@
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - machine has generic trade text
-    - consider making machine preserve # of cubes in the item
-    - it's really quite rare to be helpful otherwise
  - tutorial text can become faded. looks like a render order issue
 
 
@@ -51,19 +49,18 @@
     - also they're actually better than they seem
         - frog boss tests the player's ability to sidestep attacks
         - robot boss tests player's ability to use CC
-        
 
 [current features]
  - end-of-game boss
     - dialog only? i'm fine with this, cliffhanger for the "demo"
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines and show a game over screen
- - many status effects have placeholder icons
-        
+        - or dunk you into a ~~~different boss zone~~~
  - tutorial system
     - "how to use weapon"  (could also fix this with a UI redesign)
  - confusion and grasp effects should play a sound when they 'activate'
  - when you equip a weapon it should become active
+    - only if you have nothing activated
  - make enemies move at the same time as you...?
     - maybe there's a reason why all other roguelikes do this...
     

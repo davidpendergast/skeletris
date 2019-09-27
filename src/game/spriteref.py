@@ -158,6 +158,13 @@ class UI:
     status_waves_icon = None
 
     status_hand_icon = None
+    status_down_arrow_icon = None
+    status_x_icon = None
+    status_eye_xed_icon = None
+
+    status_bone_circle_icon = None
+    status_skull_icon = None
+    status_snowflake_icon = None
 
     @staticmethod
     def get_health_bar(pcnt_full):
@@ -721,6 +728,13 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     UI.status_waves_icon = make(272, 256, 16, 16, shift=start_pos)
 
     UI.status_hand_icon = make(288, 240, 16, 16, shift=start_pos)
+    UI.status_down_arrow_icon = make(288, 256, 16, 16, shift=start_pos)
+    UI.status_x_icon = make(288, 272, 16, 16, shift=start_pos)
+    UI.status_eye_xed_icon = make(288, 288, 16, 16, shift=start_pos)
+
+    UI.status_bone_circle_icon = make(304, 240, 16, 16, shift=start_pos)
+    UI.status_skull_icon = make(304, 256, 16, 16, shift=start_pos)
+    UI.status_snowflake_icon = make(304, 272, 16, 16, shift=start_pos)
 
     UI.tooltip_bg = make(48, 232, 2, 2, shift=start_pos)
 
