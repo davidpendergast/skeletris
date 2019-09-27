@@ -975,6 +975,9 @@ class NamelessLairZone(Zone):
     def get_color(self):
         return colors.LIGHT_PURPLE
 
+    def get_music_id(self):
+        return music.Songs.UNEARTHED
+
 
 class CaveHorrorZone(Zone):
 

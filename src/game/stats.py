@@ -145,8 +145,8 @@ class StatTypes:
 
     FLINCH_ON_HIT = StatType("FLINCH_ON_HIT",
                              color=colors.PINK,
-                             desc="{}0% Chance to Flinch on Hit",
-                             local_desc="{}0% Chance to Flinch on Hit",
+                             desc="Causes Target to Flinch on Hit",
+                             local_desc="Causes Target to Flinch on Hit",
                              enemy_desc="Flinching")
 
     @staticmethod

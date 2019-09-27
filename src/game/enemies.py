@@ -198,7 +198,8 @@ class SporeTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
-            StatTypes.CONFUSION_ON_HIT: 1
+            StatTypes.CONFUSION_ON_HIT: 1,
+            StatTypes.UNFLINCHING: 1
         })
 
     def get_level_range(self):
@@ -382,8 +383,7 @@ class CrabTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
-            StatTypes.GRASP_ON_MELEE_HIT: 2,
-            StatTypes.UNFLINCHING: 1,
+            StatTypes.GRASP_ON_MELEE_HIT: 2
         })
 
 
@@ -407,13 +407,13 @@ class CyclopsTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 15,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
-            StatTypes.FLINCH_ON_HIT: 2,
+            StatTypes.FLINCH_ON_HIT: 1,
         })
 
 
@@ -577,7 +577,8 @@ class OysterTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 5,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.BLINDNESS_ON_HIT: 3
+            StatTypes.BLINDNESS_ON_HIT: 3,
+            StatTypes.UNFLINCHING: 1,
         })
 
     def get_map_identifier(self):
@@ -674,11 +675,11 @@ class NamelessTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 99 if self._invincible else 8,
             StatTypes.DEF: 99 if self._invincible else 5,
-            StatTypes.INTELLIGENCE: 5,
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.SUPER_PATHING: 1,
             StatTypes.NULLIFICATION: 1 if self._invincible else 0,
-            StatTypes.UNFLINCHING: 1 if self._invincible else 0,
-            StatTypes.WEALTH: 0,
+            StatTypes.UNFLINCHING: 1,
+            StatTypes.WEALTH: 3,
         })
 
     def is_always_updating(self):

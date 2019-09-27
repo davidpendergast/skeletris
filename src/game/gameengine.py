@@ -827,9 +827,9 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         if blindness_duration > 0:
             new_status_effects_for_defender.append(statuseffects.new_blindness_effect(blindness_duration))
 
-        flinch_chance = attacker.stat_value_with_item(StatTypes.FLINCH_ON_HIT, item_used)
+        flinches = attacker.stat_value_with_item(StatTypes.FLINCH_ON_HIT, item_used) > 0
         is_unflinching = defender.stat_value(StatTypes.UNFLINCHING) > 0
-        if not is_unflinching and random.random() <= flinch_chance / 10:
+        if flinches and not is_unflinching:
             new_status_effects_for_defender.append(statuseffects.new_flinch_effect())
 
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)

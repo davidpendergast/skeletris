@@ -81,7 +81,7 @@ class WeaponItemFactory:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.SWORD_ATTACK]
             return SpriteItem("Sword of Truth", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 4, local=True)],
+                              [AppliedStat(StatTypes.ATT, 5, local=True)],
                               spriteref.Items.sword_small, spriteref.Items.sword_big, actions=actions)
 
         elif item_type == ItemTypes.WHIP_WEAPON:
@@ -89,7 +89,7 @@ class WeaponItemFactory:
             actions = [ItemActions.WHIP_ATTACK]
             return SpriteItem("Whip of Quickness", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True),
-                               AppliedStat(StatTypes.FLINCH_ON_HIT, 3, local=True)],
+                               AppliedStat(StatTypes.FLINCH_ON_HIT, 1, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
 
         elif item_type == ItemTypes.DAGGER_WEAPON:
@@ -136,7 +136,7 @@ class WeaponItemFactory:
             cubes = [(0, 0), (1, 0), (1, 1), (1, 2)]
             actions = [ItemActions.AXE_ATTACK]
             return SpriteItem("Axe of Striking", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 5, local=True),
+                              [AppliedStat(StatTypes.ATT, 6, local=True),
                                AppliedStat(StatTypes.THROWN_ATT, 3, local=True)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 

@@ -740,8 +740,8 @@ class ActorEntity(Entity):
                 a_state = self.get_actor_state()
 
                 if a_state.is_alive():
-                    a_state.countdown_status_effects()
                     self._apply_status_effects(world)
+                    a_state.countdown_status_effects()
             else:
                 prog = Utils.bound(self.executing_action_ticks / self.executing_action_duration, 0.0, 1.0)
                 self.executing_action.animate_in_world(prog, world)
