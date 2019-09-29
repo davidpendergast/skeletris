@@ -505,6 +505,7 @@ class ActionType:
     INTERACT = "INTERACT"
     PLAYER_WAIT = "PLAYER_WAIT"  # special command used by player to indicate they're still deciding
     SKIP_TURN = "SKIP_TURN"
+    SPAWN_ACTOR = "SPAWN_ACTOR"
 
     OPEN_DOOR = "OPEN_DOOR"
 

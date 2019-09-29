@@ -674,7 +674,7 @@ class HuskTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 30,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 2,
             StatTypes.ATT: 8,
             StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 6,
