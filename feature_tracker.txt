@@ -24,6 +24,7 @@
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - machine has generic trade text
  - tutorial text can become faded. looks like a render order issue
+ - make sure that status 'apply' the correct number of times
 
 
 [balance issues]
@@ -210,7 +211,7 @@
 
     [CAN'T USE] Cubelike 
         - blend of roguelike and "cube" (?)
-        - been using this as the name since the begining
+        - been using this as the name since the beginning
         - don't really want to use word "Cube" because it's awkward to say/hard to hear
             - "it's called kyubelike"
             - what?

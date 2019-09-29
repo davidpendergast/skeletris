@@ -19,6 +19,9 @@ class EnemyTemplate:
     def get_sprites(self):
         return spriteref.player_idle_arms_up_all
 
+    def get_moving_sprites(self):
+        return self.get_sprites()
+
     def get_shadow_sprite(self):
         return spriteref.medium_shadow
 
@@ -62,7 +65,7 @@ class EnemyTemplate:
         return 2
 
     def get_moving_anim_rate(self):
-        return 4
+        return 1
 
 
 class CaveCrawlerTemplate(EnemyTemplate):
@@ -198,7 +201,7 @@ class SporeTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
-            StatTypes.CONFUSION_ON_HIT: 1,
+            StatTypes.CONFUSION_ON_HIT: 2,
             StatTypes.UNFLINCHING: 1
         })
 
@@ -651,6 +654,35 @@ class RoboTemplate(EnemyTemplate):
         })
 
 
+class HuskTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Husk")
+
+    def get_sprites(self):
+        return spriteref.enemy_husk_idle_all
+
+    def get_moving_sprites(self):
+        return spriteref.enemy_husk_moving_all
+
+    def get_map_identifier(self):
+        return ("h", colors.RED)
+
+    def get_level_range(self):
+        return [15]
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 30,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 8,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 6,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 2,
+        })
+
+
 class NamelessTemplate(EnemyTemplate):
 
     def __init__(self, invincible):
@@ -758,6 +790,7 @@ TEMPLATE_WITCH = WitchTemplate()
 TEMPLATE_OYSTER = OysterTemplate()
 TEMPLATE_NAMELESS = NamelessTemplate(False)
 TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
+TEMPLATE_HUSK = HuskTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -850,7 +883,8 @@ class EnemyFactory:
                              moving_anim_rate=template.get_moving_anim_rate(),
                              sprite_offset=template.get_sprite_offset(),
                              shadow_sprite=template.get_shadow_sprite(),
-                             shadow_offset=template.get_shadow_offset()))
+                             shadow_offset=template.get_shadow_offset(),
+                             moving_sprites=template.get_moving_sprites()))
 
         return res
 

@@ -909,7 +909,7 @@ class NamelessLairZone(Zone):
     ZONE_ID = "???_lair"
 
     def __init__(self):
-        Zone.__init__(self, "The Undergrowth", 15, filename="???_lair.png")
+        Zone.__init__(self, "Unearth", 15, filename="???_lair.png")
         self._nameless_color = (255, 170, 170)
 
     def build_world(self):
@@ -986,6 +986,7 @@ class CaveHorrorZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
         self._tree_color = (255, 170, 170)
+        self._husk_color = (255, 194, 194)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -995,6 +996,11 @@ class CaveHorrorZone(Zone):
         tree_pos = unknowns[self._tree_color][0]
         tree_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level())
         w.add(tree_entity, gridcell=tree_pos)
+
+        husk_spawns = unknowns[self._husk_color]
+        for pos in husk_spawns:
+            husk_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self.get_level())
+            w.add(husk_entity, gridcell=pos)
 
         return w
 

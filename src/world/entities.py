@@ -539,7 +539,7 @@ class FloatingTextEntity(Entity):
 class ActorEntity(Entity):
 
     def __init__(self, idle_sprites, map_id=None, idle_anim_rate=4, moving_anim_rate=2,
-                 sprite_offset=(0, 0), shadow_offset=(0, 0)):
+                 sprite_offset=(0, 0), shadow_offset=(0, 0), moving_sprites=None):
         Entity.__init__(self, 0, 0, 24, 24)
 
         self.executing_action = None
@@ -552,6 +552,11 @@ class ActorEntity(Entity):
         self.map_id = map_id
 
         self.idle_sprites = Utils.listify(idle_sprites)
+        if moving_sprites is None:
+            self.moving_sprites = [s for s in self.idle_sprites]
+        else:
+            self.moving_sprites = Utils.listify(moving_sprites)
+
         self._facing_right = random.random() > 0.5
         self.base_color = (1, 1, 1)
 
@@ -809,7 +814,8 @@ class ActorEntity(Entity):
         if self._sprites_override is not None and len(self._sprites_override) > 0:
             return self._sprites_override[(tick // anim_rate) % len(self._sprites_override)]
         else:
-            return self.idle_sprites[(tick // anim_rate) % len(self.idle_sprites)]
+            sprites = self.idle_sprites if not self.was_moving_recently() else self.moving_sprites
+            return sprites[(tick // anim_rate) % len(sprites)]
 
     def set_facing_right(self, facing_right):
         self._facing_right = facing_right
@@ -1038,9 +1044,10 @@ class Player(ActorEntity):
  
 class Enemy(ActorEntity):
 
-    def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4, shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0)):
+    def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4,
+                 shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0), moving_sprites=None):
         ActorEntity.__init__(self, sprites, map_id=map_id, idle_anim_rate=idle_anim_rate, moving_anim_rate=moving_anim_rate,
-                             sprite_offset=sprite_offset, shadow_offset=shadow_offset)
+                             sprite_offset=sprite_offset, shadow_offset=shadow_offset, moving_sprites=moving_sprites)
         self._enemy_state = state
         self._enemy_controller = controller
         self.set_x(x)
