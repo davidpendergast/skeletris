@@ -62,10 +62,10 @@ class EnemyTemplate:
         return False
 
     def get_idle_anim_rate(self):
-        return 2
+        return 4
 
     def get_moving_anim_rate(self):
-        return 1
+        return 2
 
 
 class SkeleSpawn(EnemyTemplate):
@@ -692,13 +692,16 @@ class HuskTemplate(EnemyTemplate):
         return [15]
 
     def get_base_stats(self):
+        player_base_stats = stats.default_player_stats()
+
         return stats.BasicStatLookup({
-            StatTypes.VIT: 20,
-            StatTypes.SPEED: 4,
-            StatTypes.ATT: 4,
-            StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 3,
-            StatTypes.INTELLIGENCE: 4,
+            StatTypes.VIT: player_base_stats.stat_value(StatTypes.VIT) * 2,
+            StatTypes.SPEED: player_base_stats.stat_value(StatTypes.SPEED),
+            StatTypes.ATT: player_base_stats.stat_value(StatTypes.ATT),
+            StatTypes.UNARMED_ATT: player_base_stats.stat_value(StatTypes.UNARMED_ATT) * 2,
+            StatTypes.DEF: player_base_stats.stat_value(StatTypes.DEF) + 2,
+
+            StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 0,
         })
 
@@ -766,13 +769,14 @@ class CaveHorrorTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 60,
+            StatTypes.VIT: 40,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 10,
             StatTypes.UNARMED_ATT: 0,
-            StatTypes.DEF: 16,
+            StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 6
+            StatTypes.WEALTH: 6,
+            StatTypes.LIGHT_LEVEL: 4  # so it stays visible
         })
 
     def get_controller(self):
