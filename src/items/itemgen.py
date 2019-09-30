@@ -6,9 +6,6 @@ from src.game.stats import StatTypes, StatType, StatProvider
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 from src.items.cubeutils import CubeUtils
-import src.utils.colors as colors
-import src.game.dialog as dialog
-import src.game.globalstate as gs
 import src.game.statuseffects as statuseffects
 import src.game.balance as balance
 import src.game.debug as debug
@@ -144,7 +141,6 @@ class WeaponItemFactory:
         return None
 
 
-
 _ALL_POTION_TEMPLATES = []
 
 
@@ -243,6 +239,30 @@ class PotionItemFactory:
                          actions=[ItemActions.CONSUME_ITEM], consume_effect=consume_effect, color=color)
 
         return res
+
+
+# TODO - maybe one day
+#_ALL_SUMMONING_TOME_TEMPLATES = []
+
+
+#class SummoningTomeTemplate:
+
+#    def __init__(self, name, enemy_template, min_level=0, drop_rate=1):
+#        self.name = name
+#        self.min_level = min_level
+#        self.enemy_template = enemy_template
+#        self.drop_rate = drop_rate
+#        _ALL_SUMMONING_TOME_TEMPLATES.append(self)
+
+
+#class SummoningTomeTemplates:
+#
+#    def all_templates(self, for_level=None):
+#        all_of_em = _ALL_SUMMONING_TOME_TEMPLATES
+#        if for_level is None:
+#            return list(all_of_em)
+#        else:
+#            return [t for t in all_of_em if t.min_level <= for_level]
 
 
 def _exp_map(x1, y0, y1, intensity=0, integral=True):

@@ -987,20 +987,20 @@ class CaveHorrorZone(Zone):
         Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
         self._tree_color = (255, 170, 170)
         self._husk_color = (255, 194, 194)
+        self._bounds_color = (255, 190, 0)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
-        tree_pos = unknowns[self._tree_color][0]
-        tree_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level())
-        w.add(tree_entity, gridcell=tree_pos)
+        bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=False)
 
-        husk_spawns = unknowns[self._husk_color]
-        for pos in husk_spawns:
-            husk_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self.get_level())
-            w.add(husk_entity, gridcell=pos)
+        inital_husk_spawns = unknowns[self._husk_color]
+
+        tree_pos = unknowns[self._tree_color][0]
+        tree_entity = self.gen_tree_entity(bounds_rect, inital_husk_spawns, min_n_husks=2)
+        w.add(tree_entity, gridcell=tree_pos)
 
         return w
 
@@ -1012,6 +1012,61 @@ class CaveHorrorZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_RED
+
+    def gen_tree_entity(self, arena_rect, spawn_positions, min_n_husks=2):
+
+        import src.game.gameengine as gameengine
+
+        class _CaveHorrorController(gameengine.EnemyController):
+
+            def __init__(self, level, rect, positions, husk_limit=2):
+                gameengine.EnemyController.__init__(self)
+                self._arena_rect = rect
+                self._initial_spawns = [x for x in positions]
+                self._level = level
+                self._husk_limit = husk_limit
+
+            def get_next_action(self, actor, world):
+
+                summon_color = colors.RED
+
+                if len(self._initial_spawns) > 0:
+                    inital_spawns_copy = [x for x in self._initial_spawns]
+                    random.shuffle(inital_spawns_copy)
+                    new_husk = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self._level)
+                    for pos in inital_spawns_copy:
+                        spawn_action = gameengine.SpawnActorAction(actor, pos, new_husk, art_color=summon_color)
+                        if spawn_action.is_possible(world):
+                            self._initial_spawns.remove(pos)  # can only use each spawn point once.
+                            return spawn_action
+
+                arena_length = world.cellsize() * max(self._arena_rect[2], self._arena_rect[3])
+                enemies_nearby = world.entities_in_circle(actor.center(),
+                                                          round(arena_length * 1.4142),
+                                                          onscreen=False,
+                                                          cond=lambda ent: ent.is_enemy() and actor is not ent)
+
+                if len(enemies_nearby) < self._husk_limit:
+                    rand_pos_x = random.randint(self._arena_rect[0], self._arena_rect[0] + self._arena_rect[2])
+                    rand_pos_y = random.randint(self._arena_rect[1], self._arena_rect[1] + self._arena_rect[3])
+                    new_husk = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self._level)
+                    spawn_action = gameengine.SpawnActorAction(actor, (rand_pos_x, rand_pos_y),
+                                                               new_husk, art_color=summon_color)
+                    if spawn_action.is_possible(world):
+                        return spawn_action
+
+                a_pos = world.to_grid_coords(*actor.center())
+                for n in Utils.neighbors(*a_pos):
+                    attack_action = gameengine.MeleeAttackAction(actor, None, n)
+                    if attack_action.is_possible(world):
+                        return attack_action
+
+                pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
+                return gameengine.SkipTurnAction(actor, pos)
+
+        controller = _CaveHorrorController(self.get_level(), arena_rect, spawn_positions, husk_limit=min_n_husks)
+
+        return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level(), controller=controller)
 
 
 class TombTownZone(Zone):

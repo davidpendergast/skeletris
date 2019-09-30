@@ -256,6 +256,13 @@ class ActorController:
         return SkipTurnAction(actor, pos)
 
 
+class NullController(ActorController):
+
+    def get_next_action(self, actor, world):
+        pos = world.to_grid_coords(actor.center())
+        return SkipTurnAction(actor, pos)
+
+
 class PlayerController(ActorController):
 
     HIGHEST_PRIORITY = 0
@@ -1714,6 +1721,50 @@ class RemoveItemFromGridAction(Action):
             self.get_actor().get_actor_state().held_item = my_item
         else:
             print("ERROR: failed to remove item from grid: {}".format(my_item))
+
+
+class SpawnActorAction(Action):
+
+    def __init__(self, actor, position, new_actor, art_color=colors.RED):
+        Action.__init__(self, ActionType.SPAWN_ACTOR, 40, actor, position=position)
+        self.new_actor = new_actor
+        self.art_color = art_color
+
+        self._animation_entity = None
+
+    def is_possible(self, world):
+        pos = self.get_position()
+        if pos is None:
+            return False
+
+        if world.is_solid(pos[0], pos[1], including_entities=True):
+            return False
+
+        if not self.new_actor.get_actor_state().is_alive():
+            print("WARN: trying to spawn a dead actor? {}".format(self.new_actor))
+            return False
+
+        if world.get_entity(self.new_actor.get_uid(), onscreen=False) is not None:
+            print("WARN: actor is already in world: {}".format(self.new_actor))
+            return False
+
+        return True
+
+    def start(self, world):
+        pass
+
+    def animate_in_world(self, progress, world):
+        if self._animation_entity is None:
+            cx = (self.get_position()[0] + 0.5) * world.cellsize()
+            cy = (self.get_position()[1] + 0.5) * world.cellsize()
+            from src.world.entities import AttackCircleArt
+            self._animation_entity = AttackCircleArt(cx, cy, 64, 45, self.art_color)
+            world.add(self._animation_entity)
+
+            sound_effects.play_sound(soundref.summon_enemy)
+
+    def finalize(self, world):
+        world.add(self.new_actor, self.get_position())
 
 
 class ActionProvider:

@@ -328,6 +328,7 @@ class AnimationEntity(Entity):
             self._color = (1, 1, 1)
             self.shadow_sprite = None
             self.rotation = 0
+            self.standing_up = True
 
             self.vel = (0, 0)
             self.fric = 0.90
@@ -388,7 +389,7 @@ class AnimationEntity(Entity):
                 spr_h = sprite.height() * self.scale if self.rotation % 2 == 0 else sprite.width() * self.scale
 
                 x = cx - spr_w // 2 + self.sprite_offset[0]
-                y = cy - spr_h + self.sprite_offset[1]
+                y = cy - spr_h // (1 if self.standing_up else 2) + self.sprite_offset[1]
 
                 if self._img is None:
                     self._img = img.ImageBundle.new_bundle(self.layer_id)
@@ -438,6 +439,7 @@ class AttackCircleArt(AnimationEntity):
     def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
         sprites = spriteref.get_attack_circles(radius * 2 // 2)
         AnimationEntity.__init__(self, cx, cy, sprites, duration, spriteref.SHADOW_LAYER)
+        self.standing_up = False
         self._start_color = color
         self._end_color = color_end
 

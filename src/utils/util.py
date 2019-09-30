@@ -85,6 +85,28 @@ class Utils:
         return rect[0] <= v[0] < rect[0] + rect[2] and rect[1] <= v[1] < rect[1] + rect[3]
 
     @staticmethod
+    def get_rect_containing_points(pts, inclusive=False):
+        if len(pts) == 0:
+            raise ValueError("pts is empty")
+        else:
+            min_x = pts[0][0]
+            max_x = pts[0][0]
+            min_y = pts[0][1]
+            max_y = pts[0][1]
+
+            for pt in pts:
+                min_x = min(min_x, pt[0])
+                max_x = max(max_x, pt[0])
+                min_y = min(min_y, pt[1])
+                max_y = max(max_y, pt[1])
+
+            if inclusive:
+                max_x += 1
+                max_y += 1
+
+            return [min_x, min_y, (max_x - min_x), (max_y - min_y)]
+
+    @staticmethod
     def linear_interp(v1, v2, a):
         if isinstance(v1, numbers.Number):
             return v1 * (1 - a) + v2 * a

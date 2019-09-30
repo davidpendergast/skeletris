@@ -161,6 +161,10 @@ class ItemTypes:
     POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]),
                        drop_rate=balance.POTION_DROP_RATE)
 
+    # TODO - one day
+    #SUMMONING_TOME = _new_type("Summoning Tome", tuple([ItemTags.CONSUMABLE]),
+    #                           drop_rate=balance.SUMMONING_TOME_DROP_RATE)
+
 
 class Item(StatProvider):
 

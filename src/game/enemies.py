@@ -68,6 +68,26 @@ class EnemyTemplate:
         return 1
 
 
+class SkeleSpawn(EnemyTemplate):
+    """An 'enemy' that must be summoned"""
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Skele-Spawn")
+
+    def get_sprites(self):
+        return spriteref.enemy_skelekid_all
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 10,
+            StatTypes.DEF: 2,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.SPEED: 2,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 0
+        })
+
+
 class CaveCrawlerTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -673,13 +693,13 @@ class HuskTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 30,
-            StatTypes.SPEED: 2,
-            StatTypes.ATT: 8,
+            StatTypes.VIT: 20,
+            StatTypes.SPEED: 4,
+            StatTypes.ATT: 4,
             StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 6,
-            StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 2,
+            StatTypes.DEF: 3,
+            StatTypes.INTELLIGENCE: 4,
+            StatTypes.WEALTH: 0,
         })
 
 
@@ -757,14 +777,7 @@ class CaveHorrorTemplate(EnemyTemplate):
 
     def get_controller(self):
         import src.game.gameengine as gameengine
-
-        class _CaveHorrorController(gameengine.ActorController):
-
-            def get_next_action(self, actor, world):
-                pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
-                return gameengine.SkipTurnAction(actor, pos)
-
-        return _CaveHorrorController()
+        return gameengine.NullController()
 
 
 # regular enemies
@@ -791,6 +804,7 @@ TEMPLATE_OYSTER = OysterTemplate()
 TEMPLATE_NAMELESS = NamelessTemplate(False)
 TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 TEMPLATE_HUSK = HuskTemplate()
+TEMPLATE_SKELEKID = SkeleSpawn()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -868,17 +882,18 @@ class EnemyFactory:
         return a_state
 
     @staticmethod
-    def gen_enemy(template, level):
-        return EnemyFactory.gen_enemies(template, level, n=1)[0]
+    def gen_enemy(template, level, controller=None):
+        return EnemyFactory.gen_enemies(template, level, n=1, controller=controller)[0]
 
     @staticmethod
-    def gen_enemies(template, level, n=1):
+    def gen_enemies(template, level, n=1, controller=None):
         template = template if template is not None else get_rand_template_for_level(level, random.random())
 
         res = []
         for _ in range(0, n):
             res.append(Enemy(0, 0, EnemyFactory.get_state(template, level), template.get_sprites(),
-                             template.get_map_identifier(), template.get_controller(),
+                             template.get_map_identifier(),
+                             controller if controller is not None else template.get_controller(),
                              idle_anim_rate=template.get_idle_anim_rate(),
                              moving_anim_rate=template.get_moving_anim_rate(),
                              sprite_offset=template.get_sprite_offset(),
