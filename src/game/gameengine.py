@@ -1730,7 +1730,9 @@ class SpawnActorAction(Action):
         self.new_actor = new_actor
         self.art_color = art_color
 
-        self._animation_entity = None
+        self._did_animation_1 = False
+        self._did_animation_2 = False
+        self._did_add = False
 
     def is_possible(self, world):
         pos = self.get_position()
@@ -1754,17 +1756,37 @@ class SpawnActorAction(Action):
         pass
 
     def animate_in_world(self, progress, world):
-        if self._animation_entity is None:
-            cx = (self.get_position()[0] + 0.5) * world.cellsize()
-            cy = (self.get_position()[1] + 0.5) * world.cellsize()
-            from src.world.entities import AttackCircleArt
-            self._animation_entity = AttackCircleArt(cx, cy, 64, 45, self.art_color)
-            world.add(self._animation_entity)
+        if not self._did_animation_1:
+            self._did_animation_1 = True
+
+            if self.art_color is not None:
+                cx = (self.get_position()[0] + 0.5) * world.cellsize()
+                cy = (self.get_position()[1] + 0.5) * world.cellsize()
+
+                from src.world.entities import AttackCircleArt
+                circle_anim = AttackCircleArt(cx, cy, 64, 60, colors.WHITE, color_end=self.art_color)
+                world.add(circle_anim)
+
+        if not self._did_animation_2 and progress > 0.5:
+            self._did_animation_2 = True
+
+            if self.art_color is not None:
+                cx = (self.get_position()[0] + 0.5) * world.cellsize()
+                cy = (self.get_position()[1] + 0.75) * world.cellsize()
+                world.show_explosion(cx, cy, 30, color=self.art_color, offs=(0, 0), scale=4)
 
             sound_effects.play_sound(soundref.summon_enemy)
 
+            if self.art_color is not None:
+                self.new_actor.perturb_color(self.art_color, 20)
+
+            world.add(self.new_actor, self.get_position())
+            self._did_add = True
+
     def finalize(self, world):
-        world.add(self.new_actor, self.get_position())
+        if not self._did_add:
+            world.add(self.new_actor, self.get_position())
+            self._did_add = True
 
 
 class ActionProvider:

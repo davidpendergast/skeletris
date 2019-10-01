@@ -776,7 +776,7 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 6,
-            StatTypes.LIGHT_LEVEL: 4  # so it stays visible
+            StatTypes.LIGHT_LEVEL: 1  # so it stays visible
         })
 
     def get_controller(self):
