@@ -1026,6 +1026,9 @@ class CaveHorrorZone(Zone):
                 self._level = level
                 self._husk_limit = husk_limit
 
+            def gen_spawned_minion(self):
+                return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_INFECTED_HUSK, self._level)
+
             def get_next_action(self, actor, world):
 
                 summon_color = colors.RED
@@ -1033,7 +1036,7 @@ class CaveHorrorZone(Zone):
                 if len(self._initial_spawns) > 0:
                     inital_spawns_copy = [x for x in self._initial_spawns]
                     random.shuffle(inital_spawns_copy)
-                    new_husk = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self._level)
+                    new_husk = self.gen_spawned_minion()
                     for pos in inital_spawns_copy:
                         spawn_action = gameengine.SpawnActorAction(actor, pos, new_husk, art_color=summon_color)
                         if spawn_action.is_possible(world):
@@ -1049,9 +1052,9 @@ class CaveHorrorZone(Zone):
                 if len(enemies_nearby) < self._husk_limit:
                     rand_pos_x = random.randint(self._arena_rect[0], self._arena_rect[0] + self._arena_rect[2])
                     rand_pos_y = random.randint(self._arena_rect[1], self._arena_rect[1] + self._arena_rect[3])
-                    new_husk = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_HUSK, self._level)
                     spawn_action = gameengine.SpawnActorAction(actor, (rand_pos_x, rand_pos_y),
-                                                               new_husk, art_color=summon_color)
+                                                               self.gen_spawned_minion(),
+                                                               art_color=summon_color)
                     if spawn_action.is_possible(world):
                         return spawn_action
 

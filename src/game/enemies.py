@@ -695,6 +695,40 @@ class HuskTemplate(EnemyTemplate):
         player_base_stats = stats.default_player_stats()
 
         return stats.BasicStatLookup({
+            StatTypes.VIT: player_base_stats.stat_value(StatTypes.VIT),
+            StatTypes.SPEED: player_base_stats.stat_value(StatTypes.SPEED),
+            StatTypes.ATT: player_base_stats.stat_value(StatTypes.ATT),
+            StatTypes.UNARMED_ATT: player_base_stats.stat_value(StatTypes.UNARMED_ATT),
+            StatTypes.DEF: player_base_stats.stat_value(StatTypes.DEF),
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 0,
+        })
+
+
+class InfectedHuskTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Infected Husk")
+
+    def get_sprites(self):
+        return spriteref.Bosses.infected_husk_idle
+
+    def get_map_identifier(self):
+        return ("h", colors.RED)
+
+    def get_idle_anim_rate(self):
+        return 1
+
+    def get_moving_anim_rate(self):
+        return 1
+
+    def get_level_range(self):
+        return [15]
+
+    def get_base_stats(self):
+        player_base_stats = stats.default_player_stats()
+
+        return stats.BasicStatLookup({
             StatTypes.VIT: player_base_stats.stat_value(StatTypes.VIT) * 2,
             StatTypes.SPEED: player_base_stats.stat_value(StatTypes.SPEED),
             StatTypes.ATT: player_base_stats.stat_value(StatTypes.ATT),
@@ -776,7 +810,7 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 6,
-            StatTypes.LIGHT_LEVEL: 1  # so it stays visible
+            StatTypes.LIGHT_LEVEL: 4  # so it stays visible
         })
 
     def get_controller(self):
@@ -814,6 +848,7 @@ TEMPLATE_SKELEKID = SkeleSpawn()
 TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
+TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,

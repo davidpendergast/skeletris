@@ -72,6 +72,7 @@ class Items:
     axe_big = None
     bow_big = None
     potion_big = None
+    ring_big = None
 
     spear_small = None
     sword_small = None
@@ -232,6 +233,8 @@ class Bosses:
     frog_idle_down = []
     frog_airborn_rising = []
     frog_airborn_falling = []
+
+    infected_husk_idle = []
 
     robo_idle = []
 
@@ -662,6 +665,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.axe_big = make(80, 0, 32, 48, shift=start_pos)
     Items.bow_big = make(112, 0, 16, 48, shift=start_pos)
     Items.potion_big = make(144, 48, 16, 16, shift=start_pos)
+    Items.ring_big = make(160, 48, 16, 16, shift=start_pos)
 
     Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
     Items.sword_small = make(133, 3, 5, 13, shift=start_pos)
@@ -790,6 +794,8 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
     Bosses.frog_idle_down = [make(288 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_airborn_rising = [make(384 + 32*i, 0, 32, 80, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_airborn_falling = [make(448, 0, 48, 48, shift=start_pos)]
+
+    Bosses.infected_husk_idle = [make(0 + i * 16, 464, 16, 48, shift=start_pos) for i in range(0, 8)]
 
 
 def build_font_sheet(start_pos, raw_font_img, sheet):
