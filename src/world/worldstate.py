@@ -625,6 +625,10 @@ class World:
                     a_state.set_energy((a_state.energy() + a_state.speed()) % a_state.max_energy())
 
             for actor in actors_ready_to_act:
+                # if a different actor added a new solid entity this frame as part of its action,
+                # need to make sure it's flushed before any other actors choose their actions.
+                self.flush_new_entity_additions()
+
                 a_state = actor.get_actor_state()
                 action = actor.get_controller().get_actual_next_action(actor, self)
 
