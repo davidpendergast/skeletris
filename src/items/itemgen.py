@@ -137,6 +137,14 @@ class WeaponItemFactory:
                                AppliedStat(StatTypes.THROWN_ATT, 3, local=True)],
                               spriteref.Items.axe_small, spriteref.Items.axe_big, actions=actions)
 
+        elif item_type == ItemTypes.FISHING_ROD_WEAPON:
+            cubes = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]
+            actions = [ItemActions.FISHING_ROD_ATTACK]
+            return SpriteItem("Fishing Rod of Glory", item_type, level, cubes,
+                              [AppliedStat(StatTypes.ATT, 2, local=True),
+                               AppliedStat(StatTypes.GRASP_ON_MELEE_HIT, 2, local=True)],
+                              spriteref.Items.fishing_rod_small, spriteref.Items.fishing_rod_big, actions=actions)
+
         print("ERROR: unrecognized weapon type: {}".format(item_type))
         return None
 

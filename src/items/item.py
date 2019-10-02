@@ -157,6 +157,8 @@ class ItemTypes:
                            drop_rate=balance.WEAPON_DROP_RATE)
     WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7,
                             drop_rate=balance.WEAPON_DROP_RATE)
+    FISHING_ROD_WEAPON = _new_type("Fishing Rod", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=4,
+                                   drop_rate=balance.FISHING_ROD_DROP_RATE)
 
     POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]),
                        drop_rate=balance.POTION_DROP_RATE)

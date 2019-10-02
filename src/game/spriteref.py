@@ -73,6 +73,7 @@ class Items:
     bow_big = None
     potion_big = None
     ring_big = None
+    fishing_rod_big = None
 
     spear_small = None
     sword_small = None
@@ -84,6 +85,7 @@ class Items:
     whip_small = None
     wand_small = None
     potion_small = None
+    fishing_rod_small = None
 
     misc_small = None
     projectile_small = None
@@ -99,6 +101,7 @@ class Items:
     dagger_icon = None
     shield_icon = None
     magic_icon = None
+    fishing_rod_icon = None
 
 
 class UI:
@@ -666,6 +669,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.bow_big = make(112, 0, 16, 48, shift=start_pos)
     Items.potion_big = make(144, 48, 16, 16, shift=start_pos)
     Items.ring_big = make(160, 48, 16, 16, shift=start_pos)
+    Items.fishing_rod_big = make(256, 0, 16, 80, shift=start_pos)
 
     Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
     Items.sword_small = make(133, 3, 5, 13, shift=start_pos)
@@ -677,6 +681,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.whip_small = make(176, 7, 8, 9, shift=start_pos)
     Items.wand_small = make(187, 7, 5, 9, shift=start_pos)
     Items.potion_small = make(198, 8, 6, 8, shift=start_pos)
+    Items.fishing_rod_small = make(128, 16, 6, 16, shift=start_pos)
 
     Items.misc_small = make(192, 12, 5, 4, shift=start_pos)
     Items.projectile_small = make(208, 11, 5, 5, shift=start_pos)
@@ -687,6 +692,8 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.axe_icon = make(20, 80, 10, 10, shift=start_pos)
     Items.whip_icon = make(30, 80, 10, 10, shift=start_pos)
     Items.unarmed_icon = make(40, 80, 10, 10, shift=start_pos)
+    Items.fishing_rod_icon = make(50, 80, 10, 10, shift=start_pos)
+
     Items.bow_icon = make(0, 90, 10, 10, shift=start_pos)
     Items.potion_icon = make(10, 90, 10, 10, shift=start_pos)
     Items.dagger_icon = make(20, 90, 10, 10, shift=start_pos)
