@@ -1047,16 +1047,22 @@ class Player(ActorEntity):
 class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4,
-                 shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0), moving_sprites=None):
+                 shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0), bar_offset=(0, 0), moving_sprites=None,
+                 can_xflip=True):
+
         ActorEntity.__init__(self, sprites, map_id=map_id, idle_anim_rate=idle_anim_rate, moving_anim_rate=moving_anim_rate,
                              sprite_offset=sprite_offset, shadow_offset=shadow_offset, moving_sprites=moving_sprites)
+
         self._enemy_state = state
         self._enemy_controller = controller
         self.set_x(x)
         self.set_y(y)
         self.state = state
         self.sprites = sprites
+        self._can_xflip = can_xflip
         self._shadow_sprite = shadow_sprite
+
+        self._bar_offset = bar_offset
         self._bar_imgs = []
 
         # floating z's above enemy while waiting for player
@@ -1065,6 +1071,9 @@ class Enemy(ActorEntity):
 
     def get_actor_state(self):
         return self._enemy_state
+
+    def should_xflip(self):
+        return self._can_xflip and super().should_xflip()
 
     def get_controller(self):
         return self._enemy_controller
@@ -1079,8 +1088,8 @@ class Enemy(ActorEntity):
         while len(self._bar_imgs) < len(bars):
             self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2))
 
-        cx = self.get_render_center(ignore_perturbs=True)[0]
-        cy = self.get_render_center(ignore_perturbs=True)[1] + 4
+        cx = self.get_render_center(ignore_perturbs=True)[0] + self._bar_offset[0]
+        cy = self.get_render_center(ignore_perturbs=True)[1] + 4 + self._bar_offset[1]
 
         for i in range(0, len(bars)):
             pcnt, color = bars[i]

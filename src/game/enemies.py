@@ -34,6 +34,12 @@ class EnemyTemplate:
     def get_shadow_offset(self):
         return (0, 0)
 
+    def get_bar_offset(self):
+        return (0, 0)
+
+    def can_xflip(self):
+        return True
+
     def get_map_identifier(self):
         return ("m", colors.RED)
 
@@ -795,6 +801,13 @@ class CaveHorrorTemplate(EnemyTemplate):
     def get_sprite_offset(self):
         return (0, 148 + 32)
 
+    def get_bar_offset(self):
+        return (0, -148 - 42)
+
+    def can_xflip(self):
+        # the directional shadows look weird flipping back and forth
+        return False
+
     def get_shadow_sprite(self):
         return None
 
@@ -810,7 +823,7 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 6,
-            StatTypes.LIGHT_LEVEL: 4  # so it stays visible
+            StatTypes.LIGHT_LEVEL: 2  # so it stays visible
         })
 
     def get_controller(self):
@@ -938,6 +951,8 @@ class EnemyFactory:
                              sprite_offset=template.get_sprite_offset(),
                              shadow_sprite=template.get_shadow_sprite(),
                              shadow_offset=template.get_shadow_offset(),
+                             bar_offset=template.get_bar_offset(),
+                             can_xflip=template.can_xflip(),
                              moving_sprites=template.get_moving_sprites()))
 
         return res

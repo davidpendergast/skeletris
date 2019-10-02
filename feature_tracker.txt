@@ -24,9 +24,7 @@
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - machine has generic trade text
  - tutorial text can become faded. looks like a render order issue
- - make sure that status 'apply' the correct number of times
- - prevent cave horror from turning
- - prevent cave horror from displaying health bar
+ - make sure that statuses 'apply' the correct number of times
 
 
 [balance issues]
