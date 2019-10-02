@@ -1002,6 +1002,16 @@ class CaveHorrorZone(Zone):
         tree_entity = self.gen_tree_entity(bounds_rect, inital_husk_spawns, min_n_husks=2)
         w.add(tree_entity, gridcell=tree_pos)
 
+        dia_list = [
+            dialog.NpcDialog("Come closer. Let me see you, child."),
+            dialog.PlayerDialog("Who.. or what.. are you?"),
+            dialog.NpcDialog("I am the ultimate end. The Afterdeath. Soon you will serve me, as all things do."),
+            dialog.PlayerDialog("We'll see about that!"),
+            dialog.NpcDialog("Behold your fate, challenger!")
+        ]
+
+        gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(dia_list))
+
         return w
 
     def is_boss_zone(self):
