@@ -614,6 +614,36 @@ class OysterTemplate(EnemyTemplate):
         return ("O", colors.RED)
 
 
+class SnowfolkTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Snowfolk")
+
+    def get_sprites(self):
+        return spriteref.enemy_snowfolk_all
+
+    def get_level_range(self):
+        return range(8, 12)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 14,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 0,
+            StatTypes.DEF: 2,
+            StatTypes.UNARMED_ATT: 3,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.THROW_AFFINITY: 1,
+            StatTypes.CHILL_ON_HIT: 4,
+        })
+
+    def get_map_identifier(self):
+        return ("s", colors.RED)
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+
 class FrogBossTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -805,7 +835,7 @@ class CaveHorrorTemplate(EnemyTemplate):
         return (0, -148 - 42)
 
     def can_xflip(self):
-        # the directional shadows look weird flipping back and forth
+        # the directional shadows on its face look weird flipping back and forth
         return False
 
     def get_shadow_sprite(self):
@@ -856,6 +886,7 @@ TEMPLATE_NAMELESS = NamelessTemplate(False)
 TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 TEMPLATE_HUSK = HuskTemplate()
 TEMPLATE_SKELEKID = SkeleSpawn()
+TEMPLATE_SNOWFOLK = SnowfolkTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
@@ -873,6 +904,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_SLUG,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
+                        TEMPLATE_SNOWFOLK,
                         TEMPLATE_FROG,
                         TEMPLATE_SMALL_FROG,
                         TEMPLATE_SCORPION,

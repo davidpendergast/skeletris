@@ -114,6 +114,9 @@ class ActorState(StatProvider):
     def is_flinched(self):
         return self.stat_value(StatTypes.FLINCHED) > 0
 
+    def is_chilled(self):
+        return self.stat_value(StatTypes.CHILLED) > 0
+
     def get_projectile_sprite(self):
         return self.unarmed_projectile_sprite
 
@@ -844,6 +847,11 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:
             new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration))
+
+        chill_duration = attacker.stat_value_with_item(StatTypes.CHILL_ON_HIT, item_used)
+        chill_val = balance.STATUS_EFFECT_CHILL_ON_HIT_VAL
+        if chill_duration > 0:
+            new_status_effects_for_defender.append(statuseffects.new_chilled_effect(chill_duration, chill_val))
 
         # TODO - the 'on melee hit' thing is not enforced right now
         grasped_duration = attacker.stat_value_with_item(StatTypes.GRASP_ON_MELEE_HIT, item_used)

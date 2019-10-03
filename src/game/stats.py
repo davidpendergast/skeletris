@@ -149,6 +149,12 @@ class StatTypes:
                              local_desc="Causes Target to Flinch on Hit",
                              enemy_desc="Flinching")
 
+    CHILL_ON_HIT = StatType("CHILL_ON_HIT",
+                            color=colors.LIGHT_BLUE,
+                            desc="Chills on Hit",
+                            local_desc="Chills on Hit",
+                            enemy_desc="Chilling")
+
     @staticmethod
     def all_types():
         for stat_id in _ALL_STAT_TYPES:

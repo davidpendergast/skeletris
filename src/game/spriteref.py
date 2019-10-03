@@ -394,6 +394,7 @@ enemy_witch_all = [make(544 + i * 16, 160, 16, 48) for i in range(0, 2)]
 enemy_oyster_all = [make(592, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_husk_idle_all = [make(576 + i * 16, 176, 16, 32) for i in range(0, 2)]
 enemy_husk_moving_all = [make(608 + i * 16, 176, 16, 32) for i in range(0, 4)]
+enemy_snowfolk_all = [make(624, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 

@@ -164,3 +164,10 @@ def new_flinch_recovery_effect(duration, player_text=None):
                         spriteref.UI.status_x_icon, stats,
                         player_text=player_text, unique_key="unflinching", is_debuff=False,
                         ignore_nullification=True)
+
+
+def new_chilled_effect(duration, val, player_text=None):
+    stats = [AppliedStat(StatTypes.SPEED, -val), AppliedStat(StatTypes.ATT, -val)]
+    return StatusEffect("Chilled", duration, StatTypes.CHILL_ON_HIT.get_color(),
+                        spriteref.UI.status_snowflake_icon, stats, player_text=player_text,
+                        unique_key="chilled", is_debuff=True)
