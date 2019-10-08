@@ -354,6 +354,7 @@ normal_door_opening = [make(256 + i*16, 112, 16, 32) for i in range(0, 7)]
 
 large_decs = []
 wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 24, and_add_to_list=large_decs) for i in range(0, 3)]
+wall_decoration_workbench = make(16, 400, 16, 24, and_add_to_list=large_decs)
 
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
@@ -362,6 +363,7 @@ wall_decoration_plants = [make(8, 376, 8, 24, and_add_to_list=smol_decs),
 wall_decoration_rake = make(24, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_bones = make(32, 376, 8, 24, and_add_to_list=smol_decs)
 wall_decoration_sign = make(40, 376, 8, 24, and_add_to_list=smol_decs)
+wall_decoration_dresser = make(0, 400, 16, 24, and_add_to_list=smol_decs)
 wall_decoration_switches = [make(64, 376, 16, 24), make(80, 376, 16, 24)]
 
 standalone_sign_decoration = make(96, 368, 16, 16)
@@ -395,6 +397,7 @@ enemy_oyster_all = [make(592, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_husk_idle_all = [make(576 + i * 16, 176, 16, 32) for i in range(0, 2)]
 enemy_husk_moving_all = [make(608 + i * 16, 176, 16, 32) for i in range(0, 4)]
 enemy_snowfolk_all = [make(624, 208 + i * 32, 32, 32) for i in range(0, 2)]
+enemy_crawling_lepiota = [make(656, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 

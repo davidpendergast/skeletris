@@ -192,6 +192,7 @@ class WorldBlueprint:
         self.sensor_doors = []
         self.global_floor_alt_art = None
         self.global_wall_alt_art = None
+        self.enemy_supplier = None  # lambda: int x, int y -> Enemy
 
     def width(self):
         return self.size[0]
@@ -231,6 +232,10 @@ class WorldBlueprint:
         self.set(x, y, World.DOOR)
         self.sensor_doors.append((x, y))
 
+    def set_enemy_supplier(self, supplier):
+        """:param supplier: lambda: int x, int y -> Enemy"""
+        self.enemy_supplier = supplier
+
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 
@@ -269,7 +274,11 @@ class WorldBlueprint:
                         w.add(DoorEntity(x, y))
 
         for spawn_pos in self.enemy_spawns:
-            enemy = EnemyFactory.gen_enemy(None, self.level)
+            if self.enemy_supplier is None:
+                enemy = EnemyFactory.gen_enemy(None, self.level)
+            else:
+                enemy = self.enemy_supplier(spawn_pos[0], spawn_pos[1])
+
             if enemy is not None:
                 w.add(enemy, gridcell=spawn_pos)
 

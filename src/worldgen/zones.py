@@ -912,6 +912,16 @@ class NamelessLairZone(Zone):
         Zone.__init__(self, "Unearth", 15, filename="???_lair.png")
         self._nameless_color = (255, 170, 170)
 
+    def gen_mushroom_enemy(self):
+        import src.game.enemies as enemies_clz
+
+        templates = enemies_clz.get_all_rand_spawn_templates(
+            cond=lambda t: enemies_clz.EnemyTypes.FUNGUS in t.get_types())
+        if len(templates) > 0:
+            return enemies_clz.EnemyFactory.gen_enemy(random.choice(templates), self.level)
+        else:
+            return None
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
@@ -956,6 +966,8 @@ class NamelessLairZone(Zone):
                 elif geo == World.WALL:
                     if random.random() < chance_to_fungify:
                         bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
+
+        bp.set_enemy_supplier(lambda _x, _y: self.gen_mushroom_enemy())
 
         w = bp.build_world()
 

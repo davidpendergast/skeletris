@@ -11,6 +11,33 @@ import src.items.itemgen as itemgen
 import src.game.balance as balance
 
 
+_ALL_TYPES = {}
+
+
+class EnemyType:
+
+    def __init__(self, type_id):
+        self.type_id = type_id
+        _ALL_TYPES[type_id] = self
+
+    def __eq__(self, other):
+        if isinstance(other, EnemyType):
+            return self.type_id == other.type_id
+        else:
+            return False
+
+
+class EnemyTypes:
+    ANIMAL = EnemyType("ANIMAL")
+    UNDEAD = EnemyType("UNDEAD")
+    FUNGUS = EnemyType("FUNGUS")
+    MASKED = EnemyType("MASKED")
+
+    @staticmethod
+    def all_types():
+        return list(_ALL_TYPES)
+
+
 class EnemyTemplate:
 
     def __init__(self, name):
@@ -18,6 +45,9 @@ class EnemyTemplate:
 
     def get_sprites(self):
         return spriteref.player_idle_arms_up_all
+
+    def get_types(self):
+        return []
 
     def get_moving_sprites(self):
         return self.get_sprites()
@@ -83,6 +113,9 @@ class SkeleSpawn(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_skelekid_all
 
+    def get_types(self):
+        return [EnemyTypes.UNDEAD]
+
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 10,
@@ -101,6 +134,9 @@ class CaveCrawlerTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_cave_crawler_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_level_range(self):
         return range(1, 3)
@@ -129,6 +165,9 @@ class SmallFrogTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_frog_all
 
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
     def get_map_identifier(self):
         return ("f", colors.RED)
 
@@ -154,6 +193,9 @@ class TrilliteTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_small_trilla_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL, EnemyTypes.MASKED]
 
     def get_map_identifier(self):
         return ("t", colors.RED)
@@ -181,6 +223,9 @@ class TrillaTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_trilla_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL, EnemyTypes.MASKED]
 
     def get_map_identifier(self):
         return ("T", colors.RED)
@@ -211,6 +256,9 @@ class SporeTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_spore_all
+
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
 
     def get_map_identifier(self):
         return ("s", colors.RED)
@@ -245,6 +293,9 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_muncher_small_alt_all if self._is_alt else spriteref.enemy_muncher_small_all
 
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
     def get_map_identifier(self):
         return ("m", colors.RED)
 
@@ -272,6 +323,9 @@ class MuncherTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_muncher_alt_all if self._is_alt else spriteref.enemy_muncher_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_map_identifier(self):
         return ("M", colors.RED)
@@ -301,6 +355,9 @@ class SlugTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_slug_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_map_identifier(self):
         return ("S", colors.RED)
@@ -332,6 +389,9 @@ class WitchTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_witch_all
 
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
     def get_shadow_sprite(self):
         return spriteref.medium_shadow
 
@@ -360,6 +420,9 @@ class GiantTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_giant_all
+
+    def get_types(self):
+        return [EnemyTypes.UNDEAD]
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -390,6 +453,9 @@ class CrabTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_crab_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -424,6 +490,9 @@ class CyclopsTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_cyclops_all
 
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
     def get_map_identifier(self):
         return ("C", colors.RED)
 
@@ -455,6 +524,9 @@ class DicelTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_dicel_all
 
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
     def get_level_range(self):
         return range(4, 7)
 
@@ -477,6 +549,9 @@ class GhastTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_ghast_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -512,6 +587,9 @@ class ScorpionTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_scorpion_all
 
+    def get_types(self):
+        return [EnemyTypes.UNDEAD]
+
     def get_map_identifier(self):
         return ("w", colors.RED)
 
@@ -539,6 +617,9 @@ class WraithTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_wraith_all
+
+    def get_types(self):
+        return [EnemyTypes.UNDEAD]
 
     def get_map_identifier(self):
         return ("W", colors.RED)
@@ -573,6 +654,9 @@ class FungoiTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.enemy_fungoi_all
 
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
+
     def get_level_range(self):
         return range(10, 15)
 
@@ -594,6 +678,9 @@ class OysterTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_oyster_all
+
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
 
     def get_level_range(self):
         return range(13, 16)
@@ -621,6 +708,9 @@ class SnowfolkTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_snowfolk_all
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_level_range(self):
         return range(8, 12)
@@ -651,6 +741,9 @@ class FrogBossTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
 
     def get_map_identifier(self):
         return ("F", colors.RED)
@@ -687,6 +780,9 @@ class RoboTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.Bosses.robo_idle
 
+    def get_types(self):
+        return [EnemyTypes.UNDEAD]
+
     def get_map_identifier(self):
         return ("S", colors.RED)
 
@@ -717,6 +813,9 @@ class HuskTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.enemy_husk_idle_all
+
+    def get_types(self):
+        return [EnemyTypes.UNDEAD, EnemyTypes.ANIMAL]
 
     def get_moving_sprites(self):
         return spriteref.enemy_husk_moving_all
@@ -749,6 +848,9 @@ class InfectedHuskTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.Bosses.infected_husk_idle
 
+    def get_types(self):
+        return [EnemyTypes.UNDEAD, EnemyTypes.ANIMAL, EnemyTypes.FUNGUS]
+
     def get_map_identifier(self):
         return ("h", colors.RED)
 
@@ -776,6 +878,38 @@ class InfectedHuskTemplate(EnemyTemplate):
         })
 
 
+class CrawlingLepiotaTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "???")
+
+    def get_sprites(self):
+        return spriteref.enemy_crawling_lepiota
+
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
+
+    def get_map_identifier(self):
+        return ("?", colors.RED)
+
+    def get_shadow_sprite(self):
+        return spriteref.large_shadow
+
+    def get_level_range(self):
+        return range(15, 20)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 35,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 16,
+            StatTypes.DEF: 3,
+            StatTypes.INTELLIGENCE: 3,
+            StatTypes.WEALTH: 3,
+            StatTypes.GRASP_ON_MELEE_HIT: 1,
+        })
+
+
 class NamelessTemplate(EnemyTemplate):
 
     def __init__(self, invincible):
@@ -784,6 +918,9 @@ class NamelessTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.Bosses.nameless_idle
+
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
 
     def get_map_identifier(self):
         return ("?", colors.RED)
@@ -824,6 +961,9 @@ class CaveHorrorTemplate(EnemyTemplate):
 
     def get_sprites(self):
         return spriteref.Bosses.cave_horror_idle
+
+    def get_types(self):
+        return [EnemyTypes.FUNGUS]
 
     def get_map_identifier(self):
         return ("H", colors.RED)
@@ -887,12 +1027,13 @@ TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 TEMPLATE_HUSK = HuskTemplate()
 TEMPLATE_SKELEKID = SkeleSpawn()
 TEMPLATE_SNOWFOLK = SnowfolkTemplate()
+TEMPLATE_LEPIOTA = CrawlingLepiotaTemplate()
+TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
 
 # bosses
 TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
-TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,
@@ -911,21 +1052,26 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_GHAST,
                         TEMPLATE_GIANT,
                         TEMPLATE_WITCH,
-                        TEMPLATE_OYSTER]
+                        TEMPLATE_OYSTER,
+                        TEMPLATE_LEPIOTA,
+                        TEMPLATE_INFECTED_HUSK]
 
 
-def get_rand_template_for_level(level, rand_val):
-    choices = []
+def get_all_rand_spawn_templates(level=None, cond=None):
+    res = []
     for template in RAND_SPAWN_TEMPLATES:
-        lvl_range = template.get_level_range()
-        if level in lvl_range:
-            choices.append(template)
+        if level is not None:
+            lvl_range = template.get_level_range()
+            if level not in lvl_range:
+                continue
 
-    if len(choices) == 0:
-        print("WARN: no enemy templates for level: {}".format(level))
-        return TEMPLATE_CAVE_CRAWLER
-    else:
-        return choices[int(rand_val * len(choices))]
+        if cond is not None:
+            if not cond(template):
+                continue
+
+        res.append(template)
+
+    return res
 
 
 class EnemyFactory:
@@ -971,7 +1117,15 @@ class EnemyFactory:
 
     @staticmethod
     def gen_enemies(template, level, n=1, controller=None):
-        template = template if template is not None else get_rand_template_for_level(level, random.random())
+        if template is None:
+            valid_templates = get_all_rand_spawn_templates(level=level)
+            if len(valid_templates) == 0:
+                template = TEMPLATE_CAVE_CRAWLER
+                print("WARN: no valid enemy templates for level {}, falling back to {}s".format(
+                    level, template.get_name()))
+            else:
+                # TODO - weights on the enemy types?
+                template = random.choice(valid_templates)
 
         res = []
         for _ in range(0, n):
@@ -1007,7 +1161,7 @@ if __name__ == "__main__":
     for story_id in zones.all_storyline_zone_ids():
         z = zones.get_zone(story_id)
         if z.is_boss_zone():
-            print("INFO: BOSS ZONE")
+            print("INFO: {}:\t~BOSS ZONE~".format(z.get_level()))
         else:
             i = z.get_level()
             line = "{}:\t".format(i)
