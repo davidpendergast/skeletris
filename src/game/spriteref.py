@@ -963,6 +963,11 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
         geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, period=2)
     ])
 
+    attack_circle_drawer_2 = geometricgen.CompositeGenerator([
+        geometricgen.OuterRotatingPolygonGenerator(3, period=1),
+        geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, period=1)
+    ])
+
     print("INFO: drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
 
     for i in range(0, len(circle_art_widths)):
@@ -975,7 +980,8 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
                 draw_y += h
             rect = [draw_x, draw_y, w, h]
             opacity = 1 - frame / (num_frames - 1)
-            attack_circle_drawer.draw_frame(sheet, rect, frame / num_frames, opacity=opacity)
+
+            attack_circle_drawer_2.draw(sheet, rect, frame / num_frames, opacity=opacity)
 
             att_circles_real[-1].append(make(rect[0], rect[1], rect[2], rect[3]))
 
