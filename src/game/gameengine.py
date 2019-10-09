@@ -1771,8 +1771,9 @@ class SpawnActorAction(Action):
                 cx = (self.get_position()[0] + 0.5) * world.cellsize()
                 cy = (self.get_position()[1] + 0.5) * world.cellsize()
 
-                from src.world.entities import AttackCircleArt
-                circle_anim = AttackCircleArt(cx, cy, 64, 60, colors.WHITE, color_end=self.art_color)
+                from src.world.entities import EffectCircleArt
+                circle_anim = EffectCircleArt(cx, cy, 96, 60, art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES,
+                                              color=colors.WHITE, color_end=self.art_color)
                 world.add(circle_anim)
 
         if not self._did_animation_2 and progress > 0.5:

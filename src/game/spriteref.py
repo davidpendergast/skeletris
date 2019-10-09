@@ -1,9 +1,6 @@
 import pygame
 import math
 
-import string
-import collections
-
 from src.items.cubeutils import CubeUtils
 from src.utils.util import Utils
 from src.game.messages import Messages
@@ -319,17 +316,64 @@ player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
 
 player_faces = [make(96 + i * 32, 0, 32, 32) for i in range(0, 2)]
 
-att_circles = [make(112 + 48*i, 240, 48, 32) for i in range(0, 9)]
 
-att_circle_min_size = 48
-att_circle_max_size = 48 * 3
-att_circles_real = []  # list of lists of frames, sorted by size, frame idx
+class EffectCircles:
 
+    _ALL_HEIGHTS = [32, 48, 64]
 
-def get_attack_circles(size):
-    size_prog = (size - att_circle_min_size) / (att_circle_max_size - att_circle_min_size)
-    size_idx = int(Utils.bound(size_prog, 0, 0.999) * len(att_circles_real))
-    return att_circles_real[size_idx]
+    _ALL_TYPES = []
+
+    FOUR_CIRCLES = Utils.add_to_list_and_return("FOUR_CIRCLES", _ALL_TYPES)
+    TRIANGLE_WITH_CIRCLES = Utils.add_to_list_and_return("TRIANGLE_WITH_CIRCLES", _ALL_TYPES)
+
+    _n_frames = 8
+
+    sprites = {}  # {str: type_id -> {int: height -> list of ImageModels}}
+
+    @staticmethod
+    def get_sprites(type_id, height):
+        h = EffectCircles._find_closest_height(height)
+        return EffectCircles.sprites[type_id][h]
+
+    @staticmethod
+    def all_types():
+        return EffectCircles._ALL_TYPES
+
+    @staticmethod
+    def all_heights():
+        return EffectCircles._ALL_HEIGHTS
+
+    @staticmethod
+    def n_frames():
+        return EffectCircles._n_frames
+
+    @staticmethod
+    def _find_closest_height(height):
+        # breaks ties with the smaller height for no real reason
+        best = EffectCircles._ALL_HEIGHTS[0]
+        for h in EffectCircles._ALL_HEIGHTS:
+            if abs(height - h) < abs(height - best):
+                # feel free to message me about how this could be log(n)
+                best = h
+        return best
+
+    @staticmethod
+    def get_generator(type_id):
+        import src.utils.geometricgen as geometricgen
+
+        if type_id == EffectCircles.FOUR_CIRCLES:
+            return geometricgen.CompositeGenerator([
+                geometricgen.OuterCircleGenerator(),
+                geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, period=2)
+            ])
+
+        elif type_id == EffectCircles.TRIANGLE_WITH_CIRCLES:
+            return geometricgen.CompositeGenerator([
+                geometricgen.OuterRotatingPolygonGenerator(3, period=1),
+                geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, period=1)
+            ])
+        else:
+            raise ValueError("there's no sprite generator for effect circle type: {}".format(type_id))
 
 
 chest_closed = make(0, 32, 16, 16)
@@ -832,7 +876,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     global walls
     right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img]
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
-    sheet_h = max(raw_image.get_height() + 2000, sum([im.get_height() for im in right_imgs]))
+    sheet_h = max(raw_image.get_height() + 2500, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
     left_size = (raw_image.get_width(), sheet_size[1])
 
@@ -951,43 +995,37 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     draw_y += 20
     draw_x = 0
 
-    step = 8
-    circle_art_heights = [y for y in range(32, 32 * 3 + 1, step)]
+    circle_art_types = EffectCircles.all_types()
+    circle_art_heights = [y for y in EffectCircles.all_heights()]
     circle_art_widths = [int(1.5 * y) for y in circle_art_heights]
-    num_frames = 8
+    circle_art_num_frames = EffectCircles.n_frames()
 
-    import src.utils.geometricgen as geometricgen
+    _total_n = len(circle_art_widths) * circle_art_num_frames * len(circle_art_types)
+    print("INFO: drawing {} effect circle sprites...".format(_total_n))
 
-    attack_circle_drawer = geometricgen.CompositeGenerator([
-        geometricgen.OuterCircleGenerator(),
-        geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, period=2)
-    ])
+    for circle_type in circle_art_types:
+        EffectCircles.sprites[circle_type] = {}
 
-    attack_circle_drawer_2 = geometricgen.CompositeGenerator([
-        geometricgen.OuterRotatingPolygonGenerator(3, period=1),
-        geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, period=1)
-    ])
+        for i in range(0, len(circle_art_widths)):
+            w = circle_art_widths[i]
+            h = circle_art_heights[i]
 
-    print("INFO: drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
+            EffectCircles.sprites[circle_type][h] = []
 
-    for i in range(0, len(circle_art_widths)):
-        w = circle_art_widths[i]
-        h = circle_art_heights[i]
-        att_circles_real.append([])
-        for frame in range(0, num_frames):
-            if draw_x + w > left_size[0]:
-                draw_x = 0
-                draw_y += h
-            rect = [draw_x, draw_y, w, h]
-            opacity = 1 - frame / (num_frames - 1)
+            for frame in range(0, circle_art_num_frames):
+                if draw_x + w > left_size[0]:
+                    draw_x = 0
+                    draw_y += h
+                rect = [draw_x, draw_y, w, h]
+                opacity = 1 - frame / (circle_art_num_frames - 1)
+                generator = EffectCircles.get_generator(circle_type)
+                generator.draw(sheet, rect, frame / circle_art_num_frames, opacity=opacity)
 
-            attack_circle_drawer_2.draw(sheet, rect, frame / num_frames, opacity=opacity)
+                EffectCircles.sprites[circle_type][h].append(make(rect[0], rect[1], rect[2], rect[3]))
 
-            att_circles_real[-1].append(make(rect[0], rect[1], rect[2], rect[3]))
+                draw_x += w
 
-            draw_x += w
-
-    draw_y += circle_art_heights[-1]
+        draw_y += circle_art_heights[-1]
 
     n_cooldowns = 20
     cd_size = 28

@@ -434,10 +434,12 @@ class AnimationEntity(Entity):
             self.tick_count += 1
 
 
-class AttackCircleArt(AnimationEntity):
+class EffectCircleArt(AnimationEntity):
 
-    def __init__(self, cx, cy, radius, duration, color=(1, 0, 1), color_end=(0, 0, 0)):
-        sprites = spriteref.get_attack_circles(radius * 2 // 2)
+    def __init__(self, cx, cy, height, duration, art_type=None, color=(1, 0, 1), color_end=(0, 0, 0)):
+        if art_type is None:
+            art_type = spriteref.EffectCircles.FOUR_CIRCLES
+        sprites = spriteref.EffectCircles.get_sprites(art_type, height / 2)
         AnimationEntity.__init__(self, cx, cy, sprites, duration, spriteref.SHADOW_LAYER)
         self.standing_up = False
         self._start_color = color

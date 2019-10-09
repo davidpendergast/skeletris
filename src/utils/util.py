@@ -173,6 +173,11 @@ class Utils:
         return res
 
     @staticmethod
+    def add_to_list_and_return(val, the_list):
+        the_list.append(val)
+        return val
+
+    @staticmethod
     def stringify_key(keycode):
         if keycode == pygame.K_LEFT:
             return "←"
