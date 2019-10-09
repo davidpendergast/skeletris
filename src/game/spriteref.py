@@ -590,20 +590,6 @@ def _get_wall_corner_loc(spot, bools, wall_pieces):
     return (wall_pieces[0] + x*8, wall_pieces[1] + y*8, 8, 8)
 
 
-def _draw_ellipse(sheet, center, width, height, opacity):
-    color = (255, 255, 255)
-    rect = [center[0] - width, center[1] - height, width * 2, height * 2]
-    pygame.draw.ellipse(sheet, color, rect, 1)
-
-    for x in range(rect[0], rect[0] + rect[2]):
-        for y in range(rect[1], rect[1] + rect[3]):
-            # it's good enoughTM don't @ me
-            if x < 0 or x >= sheet.get_width() or y < 0 or y >= sheet.get_height():
-                continue
-            if sheet.get_at((x, y)) == color:
-                sheet.set_at((x, y), (color[0], color[1], color[2], int(opacity*255)))
-
-
 cooldown_overlays = []
 
 
@@ -969,7 +955,13 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     circle_art_heights = [y for y in range(32, 32 * 3 + 1, step)]
     circle_art_widths = [int(1.5 * y) for y in circle_art_heights]
     num_frames = 8
-    anim_frames = 4
+
+    import src.utils.geometricgen as geometricgen
+
+    attack_circle_drawer = geometricgen.CompositeGenerator([
+        geometricgen.OuterCircleGenerator(),
+        geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, period=2)
+    ])
 
     print("INFO: drawing {} attack circle sprites...".format(len(circle_art_widths) * num_frames))
 
@@ -982,18 +974,11 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
                 draw_x = 0
                 draw_y += h
             rect = [draw_x, draw_y, w, h]
-            att_circles_real[-1].append(make(rect[0], rect[1], rect[2], rect[3]))
-            center = rect[0] + w // 2, rect[1] + h // 2
             opacity = 1 - frame / (num_frames - 1)
-            _draw_ellipse(sheet, center, rect[2] // 2, rect[3] // 2, opacity)
+            attack_circle_drawer.draw_frame(sheet, rect, frame / num_frames, opacity=opacity)
 
-            small_circle_size = (rect[2] // 2, rect[3] // 2)
-            for j in range(0, 4):
-                angle = (j + (frame % anim_frames) / anim_frames) * 3.1415 / 2
-                cx = int(small_circle_size[0] // 2 * math.cos(angle))
-                cy = int(small_circle_size[1] // 2 * math.sin(angle))
-                _draw_ellipse(sheet, (rect[0] + rect[2] // 2 + cx, rect[1] + rect[3] // 2 + cy),
-                              small_circle_size[0] // 2, small_circle_size[1] // 2, opacity)
+            att_circles_real[-1].append(make(rect[0], rect[1], rect[2], rect[3]))
+
             draw_x += w
 
     draw_y += circle_art_heights[-1]
