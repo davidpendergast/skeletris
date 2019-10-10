@@ -17,10 +17,11 @@ def _new_unique_key():
 class StatusEffect(StatProvider):
 
     def __init__(self, name, duration, color, icon, applied_stats, unique_key=None, player_text=None,
-                 ignore_nullification=False, is_debuff=False):
+                 ignore_nullification=False, is_debuff=False, circle_art_type=None):
         self.name = name
         self.duration = duration
         self.color = color
+        self.circle_art_type = circle_art_type
         self.icon = icon
         self.applied_stats = applied_stats
         self.player_text = player_text
@@ -60,6 +61,9 @@ class StatusEffect(StatProvider):
     def get_color(self):
         return self.color
 
+    def get_effect_circle_art_type(self):
+        return self.circle_art_type
+
     def get_icon(self):
         return self.icon
 
@@ -83,42 +87,48 @@ def new_night_vision_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.LIGHT_LEVEL, val)]
     return StatusEffect("Night Vision", duration, StatTypes.LIGHT_LEVEL.get_color(),
                         spriteref.UI.status_eye_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=False)
+                        player_text=player_text, is_debuff=False,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_plus_defenses_effect(duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.DEF, balance.STATUS_EFFECT_PLUS_DEFENSE_VAL)]
     return StatusEffect("Increased Defenses", duration, StatTypes.DEF.get_color(),
                         spriteref.UI.status_shield_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=False)
+                        player_text=player_text, is_debuff=False,
+                        circle_art_type=spriteref.EffectCircles.FOUR_CIRCLES)
 
 
 def new_regen_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.HP_REGEN, val)]
     return StatusEffect("Regeneration", duration, StatTypes.HP_REGEN.get_color(),
                         spriteref.UI.status_sparkles_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=False)
+                        player_text=player_text, is_debuff=False,
+                        circle_art_type=spriteref.EffectCircles.FOUR_CIRCLES)
 
 
 def new_poison_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.POISON, val)]
     return StatusEffect("Poison", duration, StatTypes.POISON.get_color(),
                         spriteref.UI.status_drop_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=True)
+                        player_text=player_text, is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_speed_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, val)]
     return StatusEffect("Increased Speed", duration, StatTypes.SPEED.get_color(),
                         spriteref.UI.status_up_arrow_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=False)
+                        player_text=player_text, is_debuff=False,
+                        circle_art_type=spriteref.EffectCircles.STAR_5_IN_CIRCLE)
 
 
 def new_slow_effect(val, duration, player_text=None, unique_key=None):
     stats = [AppliedStat(StatTypes.SPEED, -val)]
     return StatusEffect("Reduced Speed", duration, colors.DARK_YELLOW,
                         spriteref.UI.status_down_arrow_icon, stats, unique_key=unique_key,
-                        player_text=player_text, is_debuff=True)
+                        player_text=player_text, is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.FOUR_CIRCLES)
 
 
 def new_nullification_effect(duration, player_text=None, unique_key=None):
@@ -126,28 +136,32 @@ def new_nullification_effect(duration, player_text=None, unique_key=None):
     return StatusEffect("Nullification", duration, colors.LIGHT_GRAY,
                         spriteref.UI.status_diagonal_lines_icon, stats,
                         player_text=player_text, unique_key=unique_key,
-                        ignore_nullification=True, is_debuff=True)
+                        ignore_nullification=True, is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_confusion_effect(duration, player_text=None):
     stats = [AppliedStat(StatTypes.CONFUSION, 1)]
     return StatusEffect("Confusion", duration, colors.RED,
                         spriteref.UI.status_sparkles_icon, stats,
-                        player_text=player_text, unique_key="confusion", is_debuff=True)
+                        player_text=player_text, unique_key="confusion", is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_grasped_effect(duration, player_text=None):
     stats = [AppliedStat(StatTypes.GRASPED, 1)]
     return StatusEffect("Grasped", duration, colors.ORANGE,
                         spriteref.UI.status_hand_icon, stats,
-                        player_text=player_text, unique_key="grasped", is_debuff=True)
+                        player_text=player_text, unique_key="grasped", is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_blindness_effect(duration, player_text=None):
     stats = [AppliedStat(StatTypes.LIGHT_LEVEL, -4)]
     return StatusEffect("Blindness", duration, colors.DARK_BLUE,
                         spriteref.UI.status_eye_xed_icon, stats,
-                        player_text=player_text, unique_key="blinded", is_debuff=True)
+                        player_text=player_text, unique_key="blinded", is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_flinch_effect(player_text=None):
@@ -155,7 +169,8 @@ def new_flinch_effect(player_text=None):
     return StatusEffect("Flinched", 1, StatTypes.FLINCHED.get_color(),
                         spriteref.UI.status_x_icon, stats,
                         player_text=player_text, unique_key="flinched", is_debuff=True,
-                        ignore_nullification=True)
+                        ignore_nullification=True,
+                        circle_art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES)
 
 
 def new_flinch_recovery_effect(duration, player_text=None):
@@ -170,4 +185,5 @@ def new_chilled_effect(duration, val, player_text=None):
     stats = [AppliedStat(StatTypes.SPEED, -val), AppliedStat(StatTypes.ATT, -val)]
     return StatusEffect("Chilled", duration, StatTypes.CHILL_ON_HIT.get_color(),
                         spriteref.UI.status_snowflake_icon, stats, player_text=player_text,
-                        unique_key="chilled", is_debuff=True)
+                        unique_key="chilled", is_debuff=True,
+                        circle_art_type=spriteref.EffectCircles.FOUR_CIRCLES)

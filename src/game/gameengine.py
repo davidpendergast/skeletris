@@ -676,6 +676,10 @@ class ConsumeItemAction(Action):
                 self.actor_entity.perturb_color(consume_effect.get_color(), 30)
                 self.actor_entity.set_visually_held_item_override(False)
 
+                cx, cy = self.actor_entity.get_render_center(ignore_perturbs=True)
+                world.show_effect_circle(cx, cy, consume_effect.get_effect_circle_art_type(),
+                                         color=consume_effect.get_color(), duration=45)
+
             sound_effects.play_sound(soundref.potion_drink)
 
     def finalize(self, world):
@@ -823,6 +827,12 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
                 if s.get_color() is not None:
                     attacker_entity.perturb_color(s.get_color(), 30)
 
+                # TODO - these all get drawn on top of each other...
+                if s.get_effect_circle_art_type() is not None:
+                    cx, cy = attacker_entity.get_render_center(ignore_perturbs=True)
+                    world.show_effect_circle(cx, cy, s.get_effect_circle_art_type(),
+                                             color=s.get_color(), duration=45)
+
         new_status_effects_for_defender = []
 
         pois_duration = attacker.stat_value_with_item(StatTypes.POISON_ON_HIT, item_used)
@@ -861,8 +871,14 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         if defender_entity is not None:
             for s in new_status_effects_for_defender:
                 defender_entity.get_actor_state().add_status_effect(s)
+
                 if s.get_color() is not None:
                     defender_entity.perturb_color(s.get_color(), 30)
+
+                if s.get_effect_circle_art_type() is not None:
+                    cx, cy = defender_entity.get_render_center(ignore_perturbs=True)
+                    world.show_effect_circle(cx, cy, s.get_effect_circle_art_type(),
+                                             color=s.get_color(), duration=45)
 
 
 class AttackAction(Action):
@@ -1303,6 +1319,10 @@ class ThrowItemAction(Action):
             if damage >= 0 and consume_effect is not None:
                 target.perturb_color(consume_effect.get_color(), 30)
                 target.get_actor_state().add_status_effect(consume_effect)
+
+                cx, cy = target.get_render_center(ignore_perturbs=True)
+                world.show_effect_circle(cx, cy, consume_effect.get_effect_circle_art_type(),
+                                         color=consume_effect.get_color(), duration=45)
 
     def start(self, world):
         super().start(world)
@@ -1772,7 +1792,7 @@ class SpawnActorAction(Action):
                 cy = (self.get_position()[1] + 0.5) * world.cellsize()
 
                 from src.world.entities import EffectCircleArt
-                circle_anim = EffectCircleArt(cx, cy, 96, 60, art_type=spriteref.EffectCircles.TRIANGLE_WITH_CIRCLES,
+                circle_anim = EffectCircleArt(cx, cy, 96, 60, art_type=spriteref.EffectCircles.STAR_5_IN_CIRCLE,
                                               color=colors.WHITE, color_end=self.art_color)
                 world.add(circle_anim)
 

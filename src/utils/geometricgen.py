@@ -78,11 +78,29 @@ class OuterRotatingPolygonGenerator(GeometricGenerator):
         self.n_vertices = n_vertices
         self.period = min(n_vertices, period)
 
-    def draw_frame(self, sheet, rect, prog, rgb):
+    def get_vertex_positions(self, rect, prog):
         vertices = []
         center = (rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
         for i in range(0, self.n_vertices):
             angle = (prog / self.period + i / self.n_vertices) * 2 * math.pi
             vertices.append((int(center[0] + rect[2] / 2 * math.cos(angle)),
                              int(center[1] + rect[3] / 2 * math.sin(angle))))
+        return vertices
+
+    def draw_frame(self, sheet, rect, prog, rgb):
+        vertices = self.get_vertex_positions(rect, prog)
         pygame.draw.polygon(sheet, rgb, vertices, 1)
+
+
+class OuterRotatingStarGenerator(OuterRotatingPolygonGenerator):
+
+    def __init__(self, n_vertices, period=1):
+        OuterRotatingPolygonGenerator.__init__(self, n_vertices, period=period)
+
+    def draw_frame(self, sheet, rect, prog, rgb):
+        vertices = self.get_vertex_positions(rect, prog)
+        for i in range(0, self.n_vertices):
+            j = (i + self.n_vertices // 2) % self.n_vertices
+            p_i = vertices[i]
+            p_j = vertices[j]
+            pygame.draw.line(sheet, rgb, p_i, p_j, 1)

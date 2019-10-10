@@ -102,6 +102,16 @@ class World:
             splosion.set_color(color)
         splosion.set_sprite_offset(offs)
         self.add(splosion)
+
+    def show_effect_circle(self, cx, cy, art_type, height=64, color=None, duration=45):
+        if art_type is None:
+            return
+        else:
+            if color is None:
+                color = colors.WHITE
+            from src.world.entities import EffectCircleArt
+            circle = EffectCircleArt(cx, cy, height, duration, art_type=art_type, color=color)
+            self.add(circle)
         
     def remove(self, entity):
         self._ents_to_remove.append(entity)

@@ -325,6 +325,7 @@ class EffectCircles:
 
     FOUR_CIRCLES = Utils.add_to_list_and_return("FOUR_CIRCLES", _ALL_TYPES)
     TRIANGLE_WITH_CIRCLES = Utils.add_to_list_and_return("TRIANGLE_WITH_CIRCLES", _ALL_TYPES)
+    STAR_5_IN_CIRCLE = Utils.add_to_list_and_return("STAR_5_IN_CIRCLE", _ALL_TYPES)
 
     _n_frames = 8
 
@@ -371,6 +372,12 @@ class EffectCircles:
             return geometricgen.CompositeGenerator([
                 geometricgen.OuterRotatingPolygonGenerator(3, period=1),
                 geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, period=1)
+            ])
+
+        elif type_id == EffectCircles.STAR_5_IN_CIRCLE:
+            return geometricgen.CompositeGenerator([
+                geometricgen.OuterCircleGenerator(),
+                geometricgen.OuterRotatingStarGenerator(5, period=2)
             ])
         else:
             raise ValueError("there's no sprite generator for effect circle type: {}".format(type_id))
