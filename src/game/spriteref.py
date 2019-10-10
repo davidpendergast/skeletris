@@ -1,6 +1,8 @@
 import pygame
 import math
 
+from enum import Enum
+
 from src.items.cubeutils import CubeUtils
 from src.utils.util import Utils
 from src.game.messages import Messages
@@ -317,15 +319,22 @@ player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
 player_faces = [make(96 + i * 32, 0, 32, 32) for i in range(0, 2)]
 
 
+class EffectCircleTypes(Enum):
+    FOUR_CIRCLES = "FOUR_CIRCLES"
+    TRIANGLE_WITH_CIRCLES = "TRIANGLE_WITH_CIRCLES"
+    STAR_5_ENCLOSED = "STAR_5_ENCLOSED"
+    SQUARE_VS_STAR = "SQUARE_VS_STAR"
+    GROWING_CIRCLES = "GROWING_CIRCLES"
+    SHRINKING_CIRCLES = "SHRINKING_CIRCLES"
+
+    @staticmethod
+    def all_types():
+        return [t for t in EffectCircleTypes]
+
+
 class EffectCircles:
 
     _ALL_HEIGHTS = [32, 48, 64]
-
-    _ALL_TYPES = []
-
-    FOUR_CIRCLES = Utils.add_to_list_and_return("FOUR_CIRCLES", _ALL_TYPES)
-    TRIANGLE_WITH_CIRCLES = Utils.add_to_list_and_return("TRIANGLE_WITH_CIRCLES", _ALL_TYPES)
-    STAR_5_IN_CIRCLE = Utils.add_to_list_and_return("STAR_5_IN_CIRCLE", _ALL_TYPES)
 
     _n_frames = 8
 
@@ -335,10 +344,6 @@ class EffectCircles:
     def get_sprites(type_id, height):
         h = EffectCircles._find_closest_height(height)
         return EffectCircles.sprites[type_id][h]
-
-    @staticmethod
-    def all_types():
-        return EffectCircles._ALL_TYPES
 
     @staticmethod
     def all_heights():
@@ -362,22 +367,41 @@ class EffectCircles:
     def get_generator(type_id):
         import src.utils.geometricgen as geometricgen
 
-        if type_id == EffectCircles.FOUR_CIRCLES:
+        if type_id == EffectCircleTypes.FOUR_CIRCLES:
             return geometricgen.CompositeGenerator([
                 geometricgen.OuterCircleGenerator(),
-                geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, period=2)
+                geometricgen.RotatingCirclesGenerator(n_circles=4, relative_size=0.5, speed=2)
             ])
 
-        elif type_id == EffectCircles.TRIANGLE_WITH_CIRCLES:
+        elif type_id == EffectCircleTypes.TRIANGLE_WITH_CIRCLES:
             return geometricgen.CompositeGenerator([
-                geometricgen.OuterRotatingPolygonGenerator(3, period=1),
-                geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, period=1)
+                geometricgen.OuterRotatingPolygonGenerator(3, speed=1),
+                geometricgen.RotatingCirclesGenerator(n_circles=3, relative_size=0.5, speed=1)
             ])
 
-        elif type_id == EffectCircles.STAR_5_IN_CIRCLE:
+        elif type_id == EffectCircleTypes.STAR_5_ENCLOSED:
             return geometricgen.CompositeGenerator([
-                geometricgen.OuterCircleGenerator(),
-                geometricgen.OuterRotatingStarGenerator(5, period=2)
+                geometricgen.OuterRotatingPolygonGenerator(5, speed=2),
+                geometricgen.OuterRotatingStarGenerator(5, 2, speed=2)
+            ])
+        elif type_id == EffectCircleTypes.SQUARE_VS_STAR:
+            return geometricgen.CompositeGenerator([
+                geometricgen.OuterRotatingPolygonGenerator(4, speed=1),
+                geometricgen.OuterRotatingStarGenerator(7, 3, speed=-2)
+            ])
+        elif type_id == EffectCircleTypes.GROWING_CIRCLES:
+            return geometricgen.CompositeGenerator([
+                geometricgen.ResizingCircleGenerator(0.45, 1.0),
+                geometricgen.ResizingCircleGenerator(0.25, 1.0),
+                geometricgen.ResizingCircleGenerator(0.15, 1.0),
+                geometricgen.ResizingCircleGenerator(0.0, 1.0),
+            ])
+        elif type_id == EffectCircleTypes.SHRINKING_CIRCLES:
+            return geometricgen.CompositeGenerator([
+                geometricgen.ResizingCircleGenerator(1.0, 0.45),
+                geometricgen.ResizingCircleGenerator(1.0, 0.25),
+                geometricgen.ResizingCircleGenerator(1.0, 0.15),
+                geometricgen.ResizingCircleGenerator(1.0, 0.0),
             ])
         else:
             raise ValueError("there's no sprite generator for effect circle type: {}".format(type_id))
@@ -1002,7 +1026,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     draw_y += 20
     draw_x = 0
 
-    circle_art_types = EffectCircles.all_types()
+    circle_art_types = EffectCircleTypes.all_types()
     circle_art_heights = [y for y in EffectCircles.all_heights()]
     circle_art_widths = [int(1.5 * y) for y in circle_art_heights]
     circle_art_num_frames = EffectCircles.n_frames()

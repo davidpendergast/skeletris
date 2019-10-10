@@ -1792,7 +1792,7 @@ class SpawnActorAction(Action):
                 cy = (self.get_position()[1] + 0.5) * world.cellsize()
 
                 from src.world.entities import EffectCircleArt
-                circle_anim = EffectCircleArt(cx, cy, 96, 60, art_type=spriteref.EffectCircles.STAR_5_IN_CIRCLE,
+                circle_anim = EffectCircleArt(cx, cy, 96, 60, art_type=spriteref.EffectCircleTypes.STAR_5_ENCLOSED,
                                               color=colors.WHITE, color_end=self.art_color)
                 world.add(circle_anim)
 

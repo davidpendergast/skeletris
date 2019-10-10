@@ -1,5 +1,6 @@
 import pygame
 import math
+
 import src.utils.colors as colors
 from src.utils.util import Utils
 
@@ -52,17 +53,40 @@ class OuterCircleGenerator(GeometricGenerator):
         pygame.draw.ellipse(sheet, rgb, rect, 1)
 
 
+class ResizingCircleGenerator(OuterCircleGenerator):
+
+    def __init__(self, start_size, end_size):
+        self.start_size = start_size
+        self.end_size = end_size
+
+    def draw_frame(self, sheet, rect, prog, rgb):
+        cur_size = self.start_size + prog * (self.end_size - self.start_size)
+        cx = rect[0] + rect[2] / 2
+        cy = rect[1] + rect[3] / 2
+        new_rect = [
+            int(cx - cur_size * rect[2] / 2),
+            int(cy - cur_size * rect[3] / 2),
+            round(rect[2] * cur_size),
+            round(rect[3] * cur_size)
+        ]
+
+        bounded_new_rect = Utils.get_rect_intersect(rect, new_rect)
+
+        if bounded_new_rect is not None:
+            super().draw_frame(sheet, bounded_new_rect, prog, rgb)
+
+
 class RotatingCirclesGenerator(GeometricGenerator):
 
-    def __init__(self, n_circles=4, relative_size=0.5, period=1):
+    def __init__(self, n_circles=4, relative_size=0.5, speed=1):
         self.n_circles = n_circles
         self.relative_size = relative_size
-        self.period = min(n_circles, period)
+        self.speed = speed
 
     def draw_frame(self, sheet, rect, prog, rgb):
         small_circle_size = (rect[2] * self.relative_size, rect[3] * self.relative_size)
         for i in range(0, self.n_circles):
-            angle = (prog / self.period + i / self.n_circles) * 2 * math.pi
+            angle = (prog * self.speed + i) / self.n_circles * 2 * math.pi
             cx = rect[0] + rect[2] // 2 + int(small_circle_size[0] * (1 - self.relative_size) * math.cos(angle))
             cy = rect[1] + rect[3] // 2 + int(small_circle_size[1] * (1 - self.relative_size) * math.sin(angle))
             small_rect = [int(cx - small_circle_size[0] / 2),
@@ -74,15 +98,15 @@ class RotatingCirclesGenerator(GeometricGenerator):
 
 class OuterRotatingPolygonGenerator(GeometricGenerator):
 
-    def __init__(self, n_vertices, period=1):
+    def __init__(self, n_vertices, speed=1):
         self.n_vertices = n_vertices
-        self.period = min(n_vertices, period)
+        self.speed = speed
 
     def get_vertex_positions(self, rect, prog):
         vertices = []
         center = (rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
         for i in range(0, self.n_vertices):
-            angle = (prog / self.period + i / self.n_vertices) * 2 * math.pi
+            angle = (prog * self.speed + i) / self.n_vertices * 2 * math.pi
             vertices.append((int(center[0] + rect[2] / 2 * math.cos(angle)),
                              int(center[1] + rect[3] / 2 * math.sin(angle))))
         return vertices
@@ -94,13 +118,14 @@ class OuterRotatingPolygonGenerator(GeometricGenerator):
 
 class OuterRotatingStarGenerator(OuterRotatingPolygonGenerator):
 
-    def __init__(self, n_vertices, period=1):
-        OuterRotatingPolygonGenerator.__init__(self, n_vertices, period=period)
+    def __init__(self, n_vertices, jump_n, speed=1):
+        OuterRotatingPolygonGenerator.__init__(self, n_vertices, speed=speed)
+        self.jump_n = jump_n
 
     def draw_frame(self, sheet, rect, prog, rgb):
         vertices = self.get_vertex_positions(rect, prog)
         for i in range(0, self.n_vertices):
-            j = (i + self.n_vertices // 2) % self.n_vertices
+            j = (i + self.jump_n) % self.n_vertices
             p_i = vertices[i]
             p_j = vertices[j]
             pygame.draw.line(sheet, rgb, p_i, p_j, 1)

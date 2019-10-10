@@ -85,6 +85,35 @@ class Utils:
         return rect[0] <= v[0] < rect[0] + rect[2] and rect[1] <= v[1] < rect[1] + rect[3]
 
     @staticmethod
+    def get_rect_corners(rect, inclusive=False):
+        yield (rect[0], rect[1])
+        if inclusive:
+            if rect[2] == 0 or rect[3] == 0:
+                if rect[2] > 0:
+                    yield (rect[0] + rect[2] - 1, rect[1])
+                elif rect[3] > 0:
+                    yield (rect[0], rect[1] + rect[3] - 1)
+            else:
+                yield (rect[0] + rect[2] - 1, rect[1])
+                yield (rect[0], rect[1] + rect[3] - 1)
+                yield (rect[0] + rect[2] - 1, rect[1] + rect[3] - 1)
+        else:
+            yield (rect[0] + rect[2], rect[1])
+            yield (rect[0], rect[1] + rect[3])
+            yield (rect[0] + rect[2], rect[1] + rect[3])
+
+    @staticmethod
+    def get_rect_intersect(rect1, rect2):
+        x1 = max(rect1[0], rect2[0])
+        x2 = min(rect1[0] + rect1[2], rect2[0] + rect2[2])
+        y1 = max(rect1[1], rect2[1])
+        y2 = min(rect1[1] + rect1[3], rect2[1] + rect2[3])
+        if x1 >= x2 or y1 >= y2:
+            return None
+        else:
+            return Utils.get_rect_containing_points([(x1, y1), (x2, y2)])
+
+    @staticmethod
     def get_rect_containing_points(pts, inclusive=False):
         if len(pts) == 0:
             raise ValueError("pts is empty")

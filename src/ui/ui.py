@@ -478,14 +478,16 @@ class InventoryPanel(SidePanel):
 
         elif button == 3:
             item_to_apply = ps.held_item
+
             if item_to_apply is None:
                 item_to_apply = self.get_item_at_pos(x, y)
 
-            action = gameengine.get_right_click_action_for_item(item_to_apply)
-            if action is not None and action.is_possible(w):
-                pc.add_requests(action, pc.HIGHEST_PRIORITY)
-            else:
-                sound_effects.play_sound(soundref.item_cant_place)
+            if item_to_apply is not None:
+                action = gameengine.get_right_click_action_for_item(item_to_apply)
+                if action is not None and action.is_possible(w):
+                    pc.add_requests(action, pc.HIGHEST_PRIORITY)
+                else:
+                    sound_effects.play_sound(soundref.item_cant_place)
 
         return True  # need to prevent clicks from falling through to world
 

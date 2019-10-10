@@ -438,7 +438,7 @@ class EffectCircleArt(AnimationEntity):
 
     def __init__(self, cx, cy, height, duration, art_type=None, color=(1, 0, 1), color_end=(0, 0, 0)):
         if art_type is None:
-            art_type = spriteref.EffectCircles.FOUR_CIRCLES
+            art_type = spriteref.EffectCircleTypes.FOUR_CIRCLES
         sprites = spriteref.EffectCircles.get_sprites(art_type, height / 2)
         AnimationEntity.__init__(self, cx, cy, sprites, duration, spriteref.SHADOW_LAYER)
         self.standing_up = False

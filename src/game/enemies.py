@@ -606,7 +606,6 @@ class ScorpionTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.POISON_ON_HIT: 2,
-            StatTypes.GRASP_ON_MELEE_HIT: 1,
         })
 
 
