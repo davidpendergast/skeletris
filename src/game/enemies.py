@@ -700,16 +700,16 @@ class OysterTemplate(EnemyTemplate):
         return ("O", colors.RED)
 
 
-class SnowfolkTemplate(EnemyTemplate):
+class SkulkerTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Snowfolk")
+        EnemyTemplate.__init__(self, "Skulker")
 
     def get_sprites(self):
-        return spriteref.enemy_snowfolk_all
+        return spriteref.enemy_skullwalker
 
     def get_types(self):
-        return [EnemyTypes.ANIMAL]
+        return [EnemyTypes.UNDEAD]
 
     def get_level_range(self):
         return range(8, 12)
@@ -727,10 +727,10 @@ class SnowfolkTemplate(EnemyTemplate):
         })
 
     def get_map_identifier(self):
-        return ("s", colors.RED)
+        return ("S", colors.RED)
 
     def get_shadow_sprite(self):
-        return spriteref.large_shadow
+        return spriteref.medium_shadow
 
 
 class FrogBossTemplate(EnemyTemplate):
@@ -1025,7 +1025,7 @@ TEMPLATE_NAMELESS = NamelessTemplate(False)
 TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 TEMPLATE_HUSK = HuskTemplate()
 TEMPLATE_SKELEKID = SkeleSpawn()
-TEMPLATE_SNOWFOLK = SnowfolkTemplate()
+TEMPLATE_SKULKER = SkulkerTemplate()
 TEMPLATE_LEPIOTA = CrawlingLepiotaTemplate()
 TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
 
@@ -1044,7 +1044,7 @@ RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_SLUG,
                         TEMPLATE_TRILLA,
                         TEMPLATE_TRILLITE,
-                        TEMPLATE_SNOWFOLK,
+                        TEMPLATE_SKULKER,
                         TEMPLATE_FROG,
                         TEMPLATE_SMALL_FROG,
                         TEMPLATE_SCORPION,

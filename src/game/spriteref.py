@@ -73,6 +73,7 @@ class Items:
     potion_big = None
     ring_big = None
     fishing_rod_big = None
+    slingshot_big = None
 
     spear_small = None
     sword_small = None
@@ -85,6 +86,7 @@ class Items:
     wand_small = None
     potion_small = None
     fishing_rod_small = None
+    slingshot_small = None
 
     misc_small = None
     projectile_small = None
@@ -473,6 +475,7 @@ enemy_husk_idle_all = [make(576 + i * 16, 176, 16, 32) for i in range(0, 2)]
 enemy_husk_moving_all = [make(608 + i * 16, 176, 16, 32) for i in range(0, 4)]
 enemy_snowfolk_all = [make(624, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_crawling_lepiota = [make(656, 208 + i * 32, 32, 32) for i in range(0, 2)]
+enemy_skullwalker = [make(688 + i * 16, 224, 16, 48) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
@@ -735,6 +738,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.potion_big = make(144, 48, 16, 16, shift=start_pos)
     Items.ring_big = make(160, 48, 16, 16, shift=start_pos)
     Items.fishing_rod_big = make(256, 0, 16, 80, shift=start_pos)
+    Items.slingshot_big = make(272, 48, 32, 32, shift=start_pos)
 
     Items.spear_small = make(128, 0, 5, 16, shift=start_pos)
     Items.sword_small = make(133, 3, 5, 13, shift=start_pos)
@@ -747,6 +751,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.wand_small = make(187, 7, 5, 9, shift=start_pos)
     Items.potion_small = make(198, 8, 6, 8, shift=start_pos)
     Items.fishing_rod_small = make(128, 16, 6, 16, shift=start_pos)
+    Items.slingshot_small = make(134, 24, 7, 8, shift=start_pos)
 
     Items.misc_small = make(192, 12, 5, 4, shift=start_pos)
     Items.projectile_small = make(208, 11, 5, 5, shift=start_pos)
