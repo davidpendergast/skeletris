@@ -1959,6 +1959,7 @@ class ItemActions:
     AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, (1,))
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
     FISHING_ROD_ATTACK = AttackItemActionProvider("Hook n' Reel", spriteref.Items.fishing_rod_icon, (1,))
+    SLINGSHOT_ATTACK = AttackItemActionProvider("Sling Shot", spriteref.Items.slingshot_icon, (1, 2), projectile=True)
 
 
 def get_basic_movement_actions(player, current_pos, move_pos, for_click=False):

@@ -145,6 +145,13 @@ class WeaponItemFactory:
                                AppliedStat(StatTypes.GRASP_ON_MELEE_HIT, 2, local=True)],
                               spriteref.Items.fishing_rod_small, spriteref.Items.fishing_rod_big, actions=actions)
 
+        elif item_type == ItemTypes.SLINGSHOT_WEAPON:
+            cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
+            actions = [ItemActions.SLINGSHOT_ATTACK]
+            return SpriteItem("Slingshot of Hope", item_type, level, cubes,
+                              [AppliedStat(StatTypes.ATT, 3, local=True)],
+                              spriteref.Items.slingshot_small, spriteref.Items.slingshot_big, actions=actions)
+
         print("ERROR: unrecognized weapon type: {}".format(item_type))
         return None
 

@@ -103,6 +103,7 @@ class Items:
     shield_icon = None
     magic_icon = None
     fishing_rod_icon = None
+    slingshot_icon = None
 
 
 class UI:
@@ -769,6 +770,7 @@ def build_items_sheet(start_pos, raw_item_img, sheet):
     Items.dagger_icon = make(20, 90, 10, 10, shift=start_pos)
     Items.shield_icon = make(30, 90, 10, 10, shift=start_pos)
     Items.magic_icon = make(40, 90, 10, 10, shift=start_pos)
+    Items.slingshot_icon = make(50, 90, 10, 10, shift=start_pos)
 
 
 def build_title_scene_sheet(start_pos, raw_title_scene_img, sheet):
