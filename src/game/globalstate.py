@@ -33,6 +33,7 @@ class RunStatisticTypes:
     # used to skip tutorials
     OPENED_INVENTORY_COUNT = "OPENED_INV_COUNT"
     OPENED_MAP_COUNT = "OPENED_MAP_COUNT"
+    ROTATED_ITEM_COUNT = "ROTATED_ITEM_COUNT"
 
 
 class GlobalState:

@@ -165,6 +165,10 @@ def run():
                     if p is not None and p.get_uid() == killer_uid:
                         gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
 
+            elif event.get_type() == events.EventType.ROTATED_ITEM:
+                # used to auto-skip the rotate item tutorial
+                gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.ROTATED_ITEM_COUNT)
+
             elif event.get_type() == events.EventType.NEW_GAME:
                 print("INFO: starting fresh game")
                 render_eng.clear_all_sprites()

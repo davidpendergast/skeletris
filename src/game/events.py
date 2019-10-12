@@ -34,34 +34,25 @@ class EventQueue:
             self.next_events[new_delay].extend(self.next_events[delay])
             del self.next_events[delay]
 
-    def all_events_with_type(self, single_type):
+    def all_events_with_type(self, single_type, predicate=lambda x: True):
         for e in self.events:
-            if e.get_type() == single_type:
+            if e.get_type() == single_type and predicate(e):
                 yield e
 
     def all_events(self, types=None, predicate=lambda x: True):
         if types is not None:
             types = Utils.listify(types)
             for t in types:
-                for e in self.all_events_with_type(t):
-                    if predicate(e):
-                        yield e
+                for e in self.all_events_with_type(t, predicate=predicate):
+                    yield e
         else:
             for e in self.events:
                 if predicate(e):
                     yield e
 
-    def has_event(self, types=None, predicate=None):
-        if types is not None:
-            types = Utils.listify(types)
-            for t in types:
-                for e in self.all_events_with_type(t):
-                    if predicate is None or predicate(e):
-                        return True
-        else:
-            for e in self.events:
-                if predicate is None or predicate(e):
-                    return True
+    def has_event(self, types=None, predicate=lambda x: True):
+        for _ in self.all_events(types=types, predicate=predicate):
+            return True
 
         return False
 

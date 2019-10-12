@@ -51,10 +51,10 @@ def clean_with_hardcoded(hard_key):
 
 
 # these are all configurable
-KEY_UP = Setting("move up", "UP", [pygame.K_w], cleaner=clean_with_hardcoded(pygame.K_UP))
-KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a], cleaner=clean_with_hardcoded(pygame.K_LEFT))
-KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d], cleaner=clean_with_hardcoded(pygame.K_RIGHT))
-KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s], cleaner=clean_with_hardcoded(pygame.K_DOWN))
+KEY_UP = Setting("move up", "UP", [pygame.K_w], cleaner=clean_keys)
+KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a], cleaner=clean_keys)
+KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d], cleaner=clean_keys)
+KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s], cleaner=clean_keys)
 KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_SPACE], cleaner=clean_keys)
 
 KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r], cleaner=clean_keys)

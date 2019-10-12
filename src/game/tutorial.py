@@ -12,15 +12,17 @@ _ALL_TUTORIAL_IDS = []
 
 
 def _make_tut_id(tut_id):
-    _ALL_TUTORIAL_IDS.append(tut_id)
+    if tut_id is not None:
+        _ALL_TUTORIAL_IDS.append(tut_id)
     return tut_id
 
 
 class TutorialID:
     HOW_TO_MOVE = _make_tut_id("how_to_move")
     HOW_TO_EQUIP = _make_tut_id("how_to_equip")
+    HOW_TO_OPEN_INVENTORY = _make_tut_id("how_to_open_inv")
     HOW_TO_USE_POTIONS = _make_tut_id("how_to_use_potions")
-    HOW_TO_THROW_ITEMS = _make_tut_id("how_to_throw_items")
+    HOW_TO_THROW_ITEMS = None  # _make_tut_id("how_to_throw_items")
     HOW_TO_ROTATE = _make_tut_id("how_to_rotate")
     HOW_TO_OPEN_MAP = _make_tut_id("how_to_open_map")
 
@@ -150,9 +152,10 @@ class TutorialStage:
 
 def make_action_predicate(action_type, actor_uid=None):
     def _is_item_action(act_evt):
-        if act_evt.get_action_type() == action_type:
-            if actor_uid is None or act_evt.get_uid() == actor_uid:
-                return True
+        if act_evt is not None and act_evt.get_type() == events.EventType.ACTION_STARTED:
+            if act_evt.get_action_type() == action_type:
+                if actor_uid is None or act_evt.get_uid() == actor_uid:
+                    return True
         return False
     return _is_item_action
 
@@ -316,7 +319,9 @@ class HowToPickUpItemStage(EntityNotificationTutorialStage):
             return False
 
         def is_item_pickup_action(act_evt):
-            if act_evt.get_action_type() == gameengine.ActionType.PICKUP_ITEM:
+            # player could left-click or right-click the item
+            pickup_actions = (gameengine.ActionType.PICKUP_ITEM, gameengine.ActionType.ADD_ITEM_TO_GRID)
+            if act_evt.get_action_type() in pickup_actions:
                 if act_evt.get_uid() != p.get_uid():
                     return False
 
@@ -327,8 +332,8 @@ class HowToPickUpItemStage(EntityNotificationTutorialStage):
 
             return False
 
-        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                         predicate=is_item_pickup_action)
+        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_FINISHED,
+                                                     predicate=is_item_pickup_action)
 
     def get_message(self):
         return self._message
@@ -432,7 +437,16 @@ class HowToRotateItemStage(EntityNotificationTutorialStage):
         return None
 
     def test_completed(self):
-        return gs.get_instance().event_queue().has_event(types=events.EventType.ROTATED_ITEM)
+        if gs.get_instance().get_run_statistic(gs.RunStatisticTypes.ROTATED_ITEM_COUNT) > 0:
+            return True
+
+        if gs.get_instance().event_queue().has_event(types=events.EventType.ROTATED_ITEM):
+            return True  # just in case the run statistic didn't work...?
+
+        if len(gs.get_instance().settings().rotate_cw_key()) == 0:
+            return True  # so you can't trap yourself in the tutorial by unbinding the key...
+
+        return False
 
     def get_message(self):
         rotate_keys = gs.get_instance().settings().rotate_cw_key()
@@ -474,14 +488,9 @@ class HowToConsumeItemStage(EntityNotificationTutorialStage):
     def get_target_entity(self):
         w, p = gs.get_instance().get_world_and_player()
         if p is not None:
-            from src.ui.ui import SidePanelTypes
-            if gs.get_instance().get_active_sidepanel() != SidePanelTypes.INVENTORY:
-                return None
-
-            all_inv_items = p.get_actor_state().inventory().all_inv_items()
-            for it in all_inv_items:
-                if it.get_type().has_tag(ItemTags.CONSUMABLE):
-                    return p
+            held_item = p.get_actor_state().held_item
+            if held_item is not None and held_item.can_consume():
+                return p
         return None
 
     def test_completed(self):
@@ -490,10 +499,23 @@ class HowToConsumeItemStage(EntityNotificationTutorialStage):
             return False
 
         cond = make_action_predicate(gameengine.ActionType.CONSUME_ITEM, p.get_uid())
-        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED, predicate=cond)
+        if gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED, predicate=cond):
+            return True
+
+        # storing the item in a grid counts as a dismissal
+        cond = make_action_predicate(gameengine.ActionType.ADD_ITEM_TO_GRID, p.get_uid())
+        for evt in gs.get_instance().event_queue().all_events(predicate=cond):
+            if evt.get_item() is not None and evt.get_item().can_consume():
+                return True
+
+        # and dropping it too...
+        cond = make_action_predicate(gameengine.ActionType.DROP_ITEM, p.get_uid())
+        for evt in gs.get_instance().event_queue().all_events(predicate=cond):
+            if evt.get_item() is not None and evt.get_item().can_consume():
+                return True
 
     def get_message(self):
-        return "Right-click to use the potion."
+        return "Click yourself to consume."
 
 
 class _HowToGetInActionRangeOfEnemyStage(EntityNotificationTutorialStage):
@@ -635,7 +657,6 @@ class TutorialFactory:
                 HowToPickUpItemStage(delay=90, item_tag=ItemTags.EQUIPMENT, message="Use mouse to pick up equipment."),
                 HowToOpenInventoryPanelStage(delay=20),
                 HowToPutItemInGridStage(delay=20, item_tag=ItemTags.EQUIPMENT, grid_type=ItemGridType.EQUIPMENT),
-                MessageOnlyStage("Equipment makes you stronger.")
             ])
         elif tut_id == TutorialID.HOW_TO_ROTATE:
             return TutorialPlugin(tut_id, 0, [
@@ -644,16 +665,16 @@ class TutorialFactory:
         elif tut_id == TutorialID.HOW_TO_USE_POTIONS:
             return TutorialPlugin(tut_id, 0, [
                 HowToPickUpItemStage(delay=90, item_tag=ItemTags.CONSUMABLE, message="Use mouse to pick up potions."),
-                HowToOpenInventoryPanelStage(delay=20),
-                HowToPutItemInGridStage(delay=20, item_tag=ItemTags.CONSUMABLE, grid_type=ItemGridType.INVENTORY),
                 HowToConsumeItemStage(delay=20)
             ])
         elif tut_id == TutorialID.HOW_TO_THROW_ITEMS:
-            return TutorialPlugin(tut_id, 3, [
-                HowToGetInThrowRangeOfEnemyStage(delay=20),
-                HowToThrowItemStage(delay=20),
-                MessageOnlyStage("Potions and certain weapons can be thrown.")
-            ])
+            # TODO - this one is kinda annoying
+            #return TutorialPlugin(tut_id, 3, [
+            #    HowToGetInThrowRangeOfEnemyStage(delay=20),
+            #    HowToThrowItemStage(delay=20),
+            #    MessageOnlyStage("Potions and certain weapons can be thrown.")
+            #])
+            return None
         elif tut_id == TutorialID.HOW_TO_OPEN_MAP:
             return TutorialPlugin(tut_id, 5, [
                 HowToOpenMapPanelStage(delay=120)
