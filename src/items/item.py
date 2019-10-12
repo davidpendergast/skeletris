@@ -253,7 +253,12 @@ class Item(StatProvider):
         return self.stats
 
     def all_actions(self):
+        """beware - you probably want all_action_providers()"""
         return self.item_actions
+
+    def all_action_providers(self):
+        from src.game.gameengine import ItemActionProvider
+        return [ItemActionProvider(self, act) for act in self.all_actions()]
 
     def get_small_img(self, scale, layer_id, input_img=None):
         pass

@@ -73,6 +73,8 @@ KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN], cleaner=clean
 KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN], cleaner=clean_keys)
 KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys)
 
+AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True, cleaner=lambda x: bool(x))
+
 EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
                          cleaner=lambda val: Utils.bound(int(val), 0, 100),
                          on_set=lambda old_val, new_val: sound_effects.set_volume(new_val / 100))

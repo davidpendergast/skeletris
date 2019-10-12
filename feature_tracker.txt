@@ -57,11 +57,8 @@
     - it's been like 6 months, and you haven't figured out how to implement this
         as a fight. Let's have the boss say some lines and show a game over screen
         - or dunk you into a ~~~different boss zone~~~
- - tutorial system
-    - "how to use weapon"  (could also fix this with a UI redesign)
  - confusion and grasp effects should play a sound when they 'activate'
- - when you equip a weapon it should become active
-    - only if you have nothing activated
+    - or display some text (like "miss" does)
  - make enemies move at the same time as you...?
     - maybe there's a reason why all other roguelikes do this...
     

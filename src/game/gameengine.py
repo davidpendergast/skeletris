@@ -2,6 +2,7 @@ from enum import Enum
 from src.utils.util import Utils
 
 import src.game.globalstate as gs
+import src.game.settings as settings
 import src.game.spriteref as spriteref
 from src.game.stats import StatTypes
 import src.utils.colors as colors
@@ -1702,6 +1703,28 @@ class AddItemToGridAction(Action):
 
         if not res:
             raise ValueError("failed to place item {} in grid {}".format(it, grid))
+
+    def finalize(self, world):
+        if gs.get_instance().settings().get(settings.AUTO_ACTIVATE_EQUIPMENT):
+            self._handle_auto_activate(world)
+
+    def _handle_auto_activate(self, world):
+        if not self.get_actor().is_player():
+            return
+
+        # if you added the item to the equipment grid
+        equip_grid = self.get_actor().get_actor_state().inventory().get_equip_grid()
+        if equip_grid != self.get_grid():
+            return
+
+        # and the item has some mappable actions
+        item_actions = [x for x in self.get_item().all_action_providers() if x.is_mappable()]
+        if len(item_actions) == 0:
+            return
+
+        # and you don't already have an active action
+        if gs.get_instance().get_targeting_action_provider() is None:
+            gs.get_instance().set_targeting_action_provider(item_actions[0])  # then activate it
 
 
 class RemoveItemFromGridAction(Action):
