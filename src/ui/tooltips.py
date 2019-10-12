@@ -9,6 +9,7 @@ import src.game.gameengine as gameengine
 import src.utils.colors as colors
 import src.game.globalstate as gs
 import src.game.statuseffects as statuseffects
+from src.utils.util import Utils
 
 
 class TooltipFactory:
@@ -155,6 +156,16 @@ class TooltipFactory:
                         text_builder.add_line("")
                         added_newline = True
                     text_builder.add_line(str(item_stat), color=item_stat.color())
+
+        for i in range(0, 6):
+            if gs.get_instance().get_mapped_action(i) == action_prov:
+                keys = gs.get_instance().settings().action_key(i)
+                if len(keys) == 0:
+                    key_str = "None"
+                else:
+                    key_str = Utils.stringify_key(keys[0])
+                text_builder.add_line("")
+                text_builder.add_line("([{}] to Activate)".format(key_str), color=colors.LIGHT_GRAY)
 
         return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
                                target=action_prov, xy=xy, layer=layer)

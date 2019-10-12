@@ -25,6 +25,7 @@
  - machine has generic trade text
  - tutorial text can become faded. looks like a render order issue
  - make sure that statuses 'apply' the correct number of times
+ - while holding an item, clicking buttons on the hotbar produce inconsistent results
 
 
 [balance issues]
@@ -61,6 +62,7 @@
     - or display some text (like "miss" does)
  - make enemies move at the same time as you...?
     - maybe there's a reason why all other roguelikes do this...
+ - make mapped action buttons show the damage of the action instead of the keybinding
     
  
 [architecture]
