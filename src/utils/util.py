@@ -32,6 +32,21 @@ class Utils:
         return tuple(a*v_i for v_i in v)
 
     @staticmethod
+    def average(v_list):
+        if len(v_list) == 0:
+            raise ValueError("cannot take average of 0 vectors.")
+        n = len(v_list[0])
+        if n == 0:
+            return tuple()
+
+        sum_v = [0 for _ in range(0, n)]
+        for v in v_list:
+            for i in range(0, n):
+                sum_v[i] = sum_v[i] + v[i]
+
+        return Utils.mult(sum_v, 1 / len(v_list))
+
+    @staticmethod
     def rotate(v, rad):
         cos = math.cos(rad)
         sin = math.sin(rad)

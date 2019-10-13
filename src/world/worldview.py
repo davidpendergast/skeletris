@@ -127,6 +127,26 @@ class WorldView:
 
         self._onscreen_geo_bundles = new_onscreen_geo
 
+    def _calc_new_camera_center(self):
+        p = self.world.get_player()
+        if p is None:
+            return None
+
+        unmodified_xy = p.center()
+        new_xys = []
+
+        p_pos = self.world.to_grid_coords(*p.center())
+        for mod in self.world.get_camera_modifiers(p_pos):
+            new_xy = mod.modify_camera_center(self.world, unmodified_xy)
+            if new_xy is not None:
+                new_xys.append(new_xy)
+
+        if len(new_xys) == 0:
+            return unmodified_xy
+        else:
+            avg_xy = Utils.average(new_xys)
+            return Utils.round(avg_xy)
+
     def cleanup_active_bundles(self):
         render_eng = RenderEngine.get_instance()
         for e in self._onscreen_entities:
@@ -153,7 +173,6 @@ class WorldView:
             if self._fade_overlay_bundle is None:
                 self._fade_overlay_bundle = img.ImageBundle.new_bundle(spriteref.UI_0_LAYER,
                                                                        scale=1, depth=-float('inf'))
-
             color, alpha = fade_state
             sprite = spriteref.get_floor_lighting(1-alpha)
             scr_size = WindowState.get_instance().get_screen_size()
@@ -191,16 +210,17 @@ class WorldView:
             for bun in e.all_bundles():
                 render_eng.update(bun)
 
-        p = self.world.get_player()
-        if p is not None:
-            dist = Utils.dist(cam_center, p.center())
+        new_cam_center = self._calc_new_camera_center()
+
+        if new_cam_center is not None:
+            dist = Utils.dist(cam_center, new_cam_center)
             min_speed = 10
             max_speed = 20
-            if dist > 200 or dist <= min_speed:
-                gs.get_instance().set_camera_center_in_world(*p.center())
+            if dist > 400 or dist <= min_speed:
+                gs.get_instance().set_camera_center_in_world(*new_cam_center)
             else:
                 speed = min_speed + (max_speed - min_speed) * math.sqrt(dist / 200)
-                move_xy = Utils.set_length(Utils.sub(p.center(), cam_center), speed)
+                move_xy = Utils.set_length(Utils.sub(new_cam_center, cam_center), speed)
                 new_pos = Utils.add(cam_center, move_xy)
                 gs.get_instance().set_camera_center_in_world(*Utils.round(new_pos))
 

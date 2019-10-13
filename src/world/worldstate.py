@@ -44,6 +44,8 @@ class World:
         # entities within this distance from player receive updates
         self._entity_update_range = 600
 
+        self._camera_modifiers = []
+
         self._wall_type = spriteref.WALL_NORMAL_ID
         self._floor_type = spriteref.FLOOR_NORMAL_ID
 
@@ -191,6 +193,14 @@ class World:
                 res.add((xy[0], xy[1], e.get_light_level()))
 
         return res
+
+    def add_camera_modifier(self, modifier):
+        self._camera_modifiers.append(modifier)
+
+    def get_camera_modifiers(self, grid_xy):
+        for cm in self._camera_modifiers:
+            if grid_xy in cm:
+                yield cm
 
     def visible_entities(self, camera_rect, onscreen=True):
         for e in self.all_entities(onscreen=onscreen):

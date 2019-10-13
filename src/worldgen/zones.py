@@ -1014,6 +1014,10 @@ class CaveHorrorZone(Zone):
         tree_entity = self.gen_tree_entity(bounds_rect, inital_husk_spawns, min_n_husks=2)
         w.add(tree_entity, gridcell=tree_pos)
 
+        import src.world.cameramodifiers as cameramodifiers
+        camera_shifter = cameramodifiers.SnapToEntityModifier(bounds_rect, tree_entity)
+        w.add_camera_modifier(camera_shifter)
+
         dia_list = [
             dialog.NpcDialog("Come closer. Let me see you, child."),
             dialog.PlayerDialog("Who.. or what.. are you?"),
