@@ -1004,8 +1004,14 @@ class CaveHorrorZone(Zone):
         self._bucket_color = (225, 200, 0)
         self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
 
+        self._special_door = (0, 175, 255)  # the door that triggers the song and such
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        special_door_pos = unknowns[self._special_door][0]
+        bp.set(special_door_pos[0], special_door_pos[1], World.DOOR)
+
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
@@ -1038,13 +1044,33 @@ class CaveHorrorZone(Zone):
         camera_shifter = cameramodifiers.SnapToEntityModifier(camera_shift_rect, tree_entity)
         w.add_camera_modifier(camera_shifter)
 
+        tree_uid = tree_entity.get_uid()
+
+        special_door = w.get_door_in_cell(*special_door_pos)
+        if special_door is None:
+            raise ValueError("there's no door in the cell: {}".format(special_door_pos))
+
+        def entry_door_action(world):
+            # play the song when the player opens the door, for maximum drama
+            music.play_song(music.Songs.TREE_THEME)
+
+            tree_ent_in_world = w.get_entity(tree_uid, onscreen=False)
+            if tree_ent_in_world is not None:
+                # want it to wait a few turns before it starts summoning
+                import src.game.statuseffects as statuseffects
+                no_summon_effect = statuseffects.new_summoning_sickness_effect(4)
+                tree_ent_in_world.get_actor_state().add_status_effect(no_summon_effect)
+
+        special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
+
         return w
 
     def is_boss_zone(self):
         return True
 
     def get_music_id(self):
-        return music.Songs.TREE_THEME
+        # the real song is triggered by the door
+        return music.Songs.SILENCE
 
     def get_color(self):
         return colors.LIGHT_RED

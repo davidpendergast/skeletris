@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+import traceback
 
 import src.renderengine.img as img
 from src.ui.ui import TextImage
@@ -1373,6 +1374,9 @@ class DoorEntity(Entity):
         self.sprites = None
         self.open_prog = 0
 
+        # list of pairs (str: name, lambda world: -> None)
+        self._special_on_open_hooks = []
+
     def visible_in_darkness(self):
         return True
 
@@ -1392,6 +1396,25 @@ class DoorEntity(Entity):
         depth = float('inf')  # should render behind all other entities
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_color=world.get_geo_color())
+
+    def add_special_open_hook(self, name, hook):
+        """
+        This can be used to make doors trigger things like dialog, a song, or similar.
+        Should probably only be called while building the zone, but idk.
+        :param name: str a name for the hook, just to help with logging.
+        :param hook: lambda: World -> None
+        """
+        self._special_on_open_hooks.append((name, hook))
+
+    def do_special_open_hooks(self, world):
+        for name_and_act in self._special_on_open_hooks:
+            name = name_and_act[0]
+            act = name_and_act[1]
+            try:
+                act(world)
+            except:
+                print("ERROR: a special on-open hook \"{}\" threw an error".format(name))
+                traceback.print_exc()
 
     def set_open_progress_for_render(self, prog):
         self.open_prog = prog

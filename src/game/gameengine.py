@@ -736,6 +736,7 @@ class OpenDoorAction(MoveToAction):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
         self.door_entity.remove_self_from_world(world)
+        self.door_entity.do_special_open_hooks(world)
         self.actor_entity.set_center(end_pos[0], end_pos[1])
 
 

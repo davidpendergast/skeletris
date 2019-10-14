@@ -89,10 +89,10 @@ def _play_song_forcefully(song_filename):
 
     global CURRENT_SONG
     if song_filename == Songs.SILENCE:
-        if CURRENT_SONG is not Songs.SILENCE:
+        if CURRENT_SONG != Songs.SILENCE:
             print("INFO: stopping song {}".format(CURRENT_SONG))
             pygame.mixer.music.stop()
-            CURRENT_SONG = None
+            CURRENT_SONG = Songs.SILENCE
     else:
         print("INFO: playing song {}".format(song_filename))
         real_filename = Utils.resource_path(os.path.join("assets", "songs", song_filename))
