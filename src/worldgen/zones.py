@@ -1000,12 +1000,30 @@ class CaveHorrorZone(Zone):
         self._tree_color = (255, 170, 170)
         self._husk_color = (255, 194, 194)
         self._bounds_color = (255, 190, 0)
-        self._sign_color = (255, 220, 175)
+        self._rake_color = (255, 220, 175)
+        self._bucket_color = (225, 200, 0)
+        self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
+
+        if self._rake_color in unknowns:
+            for xy in unknowns[self._rake_color]:
+                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.RAKE)
+                w.add(dec, gridcell=(xy[0], xy[1] - 1))
+
+        if self._bucket_color in unknowns:
+            for xy in unknowns[self._bucket_color]:
+                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.BUCKET)
+                w.add(dec, gridcell=(xy[0], xy[1] - 1))
+
+        for mushroom_color in self._mushroom_colors:
+            if mushroom_color in unknowns:
+                for xy in unknowns[mushroom_color]:
+                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.MUSHROOM)
+                    w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
 
