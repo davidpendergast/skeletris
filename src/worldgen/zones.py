@@ -1000,13 +1000,14 @@ class CaveHorrorZone(Zone):
         self._tree_color = (255, 170, 170)
         self._husk_color = (255, 194, 194)
         self._bounds_color = (255, 190, 0)
+        self._sign_color = (255, 220, 175)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
 
-        bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=False)
+        bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
 
         inital_husk_spawns = unknowns[self._husk_color]
 
@@ -1015,18 +1016,9 @@ class CaveHorrorZone(Zone):
         w.add(tree_entity, gridcell=tree_pos)
 
         import src.world.cameramodifiers as cameramodifiers
-        camera_shifter = cameramodifiers.SnapToEntityModifier(bounds_rect, tree_entity)
+        camera_shift_rect = Utils.rect_expand(bounds_rect, left_expand=1)  # gotta encompass the door's square too
+        camera_shifter = cameramodifiers.SnapToEntityModifier(camera_shift_rect, tree_entity)
         w.add_camera_modifier(camera_shifter)
-
-        dia_list = [
-            dialog.NpcDialog("Come closer. Let me see you, child."),
-            dialog.PlayerDialog("Who.. or what.. are you?"),
-            dialog.NpcDialog("I am the ultimate end. The Afterdeath. Soon you will serve me, as all things do."),
-            dialog.PlayerDialog("We'll see about that!"),
-            dialog.NpcDialog("Behold your fate, challenger!")
-        ]
-
-        gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(dia_list))
 
         return w
 
@@ -1056,39 +1048,42 @@ class CaveHorrorZone(Zone):
                 return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_INFECTED_HUSK, self._level)
 
             def get_next_action(self, actor, world):
+                if actor.is_visible_in_world(world):
 
-                summon_color = colors.RED
+                    summon_color = colors.RED
 
-                if len(self._initial_spawns) > 0:
-                    inital_spawns_copy = [x for x in self._initial_spawns]
-                    random.shuffle(inital_spawns_copy)
-                    new_husk = self.gen_spawned_minion()
-                    for pos in inital_spawns_copy:
-                        spawn_action = gameengine.SpawnActorAction(actor, pos, new_husk, art_color=summon_color)
+                    if len(self._initial_spawns) > 0:
+                        inital_spawns_copy = [x for x in self._initial_spawns]
+                        random.shuffle(inital_spawns_copy)
+                        new_husk = self.gen_spawned_minion()
+                        for pos in inital_spawns_copy:
+                            # these summons are meant to be quick, so they don't give it summoning sickness
+                            spawn_action = gameengine.SpawnActorAction(actor, pos, new_husk, apply_sickness=False,
+                                                                       art_color=summon_color)
+                            if spawn_action.is_possible(world):
+                                self._initial_spawns.remove(pos)  # can only use each spawn point once.
+                                return spawn_action
+
+                    arena_length = world.cellsize() * max(self._arena_rect[2], self._arena_rect[3])
+                    enemies_nearby = world.entities_in_circle(actor.center(),
+                                                              round(arena_length * 1.4142),
+                                                              onscreen=False,
+                                                              cond=lambda ent: ent.is_enemy() and actor is not ent)
+
+                    if len(enemies_nearby) < self._husk_limit:
+                        rand_pos_x = random.randint(self._arena_rect[0], self._arena_rect[0] + self._arena_rect[2])
+                        rand_pos_y = random.randint(self._arena_rect[1], self._arena_rect[1] + self._arena_rect[3])
+                        spawn_action = gameengine.SpawnActorAction(actor, (rand_pos_x, rand_pos_y),
+                                                                   self.gen_spawned_minion(),
+                                                                   art_color=summon_color)
                         if spawn_action.is_possible(world):
-                            self._initial_spawns.remove(pos)  # can only use each spawn point once.
                             return spawn_action
 
-                arena_length = world.cellsize() * max(self._arena_rect[2], self._arena_rect[3])
-                enemies_nearby = world.entities_in_circle(actor.center(),
-                                                          round(arena_length * 1.4142),
-                                                          onscreen=False,
-                                                          cond=lambda ent: ent.is_enemy() and actor is not ent)
-
-                if len(enemies_nearby) < self._husk_limit:
-                    rand_pos_x = random.randint(self._arena_rect[0], self._arena_rect[0] + self._arena_rect[2])
-                    rand_pos_y = random.randint(self._arena_rect[1], self._arena_rect[1] + self._arena_rect[3])
-                    spawn_action = gameengine.SpawnActorAction(actor, (rand_pos_x, rand_pos_y),
-                                                               self.gen_spawned_minion(),
-                                                               art_color=summon_color)
-                    if spawn_action.is_possible(world):
-                        return spawn_action
-
-                a_pos = world.to_grid_coords(*actor.center())
-                for n in Utils.neighbors(*a_pos):
-                    attack_action = gameengine.MeleeAttackAction(actor, None, n)
-                    if attack_action.is_possible(world):
-                        return attack_action
+                    a_pos = world.to_grid_coords(*actor.center())
+                    for n in Utils.neighbors(*a_pos):
+                        attack_action = gameengine.MeleeAttackAction(actor, None, n)
+                        if attack_action.is_possible(world):
+                            return attack_action
 
                 pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
                 return gameengine.SkipTurnAction(actor, pos)

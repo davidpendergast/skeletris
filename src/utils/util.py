@@ -89,7 +89,7 @@ class Utils:
         return [length*math.cos(angle), length*math.sin(angle)]
 
     @staticmethod
-    def rect_expand(rect, left_expand, right_expand, up_expand, down_expand):
+    def rect_expand(rect, left_expand=0, right_expand=0, up_expand=0, down_expand=0):
         return [rect[0] - left_expand,
                 rect[1] - up_expand,
                 rect[2] + (left_expand + right_expand),

@@ -155,6 +155,12 @@ class StatTypes:
                             local_desc="Chills on Hit",
                             enemy_desc="Chilling")
 
+    SUMMONING_SICKNESS = StatType("SUMMONING_SICKNESS",
+                                  color=colors.WHITE,
+                                  desc="Cannot Summon")
+    SUMMONING_SICKNESS_ON_SUMMON = StatType("SUMMONING_SICKNESS_ON_SUMMON",
+                                            color=colors.WHITE)
+
     @staticmethod
     def all_types():
         for stat_id in _ALL_STAT_TYPES:

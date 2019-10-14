@@ -1776,7 +1776,7 @@ class RemoveItemFromGridAction(Action):
 
 class SpawnActorAction(Action):
 
-    def __init__(self, actor, position, new_actor, art_color=colors.RED):
+    def __init__(self, actor, position, new_actor, art_color=colors.RED, apply_sickness=True):
         Action.__init__(self, ActionType.SPAWN_ACTOR, 40, actor, position=position)
         self.new_actor = new_actor
         self.art_color = art_color
@@ -1784,6 +1784,8 @@ class SpawnActorAction(Action):
         self._did_animation_1 = False
         self._did_animation_2 = False
         self._did_add = False
+
+        self._apply_summoning_sickness = apply_sickness
 
     def is_possible(self, world):
         pos = self.get_position()
@@ -1799,6 +1801,9 @@ class SpawnActorAction(Action):
 
         if world.get_entity(self.new_actor.get_uid(), onscreen=False) is not None:
             print("WARN: actor is already in world: {}".format(self.new_actor))
+            return False
+
+        if self.get_actor().get_actor_state().stat_value(StatTypes.SUMMONING_SICKNESS) > 0:
             return False
 
         return True
@@ -1839,6 +1844,12 @@ class SpawnActorAction(Action):
         if not self._did_add:
             world.add(self.new_actor, self.get_position())
             self._did_add = True
+
+        if self._apply_summoning_sickness:
+            duration = self.get_actor().get_actor_state().stat_value(StatTypes.SUMMONING_SICKNESS_ON_SUMMON)
+            if duration > 0:
+                sickness = statuseffects.new_summoning_sickness_effect(duration)
+                self.get_actor().get_actor_state().add_status_effect(sickness)
 
 
 class ActionProvider:

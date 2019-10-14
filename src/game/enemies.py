@@ -88,6 +88,7 @@ class EnemyTemplate:
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1,
+            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4
         })
 
     def get_controller(self):
@@ -992,7 +993,8 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 6,
-            StatTypes.LIGHT_LEVEL: 2  # so it stays visible
+            StatTypes.LIGHT_LEVEL: 2,  # so it stays visible
+            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4
         })
 
     def get_controller(self):

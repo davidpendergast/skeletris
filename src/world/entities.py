@@ -630,7 +630,7 @@ class ActorEntity(Entity):
         return False
 
     def handle_death(self, world):
-        pos = self.get_render_center(ignore_perturbs=True)
+        pos = self.center()
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
 

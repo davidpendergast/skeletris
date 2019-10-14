@@ -187,3 +187,11 @@ def new_chilled_effect(duration, val, player_text=None):
                         spriteref.UI.status_snowflake_icon, stats, player_text=player_text,
                         unique_key="chilled", is_debuff=True,
                         circle_art_type=spriteref.EffectCircleTypes.STAR_5_ENCLOSED)
+
+
+def new_summoning_sickness_effect(duration, player_text=None):
+    stats = [AppliedStat(StatTypes.SUMMONING_SICKNESS, 1)]
+    return StatusEffect("Summoning Sickness", duration, StatTypes.SUMMONING_SICKNESS.get_color(),
+                        spriteref.UI.status_skull_icon, stats,
+                        player_text=player_text, unique_key="summoning_sickness",
+                        is_debuff=True)

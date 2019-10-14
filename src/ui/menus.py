@@ -346,7 +346,9 @@ class OptionsMenu(Menu):
                     selected_rect = self._option_rects[self._selection]
                     if selected_rect is not None:
                         # give click priority to the thing that's selected
-                        bigger_rect = Utils.rect_expand(selected_rect, 15, 15, 15, 15)
+                        bigger_rect = Utils.rect_expand(selected_rect,
+                                                        left_expand=15, right_expand=15,
+                                                        up_expand=15, down_expand=15)
                         if Utils.rect_contains(bigger_rect, pos):
                             clicked_option = self._selection
 
