@@ -305,11 +305,11 @@ class SmallMuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 12,
-            StatTypes.SPEED: 3,
+            StatTypes.VIT: 8,
+            StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 3,
-            StatTypes.DEF: 2,
+            StatTypes.UNARMED_ATT: 2,
+            StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 2
         })

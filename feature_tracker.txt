@@ -29,12 +29,15 @@
 
 
 [balance issues]
- - need more sources of healing
-    - added HP on kill stat, maybe enough?
- - vit is super underpowered compared to att/def (potentially fine)
  - need some ways to defensively use/alter the world's geometry
     - "need" ?
+ - game gets really ez when you have around 15~ attack
  
+ 
+[current features]
+ - confusion and grasp effects should play a sound when they 'activate'
+    - or display some text (like "miss" does)
+ - make mapped action buttons show the damage of the action instead of the keybinding
  
 [what's stressing me out?]
  - won't ever finish
@@ -51,18 +54,6 @@
     - also they're actually better than they seem
         - frog boss tests the player's ability to sidestep attacks
         - robot boss tests player's ability to use CC
-
-[current features]
- - end-of-game boss
-    - dialog only? i'm fine with this, cliffhanger for the "demo"
-    - it's been like 6 months, and you haven't figured out how to implement this
-        as a fight. Let's have the boss say some lines and show a game over screen
-        - or dunk you into a ~~~different boss zone~~~
- - confusion and grasp effects should play a sound when they 'activate'
-    - or display some text (like "miss" does)
- - make enemies move at the same time as you...?
-    - maybe there's a reason why all other roguelikes do this...
- - make mapped action buttons show the damage of the action instead of the keybinding
     
  
 [architecture]
@@ -82,11 +73,13 @@
  - enemies picking up items (intelligence >= 4)
     - we'd want an "arms up" sprite for eligible enemies I think
  - holding the up/down key in menus should continue scrolling
+    - careful, the hold-down behavior on keys differs between OSes
  - projectiles should get a color based on the item/status or something
  - tiles that alter movement
     - jump / teleport tiles
         - an interesting way to get away from enemies, assuming they don't follow you
         - could use "ReturnExitEntity" sprites for this
+            - although tests have shown people are afraid of it..
     - ice tiles
         - these would be interesting to try to generate
         - enemy pathing on these would be a bit tricky / interesting
@@ -103,9 +96,14 @@
  - some indicator that enemies are still acting
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
- - visual effect when confusion triggers
  - varying scenery
     - bridges over deep pits, water pits
+ - make enemies move at the same time as you...?
+    - maybe there's a reason why all other roguelikes do this...
+    - this will actually require a lot of work.
+    
+
+[rejected future features]
  - consider allowing two weapons to be equipped at maximum
     - there currently is almost no reason to have more than 1, let alone two
     - this would allow for a simpler UI
@@ -113,6 +111,8 @@
     - would allow weapons to have global stats (not currently possible because 
       it'd become more efficient to stack small weapons instead of cubes)
     - would need to elegantly "fail to equip" somehow
+
+
  
  
 [~dream features~]

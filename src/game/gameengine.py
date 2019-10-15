@@ -2071,7 +2071,20 @@ def get_right_click_action_for_item(clicked_item):
         elif inv_state.is_in_inventory(clicked_item):
             return AddItemToGridAction(p, clicked_item, inv_state.equip_grid, grid_position=None)
         else:
-            # try to equip it, then try to inventory it
+
+            # if it's a weapon with a type we already have equipped, add it to inventory
+            if clicked_item.get_type().has_tag(ItemTags.WEAPON):
+                already_equipped_same_type = False
+                for eq_item in inv_state.equip_grid.all_items():
+                    if eq_item.get_type() == clicked_item.get_type():
+                        already_equipped_same_type = True
+                        break
+                if already_equipped_same_type:
+                    add_to_inv = AddItemToGridAction(p, clicked_item, inv_state.inv_grid, grid_position=None)
+                    if add_to_inv.is_possible(w):
+                        return add_to_inv
+
+            # otherwise try to equip it, then try to inventory it
             to_equip_action = AddItemToGridAction(p, clicked_item, inv_state.equip_grid, grid_position=None)
             if to_equip_action.is_possible(w):
                 return to_equip_action

@@ -751,8 +751,9 @@ class MappedActionImage(InteractableImage):
         self._border_img = None
         self._icon_img = None
 
-        self._keybind_border_img = None
-        self._keybind_key_img = None
+        # the text that appears at the bottom right of the action icon
+        #self._info_text_borders = []
+        self._info_text_img = None
 
     def contains_point(self, x, y):
         if self.action_prov is None:
@@ -791,22 +792,16 @@ class MappedActionImage(InteractableImage):
                     return i
             return None
 
-    def get_keybind_character(self):
+    def get_info_text_and_color(self):
         my_idx = self.get_hotbar_idx()
         if my_idx is None:
-            return None
-        else:
-            n_settings = gs.get_instance().settings().num_mapped_actions()
-            if my_idx <= n_settings:
-                keys = gs.get_instance().settings().action_key(my_idx)
-                if len(keys) == 0:
-                    return None
-                else:
-                    keyfull = Utils.stringify_key(keys[0])
-                    if len(keyfull) > 1:
-                        return keyfull[0]  # not really ideal but there's just no room
-                    else:
-                        return keyfull
+            return (None, None)
+        elif my_idx == 0:
+            return ("7", colors.LIGHT_RED)
+        elif my_idx == 1:
+            return ("13", colors.LIGHT_RED)
+        elif my_idx >= 2:
+            return ("99+", colors.LIGHT_RED)
 
     def update_images(self):
         if self.action_prov is None:
@@ -827,44 +822,73 @@ class MappedActionImage(InteractableImage):
             self._border_img = self._border_img.update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
                                                        new_x=self.rect[0], new_y=self.rect[1])
 
-        keybind_char = self.get_keybind_character()
-        if keybind_char is None or self.action_prov is None:
-            if self._keybind_border_img is not None:
-                RenderEngine.get_instance().remove(self._keybind_border_img)
-                self._keybind_border_img = None
-            if self._keybind_key_img is not None:
-                for bun in self._keybind_key_img.all_bundles():
+        info_text, info_color = self.get_info_text_and_color()
+        if info_text is None or len(info_text) == 0 or self.action_prov is None:
+            #if len(self._info_text_borders) > 0:
+            #    for b_img in self._info_text_borders:
+            #        RenderEngine.get_instance().remove(b_img)
+            #    self._info_text_borders = []
+
+            if self._info_text_img is not None:
+                for bun in self._info_text_img.all_bundles():
                     RenderEngine.get_instance().remove(bun)
-                self._keybind_key_img = None
+                self._info_text_img = None
         else:
             sc = 1.5
-            if self._keybind_key_img is None:
-                self._keybind_border_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER)
-            if self._keybind_key_img is None:
-                self._keybind_key_img = TextImage(0, 0, keybind_char, spriteref.UI_0_LAYER)
+            #if len(self._info_text_borders) > 0 and len(self._info_text_borders) != len(info_text) + 2:
+            #    for b_img in self._info_text_borders:
+            #        RenderEngine.get_instance().remove(b_img)
+            #    self._info_text_borders = []
 
-            border_sprite = spriteref.UI.single_char_outline
-            x_pos = self.rect[0] + self.rect[2] - (border_sprite.width() * sc) // 2
-            y_pos = self.rect[1] + self.rect[3] - (border_sprite.height() * sc * 3) // 4
+            #if len(self._info_text_borders) == 0:
+            #    for i in range(0, len(info_text) + 2):
+            #        self._info_text_borders.append(ImageBundle.new_bundle(spriteref.UI_0_LAYER))
 
-            self._keybind_border_img = self._keybind_border_img.update(new_model=border_sprite, new_scale=sc,
-                                                                       new_x=x_pos, new_y=y_pos,
-                                                                       new_depth=FG_DEPTH - 1)
+            if self._info_text_img is None:
+                self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER)
 
-            self._keybind_key_img = self._keybind_key_img.update(new_text=keybind_char, new_scale=sc,
-                                                                 new_x=x_pos + 2 * sc,
-                                                                 new_y=y_pos + 2 * sc,
-                                                                 new_depth=FG_DEPTH - 2)
+            #border_sprite = spriteref.UI.single_char_outline
+            #max_x_pos = self.rect[0] + self.rect[2] + (border_sprite.width() * sc) // 2
+            #y_pos = self.rect[1] + self.rect[3] - (border_sprite.height() * sc * 3) // 4
+
+            #y_pos = self.rect[1] + 3
+
+            #x_pos = self.rect[0] + 6
+            x_pos = self.rect[0] + self.rect[2] - TextImage.calc_width(info_text, sc) + TextImage.calc_width("a", sc) // 3
+            y_pos = self.rect[1] - TextImage.calc_line_height(sc) // 5
+
+            #x_pos = max_x_pos
+            #for i in range(0, len(info_text) + 2):
+            #    if i == 0:
+            #        border_sprite = spriteref.UI.single_char_outline_right
+            #    elif i == (len(info_text) + 2) - 1:
+            #        border_sprite = spriteref.UI.single_char_outline_left
+            #    else:
+            #        border_sprite = spriteref.UI.single_char_outline_center
+
+                # this should work as long as the sprite sizes ever don't change
+            #    x_pos = x_pos - int(border_sprite.width() * sc)
+            #    self._info_text_borders[i] = self._info_text_borders[i].update(new_model=border_sprite, new_scale=sc,
+            #                                                                   new_x=x_pos, new_y=y_pos,
+            #                                                                   new_depth=FG_DEPTH - 1)
+
+            self._info_text_img = self._info_text_img.update(new_text=info_text, new_scale=sc,
+                                                             new_color=info_color,
+                                                             new_x=x_pos,
+                                                             new_y=y_pos,
+                                                             new_depth=FG_DEPTH - 2,
+                                                             new_outline_thickness=2,
+                                                             new_outline_depth=FG_DEPTH - 1.25)
 
     def all_bundles(self):
         if self._border_img is not None:
             yield self._border_img
         if self._icon_img is not None:
             yield self._icon_img
-        if self._keybind_border_img is not None:
-            yield self._keybind_border_img
-        if self._keybind_key_img is not None:
-            for bun in self._keybind_key_img.all_bundles():
+        #for bun in self._info_text_borders:
+        #    yield bun
+        if self._info_text_img is not None:
+            for bun in self._info_text_img.all_bundles():
                 yield bun
 
 
@@ -1514,6 +1538,11 @@ class TextImage:
                 max_line_w = max(max_line_w, cur_line_w)
         return max_line_w
 
+    @staticmethod
+    def calc_line_height(scale, y_kerning=None):
+        y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
+        return (spriteref.Font.get_char("a").height() + y_kerning) * scale
+
     def get_text(self):
         return self.text
 
@@ -1642,6 +1671,66 @@ class TextImage:
                     lines.append(" ".join(cur_line))
 
         return "\n".join(lines)
+
+
+class OutlinedTextImage(TextImage):
+    """beware - these are 5 times more expensive to render than regular text."""
+
+    def __init__(self, x, y, text, layer, color=(1, 1, 1), outline_color=(0, 0, 0), outline_thickness=1,
+                 outline_depth=None, scale=1, depth=0, center_w=None, y_kerning=None, custom_colors=None):
+
+        self.outline_text_imgs = []  # L, R, T, B
+        self.outline_color = outline_color
+        self.outline_thickness = outline_thickness
+        self.outline_depth = outline_depth if outline_depth is not None else depth + 1
+
+        TextImage.__init__(self, x, y, text, layer, color=color, scale=scale, depth=depth, center_w=center_w,
+                           y_kerning=y_kerning, custom_colors=custom_colors)
+
+    def _get_offsets(self):
+        t = self.outline_thickness
+        return [(-t, 0), (t, 0), (0, -t), (0, t)]
+
+    def _build_images(self):
+        super()._build_images()
+        self.outline_text_imgs.clear()  # should already be empty but...
+
+        for offs in self._get_offsets():
+            outline_img = TextImage(self.x + offs[0], self.y + offs[1], self.text, self.layer,
+                                    color=self.outline_color,
+                                    scale=self.scale,
+                                    depth=self.outline_depth,
+                                    center_w=self.center_w,
+                                    y_kerning=self.y_kerning)
+
+            self.outline_text_imgs.append(outline_img)
+
+    def update(self, new_text=None, new_x=None, new_y=None, new_scale=None, new_depth=None, new_color=None,
+               new_outline_color=None, new_outline_thickness=None, new_outline_depth=None, new_custom_colors=None):
+
+        super().update(new_text=new_text, new_x=new_x, new_y=new_y, new_scale=new_scale, new_depth=new_depth,
+                       new_color=new_color, new_custom_colors=new_custom_colors)
+
+        self.outline_depth = self.outline_depth if new_outline_depth is None else new_outline_depth
+        self.outline_color = self.outline_color if new_outline_color is None else new_outline_color
+        self.outline_thickness = self.outline_thickness if new_outline_thickness is None else new_outline_thickness
+
+        offs = self._get_offsets()
+        for i in range(0, len(self.outline_text_imgs)):
+            self.outline_text_imgs[i] = self.outline_text_imgs[i].update(new_x=new_x + offs[i][0],
+                                                                         new_y=new_y + offs[i][1],
+                                                                         new_text=new_text,
+                                                                         new_color=self.outline_color,
+                                                                         new_scale=new_scale,
+                                                                         new_depth=self.outline_depth)
+        return self
+
+    def all_bundles(self):
+        for outline_img in self.outline_text_imgs:
+            for bun in outline_img.all_bundles():
+                yield bun
+        for bun in super().all_bundles():
+            yield bun
 
 
 class ItemImage:
