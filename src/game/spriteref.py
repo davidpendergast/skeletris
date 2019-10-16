@@ -276,6 +276,31 @@ class Font:
         else:
             return None
 
+    # note that these sprites come from image.png, not font.png...
+    _tiny_alphabet = {}
+
+    @staticmethod
+    def get_tiny_char(c):
+        if c in Font._tiny_alphabet:
+            return Font._tiny_alphabet[c]
+        elif "?" in Font._tiny_alphabet:
+            return Font._tiny_alphabet["?"]
+        else:
+            return None
+
+
+class FontLookup:
+
+    def __init__(self, char_lookup):
+        self._char_lookup = char_lookup
+
+    def get_char(self, c):
+        return self._char_lookup(c)
+
+
+default_font_lookup = FontLookup(lambda c: Font.get_char(c))
+tiny_font_lookup = FontLookup(lambda c: Font.get_tiny_char(c))
+
 
 def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
     img = ImageModel(x + shift[0], y + shift[1], w, h)
@@ -286,6 +311,16 @@ def make(x, y, w, h, shift=(0, 0), and_add_to_list=None):
 
     return img
 
+
+_chars = ["abcdefghijklmnopqrstuvwxyz+-\".,!?_~%=:><",
+          "0123456789[](){}←↑→↓"]
+
+for line_n in range(0, len(_chars)):
+    for i in range(0, len(_chars[line_n])):
+        c = _chars[line_n][i]
+        Font._tiny_alphabet[c] = make(0 + i*5, 115 + line_n*5, 5, 5)
+        if ord("a") <= ord(c) <= ord("z"):
+            Font._tiny_alphabet[chr(ord(c) + ord("A") - ord("a"))] = Font._tiny_alphabet[c]
 
 title_img = make(64, 64, 81, 16)
 

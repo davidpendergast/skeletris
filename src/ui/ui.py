@@ -752,7 +752,6 @@ class MappedActionImage(InteractableImage):
         self._icon_img = None
 
         # the text that appears at the bottom right of the action icon
-        #self._info_text_borders = []
         self._info_text_img = None
 
     def contains_point(self, x, y):
@@ -774,7 +773,6 @@ class MappedActionImage(InteractableImage):
         return False
 
     def get_cursor_at(self, x, y):
-        # return spriteref.UI.Cursors.hand_cursor
         return super().get_cursor_at(x, y)
 
     def get_tooltip_target_at(self, x, y):
@@ -793,15 +791,29 @@ class MappedActionImage(InteractableImage):
             return None
 
     def get_info_text_and_color(self):
-        my_idx = self.get_hotbar_idx()
-        if my_idx is None:
+        if self.action_prov is None:
             return (None, None)
-        elif my_idx == 0:
-            return ("7", colors.LIGHT_RED)
-        elif my_idx == 1:
-            return ("13", colors.LIGHT_RED)
-        elif my_idx >= 2:
-            return ("99+", colors.LIGHT_RED)
+
+        ps = gs.get_instance().player_state()
+        if self.action_prov.get_type() == gameengine.ActionType.ATTACK:
+            att_value = ps.stat_value_with_item(StatTypes.ATT, self.action_prov.get_item())
+            if att_value < 0:
+                text = "0"
+            elif att_value > 99:
+                text = "99+"
+            else:
+                text = str(att_value)
+
+            color = colors.RED
+            if self.action_prov.get_item() is not None:
+                for item_stat in self.action_prov.get_item().all_applied_stats():
+                    if not item_stat.is_hidden() and item_stat.is_local():
+                        color = item_stat.color()  # hope it's a good one~
+                        break
+
+            return (text, color)
+
+        return (None, None)
 
     def update_images(self):
         if self.action_prov is None:
@@ -824,38 +836,26 @@ class MappedActionImage(InteractableImage):
 
         info_text, info_color = self.get_info_text_and_color()
         if info_text is None or len(info_text) == 0 or self.action_prov is None:
-            #if len(self._info_text_borders) > 0:
-            #    for b_img in self._info_text_borders:
-            #        RenderEngine.get_instance().remove(b_img)
-            #    self._info_text_borders = []
-
             if self._info_text_img is not None:
                 for bun in self._info_text_img.all_bundles():
                     RenderEngine.get_instance().remove(bun)
                 self._info_text_img = None
         else:
-            sc = 1.5
-            #if len(self._info_text_borders) > 0 and len(self._info_text_borders) != len(info_text) + 2:
-            #    for b_img in self._info_text_borders:
-            #        RenderEngine.get_instance().remove(b_img)
-            #    self._info_text_borders = []
-
-            #if len(self._info_text_borders) == 0:
-            #    for i in range(0, len(info_text) + 2):
-            #        self._info_text_borders.append(ImageBundle.new_bundle(spriteref.UI_0_LAYER))
+            sc = 2
 
             if self._info_text_img is None:
-                self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER)
+                self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER,
+                                                        font_lookup=spriteref.tiny_font_lookup,
+                                                        x_kerning=1,
+                                                        outline_diagonals=True)
 
-            #border_sprite = spriteref.UI.single_char_outline
-            #max_x_pos = self.rect[0] + self.rect[2] + (border_sprite.width() * sc) // 2
-            #y_pos = self.rect[1] + self.rect[3] - (border_sprite.height() * sc * 3) // 4
+            char_size = (TextImage.calc_width("a", sc, font_lookup=spriteref.tiny_font_lookup),
+                         TextImage.calc_line_height(sc, font_lookup=spriteref.tiny_font_lookup))
 
-            #y_pos = self.rect[1] + 3
+            inset = 4 + sc
 
-            #x_pos = self.rect[0] + 6
-            x_pos = self.rect[0] + self.rect[2] - TextImage.calc_width(info_text, sc) + TextImage.calc_width("a", sc) // 3
-            y_pos = self.rect[1] - TextImage.calc_line_height(sc) // 5
+            x_pos = self.rect[0] + inset
+            y_pos = self.rect[1] + self.rect[3] - char_size[1] - inset
 
             #x_pos = max_x_pos
             #for i in range(0, len(info_text) + 2):
@@ -877,7 +877,7 @@ class MappedActionImage(InteractableImage):
                                                              new_x=x_pos,
                                                              new_y=y_pos,
                                                              new_depth=FG_DEPTH - 2,
-                                                             new_outline_thickness=2,
+                                                             new_outline_thickness=sc,
                                                              new_outline_depth=FG_DEPTH - 1.25)
 
     def all_bundles(self):
@@ -1492,10 +1492,19 @@ class TextImage:
     X_KERNING = 0
     Y_KERNING = 0
 
-    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=1, depth=0, center_w=None, y_kerning=None,
-                 custom_colors=None):
+    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=1, depth=0,
+                 x_kerning=None, y_kerning=None, custom_colors=None, font_lookup=None):
+
+        if font_lookup is None:
+            font_lookup = spriteref.default_font_lookup
+            # TODO - move text splitting out of here, this sucks...
+            self._do_split_text = True
+        else:
+            self._do_split_text = (font_lookup is spriteref.default_font_lookup)
+
+        self.font_lookup = font_lookup
+
         self.x = x
-        self.center_w = center_w
         self.y = y
         self.text = text
         self.layer = layer
@@ -1506,6 +1515,7 @@ class TextImage:
         self._letter_images = []
         self._letter_image_indexes = []
         self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
+        self.x_kerning = TextImage.X_KERNING if x_kerning is None else x_kerning
 
         self._build_images()
 
@@ -1526,10 +1536,16 @@ class TextImage:
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
     @staticmethod
-    def calc_width(text, scale):
+    def calc_width(text, scale, font_lookup=None, x_kerning=None):
+        if font_lookup is None:
+            font_lookup = spriteref.default_font_lookup
+
+        if x_kerning is None:
+            x_kerning = TextImage.X_KERNING
+
         max_line_w = 0
         cur_line_w = 0
-        char_w = (spriteref.Font.get_char("a").width() + TextImage.X_KERNING) * scale
+        char_w = (font_lookup.get_char("a").width() + x_kerning) * scale
         for c in text:
             if c == "\n":
                 cur_line_w = 0
@@ -1539,9 +1555,12 @@ class TextImage:
         return max_line_w
 
     @staticmethod
-    def calc_line_height(scale, y_kerning=None):
+    def calc_line_height(scale, y_kerning=None, font_lookup=None):
+        if font_lookup is None:
+            font_lookup = spriteref.default_font_lookup
+
         y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
-        return (spriteref.Font.get_char("a").height() + y_kerning) * scale
+        return (font_lookup.get_char("a").height() + y_kerning) * scale
 
     def get_text(self):
         return self.text
@@ -1556,33 +1575,29 @@ class TextImage:
         return self.actual_size[1]
 
     def line_height(self):
-        return (spriteref.Font.get_char("a").height() + self.y_kerning) * self.scale
+        return (self.font_lookup.get_char("a").height() + self.y_kerning) * self.scale
 
     def _build_images(self):
-        ypos = TextImage.Y_KERNING
+        ypos = self.y_kerning
+        xpos = self.x_kerning
 
-        if self.center_w is not None:
-            true_width = TextImage.calc_width(self.text, self.scale)
-            x_shift = self.x + self.center_w // 2 - true_width // 2
-        else:
-            x_shift = TextImage.X_KERNING
-
-        xpos = x_shift
-
-        a_sprite = spriteref.Font.get_char("a")
+        a_sprite = self.font_lookup.get_char("a")
         idx = 0
 
-        text_chunks = spriteref.split_text(self.text)
+        if self._do_split_text:
+            text_chunks = spriteref.split_text(self.text)
+        else:
+            text_chunks = [c for c in self.text]
 
         for chunk in text_chunks:
             if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
-                xpos += (TextImage.X_KERNING + a_sprite.width()) * self.scale
+                xpos += (self.x_kerning + a_sprite.width()) * self.scale
             elif chunk == "\n":
-                xpos = x_shift
+                xpos = self.x_kerning
                 ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
                 if len(chunk) == 1:
-                    sprite = spriteref.Font.get_char(chunk)
+                    sprite = self.font_lookup.get_char(chunk)
                 else:
                     sprite = spriteref.cached_text_imgs[chunk]
 
@@ -1596,9 +1611,17 @@ class TextImage:
 
                 self._letter_images.append(img)
                 self._letter_image_indexes.append(idx)
-                xpos += (TextImage.X_KERNING + sprite.width()) * self.scale
+                xpos += (self.x_kerning + sprite.width()) * self.scale
 
             idx += len(chunk)
+
+    def _unbuild_images(self):
+        render_eng = RenderEngine.get_instance()
+        for bun in self._letter_images:
+            if bun is not None:
+                render_eng.remove(bun)
+        self._letter_images.clear()
+        self._letter_image_indexes.clear()
 
     def update(self, new_text=None, new_x=None, new_y=None, new_scale=None,
                new_depth=None, new_color=None, new_custom_colors=None):
@@ -1611,13 +1634,7 @@ class TextImage:
         scale_changed = new_scale is not None and new_scale != self.scale
 
         if text_changed or scale_changed:
-            render_eng = RenderEngine.get_instance()
-            for bun in self._letter_images:
-                if bun is not None:
-                    render_eng.remove(bun)
-            self._letter_images.clear()
-            self._letter_image_indexes.clear()
-
+            self._unbuild_images()
             self.text = new_text if new_text is not None else self.text
             self.scale = new_scale if new_scale is not None else self.scale
             self._build_images()
@@ -1674,36 +1691,51 @@ class TextImage:
 
 
 class OutlinedTextImage(TextImage):
-    """beware - these are 5 times more expensive to render than regular text."""
+    """beware - these are 5 (or 9) times more expensive to render than regular text."""
 
     def __init__(self, x, y, text, layer, color=(1, 1, 1), outline_color=(0, 0, 0), outline_thickness=1,
-                 outline_depth=None, scale=1, depth=0, center_w=None, y_kerning=None, custom_colors=None):
+                 outline_depth=None, scale=1, depth=0, x_kerning=None, y_kerning=None,
+                 custom_colors=None, font_lookup=None, outline_diagonals=False):
 
-        self.outline_text_imgs = []  # L, R, T, B
+        self.outline_text_imgs = []
         self.outline_color = outline_color
         self.outline_thickness = outline_thickness
         self.outline_depth = outline_depth if outline_depth is not None else depth + 1
+        self.outline_diagonals = outline_diagonals
 
-        TextImage.__init__(self, x, y, text, layer, color=color, scale=scale, depth=depth, center_w=center_w,
-                           y_kerning=y_kerning, custom_colors=custom_colors)
+        TextImage.__init__(self, x, y, text, layer, color=color, scale=scale, depth=depth,
+                           x_kerning=x_kerning, y_kerning=y_kerning, custom_colors=custom_colors,
+                           font_lookup=font_lookup)
 
     def _get_offsets(self):
         t = self.outline_thickness
-        return [(-t, 0), (t, 0), (0, -t), (0, t)]
+        offsets = [(-t, 0), (t, 0), (0, -t), (0, t)]
+
+        if self.outline_diagonals:
+            offsets.extend([(t, t), (t, -t), (-t, t), (-t, -t)])
+
+        return offsets
 
     def _build_images(self):
         super()._build_images()
-        self.outline_text_imgs.clear()  # should already be empty but...
 
         for offs in self._get_offsets():
             outline_img = TextImage(self.x + offs[0], self.y + offs[1], self.text, self.layer,
                                     color=self.outline_color,
                                     scale=self.scale,
                                     depth=self.outline_depth,
-                                    center_w=self.center_w,
-                                    y_kerning=self.y_kerning)
+                                    x_kerning=self.x_kerning,
+                                    y_kerning=self.y_kerning,
+                                    font_lookup=self.font_lookup)
 
             self.outline_text_imgs.append(outline_img)
+
+    def _unbuild_images(self):
+        super()._unbuild_images()
+        for outline_img in self.outline_text_imgs:
+            outline_img._unbuild_images()
+
+        self.outline_text_imgs.clear()
 
     def update(self, new_text=None, new_x=None, new_y=None, new_scale=None, new_depth=None, new_color=None,
                new_outline_color=None, new_outline_thickness=None, new_outline_depth=None, new_custom_colors=None):
