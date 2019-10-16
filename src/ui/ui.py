@@ -796,7 +796,9 @@ class MappedActionImage(InteractableImage):
 
         ps = gs.get_instance().player_state()
         if self.action_prov.get_type() == gameengine.ActionType.ATTACK:
-            att_value = ps.stat_value_with_item(StatTypes.ATT, self.action_prov.get_item())
+            action_item = ps.get_item_in_possession_with_uid(self.action_prov.get_item_uid())
+
+            att_value = ps.stat_value_with_item(StatTypes.ATT, action_item)
             if att_value < 0:
                 text = "0"
             elif att_value > 99:
@@ -805,8 +807,8 @@ class MappedActionImage(InteractableImage):
                 text = str(att_value)
 
             color = colors.RED
-            if self.action_prov.get_item() is not None:
-                for item_stat in self.action_prov.get_item().all_applied_stats():
+            if action_item is not None:
+                for item_stat in action_item.all_applied_stats():
                     if not item_stat.is_hidden() and item_stat.is_local():
                         color = item_stat.color()  # hope it's a good one~
                         break

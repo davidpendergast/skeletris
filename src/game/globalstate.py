@@ -302,9 +302,13 @@ class GlobalState:
         if self.player_state().held_item is not None:
             return None
         elif self._action_to_target is not None:
-            item = self._action_to_target.get_item()
-            if item is None:
+            item_uid = self._action_to_target.get_item_uid()
+            if item_uid is None:
                 return self._action_to_target
+
+            item = self.player_state().get_item_in_possession_with_uid(item_uid)
+            if item is None:
+                return None
 
             is_equipped = self.player_state().inventory().is_equipped(item)
             in_inv = self.player_state().inventory().is_in_inventory(item)

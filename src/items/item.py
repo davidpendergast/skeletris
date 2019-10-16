@@ -201,6 +201,9 @@ class Item(StatProvider):
     def get_type(self):
         return self.item_type
 
+    def get_uid(self):
+        return self.uuid
+
     def get_level(self):
         return self.level
 

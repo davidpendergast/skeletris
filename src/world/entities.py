@@ -932,8 +932,8 @@ class Player(ActorEntity):
                 return self.executing_action.get_item()
 
         action_prov = gs.get_instance().get_targeting_action_provider()
-        if action_prov is not None and action_prov.get_item() is not None:
-           return action_prov.get_item()
+        if action_prov is not None and action_prov.get_item_uid() is not None:
+           return self.get_actor_state().get_item_in_possession_with_uid(action_prov.get_item_uid())
 
         return self.get_actor_state().held_item
 

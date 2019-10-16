@@ -16,8 +16,6 @@
         - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
- - it's possible for mapped-item-actions to display their items with the wrong rotation
-    - it's probably storing an old ref to the item with a different rotation
  - enemy tooltips don't update when stats change (HP is most important)
  - enemies double attack when you die (ranged enemies only?)
  - possible to get window into an un-resizeable state after disabling fullscreen

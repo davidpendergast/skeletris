@@ -173,6 +173,18 @@ class ActorState(StatProvider):
     def inventory(self):
         return self.inventory_
 
+    def get_item_in_possession_with_uid(self, item_uid):
+        if item_uid is None:
+            return None
+
+        if self.held_item is not None and self.held_item.get_uid() == item_uid:
+            return self.held_item
+
+        for it in self.inventory().all_items():
+            if it.get_uid() == item_uid:
+                return it
+        return None
+
     def name(self):
         return self.name_
 
@@ -1874,7 +1886,7 @@ class ActionProvider:
     def get_icon(self):
         return self.icon_sprite
 
-    def get_item(self):
+    def get_item_uid(self):
         return None
 
     def get_type(self):
@@ -1905,12 +1917,12 @@ class ItemActionProvider(ActionProvider):
 
     def __init__(self, item, action_provider):
         ActionProvider.__init__(self, None, None)
-        self.item = item
+        self.item_uid = None if item is None else item.get_uid()
         self.action_provider = action_provider
 
     def __eq__(self, other):
         if isinstance(other, ItemActionProvider):
-            return self.item == other.item and self.action_provider == other.action_provider
+            return self.item_uid == other.item_uid and self.action_provider == other.action_provider
         else:
             return False
 
@@ -1921,8 +1933,8 @@ class ItemActionProvider(ActionProvider):
     def get_type(self):
         return self.action_provider.get_type()
 
-    def get_item(self):
-        return self.item
+    def get_item_uid(self):
+        return self.item_uid
 
     def needs_equipped(self):
         return self.action_provider.needs_equipped()
@@ -1945,7 +1957,13 @@ class ItemActionProvider(ActionProvider):
     def get_action(self, actor, position=None, item=None):
         if item is not None:
             raise ValueError("Cannot pass an item to an ItemActionProvider: {}".format(item))
-        return self.action_provider.get_action(actor, position=position, item=self.item)
+
+        if self.item_uid is not None:
+            item = actor.get_actor_state().get_item_in_possession_with_uid(self.item_uid)
+            if item is None:
+                print("WARN: Could not find an item with uid={} in actor's possession: {}".format(self.item_uid, actor))
+
+        return self.action_provider.get_action(actor, position=position, item=item)
 
 
 class ConsumeItemActionProvider(ActionProvider):

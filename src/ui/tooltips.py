@@ -139,18 +139,20 @@ class TooltipFactory:
         text_builder = TextBuilder()
         text_builder.add_line(action_prov.get_name())
 
+        ps = gs.get_instance().player_state()
+        action_item = ps.get_item_in_possession_with_uid(action_prov.get_item_uid())
+
         if action_prov.get_type() == gameengine.ActionType.ATTACK:
-            ps = gs.get_instance().player_state()
-            att_value = ps.stat_value_with_item(StatTypes.ATT, action_prov.get_item())
+            att_value = ps.stat_value_with_item(StatTypes.ATT, action_item)
             text_builder.add_line("Attack: {}".format(att_value), color=StatTypes.ATT.get_color())
 
             dists = action_prov.get_target_dists()
             dists_str = ", ".join([str(d) for d in dists])
             text_builder.add_line("Range: {}".format(dists_str), color=colors.LIGHT_GRAY)
 
-        if action_prov.get_item() is not None:
+        if action_item is not None:
             added_newline = False
-            for item_stat in action_prov.get_item().all_applied_stats():
+            for item_stat in action_item.all_applied_stats():
                 if not item_stat.is_hidden() and item_stat.is_local():
                     if not added_newline:
                         text_builder.add_line("")
