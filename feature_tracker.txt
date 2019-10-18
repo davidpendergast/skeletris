@@ -35,7 +35,7 @@
 [current features]
  - confusion and grasp effects should play a sound when they 'activate'
     - or display some text (like "miss" does)
- - make mapped action buttons show the damage of the action instead of the keybinding
+ - finish up final area
  
 [what's stressing me out?]
  - won't ever finish

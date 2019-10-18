@@ -15,7 +15,7 @@ from src.utils.util import Utils
 class TooltipFactory:
 
     @staticmethod
-    def build_item_tooltip(target_item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_item_tooltip_text(target_item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
 
         plus_att = target_item.stat_value(StatTypes.ATT, local=True)
@@ -76,11 +76,10 @@ class TooltipFactory:
                 else:
                     text_builder.add_line("(Right-Click to Use)", color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=target_item, xy=xy, layer=layer)
+        return text_builder
 
     @staticmethod
-    def build_enemy_tooltip(target_enemy, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_enemy_tooltip_text(target_enemy, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
         text_builder = TextBuilder()
         e_state = target_enemy.get_actor_state()
 
@@ -111,31 +110,29 @@ class TooltipFactory:
         # if e_state.ready_to_act():
         #    text_builder.add_line("Ready to Act", color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=target_enemy, xy=xy, layer=layer)
+        return text_builder
 
     @staticmethod
-    def build_chest_tooltip(target_chest, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_chest_tooltip_text(target_chest):
         text_builder = TextBuilder()
         text_builder.add("Chest")
         if target_chest.is_open():
             text_builder.add_line(" (Empty)", color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=target_chest, xy=xy, layer=layer)
+        return text_builder
+
 
     @staticmethod
-    def build_npc_tooltip(target_npc, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_npc_tooltip_text(target_npc):
         text_builder = TextBuilder()
 
         text_builder.add_line(target_npc.get_npc_template().name)
         text_builder.add_line("Friendly", color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=target_npc, xy=xy, layer=layer)
+        return text_builder
 
     @staticmethod
-    def build_action_provider_tooltip(action_prov, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_action_provider_tooltip_text(action_prov):
         text_builder = TextBuilder()
         text_builder.add_line(action_prov.get_name())
 
@@ -169,15 +166,16 @@ class TooltipFactory:
                 text_builder.add_line("")
                 text_builder.add_line("([{}] to Activate)".format(key_str), color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=action_prov, xy=xy, layer=layer)
+        return text_builder
 
     @staticmethod
-    def build_status_effect_tooltip(effect, turns_remaining, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_status_effect_tooltip_text(effect):
         text_builder = TextBuilder()
         text_builder.add_line(effect.get_name())
 
         # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
+        turns_remaining = gs.get_instance().player_state().get_turns_remaining(effect)
+
         for applied_stat in effect.all_applied_stats():
             if not applied_stat.is_hidden():
                 text_builder.add_line(str(applied_stat), color=applied_stat.color())
@@ -185,30 +183,59 @@ class TooltipFactory:
         text_builder.add_line("")
         text_builder.add_line("({} turns remaining)".format(turns_remaining), color=colors.LIGHT_GRAY)
 
-        return TextOnlyTooltip(text_builder.text(), custom_colors=text_builder.custom_colors(),
-                               target=(effect, turns_remaining), xy=xy, layer=layer)
+        return text_builder
 
     @staticmethod
-    def build_tooltip(obj, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_tooltip_text(obj):
         if isinstance(obj, entities.ItemEntity):
             obj = obj.get_item()
 
         if isinstance(obj, item.Item):
-            return TooltipFactory.build_item_tooltip(obj, xy=xy, layer=layer)
+            return TooltipFactory.get_item_tooltip_text(obj)
         elif isinstance(obj, entities.Enemy):
-            return TooltipFactory.build_enemy_tooltip(obj, xy=xy, layer=layer)
+            return TooltipFactory.get_enemy_tooltip_text(obj)
         elif isinstance(obj, entities.NpcEntity):
-            return TooltipFactory.build_npc_tooltip(obj, xy=xy, layer=layer)
+            return TooltipFactory.get_npc_tooltip_text(obj)
         elif isinstance(obj, entities.ChestEntity):
-            return TooltipFactory.build_chest_tooltip(obj, xy=xy, layer=layer)
+            return TooltipFactory.get_chest_tooltip_text(obj)
         elif isinstance(obj, gameengine.ActionProvider):
-            return TooltipFactory.build_action_provider_tooltip(obj, xy=xy, layer=layer)
-        elif isinstance(obj, tuple) and len(obj) == 2 and isinstance(obj[0], statuseffects.StatusEffect):
-            return TooltipFactory.build_status_effect_tooltip(obj[0], obj[1], xy=xy, layer=layer)
+            return TooltipFactory.get_action_provider_tooltip_text(obj)
+        elif isinstance(obj, statuseffects.StatusEffect):
+            return TooltipFactory.get_status_effect_tooltip_text(obj)
         elif isinstance(obj, TextBuilder):
-            return TextOnlyTooltip(obj.text(), custom_colors=obj.custom_colors(), target=obj, xy=xy, layer=layer)
+            return obj
         else:
             return None
+
+    @staticmethod
+    def build_tooltip(obj, text_builder=None, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+        if text_builder is None:
+            text_builder = TooltipFactory.get_tooltip_text(obj)
+            if text_builder is None:
+                return None
+
+        return TextOnlyTooltip(text_builder.text(), target=obj, xy=xy,
+                               custom_colors=text_builder.custom_colors(),
+                               layer=layer)
+
+    @staticmethod
+    def needs_rebuild(text_builder, tooltip):
+        if (tooltip is None) ^ (text_builder is not None):
+            return True
+
+        if tooltip is None and text_builder is None:
+            return False
+
+        if not isinstance(tooltip, TextOnlyTooltip):
+            return True
+
+        if tooltip.text != text_builder.text():
+            return True
+
+        if tooltip.custom_colors != text_builder.custom_colors():
+            return True
+
+        return False
 
 
 class Tooltip:
@@ -235,12 +262,12 @@ class TextOnlyTooltip(Tooltip):
 
     TEXT_SCALE = 1
 
-    def __init__(self, text, target=None, xy=(0, 0), custom_colors={}, layer=spriteref.UI_TOOLTIP_LAYER):
+    def __init__(self, text, target=None, xy=(0, 0), custom_colors=None, layer=spriteref.UI_TOOLTIP_LAYER):
         Tooltip.__init__(self, xy=xy, target=target, layer=layer)
         self.bg_sprite = spriteref.UI.tooltip_bg
 
         self.text = text
-        self.custom_colors = custom_colors
+        self.custom_colors = custom_colors if custom_colors is not None else {}
 
         self._rect = [xy[0], xy[1], 0, 0]
 

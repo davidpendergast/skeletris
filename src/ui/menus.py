@@ -1328,8 +1328,13 @@ class InGameUiState(Menu):
             current_tooltip = self.get_active_tooltip()
 
             if obj_to_display is not None:
-                if current_tooltip is None or current_tooltip.get_target() is not obj_to_display:
-                    new_tooltip = TooltipFactory.build_tooltip(obj_to_display)
+                obj_text = TooltipFactory.get_tooltip_text(obj_to_display)
+
+                if obj_text is None:
+                    self.set_active_tooltip(None)
+
+                elif TooltipFactory.needs_rebuild(obj_text, current_tooltip):
+                    new_tooltip = TooltipFactory.build_tooltip(obj_to_display, text_builder=obj_text, xy=(0, 0))
                     self.set_active_tooltip(new_tooltip)
                     needs_update = True
 

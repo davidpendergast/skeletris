@@ -911,8 +911,7 @@ class StatusEffectImage(InteractableImage):
         return False
 
     def get_tooltip_target_at(self, x, y):
-        turns_remaining = gs.get_instance().player_state().get_turns_remaining(self.status_effect)
-        return (self.status_effect, turns_remaining)
+        return self.status_effect
 
     def is_dirty(self):
         return True
