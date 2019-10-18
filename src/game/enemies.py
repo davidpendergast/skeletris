@@ -91,6 +91,9 @@ class EnemyTemplate:
             StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4
         })
 
+    def get_spawn_items(self, level, randval=None):
+        yield
+
     def get_controller(self):
         from src.game.gameengine import EnemyController
         return EnemyController()
@@ -156,6 +159,9 @@ class CaveCrawlerTemplate(EnemyTemplate):
             StatTypes.WEALTH: 1,
             StatTypes.THROW_AFFINITY: 1
         })
+
+    def get_spawn_items(self, level, randval=None):
+        yield itemgen.WeaponItemFactory.gen_item(level, item.ItemTypes.DAGGER_WEAPON)
 
 
 class SmallFrogTemplate(EnemyTemplate):
@@ -306,13 +312,17 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_base_stats(self):
         return stats.BasicStatLookup({
             StatTypes.VIT: 8,
-            StatTypes.SPEED: 4,
+            StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.WEALTH: 2
+            StatTypes.WEALTH: 2,
+            StatTypes.POTION_AFFINITY: 2
         })
+
+    def get_spawn_items(self, level, randval=None):
+        yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.HEALING)
 
 
 class MuncherTemplate(EnemyTemplate):
@@ -345,8 +355,12 @@ class MuncherTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 8,
             StatTypes.DEF: 6,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 3
+            StatTypes.WEALTH: 3,
+            StatTypes.POTION_AFFINITY: 1
         })
+
+    def get_spawn_items(self, level, randval=None):
+        yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.MAJOR_HEALING)
 
 
 class SlugTemplate(EnemyTemplate):
@@ -410,8 +424,20 @@ class WitchTemplate(EnemyTemplate):
             StatTypes.DEF: 5,
             StatTypes.INTELLIGENCE: 4,
             StatTypes.WEALTH: 3,
-            StatTypes.POTION_AFFINITY: 2
+            StatTypes.POTION_AFFINITY: 3
         })
+
+    def get_spawn_items(self, level, randval=None):
+        n_potions = 2
+        for _ in range(0, n_potions):
+            templates_to_use = itemgen.PotionTemplates.all_templates(level)
+            if len(templates_to_use) > n_potions:
+                templates_to_use = random.choices(templates_to_use, k=n_potions)
+
+            for t in templates_to_use:
+                potion = itemgen.PotionItemFactory.gen_item(level, t)
+                if potion is not None:
+                    yield potion
 
 
 class GiantTemplate(EnemyTemplate):
@@ -713,7 +739,7 @@ class SkulkerTemplate(EnemyTemplate):
         return [EnemyTypes.UNDEAD]
 
     def get_level_range(self):
-        return range(8, 12)
+        return range(9, 12)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
@@ -723,7 +749,6 @@ class SkulkerTemplate(EnemyTemplate):
             StatTypes.DEF: 2,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.THROW_AFFINITY: 1,
             StatTypes.CHILL_ON_HIT: 4,
         })
 
@@ -1081,29 +1106,16 @@ class EnemyFactory:
     def get_state(template, level):
         inv = inventory.InventoryState()
 
+        for spawn_item in template.get_spawn_items(level, randval=random.random()):
+            if spawn_item is not None:
+                inv.add_to_inv(spawn_item)
+
         wealth = template.get_base_stats().stat_value(StatTypes.WEALTH)
         for _ in range(0, wealth):
             if random.random() < balance.ENEMY_ITEM_CHANCE_PER_WEALTH:
                 loot_item = itemgen.ItemFactory.gen_item(level, item_type=None)
                 if loot_item is not None:
                     inv.add_to_inv(loot_item)
-
-        # spawn with one random, unique potion per potion_affinity point.
-        potion_affinity = template.get_base_stats().stat_value(StatTypes.POTION_AFFINITY)
-        for _ in range(0, potion_affinity):
-            templates_to_use = itemgen.PotionTemplates.all_templates(level)
-            if len(templates_to_use) > potion_affinity:
-                templates_to_use = random.choices(templates_to_use, k=potion_affinity)
-
-            for t in templates_to_use:
-                potion = itemgen.PotionItemFactory.gen_item(level, t)
-                if potion is not None:
-                    inv.add_to_inv(potion)
-
-        # gets a free dagger if it can throw them
-        if template.get_base_stats().stat_value(StatTypes.THROW_AFFINITY) > 0:
-            dagger = itemgen.WeaponItemFactory.gen_item(level, item.ItemTypes.DAGGER_WEAPON)
-            inv.add_to_inv(dagger)
 
         import src.game.gameengine as gameengine
         a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)

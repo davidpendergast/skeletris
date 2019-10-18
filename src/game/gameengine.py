@@ -423,7 +423,7 @@ class EnemyController(ActorController):
     def _get_item_consume_action(self, actor, world):
         a_state = actor.get_actor_state()
 
-        if a_state.intelligence() >= 4 and a_state.hp() <= 2 * a_state.max_hp() // 3:
+        if a_state.stat_value(StatTypes.POTION_AFFINITY) >= 1 and a_state.hp() <= 2 * a_state.max_hp() // 3:
             for it in a_state.inventory().all_inv_items():
                 consume_effect = it.get_consume_effect()
                 if consume_effect is not None and consume_effect.stat_value(StatTypes.HP_REGEN) > 0:
@@ -458,7 +458,7 @@ class EnemyController(ActorController):
                                 return throw_action
 
         # throw bad potions at player
-        if a_state.stat_value(StatTypes.POTION_AFFINITY) > 0:
+        if a_state.stat_value(StatTypes.POTION_AFFINITY) >= 3:
             target_throw_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=False)
             if len(target_throw_positions) > 0:
                 for it in all_throwables:
@@ -470,7 +470,7 @@ class EnemyController(ActorController):
                                 return throw_action
 
         # throw good potions at allies
-        if a_state.intelligence() >= 4 and a_state.stat_value(StatTypes.POTION_AFFINITY) > 0:
+        if a_state.stat_value(StatTypes.POTION_AFFINITY) >= 2:
             target_throw_positions = self._get_nearby_positions_with_actors(actor, world, same_alignment=True)
             if len(target_throw_positions) > 0:
                 for it in all_throwables:

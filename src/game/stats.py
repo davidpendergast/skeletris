@@ -118,7 +118,10 @@ class StatTypes:
     INTELLIGENCE = StatType("INTELLIGENCE")
     SUPER_PATHING = StatType("SUPER_PATHING")
     WEALTH = StatType("WEALTH")
+
+    # 1 = heals self, 2 = heals self and allies, 3 = heals self and attacks others
     POTION_AFFINITY = StatType("POTION_AFFINITY", color=colors.LIGHT_BLUE, enemy_desc="Potion User")
+
     THROW_AFFINITY = StatType("THROW_AFFINITY", color=colors.LIGHT_RED, enemy_desc="Thrower")
 
     PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",

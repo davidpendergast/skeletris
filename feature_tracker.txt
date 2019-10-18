@@ -16,7 +16,6 @@
         - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
- - enemy tooltips don't update when stats change (HP is most important)
  - enemies double attack when you die (ranged enemies only?)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
