@@ -28,7 +28,6 @@
 [balance issues]
  - need some ways to defensively use/alter the world's geometry
     - "need" ?
- - game gets really ez when you have around 15~ attack
  
  
 [current features]

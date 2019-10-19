@@ -851,7 +851,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 
     UI.status_sparkles_icon = make(272, 240, 16, 16, shift=start_pos)
     UI.status_up_arrow_icon = make(272, 256, 16, 16, shift=start_pos)
-    UI.status_diagonal_lines_icon = make(272, 256, 16, 16, shift=start_pos)
+    UI.status_diagonal_lines_icon = make(272, 272, 16, 16, shift=start_pos)
     UI.status_waves_icon = make(272, 256, 16, 16, shift=start_pos)
 
     UI.status_hand_icon = make(288, 240, 16, 16, shift=start_pos)

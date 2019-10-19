@@ -278,11 +278,11 @@ class SporeTemplate(EnemyTemplate):
             StatTypes.VIT: 12,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 2,
+            StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
-            StatTypes.CONFUSION_ON_HIT: 2,
+            StatTypes.CONFUSION_ON_HIT: 3,
             StatTypes.UNFLINCHING: 1
         })
 
@@ -349,11 +349,11 @@ class MuncherTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 20,
-            StatTypes.SPEED: 3,
+            StatTypes.VIT: 30,
+            StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 8,
-            StatTypes.DEF: 6,
+            StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
             StatTypes.POTION_AFFINITY: 1
@@ -418,7 +418,7 @@ class WitchTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 15,
+            StatTypes.VIT: 25,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 3,
             StatTypes.DEF: 5,
@@ -443,7 +443,7 @@ class WitchTemplate(EnemyTemplate):
 class GiantTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Putrid Host")
+        EnemyTemplate.__init__(self, "Giant")
 
     def get_sprites(self):
         return spriteref.enemy_giant_all
@@ -625,14 +625,14 @@ class ScorpionTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 12,
+            StatTypes.VIT: 18,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
-            StatTypes.POISON_ON_HIT: 2,
+            StatTypes.POISON_ON_HIT: 4,
         })
 
 
@@ -658,7 +658,7 @@ class WraithTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 16,
+            StatTypes.VIT: 25,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
@@ -700,7 +700,7 @@ class FungoiTemplate(EnemyTemplate):
 class OysterTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Screeching Oyster")
+        EnemyTemplate.__init__(self, "Oyster")
 
     def get_sprites(self):
         return spriteref.enemy_oyster_all
@@ -713,7 +713,7 @@ class OysterTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 12,
+            StatTypes.VIT: 18,
             StatTypes.SPEED: 6,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 5,
@@ -906,7 +906,7 @@ class InfectedHuskTemplate(EnemyTemplate):
 class CrawlingLepiotaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "???")
+        EnemyTemplate.__init__(self, "Lepiota")
 
     def get_sprites(self):
         return spriteref.enemy_crawling_lepiota
@@ -915,7 +915,7 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
         return [EnemyTypes.FUNGUS]
 
     def get_map_identifier(self):
-        return ("?", colors.RED)
+        return ("L", colors.RED)
 
     def get_shadow_sprite(self):
         return spriteref.large_shadow
@@ -932,6 +932,8 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
             StatTypes.GRASP_ON_MELEE_HIT: 1,
+            StatTypes.CONFUSION_ON_HIT: 4,
+            StatTypes.UNFLINCHING: 1
         })
 
 

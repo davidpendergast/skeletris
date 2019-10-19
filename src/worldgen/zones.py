@@ -645,8 +645,14 @@ class LootZoneBuilder:
         zone.ZONE_ID = zone_id
         zone.zone_id = zone_id
 
+        # kinda nice to have the loot zones look like the story zones the represent
+        story_zones_at_this_level = [x for x in all_storyline_zone_ids() if get_zone(x).get_level() == level]
+        if len(story_zones_at_this_level) > 0:
+            zone.geo_color = get_zone(story_zones_at_this_level[0]).get_color()
+
         zone.build_world = lambda: LootZoneBuilder.generate_new_world(zone)
         return zone
+
 
 class DesolateCaveZone(Zone):
     """This is the tutorial / intro zone"""
