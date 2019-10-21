@@ -66,7 +66,7 @@ class MarySkellyTemplate(NpcTemplate):
 class MayorPatchesTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MAYOR, "Mayor Patches", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
+        NpcTemplate.__init__(self, NpcID.MAYOR, "Mayor", sr.mayor_pumpkin_all, sr.mayor_pumpkin_faces,
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
     def get_trade_protocol(self, level):
@@ -80,7 +80,7 @@ class BeanskullTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 5:
             return NpcTradeProtocols.REROLL_STATS
 
 
@@ -90,7 +90,7 @@ class GlorpleTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 4:
+        if level >= 6:
             return NpcTradeProtocols.REROLL_CUBES
 
 
@@ -100,7 +100,7 @@ class MachineTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces, ("M", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 5:
+        if level >= 7:
             return NpcTradeProtocols.ITEM_THAT_FITS
 
 
@@ -110,7 +110,7 @@ class DoctorTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 2:
+        if level >= 5:
             return NpcTradeProtocols.POTION_EXCHANGE
 
 
@@ -131,8 +131,8 @@ TEMPLATES = {
     # Interested in maintaining order, rebuilding the city, the economy.
 
     NpcID.BEANSKULL: BeanskullTemplate(),
-    # The "Farmer", well liked, provides food for the remaining citizens.
-    # Interested in all things related to plants and mushrooms.
+    # The "Farmer", well liked, provides food and equipment for the remaining citizens.
+    # Interested in all things related to plants.
 
     NpcID.GLORPLE: GlorpleTemplate(),
     # The "Thing", not actually a skeleton, but unaffected by the Madness and accepted by the others.
@@ -146,7 +146,7 @@ TEMPLATES = {
     # The "Doctor", career-driven, but goals were cut short when Skeletris fell.
     # Looks down on other citizens, mostly keeps to himself.
 
-    NpcID.CAVE_HORROR: CaveHorrorNpcTemplate()
+    NpcID.CAVE_HORROR: CaveHorrorNpcTemplate()  # TODO - not used, it's stupid to have them talk
 }
 
 
@@ -230,6 +230,8 @@ class Conversations:
 
     BEANSKULL_INTRO = Conversation("BEANSKULL_INTRO", NpcID.BEANSKULL)
 
+    MAYOR_INTRO = Conversation("MAYOR_INTRO", NpcID.MAYOR)
+
     @staticmethod
     def get_all():
         for c in _ALL_CONVERSATIONS:
@@ -246,19 +248,19 @@ class ConversationFactory:
             if interact_count == 0:
                 res_list = [
                     NpcDialog("Oh my! Are you a... Husk? Where did you come from?"),
-                    PlayerDialog("I... don't know. I just woke up... and..."),
+                    PlayerDialog("I... don't know."),
                     NpcDialog("Are there more of you? We thought your kind was... lost during, ya know..."),
                     PlayerDialog("I... don't think so. What is this place?"),
-                    NpcDialog("This place? You mean Skeletris? How long have you been asleep?"),
+                    NpcDialog("This used to be an outpost between the Swamps the Caves, but we call it Tomb Town now."),
+                    NpcDialog("We've been... surviving here since Skeletris fell."),
                     PlayerDialog("..."),
                     NpcDialog("You don't remember the war?"),
                     PlayerDialog("I don't remember anything."),
-                    NpcDialog("It's a long story. And it's not safe here. Try to find some gear and we'll talk later."),
-                    NpcDialog("I'm Mary by the way.")
+                    NpcDialog("Well, it's a long story. I'm Mary by the way."),
                 ]
             else:
                 res_list = [
-                    NpcDialog("Gear up. It's not safe here.")
+                    NpcDialog("It's nice to see a new face. It's been dreadfully boring here.")
                 ]
 
         if conv == Conversations.MACHINE_INTRO:
@@ -293,21 +295,34 @@ class ConversationFactory:
             if interact_count == 0:
                 res_list = [
                     NpcDialog("Hello there! I don't think we've met before. What's your name?"),
-                    PlayerDialog("Hi... I... don't know. I just woke up and... here I am."),
-                    NpcDialog("Here you are indeed! Welcome to Skeletris... or what's left of it, anyway."),
+                    PlayerDialog("Hi... I... don't know."),
+                    NpcDialog("Well.. no matter. Welcome to Tomb Town! The final outpost before Skeletris."),
                     PlayerDialog("Skeletris?"),
-                    NpcDialog("You aren't familiar with this city? The... disaster?"),
+                    NpcDialog("You aren't familiar with the city? The... disaster?"),
                     PlayerDialog("I'm... not."),
-                    NpcDialog("This used to be the center of civilization. Skeletons and creatures lived in harmony here, growing food, caring for each other, raising families..."),
+                    NpcDialog("It used to be the center of civilization. Skeletons and creatures lived in harmony there, growing food, raising families..."),
                     NpcDialog("..."),
                     PlayerDialog("Something happened?"),
                     NpcDialog("Now... well... it isn't like that anymore."),
-                    NpcDialog("If you'll excuse me, I need to harvest those mushrooms before they... get too ripe."),
+                    NpcDialog("If you'll excuse me, I need to go pick those tomatoes before they... get too ripe."),
                     PlayerDialog("Oh... ok.")
                 ]
             else:
                 res_list = [
-                    NpcDialog("Sorry, talking about that stuff... brings back memories. I need to go.")
+                    NpcDialog("Sorry, talking about that stuff... brings back memories.")
+                ]
+
+        if conv == Conversations.MAYOR_INTRO:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("A.. a visitor? You'll have to excuse the mess... it's been so long since we've seen a friendly face!"),
+                    NpcDialog("But nevermind that! Welcome to Tombtown! I'm Patches, the Mayor. What can we do for you, friend?"),
+                    PlayerDialog("I'm not sure. I was just making my way through some caves and now I'm here."),
+                    NpcDialog("Well... be sure to visit some of our shops before you leave! We've been absolutely... DYING for some sales HA HA."),
+                ]
+            else:
+                res_list = [
+                    NpcDialog("A strong economy makes a strong town, is what I always say.")
                 ]
 
         if len(res_list) > 0:
@@ -728,3 +743,9 @@ class NpcFactory:
 
         template = get_template(npc_id)
         return entities.NpcTradeEntity(0, 0, template, template.get_trade_protocol(level))
+
+    @staticmethod
+    def gen_convo_npc(npc_id, convo):
+        import src.world.entities as entities
+
+        return entities.NpcConversationEntity(0, 0, get_template(npc_id), convo)

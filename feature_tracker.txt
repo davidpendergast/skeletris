@@ -31,9 +31,8 @@
  
  
 [current features]
- - confusion and grasp effects should play a sound when they 'activate'
-    - or display some text (like "miss" does)
  - finish up final area
+ - finish up dialog in TombTown
  
 [what's stressing me out?]
  - won't ever finish

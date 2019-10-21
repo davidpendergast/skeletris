@@ -172,7 +172,7 @@ class DialogManager:
                 else:
                     cutscene.update(world)
             else:
-                if dialog.scroll_pos > 0 and self.did_interact_this_tick:
+                if (dialog.scroll_pos > 0 or len(dialog.get_text()) == 0) and self.did_interact_this_tick:
                     if dialog.is_done_scrolling():
                         self.set_dialog(dialog.get_next())
                         sound_effects.play_sound(soundref.dialog_next)

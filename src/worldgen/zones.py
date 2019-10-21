@@ -87,7 +87,7 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1)))
     story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1)))
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2)))
-    # TODO put some handbuilt scenery piece for caves_4
+    story_zones.append(get_zone(TombTownZone.ZONE_ID))
 
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN))
@@ -1148,61 +1148,67 @@ class TombTownZone(Zone):
     ZONE_ID = "tomb_town"
 
     def __init__(self):
-        Zone.__init__(self, "Tomb Town", 16, filename="town.png", bg_color=colors.DARK_GRAY)
+        Zone.__init__(self, "Tomb Town", 3, filename="town.png", bg_color=colors.BLACK)
 
     WALL_SIGNS = {
-            (255, 172, 150): ("read", "dear ugly frog,\nyou're so ugly. please go away.\nsincerely,\nmary"),
-            (255, 173, 150): ("read", "mary skelly's bone repair shop\ntwists: 3m\ncracks: 6m\nbreaks: 10m"),
-            (255, 174, 150): ("read", "beanskull's tea shop\nmushroom tea: free"),
-            (255, 175, 150): ("read", "Tombtown's City Hall\n")
+        (255, 172, 150): ["The City of Tomb Town\nPopulation: 3"],
+        (255, 173, 150): ["Necromancy Supplies and Consultancy"],
+        (255, 174, 150): ["Beanskull's Tomato Grove"],
+        (255, 175, 150): ["Notice Board:\n"
+                          "Tax season is coming up! Late fees WILL be enforced."],
+        (255, 176, 150): ["Tomb Town City Hall"],
+        (205, 177, 150): ["Tomb Town Treasury\n" +
+                          "Absolutely NO Unauthorized Access"],
+        (255, 178, 150): ["P. Patches:    20,354.76m\n" +
+                          "M. Skelly:       -150.00m\n" +
+                          "B. Skull:          17.80m\n"]
     }
 
     BEANSKULL = (255, 170, 255)
     MAYOR = (255, 171, 255)
     MARY = (255, 172, 255)
+    GLORPLE = (255, 173, 255)
+
     MUSHROOMS = (255, 175, 177)
-    PLAYER_STAND_POS = (255, 215, 255)
+    TOMATO_PLANTS = (255, 234, 150)
+    WORKBENCH = (255, 220, 115)
+    BONE_DECORATIONS = (255, 230, 115)
+    RAKE = (255, 225, 115)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
+        dec_type_lookup = {TombTownZone.MUSHROOMS: (decoration.DecorationType.MUSHROOM, None),
+                           TombTownZone.TOMATO_PLANTS: (decoration.DecorationType.PLANT, "It's a tomato plant. It looks well-maintained."),
+                           TombTownZone.RAKE: (decoration.DecorationType.RAKE, None),
+                           TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None)}
+
         for key in unknowns:
             if key in TombTownZone.WALL_SIGNS:
                 pos = unknowns[key][0]
-                hover_text = TombTownZone.WALL_SIGNS[key][0]
-                dialog_text = Utils.listify(TombTownZone.WALL_SIGNS[key][1])
-                d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
+                sign = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=TombTownZone.WALL_SIGNS[key])
+                w.add(sign, gridcell=(pos[0], pos[1] - 1))
 
-                sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
-                                                                 interact_dialog=d)
-                w.add(sign)
-            elif key == TombTownZone.MUSHROOMS:
+            elif key in dec_type_lookup:
                 for pos in unknowns[key]:
-                    m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
-                    d = dialog.PlayerDialog("These mushrooms look healthy and well cared for.")
-                    mushroom = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1], interact_dialog=d)
-                    w.add(mushroom)
-            #elif key == TombTownZone.BEANSKULL:
-            #    e = entities.NpcEntity(npc.NpcID.BEANSKULL)
-            #    w.add(e, gridcell=unknowns[key][0])
-            #elif key == TombTownZone.MAYOR:
-            #    e = entities.NpcEntity(npc.NpcID.MAYOR)
-            #    w.add(e, gridcell=unknowns[key][0])
-            #elif key == TombTownZone.MARY:
-            #    e = entities.NpcEntity(npc.NpcID.MARY_SKELLY)
-            #    w.add(e, gridcell=unknowns[key][0])
-
-        def door_open_action(event, world):
-            pass
-
-        gs.get_instance().add_trigger(events.EventListener(door_open_action, events.EventType.DOOR_OPENED, None,
-                                                           single_use=True))
+                    dec_type, dec_desc = dec_type_lookup[key]
+                    dec_entity = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type, with_dialog=dec_desc)
+                    w.add(dec_entity, gridcell=(pos[0], pos[1] - 1))
+            elif key == TombTownZone.BEANSKULL:
+                e = npc.NpcFactory.gen_convo_npc(npc.NpcID.BEANSKULL, npc.Conversations.BEANSKULL_INTRO)
+                w.add(e, gridcell=unknowns[key][0])
+            elif key == TombTownZone.MAYOR:
+                e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MAYOR, npc.Conversations.MAYOR_INTRO)
+                w.add(e, gridcell=unknowns[key][0])
+            elif key == TombTownZone.MARY:
+                e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_INTRO)
+                w.add(e, gridcell=unknowns[key][0])
 
         return w
 
     def get_music_id(self):
-        return music.Songs.AN_ADVENTURE_UNFOLDS
+        return None
 
 
 class DoorTestZone(Zone):

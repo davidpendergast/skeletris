@@ -7,10 +7,13 @@ from src.utils.util import Utils
 
 
 _ALL_DECORATION_TYPES = []
+_ALL_RAND_SPAWN_DEC_TYPES = []
 
 
-def _add_dec_type(val):
+def _add_dec_type(val, rand_spawn=True):
     _ALL_DECORATION_TYPES.append(val)
+    if rand_spawn:
+        _ALL_RAND_SPAWN_DEC_TYPES.append(val)
     return val
 
 
@@ -21,21 +24,34 @@ class DecorationType:
     RAKE = _add_dec_type("RAKE")
     BONES = _add_dec_type("BONES")
     MUSHROOM = _add_dec_type("MUSHROOM")
+    WORKBENCH = _add_dec_type("WORKBENCH", rand_spawn=False)
 
 
 class DecorationFactory:
 
     @staticmethod
-    def get_decoration(level, dec_type=None):
+    def get_decoration(level, dec_type=None, with_dialog=None):
+        """
+        :param level: level of the zone in which the decoration will appear.
+        :param dec_type: the type of the decoration. If None, a random one will be used.
+        :param with_dialog: A string. The dialog text. If empty, the decoration will have no dialog and
+            will not be interactable. If None, the decoration type's default dialog text will be used.
+        """
         if dec_type is None:
-            dec_type = random.choice(_ALL_DECORATION_TYPES)
+            dec_type = random.choice(_ALL_RAND_SPAWN_DEC_TYPES)
 
         dec_sprite = DecorationFactory.get_sprite(dec_type, level)
 
         import src.world.entities as entities
         dec_ent = entities.DecorationEntity.wall_decoration([dec_sprite], 0, 0)
 
-        dec_dialog = DecorationFactory.get_dialog(dec_type, level)
+        if with_dialog is None:
+            dec_dialog = DecorationFactory.get_dialog(dec_type, level)
+        elif with_dialog is not None:
+            dec_dialog = dialog.Dialog(with_dialog)
+        else:
+            dec_dialog = None
+
         if dec_dialog is not None:
             dec_ent.set_interact_dialog(dec_dialog)
 
@@ -58,6 +74,8 @@ class DecorationFactory:
         elif dec_type == DecorationType.MUSHROOM:
             idx = int(rand_seed * len(spriteref.wall_decoration_mushrooms))
             return spriteref.wall_decoration_mushrooms[idx]
+        elif dec_type == DecorationType.WORKBENCH:
+            return spriteref.wall_decoration_workbench
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 
@@ -72,7 +90,9 @@ class DecorationFactory:
         elif dec_type == DecorationType.BONES:
             return dialog.Dialog("It seems to be a decoration of some kind.")
         elif dec_type == DecorationType.MUSHROOM:
-            return dialog.Dialog("It's a large cluster of mushrooms. They look delicious.")
+            return dialog.Dialog("It's a large cluster of mushrooms.")
+        elif dec_type == DecorationType.WORKBENCH:
+            return dialog.Dialog("It's a workbench. It looks well-used.")
         else:
             return None
 
@@ -107,10 +127,16 @@ class DecorationFactory:
         return dialog.NpcDialog(message, spriteref.sign_faces)
 
     @staticmethod
-    def get_sign(level):
+    def get_sign(level, sign_text=None):
         import src.world.entities as entities
         sign_ent = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, 0, 0)
-        sign_dialog = DecorationFactory.get_sign_dialog(level)
+
+        if sign_text is None:
+            sign_dialog = DecorationFactory.get_sign_dialog(level)
+        else:
+            sign_text = Utils.listify(sign_text)
+            sign_dialog = dialog.Dialog.link_em_up([dialog.NpcDialog(x, spriteref.sign_faces) for x in sign_text])
+
         sign_ent.set_interact_dialog(sign_dialog)
 
         return sign_ent
