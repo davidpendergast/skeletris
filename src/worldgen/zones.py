@@ -1165,9 +1165,11 @@ class TombTownZone(Zone):
     }
 
     BEANSKULL = (255, 170, 255)
-    MAYOR = (255, 171, 255)
+    MAYOR = (205, 171, 255)
     MARY = (255, 172, 255)
     GLORPLE = (255, 173, 255)
+
+    SPIDER_BOSS = (255, 170, 170)
 
     MUSHROOMS = (255, 175, 177)
     TOMATO_PLANTS = (255, 234, 150)
@@ -1203,6 +1205,11 @@ class TombTownZone(Zone):
                 w.add(e, gridcell=unknowns[key][0])
             elif key == TombTownZone.MARY:
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_INTRO)
+                w.add(e, gridcell=unknowns[key][0])
+            elif key == TombTownZone.SPIDER_BOSS:
+                e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
+                max_hp = e.get_actor_state().max_hp()
+                e.get_actor_state().set_hp(int(0.75 * max_hp))  # it's injured because it was fighting the town
                 w.add(e, gridcell=unknowns[key][0])
 
         return w

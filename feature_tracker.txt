@@ -32,7 +32,9 @@
  
 [current features]
  - finish up final area
- - finish up dialog in TombTown
+ - spider fight
+    - dialog for tombtown residents
+    - make a song for the friggin spider
  
 [what's stressing me out?]
  - won't ever finish

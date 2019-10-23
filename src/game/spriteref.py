@@ -248,6 +248,8 @@ class Bosses:
 
     nameless_idle = []
 
+    spider_idle = []
+
 
 class Font:
     _alphabet = {}  # str -> img
@@ -909,6 +911,8 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
 
     Bosses.nameless_idle = [make(i * 48, 400, 48, 64, shift=start_pos) for i in range(0, 7)]
 
+    Bosses.spider_idle = [make(i * 48, 528, 48, 48, shift=start_pos) for i in range(0, 2)]
+
     Bosses.frog_idle_1 = [make(0 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_2 = [make(96 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.frog_idle_mouth = [make(192 + 48*i, 0, 48, 48, shift=start_pos) for i in range(0, 2)]
@@ -920,7 +924,6 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
 
 
 def build_font_sheet(start_pos, raw_font_img, sheet):
-    print("font_sheet start_pos={}".format(start_pos))
     sheet.blit(raw_font_img, start_pos)
     # sheet needs to be a 32x8 grid of characters
     char_w = round(raw_font_img.get_width() / 32)

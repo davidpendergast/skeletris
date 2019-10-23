@@ -937,6 +937,45 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
         })
 
 
+class SpiderBossTemplate(EnemyTemplate):
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Ancient Spider")
+
+    def get_sprites(self):
+        return spriteref.Bosses.spider_idle
+
+    def get_types(self):
+        return [EnemyTypes.ANIMAL]
+
+    def get_map_identifier(self):
+        return ("S", colors.RED)
+
+    def get_shadow_sprite(self):
+        return spriteref.enormous_shadow
+
+    def get_level_range(self):
+        return [3]
+
+    def get_sprite_offset(self):
+        return (0, 0)
+
+    def get_shadow_offset(self):
+        return (0, -12)
+
+    def get_base_stats(self):
+        return stats.BasicStatLookup({
+            StatTypes.VIT: 16,
+            StatTypes.SPEED: 2,
+            StatTypes.ATT: 3,
+            StatTypes.UNARMED_ATT: 0,
+            StatTypes.DEF: 1,
+            StatTypes.INTELLIGENCE: 2,
+            StatTypes.WEALTH: 3,
+            StatTypes.UNARMED_RANGE: 2
+        })
+
+
 class NamelessTemplate(EnemyTemplate):
 
     def __init__(self, invincible):
@@ -1059,6 +1098,7 @@ TEMPLATE_LEPIOTA = CrawlingLepiotaTemplate()
 TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
 
 # bosses
+TEMPLATE_SPIDER = SpiderBossTemplate()
 TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
