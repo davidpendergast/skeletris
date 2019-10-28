@@ -1215,7 +1215,7 @@ class TombTownZone(Zone):
         return w
 
     def get_music_id(self):
-        return None
+        return music.Songs.SPIDER_THEME
 
 
 class DoorTestZone(Zone):
