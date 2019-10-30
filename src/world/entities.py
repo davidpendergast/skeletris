@@ -1656,6 +1656,9 @@ class EndGameExitEnitity(ExitEntity):
     def make_open_event(self):
         return events.GameWinEvent()
 
+    def does_level_end_heal(self):
+        return False
+
 
 class DecorationEntity(Entity):
 

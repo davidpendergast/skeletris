@@ -182,10 +182,9 @@ class WorldBlueprint:
             self.geo_alt_art.append([None] * size[1])
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
-        self.rare_enemy_spawns = []
         self.chest_spawns = []
-        self.exit_spawns = {}         # zone_id -> (x, y)
-        self.boss_exit_spawns = {}    # zone_id -> (x, y)
+        self.exit_spawns = {}         # (x, y) -> zone_id
+        self.boss_exit_spawns = {}    # (x, y) -> zone_id
         self.end_of_game_spawns = []  # list of (x, y)
         self.return_exit_spawns = []  # list of (x, y)
         self.save_station = None
@@ -235,6 +234,31 @@ class WorldBlueprint:
     def set_enemy_supplier(self, supplier):
         """:param supplier: lambda: int x, int y -> Enemy"""
         self.enemy_supplier = supplier
+
+    def add_exit_door(self, x, y, exit_id):
+        import src.worldgen.zones as zones
+        if zones.is_end_of_game(exit_id):
+            self.end_of_game_spawns.append((x, y))
+        else:
+            z = zones.get_zone(exit_id, or_else=None)
+            if z is None:
+                print("WARN: no exit zone for {} at ({}, {})".format(exit_id, x, y))
+            elif z.is_boss_zone():
+                self.boss_exit_spawns[(x, y)] = exit_id
+            else:
+                self.exit_spawns[(x, y)] = exit_id
+
+    def has_exit_at(self, x, y):
+        if (x, y) in self.exit_spawns:
+            return True
+        if (x, y) in self.boss_exit_spawns:
+            return True
+        if (x, y) in self.return_exit_spawns:
+            return True
+        if (x, y) in self.end_of_game_spawns:
+            return True
+        else:
+            return False
 
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
@@ -291,12 +315,12 @@ class WorldBlueprint:
         w.add(Player(0, 0), gridcell=self.player_spawn)
 
         if len(self.exit_spawns) > 0:
-            for zone_id in self.exit_spawns:
-                w.add(ExitEntity(*self.exit_spawns[zone_id], zone_id))
+            for xy in self.exit_spawns:
+                w.add(ExitEntity(*xy, self.exit_spawns[xy]))
 
         if len(self.boss_exit_spawns) > 0:
-            for zone_id in self.boss_exit_spawns:
-                w.add(BossExitEntity(*self.boss_exit_spawns[zone_id], zone_id))
+            for xy in self.boss_exit_spawns:
+                w.add(BossExitEntity(*xy, self.boss_exit_spawns[xy]))
 
         if len(self.return_exit_spawns) > 0:
             for return_pos in self.return_exit_spawns:

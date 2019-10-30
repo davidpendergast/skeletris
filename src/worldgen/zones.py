@@ -43,8 +43,18 @@ def all_zone_ids():
     return [z for z in _ALL_ZONES]
 
 
-def get_zone(zone_id):
-    return _ALL_ZONES[zone_id]
+def get_zone(zone_id, or_else="~fail~"):
+    if zone_id not in _ALL_ZONES or _ALL_ZONES[zone_id] is None:
+        if or_else == "~fail~":
+            raise ValueError("unrecognized zone id: {}".format(zone_id))
+        else:
+            return or_else
+    else:
+        return _ALL_ZONES[zone_id]
+
+
+def is_end_of_game(zone_id):
+    return zone_id == _END_OF_GAME_ZONE_ID
 
 
 def all_storyline_zone_ids():
@@ -146,7 +156,6 @@ class ZoneLoader:
     SENSOR_DOOR = (100, 100, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
-    RARE_MONSTER_SPAWN = (200, 200, 0)
     CHEST_SPAWN = (255, 0, 255)
     SAVE_STATION = (0, 255, 255)
 
@@ -196,24 +205,13 @@ class ZoneLoader:
                         bp.return_exit_spawns.append((x, y))
                     elif color == ZoneLoader.EXIT:
                         bp.set(x, y, World.FLOOR)
-                        if exit_id == _END_OF_GAME_ZONE_ID:
-                            bp.end_of_game_spawns.append((x, y))
-                        elif exit_id in _ALL_ZONES:
-                            if _ALL_ZONES[exit_id].is_boss_zone():
-                                bp.boss_exit_spawns[exit_id] = (x, y)
-                            else:
-                                bp.exit_spawns[exit_id] = (x, y)
-                        else:
-                            print("WARN: no exit zone for {} at ({}, {})".format(zone_id, x, y))
+                        bp.add_exit_door(x, y, exit_id)
                     elif color == ZoneLoader.CHEST_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.chest_spawns.append((x, y))
                     elif color == ZoneLoader.MONSTER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.enemy_spawns.append((x, y))
-                    elif color == ZoneLoader.RARE_MONSTER_SPAWN:
-                        bp.set(x, y, World.FLOOR)
-                        bp.rare_enemy_spawns.append((x, y))
                     elif color == ZoneLoader.PLAYER_SPAWN:
                         bp.set(x, y, World.FLOOR)
                         bp.player_spawn = (x, y)
@@ -395,7 +393,7 @@ class ZoneBuilder:
             world.add(entities.ReturnExitEntity(x, y, None))
         elif tile_type == worldgen2.TileType.EXIT:
             next_zone_id = next_storyline_zone(zone_id)
-            if next_zone_id == _END_OF_GAME_ZONE_ID:
+            if is_end_of_game(next_zone_id):
                 world.add(entities.EndGameExitEnitity(x, y))
             else:
                 actual_zone = get_zone(next_zone_id)
@@ -917,6 +915,7 @@ class NamelessLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Unearth", 15, filename="???_lair.png")
         self._nameless_color = (255, 170, 170)
+        self._exit_doors = (255, 175, 80)
 
     def gen_mushroom_enemy(self):
         import src.game.enemies as enemies_clz
@@ -943,6 +942,22 @@ class NamelessLairZone(Zone):
         for e_pos in enemy_spawns_to_rem:
             bp.enemy_spawns.remove(e_pos)
 
+        # spawn the exit door at the closest exit spawn position
+        # and spawn chests at the others.
+        closest_exit_door_pos = None
+        for d in unknowns[self._exit_doors]:
+            if closest_exit_door_pos is None:
+                closest_exit_door_pos = d
+            elif Utils.dist(d, nameless_pos) < Utils.dist(closest_exit_door_pos, nameless_pos):
+                closest_exit_door_pos = d
+
+        next_zone_id = next_storyline_zone(self.get_id())
+
+        bp.add_exit_door(closest_exit_door_pos[0], closest_exit_door_pos[1], next_zone_id)
+        for d in unknowns[self._exit_doors]:
+            if d != closest_exit_door_pos:
+                bp.chest_spawns.append(d)
+
         min_dist = 10
         min_dist_chance = 0.25
         max_dist = 75
@@ -966,7 +981,7 @@ class NamelessLairZone(Zone):
                 if geo == World.FLOOR:
                     if random.random() < chance_to_fungify or (x, y) == bp.player_spawn:
                         bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
-                    if y != 0 and bp.get(x, y - 1) == World.WALL:
+                    if y != 0 and bp.get(x, y - 1) == World.WALL and not bp.has_exit_at(x, y):
                         if random.random() < chance_to_fungify:
                             mushroom_positions.append((x, y))
                 elif geo == World.WALL:

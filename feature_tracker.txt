@@ -34,12 +34,11 @@
  - finish up final area
  - spider fight
     - dialog for tombtown residents
-    - make a song for the friggin spider
  
 [what's stressing me out?]
  - won't ever finish
     - potentially true. it's up to you
- - "it took you X months to make this?"
+ - "it took you X years to make this?"
     - it's hard to predict reception. don't let it paralyze you.
  - new players will struggle and quit
     - you'll playtest the tutorial system before release, and you might be 

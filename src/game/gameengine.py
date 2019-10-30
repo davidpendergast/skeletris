@@ -621,8 +621,6 @@ class MoveToAction(Action):
         pix_pos = self.actor_entity.center()
         pos = world.to_grid_coords(pix_pos[0], pix_pos[1])
 
-        a_state = self.get_actor().get_actor_state()
-
         if Utils.dist_manhattan(self.position, pos) != 1:
             return False
         elif world.is_solid(self.position[0], self.position[1], including_entities=True):
@@ -1318,8 +1316,8 @@ class ThrowItemAction(Action):
             damage = self._results[0]
             target = self._results[1]
 
-            # we only want on-hit effects that living on the thrown item to apply
-            # and we don't want any on-hit effects to go back to the thrower (I think?)
+            # we only want on-hit effects living on the thrown item to apply and
+            # we don't want any on-hit effects to go back to the thrower (I think?)
             attacker = self.get_item()
 
             defender = target.get_actor_state()
