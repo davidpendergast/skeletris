@@ -97,7 +97,7 @@ class GlorpleTemplate(NpcTemplate):
 class MachineTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MACHINE, "Machine", sr.save_stations, sr.save_station_faces, ("M", colors.YELLOW))
+        NpcTemplate.__init__(self, NpcID.MACHINE, "PrintBot", sr.save_stations, sr.save_station_faces, ("P", colors.YELLOW))
 
     def get_trade_protocol(self, level):
         if level >= 7:
@@ -141,6 +141,7 @@ TEMPLATES = {
     NpcID.MACHINE: MachineTemplate(),
     # The "Machine", the skeleton-built AI that helped manage Skeletris before its fall.
     # Wants more for itself, seems almost pleased at the skeletons' setbacks.
+    # JK - now it's just a printer
 
     NpcID.DOCTOR: DoctorTemplate(),
     # The "Doctor", career-driven, but goals were cut short when Skeletris fell.
@@ -531,15 +532,14 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
 class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
     def accepts_trade(self, item):
+        return self._is_valid_item_type(item) and self._is_enough_space_for_new_item(item)
+
+    def _is_valid_item_type(self, item):
         from src.items.item import ItemTags
-        if ItemTags.CUBES not in item.get_type().get_tags():
-            return False
+        return ItemTags.CUBES in item.get_type().get_tags()
 
-        # not enough space in grid to create a valid item.
-        if len(self._get_empty_equipment_grid_cell_clusters(min_size=5)) == 0:
-            return False
-
-        return True
+    def _is_enough_space_for_new_item(self, item):
+        return len(self._get_empty_equipment_grid_cell_clusters(min_size=5)) > 0
 
     def _get_empty_equipment_grid_cell_clusters(self, min_size=5):
         """
@@ -670,6 +670,38 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
             item.get_level(), res_cubes, new_applied_stats)
 
         return [new_item]
+
+    def get_explain_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. How can I help you?", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("How does this work?"),
+             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then I'll re-print it so it fits in your grid.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("Will the item's stats change?"),
+             dialog.NpcDialog("Sometimes. That's part of the fun!", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Just make sure there is enough space for the new item. Otherwise it definitely won't work.", sprites=get_sprites(npc_id)),
+        ]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Print completed successfully. Enjoy!", sprites=get_sprites(npc_id))
+
+    def get_wrong_item_dialog(self, npc_id, item):
+        if not self._is_valid_item_type(item):
+            return dialog.NpcDialog("ERROR: PrintBot is not compatible with this item. Only artifacts are supported.",
+                                    sprites=get_sprites(npc_id))
+        elif not self._is_enough_space_for_new_item(item):
+            return dialog.NpcDialog("ERROR: Not enough space in equipment grid.", sprites=get_sprites(npc_id))
+        else:
+            return dialog.NpcDialog("ERROR: Unexpected error.", sprites=get_sprites(npc_id))
+
+    def get_post_success_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Please rate the service you received from [1] to [5] stars.", sprites=get_sprites(npc_id)),
+             dialog.PlayerDialog("I..."),
+             dialog.NpcDialog("Confirming [5] star rating. Thank you!", sprites=get_sprites(npc_id))]
+        return dialog.Dialog.link_em_up(d)
+
+    def get_no_more_trades_dialog(self, npc_id):
+        return dialog.NpcDialog("ERROR: Toner cartridge is not genuine. Please install a genuine PrintBot toner cartridge and try again.",
+                                sprites=get_sprites(npc_id))
 
 
 class NpcTradeProtocols:

@@ -19,7 +19,6 @@
  - enemies double attack when you die (ranged enemies only?)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
- - machine has generic trade text
  - tutorial text can become faded. looks like a render order issue
  - make sure that statuses 'apply' the correct number of times
 
