@@ -32,7 +32,6 @@
  - finish up final area
  - spider fight
     - dialog for tombtown residents
- - make volume controls go from 1-10
  
 [what's stressing me out?]
  - won't ever finish

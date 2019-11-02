@@ -22,9 +22,9 @@ class Setting:
         else:
             return new_value
 
-    def on_set(self, old_value, new_value):
+    def on_set(self, sttgs, old_value, new_value):
         if self._on_setter is not None:
-            self._on_setter(old_value, new_value)
+            self._on_setter(sttgs, old_value, new_value)
 
 
 class KeySetting(Setting):
@@ -77,11 +77,19 @@ AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True,
 
 EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
                          cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                         on_set=lambda old_val, new_val: sound_effects.set_volume(new_val / 100))
+                         on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=True, music=False))
 
 MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
                        cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                       on_set=lambda old_val, new_val: pygame.mixer.music.set_volume(new_val / 100))
+                       on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=False, music=True))
+
+MUSIC_MUTED = Setting("music muted", "MUSIC_MUTED", False,
+                      cleaner=lambda val: bool(val),
+                      on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=False, music=True))
+
+EFFECTS_MUTED = Setting("effects muted", "EFFECTS_MUTED", False,
+                        cleaner=lambda val: bool(val),
+                        on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=True, music=False))
 
 FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
 
@@ -102,7 +110,7 @@ class Settings:
             new_val = setting.clean(val)
             self.values[setting.key] = new_val
             print("INFO: updated setting {} from {} to {}.".format(setting.key, old_val, new_val))
-            setting.on_set(old_val, new_val)
+            setting.on_set(self, old_val, new_val)
         except ValueError:
             print("ERROR: failed to set {} to {}".format(setting.key, val))
 
@@ -163,9 +171,6 @@ class Settings:
     def map_key(self):
         return self.get(KEY_MAP)
 
-    #def help_key(self):
-    #    return self.get(KEY_HELP)
-
     def all_direction_keys(self):
         res = []
         res.extend(self.up_key())
@@ -207,3 +212,15 @@ class Settings:
             else:
                 all_finished_tuts.append(tut_id)
             self.set(FINISHED_TUTORIALS, all_finished_tuts)
+
+    def update_volume_levels(self, music=True, effects=True):
+        if music:
+            vol_level = 0 if self.get(MUSIC_MUTED) else self.get(MUSIC_VOLUME)
+            new_val = Utils.bound(vol_level / 100, 0, 1.0)
+            pygame.mixer.music.set_volume(new_val)
+
+        if effects:
+            vol_level = 0 if self.get(EFFECTS_MUTED) else self.get(EFFECTS_VOLUME)
+            new_val = Utils.bound(vol_level / 100, 0, 1.0)
+            sound_effects.set_volume(new_val)
+

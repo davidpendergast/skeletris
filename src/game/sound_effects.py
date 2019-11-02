@@ -60,6 +60,7 @@ def play_sound(sound):
 
     if effect_path in _LOADED_EFFECTS:
         effect = _LOADED_EFFECTS[effect_path]
+        effect.set_volume(_MASTER_VOLUME * volume)
     else:
         try:
             effect = pygame.mixer.Sound(effect_path)

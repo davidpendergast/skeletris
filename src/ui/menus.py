@@ -522,25 +522,39 @@ class TextOnlyMenu(OptionsMenu):
 
 
 class SoundSettingsMenu(OptionsMenu):
-    MUSIC_VOLUME_IDX = 0
-    EFFECTS_VOLUME_IDX = 1
-    BACK_IDX = 2
+    MUSIC_TOGGLE_IDX = 0
+    MUSIC_VOLUME_UP_IDX = 1
+    MUSIC_VOLUME_DOWN_IDX = 2
+
+    EFFECTS_TOGGLE_IDX = 3
+    EFFECTS_VOLUME_UP_IDX = 4
+    EFFECTS_VOLUME_DOWN_IDX = 5
+
+    BACK_IDX = 6
 
     def __init__(self, prev_id):
-        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound", ["~music~", "~effects~", "back"])
+        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound", ["~music toggle~",
+                                                                        "+10% music", "-10% music",
+                                                                        "~effects toggle~",
+                                                                        "+10% effects", "-10% effects",
+                                                                        "back"])
         self.prev_id = prev_id
-        self.music_enabled = gs.get_instance().settings().get(settings.MUSIC_VOLUME) > 0
-        self.effects_enabled = gs.get_instance().settings().get(settings.EFFECTS_VOLUME) > 0
+
+        self.music_pcnt = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
+        self.music_muted = self.music_pcnt == 0 or gs.get_instance().settings().get(settings.MUSIC_MUTED)
+
+        self.effects_pcnt = gs.get_instance().settings().get(settings.EFFECTS_VOLUME)
+        self.effects_muted = self.effects_pcnt == 0 or gs.get_instance().settings().get(settings.EFFECTS_MUTED)
 
     def get_option_text(self, idx):
-        if idx == SoundSettingsMenu.MUSIC_VOLUME_IDX:
-            if self.music_enabled:
-                return "music: ON"
+        if idx == SoundSettingsMenu.MUSIC_TOGGLE_IDX:
+            if not self.music_muted:
+                return "music: {}%".format(self.music_pcnt)
             else:
                 return "music: OFF"
-        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_IDX:
-            if self.effects_enabled:
-                return "effects: ON"
+        elif idx == SoundSettingsMenu.EFFECTS_TOGGLE_IDX:
+            if not self.effects_muted:
+                return "effects: {}%".format(self.effects_pcnt)
             else:
                 return "effects: OFF"
         else:
@@ -548,18 +562,54 @@ class SoundSettingsMenu(OptionsMenu):
 
     def option_activated(self, idx):
         rebuild = False
-        if idx == SoundSettingsMenu.MUSIC_VOLUME_IDX:
-            new_val = 0 if self.music_enabled else 100
-            gs.get_instance().settings().set(settings.MUSIC_VOLUME, new_val)
+        if idx == SoundSettingsMenu.MUSIC_TOGGLE_IDX:
+            new_val = not self.music_muted
+            gs.get_instance().settings().set(settings.MUSIC_MUTED, new_val)
+
+            if new_val is False and self.music_pcnt == 0:
+                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 10)
+
             gs.get_instance().save_settings_to_disk()
             rebuild = True
             sound_effects.play_sound(soundref.menu_select)
-        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_IDX:
-            new_val = 0 if self.effects_enabled else 100
-            gs.get_instance().settings().set(settings.EFFECTS_VOLUME, new_val)
+
+        elif idx == SoundSettingsMenu.EFFECTS_TOGGLE_IDX:
+            new_val = not self.effects_muted
+            gs.get_instance().settings().set(settings.EFFECTS_MUTED, new_val)
+
+            if new_val is False and self.effects_pcnt == 0:
+                gs.get_instance().settings().set(settings.EFFECTS_VOLUME, 10)
+
             gs.get_instance().save_settings_to_disk()
             rebuild = True
             sound_effects.play_sound(soundref.menu_select)
+
+        elif idx == SoundSettingsMenu.MUSIC_VOLUME_UP_IDX or idx == SoundSettingsMenu.MUSIC_VOLUME_DOWN_IDX:
+            change = 10 if idx == SoundSettingsMenu.MUSIC_VOLUME_UP_IDX else -10
+            new_vol = Utils.bound(self.music_pcnt + change, 0, 100)
+            if new_vol == 0:
+                gs.get_instance().settings().set(settings.MUSIC_MUTED, True)
+            else:
+                gs.get_instance().settings().set(settings.MUSIC_MUTED, False)
+            gs.get_instance().settings().set(settings.MUSIC_VOLUME, new_vol)
+
+            gs.get_instance().save_settings_to_disk()
+            rebuild = True
+            sound_effects.play_sound(soundref.menu_select)
+
+        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_UP_IDX or idx == SoundSettingsMenu.EFFECTS_VOLUME_DOWN_IDX:
+            change = 10 if idx == SoundSettingsMenu.EFFECTS_VOLUME_UP_IDX else -10
+            new_vol = Utils.bound(self.effects_pcnt + change, 0, 100)
+            if new_vol == 0:
+                gs.get_instance().settings().set(settings.EFFECTS_MUTED, True)
+            else:
+                gs.get_instance().settings().set(settings.EFFECTS_MUTED, False)
+            gs.get_instance().settings().set(settings.EFFECTS_VOLUME, new_vol)
+
+            gs.get_instance().save_settings_to_disk()
+            rebuild = True
+            sound_effects.play_sound(soundref.menu_select)
+
         elif idx == SoundSettingsMenu.BACK_IDX:
             if self.prev_id == MenuManager.START_MENU:
                 gs.get_instance().menu_manager().set_active_menu(StartMenu())
