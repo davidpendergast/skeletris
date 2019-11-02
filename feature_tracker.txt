@@ -22,7 +22,6 @@
  - machine has generic trade text
  - tutorial text can become faded. looks like a render order issue
  - make sure that statuses 'apply' the correct number of times
- - while holding an item, clicking buttons on the hotbar produce inconsistent results
 
 
 [balance issues]
@@ -34,6 +33,7 @@
  - finish up final area
  - spider fight
     - dialog for tombtown residents
+ - make volume controls go from 1-10
  
 [what's stressing me out?]
  - won't ever finish
@@ -50,6 +50,8 @@
     - also they're actually better than they seem
         - frog boss tests the player's ability to sidestep attacks
         - robot boss tests player's ability to use CC
+ - none of it's very interesting
+    - done is better than interesting
     
  
 [architecture]

@@ -1032,7 +1032,7 @@ class HotbarHelpButton(HotbarSidePanelButton):
         return spriteref.UI.help_button
 
     def on_click(self, x, y, button=1):
-        pass
+        return True
 
     def get_tooltip_target_at(self, x, y):
         text = "Help [h]"
@@ -1102,6 +1102,7 @@ class HotbarMoveButton(InteractableImage):
     def on_click(self, x, y, button=1):
         if button == 1 and self.is_active():
             self.last_clicked_at = gs.get_instance().tick_counter
+        return True
 
     def is_active(self):
         if gs.get_instance().world_updates_paused():
@@ -1158,6 +1159,7 @@ class HotbarMoveLeftButton(HotbarMoveButton):
         super().on_click(x, y, button=1)
         if button == 1:
             super().send_move_action((-1, 0))
+        return True
 
 
 class HotbarMoveRightButton(HotbarMoveButton):
@@ -1172,6 +1174,7 @@ class HotbarMoveRightButton(HotbarMoveButton):
         super().on_click(x, y, button=1)
         if button == 1:
             super().send_move_action((1, 0))
+        return True
 
 
 class HotbarMoveUpButton(HotbarMoveButton):
@@ -1186,6 +1189,7 @@ class HotbarMoveUpButton(HotbarMoveButton):
         super().on_click(x, y, button=1)
         if button == 1:
             super().send_move_action((0, -1))
+        return True
 
 
 class HotbarMoveDownButton(HotbarMoveButton):
@@ -1200,6 +1204,7 @@ class HotbarMoveDownButton(HotbarMoveButton):
         super().on_click(x, y, button=1)
         if button == 1:
             super().send_move_action((0, 1))
+        return True
 
 
 class HotbarSkipTurnButton(HotbarMoveButton):
@@ -1213,21 +1218,18 @@ class HotbarSkipTurnButton(HotbarMoveButton):
     def on_click(self, x, y, button=1):
         super().on_click(x, y, button=1)
         if button == 1:
-            w = gs.get_instance().get_world()
-            if w is None:
-                return
-
-            player = w.get_player()
-            if player is None:
-                return
+            w, p = gs.get_instance().get_world_and_player()
+            if w is None or p is None:
+                return True
 
             pc = gs.get_instance().player_controller()
             if pc is None:
-                return  # shouldn't be possible but ehjlkhl
+                return True  # shouldn't be possible but ehjlkhl
 
-            pos = w.to_grid_coords(*player.center())
+            pos = w.to_grid_coords(*p.center())
 
-            pc.add_requests([gameengine.SkipTurnAction(player, pos)])
+            pc.add_requests([gameengine.SkipTurnAction(p, pos)])
+            return True
 
     def get_preferred_size(self):
         return (30, 15)
