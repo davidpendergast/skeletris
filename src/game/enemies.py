@@ -353,11 +353,10 @@ class MuncherTemplate(EnemyTemplate):
             StatTypes.VIT: 30,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 6,
-            StatTypes.DEF: 4,
+            StatTypes.UNARMED_ATT: 8,
+            StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
-            StatTypes.POTION_AFFINITY: 1
         })
 
     def get_spawn_items(self, level, randval=None):
@@ -745,13 +744,14 @@ class SkulkerTemplate(EnemyTemplate):
 
     def get_base_stats(self):
         return stats.BasicStatLookup({
-            StatTypes.VIT: 14,
+            StatTypes.VIT: 20,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
-            StatTypes.DEF: 2,
+            StatTypes.DEF: 4,
             StatTypes.UNARMED_ATT: 3,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.CHILL_ON_HIT: 4,
+            StatTypes.CHILL_ON_HIT: 3,
+            StatTypes.POTION_AFFINITY: 1,
         })
 
     def get_map_identifier(self):
@@ -759,6 +759,9 @@ class SkulkerTemplate(EnemyTemplate):
 
     def get_shadow_sprite(self):
         return spriteref.medium_shadow
+
+    def get_spawn_items(self, level, randval=None):
+        yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.HEALING)
 
 
 class FrogBossTemplate(EnemyTemplate):

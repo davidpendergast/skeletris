@@ -27,8 +27,8 @@
  - spider fight is way too easy
  - frog boss should do ~something~
     - drink potions? spawn more frogs? leap?
- - munchers are probably too much
  - skulkers too weak
+    - til they touch you...
  - flinch makes boss fights trivial
     - just make them unflinching?
         - sure for now
