@@ -957,7 +957,7 @@ class CreditsMenu(Menu):
         "David Pendergast",
         ("2019", SMALL),
         "",
-        ("art, programming, design, and music by", SMALL),
+        ("art, coding, design, and music by", SMALL),
         "David Pendergast",
         "",
         ("twitter", SMALL),

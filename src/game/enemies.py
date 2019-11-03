@@ -667,7 +667,8 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.WEALTH: 2,
             StatTypes.UNARMED_RANGE: 3,
             StatTypes.UNARMED_IS_PROJECTILE: 1,
-            StatTypes.CONFUSION_ON_HIT: 5
+            StatTypes.CONFUSION_ON_HIT: 5,
+            StatTypes.SWAP_ON_HIT: 1,
         })
 
 

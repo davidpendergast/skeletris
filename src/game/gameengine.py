@@ -783,6 +783,13 @@ def determine_damage_dealt(attacker, defender, item_used=None, is_thrown=False):
     return len(atts)
 
 
+class HitResult:
+
+    def __init__(self):
+        self.missed = False
+        self.should_swap = False
+
+
 def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
                                  attacker_entity=None, defender_entity=None, item_used=False,
                                  responsible_entity=None):
@@ -795,14 +802,30 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
     :param defender_entity: The entity receiving the attack.
     :param item_used: The item used in the attack, which may contribute secondary offensive effects.
     :param responsible_entity: The entity that will be credited with the attack or kill.
+    :returns: HitResult
     """
+    res = HitResult()
+
     if damage <= 0:
         if defender_entity is not None and world is not None:
             world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
             sound_effects.play_sound(soundref.whiff_noise)
+        res.missed = True
     else:
         was_alive = defender.is_alive()  # bleh
         defender.set_hp(defender.hp() - damage)
+
+        res.missed = False
+
+        # 'swap on hit' and 'swap when hit' cancel each other out
+        do_swap = attacker.stat_value_with_item(StatTypes.SWAP_ON_HIT, item_used) > 0
+        do_swap = do_swap ^ defender.stat_value(StatTypes.SWAPS_WHEN_HIT) > 0
+
+        if attacker.stat_value_with_item(StatTypes.UNSWAPPABLE, item_used) > 0:
+            do_swap = False
+        if defender.stat_value(StatTypes.UNSWAPPABLE) > 0:
+            do_swap = False
+        res.should_swap = do_swap
 
         if defender_entity is not None and world is not None:
             world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, defender_entity)
@@ -892,6 +915,8 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
                     world.show_effect_circle(cx, cy, s.get_effect_circle_art_type(),
                                              color=s.get_color(), duration=45)
 
+    return res
+
 
 class AttackAction(Action):
 
@@ -899,6 +924,7 @@ class AttackAction(Action):
         Action.__init__(self, ActionType.ATTACK, duration, actor, item=item, position=position)
         self._did_animations = False
         self._results = None  # (int: dmg, ActorEntity: target)
+        self._hit_result = None
 
     def get_targeting_color(self, for_mouse=False):
         return colors.RED
@@ -951,10 +977,10 @@ class AttackAction(Action):
             attacker = self.get_actor().get_actor_state()
             defender = target.get_actor_state()
 
-            apply_damage_and_hit_effects(damage, attacker, defender,
-                                         attacker_entity=self.get_actor(), defender_entity=target,
-                                         responsible_entity=self.get_actor(),
-                                         world=world, item_used=self.item)
+            self._hit_result = apply_damage_and_hit_effects(damage, attacker, defender,
+                                                            attacker_entity=self.get_actor(), defender_entity=target,
+                                                            responsible_entity=self.get_actor(),
+                                                            world=world, item_used=self.item)
 
     def start(self, world):
         super().start(world)
@@ -968,11 +994,34 @@ class AttackAction(Action):
     def animate_in_world(self, progress, world):
         pass
 
+    def swap_actor_with_target(self, world):
+        target = self._results[1]
+        if target is not None:
+            target_pos = world.to_grid_coords(*target.center())
+            actor_pos = world.to_grid_coords(*self.actor_entity.center())
+
+            # if somehow an actor is stuck in a wall, don't let it swap
+            if world.is_solid(target_pos[0], target_pos[1], False):
+                return False
+            if world.is_solid(actor_pos[0], actor_pos[1], False):
+                return False
+
+            target_new_center = (int(world.cellsize() * (actor_pos[0] + 0.5)),
+                                 int(world.cellsize() * (actor_pos[1] + 0.5)))
+            target.set_center(*target_new_center)
+
+            actor_new_center = (int(world.cellsize() * (target_pos[0] + 0.5)),
+                                int(world.cellsize() * (target_pos[1] + 0.5)))
+            self.actor_entity.set_center(*actor_new_center)
+
     def finalize(self, world):
         super().finalize(world)
         self._apply_attack_and_add_animations_if_necessary(world)
         self.actor_entity.set_draw_offset(0, 0)
         self.actor_entity.set_vel((0, 0))
+
+        if self._hit_result.should_swap:
+            self.swap_actor_with_target(world)
 
         attack_vec = Utils.sub(self._results[1].center(), self.actor_entity.center())
 
@@ -2010,7 +2059,7 @@ class ItemActions:
     AXE_ATTACK = AttackItemActionProvider("Axe Attack", spriteref.Items.axe_icon, (1,))
     UNARMED_ATTACK = AttackItemActionProvider("Slap", spriteref.Items.unarmed_icon, (1,))
     FISHING_ROD_ATTACK = AttackItemActionProvider("Hook n' Reel", spriteref.Items.fishing_rod_icon, (1,))
-    SLINGSHOT_ATTACK = AttackItemActionProvider("Sling Shot", spriteref.Items.slingshot_icon, (1, 2), projectile=True)
+    SLINGSHOT_ATTACK = AttackItemActionProvider("Sling Shot", spriteref.Items.slingshot_icon, (2,), projectile=True)
 
 
 def get_basic_movement_actions(player, current_pos, move_pos, for_click=False):

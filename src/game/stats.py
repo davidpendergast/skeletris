@@ -164,6 +164,21 @@ class StatTypes:
     SUMMONING_SICKNESS_ON_SUMMON = StatType("SUMMONING_SICKNESS_ON_SUMMON",
                                             color=colors.WHITE)
 
+    SWAP_ON_HIT = StatType("SWAP_ON_HIT",
+                           color=colors.LIGHT_PURPLE,
+                           desc="Swaps Position with Target on Hit",
+                           local_desc="Swaps Position with Target on Hit",
+                           enemy_desc="Swapping")
+
+    SWAPS_WHEN_HIT = StatType("SWAPS_WHEN_HIT",
+                              color=colors.LIGHT_PURPLE,
+                              desc="Swaps Position with Attacker when Hit",
+                              enemy_desc="Reversing")
+
+    UNSWAPPABLE = StatType("UNSWAPPABLE", color=colors.WHITE,
+                           desc="Cannot be Swapped",
+                           enemy_desc="Immobile")
+
     @staticmethod
     def all_types():
         for stat_id in _ALL_STAT_TYPES:

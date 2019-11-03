@@ -149,7 +149,8 @@ class WeaponItemFactory:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SLINGSHOT_ATTACK]
             return SpriteItem("Slingshot of Hope", item_type, level, cubes,
-                              [AppliedStat(StatTypes.ATT, 3, local=True)],
+                              [AppliedStat(StatTypes.ATT, 2, local=True),
+                               AppliedStat(StatTypes.SWAP_ON_HIT, 1, local=True)],
                               spriteref.Items.slingshot_small, spriteref.Items.slingshot_big, actions=actions)
 
         print("ERROR: unrecognized weapon type: {}".format(item_type))

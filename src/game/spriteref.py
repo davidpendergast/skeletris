@@ -197,15 +197,12 @@ class UI:
         def init_cursors(sheet):
             UI.Cursors.arrow_cursor = pygame.cursors.arrow  # it just looks better, sorry
             # UI.Cursors.arrow_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.arrow_cursor_sprite.rect(), sheet)
-            print("INFO: arrow_cursor={}".format(UI.Cursors.arrow_cursor))
 
             UI.Cursors.hand_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.hand_cursor_sprite.rect(),
                                                                  sheet, hotspot=(5, 3))
-            print("INFO: hand_cursor={}".format(UI.Cursors.hand_cursor))
 
             UI.Cursors.invisible_cursor = UI.Cursors.sprite_to_cursor(UI.Cursors.invis_cursor_sprite.rect(),
                                                                       sheet, hotspot=(0, 0))
-            print("INFO: invisible_cursor={}".format(UI.Cursors.invisible_cursor))
 
         @staticmethod
         def sprite_to_cursor(cursor_rect, sheet, hotspot=(0, 0)):
@@ -932,8 +929,6 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
         for x in range(0, 32):
             c = chr(y*32 + x)
             Font._alphabet[c] = make(x * char_w, y * char_h, char_w, char_h, shift=start_pos)
-
-    print("Font._alphabet = {}".format(Font._alphabet))
 
 
 def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img, raw_title_scene_img):
