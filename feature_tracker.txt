@@ -27,8 +27,6 @@
  - spider fight is way too easy
  - frog boss should do ~something~
     - drink potions? spawn more frogs? leap?
- - skulkers too weak
-    - til they touch you...
  - flinch makes boss fights trivial
     - just make them unflinching?
         - sure for now
@@ -42,6 +40,7 @@
  - finish up final area
  - spider fight
     - dialog for tombtown residents
+ - add an animation for when you get swapped
  
 [what's stressing me out?]
  - won't ever finish

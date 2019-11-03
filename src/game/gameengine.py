@@ -819,9 +819,9 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
 
         res.missed = False
 
-        # 'swap on hit' and 'swap when hit' cancel each other out
+        # TODO consider making 'swap on hit' and 'swap when hit' cancel each other out, would be funny
         do_swap = attacker.stat_value_with_item(StatTypes.SWAP_ON_HIT, item_used) > 0
-        do_swap = do_swap ^ defender.stat_value(StatTypes.SWAPS_WHEN_HIT) > 0
+        do_swap = do_swap or defender.stat_value(StatTypes.SWAPS_WHEN_HIT) > 0
 
         if attacker.stat_value_with_item(StatTypes.UNSWAPPABLE, item_used) > 0:
             do_swap = False
@@ -996,7 +996,7 @@ class AttackAction(Action):
     def animate_in_world(self, progress, world):
         pass
 
-    def swap_actor_with_target(self, world):
+    def swap_actor_with_target(self, world, show_effects=True):
         target = self._results[1]
         if target is not None:
             target_pos = world.to_grid_coords(*target.center())
@@ -1015,6 +1015,17 @@ class AttackAction(Action):
             actor_new_center = (int(world.cellsize() * (target_pos[0] + 0.5)),
                                 int(world.cellsize() * (target_pos[1] + 0.5)))
             self.actor_entity.set_center(*actor_new_center)
+
+            if show_effects:
+                if target.is_visible_in_world(world):
+                    cx, cy = target.get_render_center(ignore_perturbs=True)
+                    world.show_effect_circle(cx, cy, spriteref.EffectCircleTypes.STAR_5_ENCLOSED,
+                                             color=colors.WHITE, duration=45, height=96)
+
+                if self.actor_entity.is_visible_in_world(world):
+                    cx, cy = self.actor_entity.get_render_center(ignore_perturbs=True)
+                    world.show_effect_circle(cx, cy, spriteref.EffectCircleTypes.STAR_5_ENCLOSED,
+                                             color=colors.WHITE, duration=45, height=96)
 
     def finalize(self, world):
         super().finalize(world)
