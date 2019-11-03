@@ -146,6 +146,10 @@ class StatTypes:
                            desc="Cannot be Flinched",
                            enemy_desc="Unflinching")
 
+    # how many turns you become unflinching after being flinched
+    FLINCH_RESIST = StatType("FLINCH_RESIST",
+                             color=UNFLINCHING.get_color())
+
     FLINCH_ON_HIT = StatType("FLINCH_ON_HIT",
                              color=colors.PINK,
                              desc="Causes Target to Flinch on Hit",

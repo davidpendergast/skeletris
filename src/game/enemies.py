@@ -88,7 +88,8 @@ class EnemyTemplate:
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1,
-            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4
+            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
+            StatTypes.FLINCH_RESIST: 1
         })
 
     def get_spawn_items(self, level, randval=None):
@@ -352,7 +353,7 @@ class MuncherTemplate(EnemyTemplate):
             StatTypes.VIT: 30,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 8,
+            StatTypes.UNARMED_ATT: 6,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
@@ -661,7 +662,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.VIT: 25,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
-            StatTypes.UNARMED_ATT: 4,
+            StatTypes.UNARMED_ATT: 6,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
@@ -794,7 +795,8 @@ class FrogBossTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 1,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 3
+            StatTypes.WEALTH: 3,
+            StatTypes.FLINCH_RESIST: 3,
         })
 
 
@@ -828,7 +830,8 @@ class RoboTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 5,
             StatTypes.UNARMED_RANGE: 2,
-            StatTypes.UNARMED_IS_PROJECTILE: 1
+            StatTypes.UNARMED_IS_PROJECTILE: 1,
+            StatTypes.FLINCH_RESIST: 3,
         })
 
 
@@ -1063,6 +1066,7 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.LIGHT_LEVEL: 2,  # so it stays visible
             StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
             StatTypes.UNSWAPPABLE: 1,  # would be tragic if this thing moved
+            StatTypes.FLINCH_RESIST: 3,
         })
 
     def get_controller(self):

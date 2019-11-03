@@ -227,7 +227,9 @@ class ActorState(StatProvider):
                 self.status_effects[e] = self.status_effects[e] - 1
 
         if add_flinch_recovery:
-            self.add_status_effect(statuseffects.new_flinch_recovery_effect(1))
+            flinch_recovery_dur = self.stat_value(StatTypes.FLINCH_RESIST)
+            if flinch_recovery_dur > 0:
+                self.add_status_effect(statuseffects.new_flinch_recovery_effect(flinch_recovery_dur))
 
 
 class ActorController:

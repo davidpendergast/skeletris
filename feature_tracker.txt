@@ -23,22 +23,18 @@
  - make sure that statuses 'apply' the correct number of times
 
 
-[balance issues]
- - need some ways to defensively use/alter the world's geometry
-    - "need" ?
-    
+[balance issues]    
  - spider fight is way too easy
- - just remove the sign decorations, or make them flavorful
  - frog boss should do ~something~
     - drink potions? spawn more frogs? leap?
- - no trades in the swamp?
  - munchers are probably too much
  - skulkers too weak
- - way too many trades in the city
  - flinch makes boss fights trivial
+    - just make them unflinching?
+        - sure for now
+ 
+[feel issues]
  - need some ambient songs...
- - wraiths should do more damage
-    - and maybe swap positions with you?
  - bosses song's should end when they die
  
  
