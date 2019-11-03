@@ -752,21 +752,30 @@ class TileGridBuilder:
         return res
 
 
-_ALL_FEATURES = []
+_ALL_FEATURES = {}  # feat_id -> Feature
 
 
 class Feature(Tileish):
 
-    def __init__(self, feat_id, replace, place, appear_rate=1, can_rotate=True):
+    def __init__(self, feat_id, replace, place, appear_rate=1, can_rotate=True,
+                 max_per_zone=-1, min_level=-1, max_level=-1):
         self.feat_id = feat_id
         self.replace = replace
         self.place = place
         self.can_rotate = can_rotate
         self._appear_rate = appear_rate
+        self._max_per_zone = max_per_zone
+        self._min_level = min_level
+        self._max_level = max_level
 
         self._validate()
 
-        _ALL_FEATURES.append(self)
+        # don't overwrite a feature when we're producing a rotated version~
+        if self.feat_id not in _ALL_FEATURES:
+            _ALL_FEATURES[self.feat_id] = self
+
+    def __repr__(self):
+        return str(self.feat_id)
 
     def _validate(self):
         if len(self.replace) == 0 or len(self.replace[0]) == 0:
@@ -787,8 +796,17 @@ class Feature(Tileish):
                     self.feat_id, i, place_width, replace_width
                 ))
 
-    def appear_rate(self, at_level=None):
-        return self._appear_rate
+    def appear_rate(self, at_level=None, cur_count=0):
+        if at_level is not None:
+            if self._min_level != -1 and at_level < self._min_level:
+                return 0
+            if self._max_level != -1 and at_level > self._max_level:
+                return 0
+
+        if self._max_per_zone != -1 and cur_count >= self._max_per_zone:
+            return 0
+        else:
+            return self._appear_rate
 
     def w(self):
         return len(self.replace[0])
@@ -819,7 +837,11 @@ class Feature(Tileish):
                 replace[i] = replace[i] + self.replace[j][i]
                 place[i] = place[i] + self.place[j][i]
 
-        return Feature(self.feat_id, replace, place, can_rotate=True).rotated(rots=rots-1)
+        return Feature(self.feat_id, replace, place, can_rotate=True,
+                       appear_rate=self._appear_rate,
+                       max_level=self._max_level,
+                       min_level=self._min_level,
+                       max_per_zone=self._max_per_zone).rotated(rots=rots-1)
 
     def can_place_at(self, tilish, x, y):
         for feat_x in range(0, self.w()):
@@ -938,7 +960,7 @@ class Features:
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["-"]),
-                         FeatureUtils.convert(["i"]))
+                         FeatureUtils.convert(["i"]), appear_rate=0)  # TODO not implemented, just delete
 
     DECORATION = Feature("decoration",
                          FeatureUtils.convert(["W", "-"]),
@@ -946,7 +968,7 @@ class Features:
 
     SIGN = Feature("sign",
                    FeatureUtils.convert(["W", "-"]),
-                   FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=4)
+                   FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=0)  # these just suck
 
     # Nuking these for now, I can't write as it turns out
     QUEST_NPC = Feature("conversation_npc",
@@ -955,17 +977,23 @@ class Features:
 
     TRADE_NPC = Feature("trade_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=3)
+                        FeatureUtils.convert(["?W?", "?t?", "---"]), can_rotate=True, appear_rate=2,
+                        min_level=3, max_per_zone=3)
 
     @staticmethod
-    def get_random_feature(at_level=None):
+    def get_random_feature(at_level=None, current_counts=None):
         weighted_feats = []
-        for f in _ALL_FEATURES:
-            for _ in range(0, f.appear_rate(at_level=at_level)):
-                weighted_feats.append(f)
+        for feat_id in _ALL_FEATURES:
+            cur_count = 0
+            if current_counts is not None and feat_id in current_counts:
+                cur_count = current_counts[feat_id]
+
+            appear_rate = _ALL_FEATURES[feat_id].appear_rate(at_level=at_level, cur_count=cur_count)
+            for _ in range(0, appear_rate):
+                weighted_feats.append(feat_id)
 
         if len(weighted_feats) > 0:
-            return random.choice(weighted_feats)
+            return _ALL_FEATURES[random.choice(weighted_feats)]
         else:
             print("WARN: no valid features for level: {}" + at_level)
             return None

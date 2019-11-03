@@ -59,7 +59,7 @@ class MarySkellyTemplate(NpcTemplate):
                              sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 7:
+        if level >= 3:
             return NpcTradeProtocols.MIRROR_TRADE
 
 
@@ -70,7 +70,7 @@ class MayorPatchesTemplate(NpcTemplate):
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
     def get_trade_protocol(self, level):
-        if level >= 9:
+        if level >= 3:
             return NpcTradeProtocols.REROLL_ART
 
 
@@ -80,7 +80,7 @@ class BeanskullTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 5:
+        if level >= 3:
             return NpcTradeProtocols.REROLL_STATS
 
 
@@ -90,7 +90,7 @@ class GlorpleTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 6:
+        if level >= 8:
             return NpcTradeProtocols.REROLL_CUBES
 
 
@@ -100,7 +100,7 @@ class MachineTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.MACHINE, "PrintBot", sr.save_stations, sr.save_station_faces, ("P", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 7:
+        if level >= 8:
             return NpcTradeProtocols.ITEM_THAT_FITS
 
 
@@ -110,7 +110,7 @@ class DoctorTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 5:
+        if level >= 3:
             return NpcTradeProtocols.POTION_EXCHANGE
 
 

@@ -1061,7 +1061,8 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 6,
             StatTypes.LIGHT_LEVEL: 2,  # so it stays visible
-            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4
+            StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
+            StatTypes.UNSWAPPABLE: 1,  # would be tragic if this thing moved
         })
 
     def get_controller(self):

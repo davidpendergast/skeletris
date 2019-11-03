@@ -569,12 +569,20 @@ class ZoneBuilder:
         if not start_placed:
             raise ValueError("failed to place end anywhere on path...")
 
+        feature_counts = {}  # feat_id -> int
+
         while len(empty_rooms) > 0:
             r = empty_rooms.pop()
             if random.random() < 0.95:
-                feat = worldgen2.Features.get_random_feature(at_level=level)
+                feat = worldgen2.Features.get_random_feature(at_level=level, current_counts=feature_counts)
                 if feat is not None:
-                    worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+                    did_place = worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r)
+
+                    if did_place:
+                        if feat.feat_id not in feature_counts:
+                            feature_counts[feat.feat_id] = 1
+                        else:
+                            feature_counts[feat.feat_id] += 1
 
         return t_grid
 
