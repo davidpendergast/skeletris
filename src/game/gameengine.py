@@ -531,6 +531,7 @@ class ActionType:
     PLAYER_WAIT = "PLAYER_WAIT"  # special command used by player to indicate they're still deciding
     SKIP_TURN = "SKIP_TURN"
     SPAWN_ACTOR = "SPAWN_ACTOR"
+    FROG_LEAP = "FROG_LEAP"
 
     OPEN_DOOR = "OPEN_DOOR"
 
@@ -1845,6 +1846,35 @@ class RemoveItemFromGridAction(Action):
             self.get_actor().get_actor_state().held_item = my_item
         else:
             print("ERROR: failed to remove item from grid: {}".format(my_item))
+
+
+class FrogLeapAction(MoveToAction):
+
+    def __init__(self, actor, position):
+        Action.__init__(self, ActionType.FROG_LEAP, 60, actor, position=position)
+        self._pre_jump_pcnt = 0.1
+        self._post_jump_pcnt = 0.1
+
+    def is_possible(self, world):
+        pos = self.get_position()
+        if pos is None:
+            return False
+
+        if world.is_solid(pos[0], pos[1], including_entities=True):
+            return False
+
+        return True
+
+    def _get_sprite(self, prog):
+        return spriteref.Bosses.frog_airborn_rising
+
+    def animate_in_world(self, progress, world):
+        end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
+                   int(world.cellsize() * (self.position[1] + 0.5)))
+
+        new_pos = Utils.linear_interp(self.start_pos, end_pos, progress)
+        self.actor_entity.move_to(round(new_pos[0]), round(new_pos[1]))
+
 
 
 class SpawnActorAction(Action):

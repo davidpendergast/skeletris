@@ -260,6 +260,26 @@ class WorldBlueprint:
         else:
             return False
 
+    def flood_search(self, x, y, allow_types=(World.FLOOR,)):
+        if not self.is_valid(x, y):
+            yield
+
+        seen = set()
+        seen.add((x, y))
+        q = []
+        q.append((x, y))
+
+        while len(q) > 0:
+            p = q.pop()
+            if self.get(p[0], p[1]) in allow_types:
+                yield p
+
+                for n in NEIGHBORS:
+                    p_n = (p[0] + n[0], p[1] + n[1])
+                    if self.is_valid(p_n[0], p_n[1]) and p_n not in seen:
+                        seen.add(p_n)
+                        q.append(p_n)
+
     def is_valid(self, x, y):
         return 0 <= x < self.size[0] and 0 <= y < self.size[1]
 

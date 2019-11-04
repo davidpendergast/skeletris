@@ -860,6 +860,60 @@ class FrogLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
 
+    def gen_frog_boss_entity(self, positions):
+
+        import src.game.gameengine as gameengine
+
+        class _FrogBossController(gameengine.EnemyController):
+
+                def __init__(self, positions, min_leap_chance=0.1, max_leap_chance=0.6):
+                    gameengine.EnemyController.__init__(self)
+                    self._arena_positions = positions
+                    self._min_leap_chance = min_leap_chance
+                    self._max_leap_chance = max_leap_chance
+
+                def get_special_leap_action_if_possible(self, actor, world):
+                    player = world.get_player()
+                    if player is None:
+                        return None
+
+                    if not actor.is_visible_in_world(world):
+                        return None
+
+                    player_xy = world.to_grid_coords(*player.center())
+                    actor_xy = world.to_grid_coords(*actor.center())
+
+                    # don't leap if you can attack directly
+                    if Utils.dist_manhattan(player_xy, actor_xy) <= 1:
+                        return None
+
+                    scrambled_positions = [x for x in self._arena_positions]
+                    random.shuffle(scrambled_positions)
+
+                    for p in scrambled_positions:
+                        act = gameengine.FrogLeapAction(actor, p)
+                        if act.is_possible(world):
+                            return act
+
+                    return None
+
+                def get_next_action(self, actor, world):
+                    hp_pct = actor.get_actor_state().hp() / actor.get_actor_state().max_hp()
+                    leap_chance = Utils.linear_interp(self._min_leap_chance, self._max_leap_chance, 1 - hp_pct)
+
+                    if random.random() < leap_chance:
+                        special_leap = self.get_special_leap_action_if_possible(actor, world)
+                        if special_leap is not None:
+                            return special_leap
+
+                    return super().get_next_action(actor, world)
+
+        controller = _FrogBossController(positions, min_leap_chance=0.9, max_leap_chance=0.9)
+
+        return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG,
+                                              self.get_level(),
+                                              controller=controller)
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
@@ -867,7 +921,13 @@ class FrogLairZone(Zone):
 
         boss_spawn = unknowns[FrogLairZone.FROG_BOSS_SPAWN][0]
 
-        boss_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG, self.get_level())
+        # do a flood-fill search around the boss's spawn to find the area positions
+        arena_positions = set()
+        for pos in bp.flood_search(boss_spawn[0], boss_spawn[1], allow_types=(World.FLOOR,)):
+            arena_positions.add(pos)
+        positions = [x for x in arena_positions]
+
+        boss_entity = self.gen_frog_boss_entity(positions)
         w.add(boss_entity, gridcell=boss_spawn)
 
         if FrogLairZone.FROG_SPAWN in unknowns:

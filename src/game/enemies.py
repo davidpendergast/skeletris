@@ -469,7 +469,8 @@ class GiantTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 2,
             StatTypes.HP_REGEN: 2,
-            StatTypes.WEALTH: 4
+            StatTypes.WEALTH: 4,
+            StatTypes.UNSWAPPABLE: 1,
         })
 
 
@@ -938,9 +939,9 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
-            StatTypes.GRASP_ON_MELEE_HIT: 1,
             StatTypes.CONFUSION_ON_HIT: 4,
-            StatTypes.UNFLINCHING: 1
+            StatTypes.UNFLINCHING: 1,
+            StatTypes.UNSWAPPABLE: 1
         })
 
 
