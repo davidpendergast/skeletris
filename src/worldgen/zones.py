@@ -908,7 +908,7 @@ class FrogLairZone(Zone):
 
                     return super().get_next_action(actor, world)
 
-        controller = _FrogBossController(positions, min_leap_chance=0.9, max_leap_chance=0.9)
+        controller = _FrogBossController(positions, min_leap_chance=0.6, max_leap_chance=0.9)
 
         return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_FROG,
                                               self.get_level(),

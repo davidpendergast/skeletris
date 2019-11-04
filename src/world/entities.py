@@ -571,6 +571,9 @@ class ActorEntity(Entity):
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
 
+        # used to (temporarily change the actor's shadow). Use False for no shadow.
+        self._shadow_sprite_override = None
+
         # used to apply a 'bouncy' effect to the actor
         self._perturb_points = []
 
@@ -581,6 +584,9 @@ class ActorEntity(Entity):
 
         # used to jump a little bit (z-axis)
         self._z_perturb_points = []
+
+        # used to (temporarily) move the actor on the z-axis
+        self._z_draw_offs = 0
 
         # used to compensate for off-center sprites
         self._sprite_offset = sprite_offset
@@ -594,7 +600,12 @@ class ActorEntity(Entity):
         self._was_moving = 60  # how long it's been since the actor was moving
 
     def get_shadow_sprite(self):
-        return self._shadow_sprite
+        if self._shadow_sprite_override is False:
+            return None
+        elif self._shadow_sprite_override is not None:
+            return self._shadow_sprite_override
+        else:
+            return self._shadow_sprite
 
     def get_map_identifier(self):
         return self.map_id
@@ -682,6 +693,9 @@ class ActorEntity(Entity):
             self._sprites_override = None
         else:
             self._sprites_override = Utils.listify(sprites)
+
+    def set_shadow_sprite_override(self, shadow_sprite):
+        self._shadow_sprite_override = shadow_sprite
 
     def is_performing_action(self):
         return self.executing_action is not None
@@ -855,6 +869,12 @@ class ActorEntity(Entity):
                 x = 2 - i / (jump_duration / 2)
             self._z_perturb_points.append(-jump_height * math.sqrt(x))
 
+    def set_z_draw_offset(self, z_offs):
+        self._z_draw_offs = z_offs
+
+    def get_z_draw_offset(self):
+        return self._z_draw_offs
+
     def update_images(self):
         if self._img is None:
             self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
@@ -862,7 +882,7 @@ class ActorEntity(Entity):
         sprite = self.get_sprite()
 
         x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
-        y = self.get_render_center()[1] - (sprite.height() * self._img.scale()) + self.get_perturbed_z()
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale()) + self.get_perturbed_z() + self.get_z_draw_offset()
 
         depth = self.get_depth()
         xflip = self.should_xflip()

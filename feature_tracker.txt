@@ -21,15 +21,12 @@
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
  - tutorial text can become faded. looks like a render order issue
  - make sure that statuses 'apply' the correct number of times
+ - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
 
 
 [balance issues]    
  - spider fight is way too easy
- - frog boss should do ~something~
-    - drink potions? spawn more frogs? leap?
- - flinch makes boss fights trivial
-    - just make them unflinching?
-        - sure for now
+ - robo boss should do something
  
 [feel issues]
  - need some ambient songs...

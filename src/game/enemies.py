@@ -773,6 +773,9 @@ class FrogBossTemplate(EnemyTemplate):
     def get_sprites(self):
         return spriteref.Bosses.frog_idle_1
 
+    def get_moving_sprites(self):
+        return spriteref.Bosses.frog_idle_2
+
     def get_types(self):
         return [EnemyTypes.ANIMAL]
 

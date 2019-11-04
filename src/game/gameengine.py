@@ -1222,7 +1222,7 @@ class _ThrownItemAnimator:
 
             h = a * x * x + b * x + c
 
-            self._thrown_item_entity.set_sprite_offset((0, -h))
+            self._thrown_item_entity.set_sprite_offset((0, -h))  # XXX this method isn't meant for this
 
             # make it spin through the air
             rot = (self._item_start_rotation + int(airtime_prog * 6)) % 4
@@ -1852,8 +1852,12 @@ class FrogLeapAction(MoveToAction):
 
     def __init__(self, actor, position):
         Action.__init__(self, ActionType.FROG_LEAP, 60, actor, position=position)
-        self._pre_jump_pcnt = 0.1
-        self._post_jump_pcnt = 0.1
+        self._pre_jump_pcnt = 0.15
+        self._post_jump_pcnt = 0.25
+        self._jump_height = 96
+        self._orig_shadow = actor.get_shadow_sprite()
+
+        self._did_screen_shake = False
 
     def is_possible(self, world):
         pos = self.get_position()
@@ -1865,15 +1869,54 @@ class FrogLeapAction(MoveToAction):
 
         return True
 
-    def _get_sprite(self, prog):
-        return spriteref.Bosses.frog_airborn_rising
+    def _get_z_height(self, jump_pct):
+        x = jump_pct
+        h = self._jump_height
+        res = -4 * h * x * x + 4 * h * x
+        return Utils.bound(res, 0, h)
 
     def animate_in_world(self, progress, world):
         end_pos = (int(world.cellsize() * (self.position[0] + 0.5)),
                    int(world.cellsize() * (self.position[1] + 0.5)))
 
-        new_pos = Utils.linear_interp(self.start_pos, end_pos, progress)
+        z_offs = 0
+        new_shadow = None
+
+        if progress < self._pre_jump_pcnt:
+            self.actor_entity.set_sprite_override(spriteref.Bosses.frog_idle_down)
+            new_pos = self.start_pos
+        elif progress >= 1 - self._post_jump_pcnt:
+            self.actor_entity.set_sprite_override(spriteref.Bosses.frog_idle_down)
+            new_pos = end_pos
+
+            if not self._did_screen_shake:
+                self._did_screen_shake = True
+                gs.get_instance().add_screenshake(24, 18, falloff=3, freq=3)
+        else:
+            jump_prog = (progress - self._pre_jump_pcnt) / (1 - self._post_jump_pcnt - self._pre_jump_pcnt)
+            jump_prog = Utils.bound(jump_prog, 0.0, 1.0)
+            if jump_prog < 0.5:
+                self.actor_entity.set_sprite_override(spriteref.Bosses.frog_airborn_rising)
+            else:
+                self.actor_entity.set_sprite_override(spriteref.Bosses.frog_airborn_falling)
+            new_pos = Utils.linear_interp(self.start_pos, end_pos, jump_prog)
+            z_offs = self._get_z_height(jump_prog)
+
+            if self._orig_shadow is not None and 0.1 <= jump_prog <= 0.9:
+                # we know it's a large shadow because this action is only used by the frog boss
+                new_shadow = spriteref.large_shadow
+
+        self.actor_entity.set_z_draw_offset(-z_offs)
+        self.actor_entity.set_shadow_sprite_override(new_shadow)
         self.actor_entity.move_to(round(new_pos[0]), round(new_pos[1]))
+
+    def finalize(self, world):
+        super().finalize(world)
+        self.actor_entity.set_z_draw_offset(0)
+        self.actor_entity.set_shadow_sprite_override(None)
+        self.actor_entity.set_sprite_override(None)
+
+
 
 
 
