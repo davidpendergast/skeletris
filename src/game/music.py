@@ -13,6 +13,7 @@ class Songs:
     DEAD_CITY = "06_dead_city.ogg"
     UNEARTHED = "07_unearthed.ogg"
     SPIDER_THEME = "08_spider_theme.ogg"
+    CAVE_AMBIENT = "09_ambient_cave.ogg"
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
 
