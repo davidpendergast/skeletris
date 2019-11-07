@@ -20,10 +20,11 @@ class Songs:
 
 CURRENT_SONG = Songs.SILENCE
 
+
 # y'all better acquire the lock before you do anything involving fading
 _IS_FADING_LOCK = threading.Lock()
 _IS_FADING = False
-_NEXT_SONG_AFTER_FADE = Songs.SILENCE
+_NEXT_SONG = Songs.CONTINUE_CURRENT
 
 
 def _do_fadeout(fade_duration_millis):
@@ -43,13 +44,16 @@ def _do_fadeout(fade_duration_millis):
         rem_time_millis = fade_duration_millis - (cur_time_millis - old_time_millis)
         time.sleep(rem_time_millis / 1000.0)
 
-    global _IS_FADING, _IS_FADING_LOCK, _NEXT_SONG_AFTER_FADE
+    global _IS_FADING, _IS_FADING_LOCK, _NEXT_SONG
     _IS_FADING_LOCK.acquire()
     try:
         _IS_FADING = False
-        if _NEXT_SONG_AFTER_FADE is not None:
-            _play_song_forcefully(_NEXT_SONG_AFTER_FADE)
-            _NEXT_SONG_AFTER_FADE = None
+        if _NEXT_SONG == Songs.CONTINUE_CURRENT:
+            print("WARN: _NEXT_SONG was set to {} during fadeout, going silent instead".format(Songs.CONTINUE_CURRENT))
+            _play_song_forcefully(Songs.SILENCE)
+        else:
+            _play_song_forcefully(_NEXT_SONG)
+        _NEXT_SONG = Songs.CONTINUE_CURRENT
     finally:
         _IS_FADING_LOCK.release()
 
@@ -58,29 +62,67 @@ def play_song(song_filename):
     if song_filename is None:
         song_filename = Songs.SILENCE
 
-    global CURRENT_SONG, _IS_FADING_LOCK, _IS_FADING, _NEXT_SONG_AFTER_FADE
+    global CURRENT_SONG, _IS_FADING_LOCK, _IS_FADING, _NEXT_SONG
     _IS_FADING_LOCK.acquire()
     try:
         if _IS_FADING:
-            # we're already fading, so just pop the new song into the fade thread
-            if song_filename != Songs.CONTINUE_CURRENT:
-                _NEXT_SONG_AFTER_FADE = song_filename
+            if song_filename == Songs.CONTINUE_CURRENT:
+                return  # just continue doing what we were doing i guess..
             else:
+                # intercept the active fadeout and insert the new song
+                _NEXT_SONG = song_filename
                 return
 
         if CURRENT_SONG == song_filename:
-            print("INFO: already playing song {}".format(song_filename))
-            return
-        elif song_filename is None or song_filename == Songs.CONTINUE_CURRENT:
-            return
+            _NEXT_SONG = Songs.CONTINUE_CURRENT
+        elif song_filename == Songs.CONTINUE_CURRENT:
+            pass
         elif CURRENT_SONG != Songs.SILENCE:
             _IS_FADING = True
-            _NEXT_SONG_AFTER_FADE = song_filename
+            _NEXT_SONG = song_filename
             print("INFO: starting fadeout thread")
             x = threading.Thread(target=_do_fadeout, args=(1500,))
             x.start()
         else:
             _play_song_forcefully(song_filename)
+            _NEXT_SONG = Songs.CONTINUE_CURRENT
+    finally:
+        _IS_FADING_LOCK.release()
+
+
+def play_next_song_forcefully():
+    """This is called whenever the current song stops."""
+    global _IS_FADING_LOCK, _IS_FADING, _NEXT_SONG
+
+    _IS_FADING_LOCK.acquire()
+    try:
+        if _NEXT_SONG == Songs.CONTINUE_CURRENT:
+            _play_song_forcefully(CURRENT_SONG)
+        else:
+            _play_song_forcefully(_NEXT_SONG)
+            _NEXT_SONG = Songs.CONTINUE_CURRENT
+    finally:
+        _IS_FADING_LOCK.release()
+
+
+def set_next_song(song_filename):
+    if song_filename is None:
+        song_filename = Songs.SILENCE
+
+    global _IS_FADING_LOCK, _IS_FADING, CURRENT_SONG, _NEXT_SONG
+
+    _IS_FADING_LOCK.acquire()
+    try:
+        if song_filename == Songs.CONTINUE_CURRENT:
+            _NEXT_SONG = song_filename
+        elif _IS_FADING:
+            # steal the place of whatever's about to fade in
+            _NEXT_SONG = song_filename
+        elif CURRENT_SONG == Songs.SILENCE:
+            _play_song_forcefully(song_filename)
+            _NEXT_SONG = Songs.CONTINUE_CURRENT
+        else:
+            _NEXT_SONG = song_filename
     finally:
         _IS_FADING_LOCK.release()
 
@@ -90,16 +132,22 @@ def _play_song_forcefully(song_filename):
         raise ValueError("_play_song_forcefully needs a real song, instead got: {}".format(song_filename))
 
     global CURRENT_SONG
-    if song_filename == Songs.SILENCE:
-        if CURRENT_SONG != Songs.SILENCE:
+    if CURRENT_SONG != Songs.SILENCE:
+        if CURRENT_SONG != song_filename:
             print("INFO: stopping song {}".format(CURRENT_SONG))
-            pygame.mixer.music.stop()
-            CURRENT_SONG = Songs.SILENCE
+        pygame.mixer.music.stop()
+
+    if song_filename == Songs.SILENCE:
+        CURRENT_SONG = Songs.SILENCE
     else:
-        print("INFO: playing song {}".format(song_filename))
+        if CURRENT_SONG != song_filename:
+            print("INFO: starting song {}".format(song_filename))
+        else:
+            print("INFO: looping song {}".format(song_filename))
+
         real_filename = Utils.resource_path(os.path.join("assets", "songs", song_filename))
         pygame.mixer.music.load(real_filename)
-        pygame.mixer.music.play(-1, 0)
+        pygame.mixer.music.play(1, 0)
 
         CURRENT_SONG = song_filename
 

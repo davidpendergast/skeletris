@@ -556,6 +556,9 @@ class ActorEntity(Entity):
 
         self.map_id = map_id
 
+        # list of tuples (name , lambda: (world, entity) -> None)
+        self._special_on_death_hooks = []
+
         self.idle_sprites = Utils.listify(idle_sprites)
         if moving_sprites is None:
             self.moving_sprites = [s for s in self.idle_sprites]
@@ -641,10 +644,22 @@ class ActorEntity(Entity):
     def visible_in_darkness(self):
         return False
 
+    def add_special_death_hook(self, name, hook):
+        """
+        :param name: name of the hook
+        :param hook: lambda: (world, entity) -> None
+        """
+        self._special_on_death_hooks.append((name, hook))
+
     def handle_death(self, world):
         pos = self.center()
         for item in self.get_actor_state().inventory().all_items():
             world.add_item_as_entity(item, pos, direction=None)
+
+        for name_and_hook in self._special_on_death_hooks:
+            name, hook = name_and_hook
+            print("INFO: calling death hook \"{}\" for actor {}".format(name, self))
+            hook(world, self)
 
         sound_effects.play_sound(self.get_death_sound())
         world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
@@ -953,7 +968,7 @@ class Player(ActorEntity):
 
         action_prov = gs.get_instance().get_targeting_action_provider()
         if action_prov is not None and action_prov.get_item_uid() is not None:
-           return self.get_actor_state().get_item_in_possession_with_uid(action_prov.get_item_uid())
+            return self.get_actor_state().get_item_in_possession_with_uid(action_prov.get_item_uid())
 
         return self.get_actor_state().held_item
 

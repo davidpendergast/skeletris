@@ -4,6 +4,7 @@ from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
 from src.world.entities import Player, ExitEntity, SensorDoorEntity, \
     BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, EndGameExitEnitity
+import src.game.music as music
 
 
 NEIGHBORS = [(-1, 0), (0, -1), (1, 0), (0, 1)]
@@ -189,6 +190,7 @@ class WorldBlueprint:
         self.return_exit_spawns = []  # list of (x, y)
         self.save_station = None
         self.sensor_doors = []
+        self.music_doors = {}         # (x, y) -> music_id
         self.global_floor_alt_art = None
         self.global_wall_alt_art = None
         self.enemy_supplier = None  # lambda: int x, int y -> Enemy
@@ -209,7 +211,9 @@ class WorldBlueprint:
         if self.is_valid(x, y):
             self.geo[x][y] = val
             if (x, y) in self.sensor_doors and val != World.DOOR:
-                raise ValueError("just stamped out a sensor door at {}, {}".format(x, y))
+                raise ValueError("tried to stomp out a sensor door at {}, {}".format(x, y))
+            if (x, y) in self.music_doors and val != World.DOOR:
+                raise ValueError("tried to stomp out a music door at {}, {}".format(x, y))
 
     def set_alt_art(self, x, y, val):
         if self.is_valid(x, y):
@@ -230,6 +234,10 @@ class WorldBlueprint:
     def set_sensor_door(self, x, y):
         self.set(x, y, World.DOOR)
         self.sensor_doors.append((x, y))
+
+    def set_music_door(self, x, y, music_id):
+        self.set(x, y, World.DOOR)
+        self.music_doors[(x, y)] = music_id
 
     def set_enemy_supplier(self, supplier):
         """:param supplier: lambda: int x, int y -> Enemy"""
@@ -313,9 +321,15 @@ class WorldBlueprint:
 
                 if self.geo[x][y] == World.DOOR:
                     if (x, y) in self.sensor_doors:
-                        w.add(SensorDoorEntity(x, y))
+                        door_ent = SensorDoorEntity(x, y)
                     else:
-                        w.add(DoorEntity(x, y))
+                        door_ent = DoorEntity(x, y)
+
+                    if (x, y) in self.music_doors:
+                        door_music_id = self.music_doors[(x, y)]
+                        door_ent.add_special_open_hook("play_song_{}".format(door_music_id),
+                                                       lambda _: music.play_song(door_music_id))
+                    w.add(door_ent)
 
         for spawn_pos in self.enemy_spawns:
             if self.enemy_supplier is None:

@@ -154,6 +154,7 @@ class ZoneLoader:
 
     DOOR = (0, 0, 255)
     SENSOR_DOOR = (100, 100, 255)
+    MUSIC_DOOR = (0, 175, 255)
     PLAYER_SPAWN = (0, 255, 0)
     MONSTER_SPAWN = (255, 255, 0)
     CHEST_SPAWN = (255, 0, 255)
@@ -200,6 +201,13 @@ class ZoneLoader:
                         bp.set(x, y, World.DOOR)
                     elif color == ZoneLoader.SENSOR_DOOR:
                         bp.set_sensor_door(x, y)
+                    elif color == ZoneLoader.MUSIC_DOOR:
+                        music_id = get_zone(zone_id).get_special_door_music_id()
+                        if music_id is None:
+                            print("WARN: no song exists for music door at ({}, {})".format(x, y))
+                            bp.set(x, y, World.DOOR)
+                        else:
+                            bp.set_music_door(x, y, music_id)
                     elif color == ZoneLoader.RETURN_EXIT:
                         bp.set(x, y, World.FLOOR)
                         bp.return_exit_spawns.append((x, y))
@@ -323,6 +331,9 @@ class Zone:
     def get_music_id(self):
         return self.music_id
 
+    def get_special_door_music_id(self):
+        return None
+
     def build_world(self):
         pass
 
@@ -379,6 +390,8 @@ class ZoneBuilder:
 
     @staticmethod
     def _add_entities_for_tile(zone_id, level, x, y, tile_type, world):
+        actual_zone = get_zone(zone_id, or_else=None)
+
         if tile_type == worldgen2.TileType.PLAYER:
             world.add(entities.Player(0, 0), gridcell=(x, y))
         elif tile_type == worldgen2.TileType.CHEST:
@@ -396,7 +409,6 @@ class ZoneBuilder:
             if is_end_of_game(next_zone_id):
                 world.add(entities.EndGameExitEnitity(x, y))
             else:
-                actual_zone = get_zone(next_zone_id)
                 if actual_zone is not None:
                     if actual_zone.is_boss_zone():
                         world.add(entities.BossExitEntity(x, y, next_zone_id))
@@ -928,6 +940,10 @@ class FrogLairZone(Zone):
         positions = [x for x in arena_positions]
 
         boss_entity = self.gen_frog_boss_entity(positions)
+
+        # end the song when the boss dies, for maximum drama
+        boss_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+
         w.add(boss_entity, gridcell=boss_spawn)
 
         if FrogLairZone.FROG_SPAWN in unknowns:
@@ -938,6 +954,9 @@ class FrogLairZone(Zone):
         return w
 
     def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_special_door_music_id(self):
         return music.Songs.AMPHIBIAN
 
     def is_boss_zone(self):
@@ -962,11 +981,18 @@ class RoboLairZone(Zone):
 
         robo_pos = unknowns[self._robo_color][0]
         robo_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_ROBO, self.get_level())
+
+        # end the song when the boss dies, for maximum drama
+        robo_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+
         w.add(robo_entity, gridcell=robo_pos)
 
         return w
 
     def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_special_door_music_id(self):
         return music.Songs.DEAD_CITY
 
     def get_color(self):
@@ -1061,6 +1087,7 @@ class NamelessLairZone(Zone):
         w = bp.build_world()
 
         nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
+
         w.add(nameless_entity, gridcell=nameless_pos)
 
         for xy in mushroom_positions:
@@ -1093,13 +1120,12 @@ class CaveHorrorZone(Zone):
         self._bucket_color = (225, 200, 0)
         self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
 
-        self._special_door = (0, 175, 255)  # the door that triggers the song and such
-
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
-        special_door_pos = unknowns[self._special_door][0]
-        bp.set(special_door_pos[0], special_door_pos[1], World.DOOR)
+        if len(bp.music_doors) != 1:
+            raise ValueError("should be exactly one special door in zone: {}".format(len(bp.music_doors)))
+        special_door_pos = list(bp.music_doors.keys())[0]
 
         w = bp.build_world()
         w.set_wall_type(spriteref.WALL_NORMAL_ID)
@@ -1126,6 +1152,10 @@ class CaveHorrorZone(Zone):
 
         tree_pos = unknowns[self._tree_color][0]
         tree_entity = self.gen_tree_entity(bounds_rect, inital_husk_spawns, min_n_husks=2)
+
+        # end the song when the boss dies, for maximum drama
+        tree_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+
         w.add(tree_entity, gridcell=tree_pos)
 
         import src.world.cameramodifiers as cameramodifiers
@@ -1140,14 +1170,11 @@ class CaveHorrorZone(Zone):
             raise ValueError("there's no door in the cell: {}".format(special_door_pos))
 
         def entry_door_action(world):
-            # play the song when the player opens the door, for maximum drama
-            music.play_song(music.Songs.TREE_THEME)
-
             tree_ent_in_world = w.get_entity(tree_uid, onscreen=False)
             if tree_ent_in_world is not None:
                 # want it to wait a few turns before it starts summoning
                 import src.game.statuseffects as statuseffects
-                no_summon_effect = statuseffects.new_summoning_sickness_effect(4)
+                no_summon_effect = statuseffects.new_summoning_sickness_effect(2)
                 tree_ent_in_world.get_actor_state().add_status_effect(no_summon_effect)
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
@@ -1158,8 +1185,10 @@ class CaveHorrorZone(Zone):
         return True
 
     def get_music_id(self):
-        # the real song is triggered by the door
         return music.Songs.SILENCE
+
+    def get_special_door_music_id(self):
+        return music.Songs.TREE_THEME
 
     def get_color(self):
         return colors.LIGHT_RED
@@ -1291,6 +1320,10 @@ class TombTownZone(Zone):
                 w.add(e, gridcell=unknowns[key][0])
             elif key == TombTownZone.SPIDER_BOSS:
                 e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
+
+                # end the song when the boss dies, for maximum drama
+                e.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+
                 max_hp = e.get_actor_state().max_hp()
                 e.get_actor_state().set_hp(int(0.75 * max_hp))  # it's injured because it was fighting the town
                 w.add(e, gridcell=unknowns[key][0])
@@ -1298,6 +1331,9 @@ class TombTownZone(Zone):
         return w
 
     def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_special_door_music_id(self):
         return music.Songs.SPIDER_THEME
 
 

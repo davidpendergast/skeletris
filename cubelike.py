@@ -22,6 +22,7 @@ if debug.is_dev():
 print("INFO: initializing sounds...")
 pygame.mixer.pre_init(44100, -16, 1, 2048)
 
+SONG_END_EVENT = pygame.USEREVENT + 1
 
 SCREEN_SIZE = (800, 600)
 
@@ -29,6 +30,8 @@ SCREEN_SIZE = (800, 600)
 def run():
     pygame.mixer.init()
     pygame.init()
+
+    pygame.mixer.music.set_endevent(SONG_END_EVENT)
 
     # fyi this needs to happen before any calls to set_mode
     info = pygame.display.Info()
@@ -112,6 +115,7 @@ def run():
     import src.game.events as events
     import src.game.sound_effects as sound_effects
     import src.game.soundref as soundref
+    import src.game.music as music
     from src.world.worldview import WorldView
 
     world_view = None
@@ -214,6 +218,9 @@ def run():
                 screen_size = (max(800, event.w), max(600, event.h))
                 WindowState.get_instance().set_screen_size(*screen_size)
                 RenderEngine.get_instance().resize(*screen_size)
+
+            elif event.type == SONG_END_EVENT:  # custom event
+                music.play_next_song_forcefully()
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)

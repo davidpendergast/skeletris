@@ -22,15 +22,12 @@
  - tutorial text can become faded. looks like a render order issue
  - make sure that statuses 'apply' the correct number of times
  - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
+ - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
 
 
 [balance issues]    
  - spider fight is way too easy
  - robo boss should do something
- 
-[feel issues]
- - need some ambient songs...
- - bosses song's should end when they die
  
  
 [current features]
