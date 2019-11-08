@@ -951,7 +951,7 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
 class SpiderBossTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Ancient Spider")
+        EnemyTemplate.__init__(self, "Halfling Spider")
 
     def get_sprites(self):
         return spriteref.Bosses.spider_idle
@@ -960,10 +960,10 @@ class SpiderBossTemplate(EnemyTemplate):
         return [EnemyTypes.ANIMAL]
 
     def get_map_identifier(self):
-        return ("S", colors.RED)
+        return ("H", colors.RED)
 
     def get_shadow_sprite(self):
-        return spriteref.enormous_shadow
+        return spriteref.large_shadow
 
     def get_level_range(self):
         return [3]
@@ -972,7 +972,7 @@ class SpiderBossTemplate(EnemyTemplate):
         return (0, 0)
 
     def get_shadow_offset(self):
-        return (0, -12)
+        return (0, 0)
 
     def get_base_stats(self):
         return stats.BasicStatLookup({

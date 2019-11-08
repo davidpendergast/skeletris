@@ -34,7 +34,6 @@
  - finish up final area
  - spider fight
     - dialog for tombtown residents
- - add an animation for when you get swapped
  
 [what's stressing me out?]
  - won't ever finish
@@ -61,10 +60,8 @@
     
     
 [design philosophy]
-    - if it doesn't fit, cut it
-    - if you can't draw it in two tries, cut it
-    - everything in the game should add something unique 
-        - "don't have two goombas"
+    - if you can't make it in two tries, cut it
+    - everything must add something unique 
         
         
 [future features]
