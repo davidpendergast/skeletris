@@ -23,14 +23,18 @@
  - make sure that statuses 'apply' the correct number of times
  - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
  - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
+ - held items jibble for a frame while walking
 
 
 [balance issues]    
- - spider fight is way too easy
+ - spider boss should do something
  - robo boss should do something
+ - enemies can insta-smack you when you open a door (esp. bosses)
  
  
 [current features]
+ - add versioning system
+ - add bug reporting system
  - finish up final area
  - spider fight
     - dialog for tombtown residents
@@ -59,10 +63,24 @@
         - instead of passing the world into literally every method
     
     
-[design philosophy]
+[per-feature design philosophy]
     - if you can't make it in two tries, cut it
-    - everything must add something unique 
-        
+    - done is better than good
+    - but if it's bad delete it
+
+
+## CONTROLS ##
+
+Move/Attack/Interact - [WASD]
+Skip Turn - [Space]
+Open Inventory - [R]
+Open Map - [M]
+Rotate Item on Cursor - [E]
+
+Pickup and apply items with mouse
+    
+    
+    
         
 [future features]
  - traps / ground effects
@@ -109,8 +127,6 @@
     - would need to elegantly "fail to equip" somehow
 
 
- 
- 
 [~dream features~]
  - farming
     - if you can dream it you can meme it

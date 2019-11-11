@@ -89,7 +89,7 @@ class EnemyTemplate:
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1,
             StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
-            StatTypes.FLINCH_RESIST: 1
+            StatTypes.FLINCH_RESIST: 2
         })
 
     def get_spawn_items(self, level, randval=None):
