@@ -23,13 +23,12 @@
  - make sure that statuses 'apply' the correct number of times
  - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
  - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
- - held items jibble for a frame while walking
 
 
 [balance issues]    
  - spider boss should do something
+    - or just add two :3
  - robo boss should do something
- - enemies can insta-smack you when you open a door (esp. bosses)
  
  
 [current features]

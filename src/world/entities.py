@@ -999,11 +999,11 @@ class Player(ActorEntity):
 
             draw_x = x_center - scale * (int(sprite_w / 2) + (1 if self.should_xflip() else -1))
 
-            if not self.is_moving():
+            if not self.was_moving_recently():
                 bobs = (0, 1)
                 bob_offset = bobs[(gs.get_instance().anim_tick // 4) % 2]
             else:
-                bobs = (0, 1, 2, 1)  # these numbers are solely dependant on how the sprites are drawn..
+                bobs = (0, 1, 2, 1)  # these numbers depend solely on how the player sprites are drawn..
                 bob_offset = bobs[(gs.get_instance().anim_tick // 2) % 4]
 
             draw_y = y_center - my_height - scale * (1 + sprite_h - bob_offset) + self.get_perturbed_z()
