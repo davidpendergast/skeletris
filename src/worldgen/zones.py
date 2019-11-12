@@ -1298,6 +1298,14 @@ class TombTownZone(Zone):
                            TombTownZone.RAKE: (decoration.DecorationType.RAKE, None),
                            TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None)}
 
+        spider_count = [0]
+
+        def spider_death_hook(_w, _ent):
+            spider_count[0] -= 1
+
+            if spider_count[0] <= 0:
+                music.set_next_song(self.get_music_id())
+
         for key in unknowns:
             if key in TombTownZone.WALL_SIGNS:
                 pos = unknowns[key][0]
@@ -1319,14 +1327,18 @@ class TombTownZone(Zone):
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_INTRO)
                 w.add(e, gridcell=unknowns[key][0])
             elif key == TombTownZone.SPIDER_BOSS:
-                e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
+                for pos in unknowns[key]:
+                    e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
+                    spider_count[0] += 1
 
-                # end the song when the boss dies, for maximum drama
-                e.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+                    # end the song when all of them are dead, for maximum drama
+                    e.add_special_death_hook("end_song", spider_death_hook)
 
-                max_hp = e.get_actor_state().max_hp()
-                e.get_actor_state().set_hp(int(0.75 * max_hp))  # it's injured because it was fighting the town
-                w.add(e, gridcell=unknowns[key][0])
+                    # they're injured because they were fighting the town
+                    max_hp = e.get_actor_state().max_hp()
+                    e.get_actor_state().set_hp(int((1 - random.random() * 0.333) * max_hp))
+
+                    w.add(e, gridcell=pos)
 
         return w
 
