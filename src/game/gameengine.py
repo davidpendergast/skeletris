@@ -414,6 +414,25 @@ class EnemyController(ActorController):
                     else:
                         print("WARN: world gave {} an impossible path? {}".format(actor.get_actor_state().name, path))
 
+        # if hidden, avoid stepping next to doors
+        # (so that the player can't get instagibbed as they open a door)
+        if world.get_hidden(*pos):
+            neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
+            random.shuffle(neighbors)
+
+            from src.world.worldstate import World
+
+            for n in neighbors:
+                adjacent_to_door = False
+                for n2 in Utils.neighbors(n[0], n[1]):
+                    if n2 != pos and world.get_geo(n2[0], n2[1]) == World.DOOR:
+                        adjacent_to_door = True
+                        break
+                if not adjacent_to_door:
+                    res = MoveToAction(actor, n)
+                    if res.is_possible(world):
+                        return res
+
         # otherwise just fallback to dumb movement
         neighbors = [n for n in Utils.neighbors(pos[0], pos[1])]
         random.shuffle(neighbors)

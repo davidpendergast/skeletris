@@ -63,23 +63,10 @@
         - instead of passing the world into literally every method
     
     
-[per-feature design philosophy]
+[content design philosophy]
     - if you can't make it in two tries, cut it
     - done is better than good
     - but if it's bad delete it
-
-
-## CONTROLS ##
-
-Move/Attack/Interact - [WASD]
-Skip Turn - [Space]
-Open Inventory - [R]
-Open Map - [M]
-Rotate Item on Cursor - [E]
-
-Pickup and apply items with mouse
-    
-    
     
         
 [future features]
