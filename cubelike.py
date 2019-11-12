@@ -7,7 +7,10 @@ from src.utils.util import Utils
 
 NAME_OF_THE_GAME = "Skeletris"
 
-print("INFO: launching {}...".format(NAME_OF_THE_GAME))
+import src.game.version as version
+version.load_version_info()
+
+print("INFO: launching {} version {}...".format(NAME_OF_THE_GAME, version.get_pretty_version_string()))
 print("INFO: running pygame version: " + pygame.version.ver)
 
 import src.game.debug as debug

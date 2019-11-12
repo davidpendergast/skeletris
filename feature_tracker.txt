@@ -27,8 +27,9 @@
 
 [balance issues]    
  - spider boss should do something
-    - or just add two :3
+    - well now there's two
  - robo boss should do something
+    - he big. he tuff. maybe that's enough
  
  
 [current features]

@@ -19,6 +19,7 @@ from src.game.inputs import InputState
 import src.utils.colors as colors
 import src.game.gameengine as gameengine
 from src.game.windowstate import WindowState
+import src.game.version as version
 
 
 class MenuManager:
@@ -237,6 +238,10 @@ class OptionsMenu(Menu):
     def get_num_options(self):
         return len(self.options_text)
 
+    def build_images(self):
+        self.build_title_img()
+        self.build_option_imgs()
+
     def build_title_img(self):
         if self.title_text is not None:
             if self._title_img is None:
@@ -256,7 +261,7 @@ class OptionsMenu(Menu):
                 self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i), layer=spriteref.UI_0_LAYER,
                                                  color=self.get_option_color(i), scale=2)
 
-    def _layout_rects(self):
+    def layout_rects(self):
         if self._title_rect is None:
             self._title_rect = (0, 0, 0, 0)
         if self._option_rects is None:
@@ -282,7 +287,7 @@ class OptionsMenu(Menu):
                 self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
                 y_pos += self._option_imgs[i].size()[1] + self.spacing
 
-    def _update_imgs(self):
+    def update_imgs(self):
         if self._title_img is not None:
             x = self._title_rect[0]
             y = self._title_rect[1]
@@ -366,10 +371,9 @@ class OptionsMenu(Menu):
                             pass  # TODO sound effect
 
     def update(self, world):
-        self.build_title_img()
-        self.build_option_imgs()
-        self._layout_rects()
-        self._update_imgs()
+        self.build_images()
+        self.layout_rects()
+        self.update_imgs()
 
         self.handle_inputs(world)
 
@@ -417,6 +421,34 @@ class StartMenu(OptionsMenu):
                              ["start", "controls", "sound", "exit"],
                              title_size=6)
 
+        self.version_text = "[{}]".format(version.get_pretty_version_string())
+        self.version_img = None
+        self.version_rect = [0, 0, 0, 0]
+
+    def build_images(self):
+        super().build_images()
+
+        if self.version_text is not None:
+            if self.version_img is None:
+                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER)
+
+    def layout_rects(self):
+        super().layout_rects()
+
+        if self.version_img is not None:
+            scr_w, scr_h = WindowState.get_instance().get_screen_size()
+            x = scr_w - self.version_img.w() - 4
+            y = scr_h - self.version_img.h() - 4
+            self.version_rect = [x, y, self.version_img.w(), self.version_img.h()]
+
+    def update_imgs(self):
+        super().update_imgs()
+
+        if self.version_img is not None:
+            self.version_img = self.version_img.update(new_x=self.version_rect[0],
+                                                       new_y=self.version_rect[1],
+                                                       new_color=colors.LIGHT_GRAY)
+
     def get_song(self):
         return music.Songs.MENU_THEME
 
@@ -436,6 +468,13 @@ class StartMenu(OptionsMenu):
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(TitleMenu())
         sound_effects.play_sound(soundref.menu_back)
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        if self.version_img is not None:
+            for bun in self.version_img.all_bundles():
+                yield bun
 
 
 class PauseMenu(OptionsMenu):
@@ -645,9 +684,6 @@ class ControlsMenu(OptionsMenu):
     def __init__(self, prev_id):
         OptionsMenu.__init__(self, MenuManager.CONTROLS_MENU, "controls", ["~unused~"])
         self.prev_id = prev_id
-
-    def _layout_rects(self):
-        OptionsMenu._layout_rects(self)
 
     def get_option_text(self, idx):
         if idx == ControlsMenu.BACK_OPT_IDX:

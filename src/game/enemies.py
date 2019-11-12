@@ -838,7 +838,7 @@ class RoboTemplate(EnemyTemplate):
             StatTypes.WEALTH: 5,
             StatTypes.UNARMED_RANGE: 2,
             StatTypes.UNARMED_IS_PROJECTILE: 1,
-            StatTypes.FLINCH_RESIST: 3,
+            StatTypes.UNFLINCHING: 1,
         })
 
 
