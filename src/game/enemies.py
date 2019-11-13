@@ -79,8 +79,8 @@ class EnemyTemplate:
     def get_level_range(self):
         return range(0, 64)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stats(self):
+        base_stats = {
             StatTypes.VIT: 3,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -89,8 +89,18 @@ class EnemyTemplate:
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1,
             StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
-            StatTypes.FLINCH_RESIST: 2
-        })
+            StatTypes.FLINCH_RESIST: 1
+        }
+        overrides = self.get_stat_overrides()
+        base_stats.update(overrides)
+
+        return stats.BasicStatLookup(base_stats)
+
+    def get_stat_overrides(self):
+        """Subclasses can override this to provide their template's custom stats.
+            :returns: map: StatType -> int value
+        """
+        return {}
 
     def get_spawn_items(self, level, randval=None):
         yield
@@ -121,15 +131,15 @@ class SkeleSpawn(EnemyTemplate):
     def get_types(self):
         return [EnemyTypes.UNDEAD]
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 10,
             StatTypes.DEF: 2,
             StatTypes.UNARMED_ATT: 2,
             StatTypes.SPEED: 2,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 0
-        })
+        }
 
 
 class CaveCrawlerTemplate(EnemyTemplate):
@@ -149,8 +159,8 @@ class CaveCrawlerTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("c", colors.RED)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 8,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -159,7 +169,7 @@ class CaveCrawlerTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 1,
             StatTypes.THROW_AFFINITY: 1
-        })
+        }
 
     def get_spawn_items(self, level, randval=None):
         yield itemgen.WeaponItemFactory.gen_item(level, item.ItemTypes.DAGGER_WEAPON)
@@ -179,8 +189,8 @@ class SmallFrogTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("f", colors.RED)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 6,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -188,7 +198,7 @@ class SmallFrogTemplate(EnemyTemplate):
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1
-        })
+        }
 
     def get_level_range(self):
         return range(0, 5)
@@ -208,8 +218,8 @@ class TrilliteTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("t", colors.RED)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 10,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -218,7 +228,7 @@ class TrilliteTemplate(EnemyTemplate):
             StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 1,
             StatTypes.WEALTH: 1
-        })
+        }
 
     def get_level_range(self):
         return range(5, 8)
@@ -241,8 +251,8 @@ class TrillaTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.large_shadow
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 16,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
@@ -251,7 +261,7 @@ class TrillaTemplate(EnemyTemplate):
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3
-        })
+        }
 
     def get_level_range(self):
         return range(8, 11)
@@ -274,8 +284,8 @@ class SporeTemplate(EnemyTemplate):
     def get_shadow_sprite(self):
         return spriteref.small_shadow
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 12,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
@@ -285,7 +295,7 @@ class SporeTemplate(EnemyTemplate):
             StatTypes.WEALTH: 1,
             StatTypes.CONFUSION_ON_HIT: 3,
             StatTypes.UNFLINCHING: 1
-        })
+        }
 
     def get_level_range(self):
         return range(8, 13)
@@ -310,8 +320,8 @@ class SmallMuncherTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(2, 5)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 8,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -320,7 +330,7 @@ class SmallMuncherTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 2,
             StatTypes.POTION_AFFINITY: 2
-        })
+        }
 
     def get_spawn_items(self, level, randval=None):
         yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.HEALING)
@@ -348,8 +358,8 @@ class MuncherTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(10, 14)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 30,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
@@ -357,7 +367,7 @@ class MuncherTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
-        })
+        }
 
     def get_spawn_items(self, level, randval=None):
         yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.MAJOR_HEALING)
@@ -383,8 +393,8 @@ class SlugTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(5, 8)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 20,
             StatTypes.SPEED: 1,
             StatTypes.ATT: 0,
@@ -393,7 +403,7 @@ class SlugTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.SLOW_ON_HIT: 3,
             StatTypes.WEALTH: 2
-        })
+        }
 
 
 class WitchTemplate(EnemyTemplate):
@@ -416,8 +426,8 @@ class WitchTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(12, 16)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 25,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 3,
@@ -425,7 +435,7 @@ class WitchTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 4,
             StatTypes.WEALTH: 3,
             StatTypes.POTION_AFFINITY: 3
-        })
+        }
 
     def get_spawn_items(self, level, randval=None):
         n_potions = 2
@@ -460,8 +470,8 @@ class GiantTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(12, 16)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 28,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 6,
@@ -471,7 +481,7 @@ class GiantTemplate(EnemyTemplate):
             StatTypes.HP_REGEN: 2,
             StatTypes.WEALTH: 4,
             StatTypes.UNSWAPPABLE: 1,
-        })
+        }
 
 
 class CrabTemplate(EnemyTemplate):
@@ -497,8 +507,8 @@ class CrabTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(4, 7)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 16,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -507,7 +517,7 @@ class CrabTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
             StatTypes.GRASP_ON_MELEE_HIT: 2
-        })
+        }
 
 
 class CyclopsTemplate(EnemyTemplate):
@@ -530,8 +540,8 @@ class CyclopsTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(6, 10)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 15,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
@@ -540,7 +550,7 @@ class CyclopsTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.FLINCH_ON_HIT: 1,
-        })
+        }
 
 
 # TODO these suck, consider deleting
@@ -558,8 +568,8 @@ class DicelTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(4, 7)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 12,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
@@ -567,7 +577,7 @@ class DicelTemplate(EnemyTemplate):
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 1
-        })
+        }
 
 
 class GhastTemplate(EnemyTemplate):
@@ -590,8 +600,8 @@ class GhastTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(4, 8)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 12,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
@@ -601,7 +611,7 @@ class GhastTemplate(EnemyTemplate):
             StatTypes.WEALTH: 2,
             StatTypes.UNARMED_RANGE: 2,
             StatTypes.UNARMED_IS_PROJECTILE: 1
-        })
+        }
 
     def get_projectile_sprite(self):
         return spriteref.Items.projectile_small
@@ -624,8 +634,8 @@ class ScorpionTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(9, 14)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 18,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 0,
@@ -634,7 +644,7 @@ class ScorpionTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.POISON_ON_HIT: 4,
-        })
+        }
 
 
 class WraithTemplate(EnemyTemplate):
@@ -657,8 +667,8 @@ class WraithTemplate(EnemyTemplate):
     def get_projectile_sprite(self):
         return spriteref.Items.projectile_small
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 25,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -670,7 +680,7 @@ class WraithTemplate(EnemyTemplate):
             StatTypes.UNARMED_IS_PROJECTILE: 1,
             StatTypes.CONFUSION_ON_HIT: 5,
             StatTypes.SWAP_ON_HIT: 1,
-        })
+        }
 
 
 # TODO - not currently used
@@ -688,15 +698,15 @@ class FungoiTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(10, 15)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 10,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 2
-        })
+        }
 
 
 class OysterTemplate(EnemyTemplate):
@@ -713,8 +723,8 @@ class OysterTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(13, 16)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 18,
             StatTypes.SPEED: 6,
             StatTypes.ATT: 0,
@@ -723,7 +733,7 @@ class OysterTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 2,
             StatTypes.BLINDNESS_ON_HIT: 3,
             StatTypes.UNFLINCHING: 1,
-        })
+        }
 
     def get_map_identifier(self):
         return ("O", colors.RED)
@@ -743,8 +753,8 @@ class SkulkerTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(9, 12)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 20,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
@@ -753,7 +763,7 @@ class SkulkerTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.CHILL_ON_HIT: 3,
             StatTypes.POTION_AFFINITY: 1,
-        })
+        }
 
     def get_map_identifier(self):
         return ("S", colors.RED)
@@ -794,8 +804,8 @@ class FrogBossTemplate(EnemyTemplate):
     def get_level_range(self):
         return [7]
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 30,
             StatTypes.SPEED: 3,
             StatTypes.ATT: 6,
@@ -804,7 +814,7 @@ class FrogBossTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
             StatTypes.FLINCH_RESIST: 3,
-        })
+        }
 
 
 class RoboTemplate(EnemyTemplate):
@@ -827,8 +837,8 @@ class RoboTemplate(EnemyTemplate):
     def get_level_range(self):
         return [11]
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 40,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 7,
@@ -839,7 +849,7 @@ class RoboTemplate(EnemyTemplate):
             StatTypes.UNARMED_RANGE: 2,
             StatTypes.UNARMED_IS_PROJECTILE: 1,
             StatTypes.UNFLINCHING: 1,
-        })
+        }
 
 
 class HuskTemplate(EnemyTemplate):
@@ -862,10 +872,10 @@ class HuskTemplate(EnemyTemplate):
     def get_level_range(self):
         return [15]
 
-    def get_base_stats(self):
+    def get_stat_overrides(self):
         player_base_stats = stats.default_player_stats()
 
-        return stats.BasicStatLookup({
+        return {
             StatTypes.VIT: player_base_stats.stat_value(StatTypes.VIT),
             StatTypes.SPEED: player_base_stats.stat_value(StatTypes.SPEED),
             StatTypes.ATT: player_base_stats.stat_value(StatTypes.ATT),
@@ -873,7 +883,7 @@ class HuskTemplate(EnemyTemplate):
             StatTypes.DEF: player_base_stats.stat_value(StatTypes.DEF),
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 0,
-        })
+        }
 
 
 class InfectedHuskTemplate(EnemyTemplate):
@@ -899,10 +909,10 @@ class InfectedHuskTemplate(EnemyTemplate):
     def get_level_range(self):
         return [15]
 
-    def get_base_stats(self):
+    def get_stat_overrides(self):
         player_base_stats = stats.default_player_stats()
 
-        return stats.BasicStatLookup({
+        return {
             StatTypes.VIT: player_base_stats.stat_value(StatTypes.VIT) * 2,
             StatTypes.SPEED: player_base_stats.stat_value(StatTypes.SPEED),
             StatTypes.ATT: player_base_stats.stat_value(StatTypes.ATT),
@@ -911,7 +921,7 @@ class InfectedHuskTemplate(EnemyTemplate):
 
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 0,
-        })
+        }
 
 
 class CrawlingLepiotaTemplate(EnemyTemplate):
@@ -934,8 +944,8 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
     def get_level_range(self):
         return range(15, 20)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 35,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 16,
@@ -945,7 +955,7 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
             StatTypes.CONFUSION_ON_HIT: 4,
             StatTypes.UNFLINCHING: 1,
             StatTypes.UNSWAPPABLE: 1
-        })
+        }
 
 
 class SpiderBossTemplate(EnemyTemplate):
@@ -974,8 +984,8 @@ class SpiderBossTemplate(EnemyTemplate):
     def get_shadow_offset(self):
         return (0, 0)
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 16,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 3,
@@ -984,7 +994,7 @@ class SpiderBossTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 2,
             StatTypes.WEALTH: 3,
             StatTypes.UNARMED_RANGE: 2
-        })
+        }
 
 
 class NamelessTemplate(EnemyTemplate):
@@ -1008,8 +1018,8 @@ class NamelessTemplate(EnemyTemplate):
     def get_level_range(self):
         return []  # special enemy
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 999 if self._invincible else 60,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 99 if self._invincible else 8,
@@ -1019,7 +1029,7 @@ class NamelessTemplate(EnemyTemplate):
             StatTypes.NULLIFICATION: 1 if self._invincible else 0,
             StatTypes.UNFLINCHING: 1,
             StatTypes.WEALTH: 3,
-        })
+        }
 
     def is_always_updating(self):
         return self._invincible
@@ -1061,8 +1071,8 @@ class CaveHorrorTemplate(EnemyTemplate):
     def get_level_range(self):
         return [15]
 
-    def get_base_stats(self):
-        return stats.BasicStatLookup({
+    def get_stat_overrides(self):
+        return {
             StatTypes.VIT: 40,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 10,
@@ -1074,7 +1084,7 @@ class CaveHorrorTemplate(EnemyTemplate):
             StatTypes.SUMMONING_SICKNESS_ON_SUMMON: 4,
             StatTypes.UNSWAPPABLE: 1,  # would be tragic if this thing moved
             StatTypes.FLINCH_RESIST: 3,
-        })
+        }
 
     def get_controller(self):
         import src.game.gameengine as gameengine
@@ -1165,7 +1175,8 @@ class EnemyFactory:
             if spawn_item is not None:
                 inv.add_to_inv(spawn_item)
 
-        wealth = template.get_base_stats().stat_value(StatTypes.WEALTH)
+        stat_lookup = template.get_stats()
+        wealth = stat_lookup.stat_value(StatTypes.WEALTH)
         for _ in range(0, wealth):
             if random.random() < balance.ENEMY_ITEM_CHANCE_PER_WEALTH:
                 loot_item = itemgen.ItemFactory.gen_item(level, item_type=None)
@@ -1173,7 +1184,7 @@ class EnemyFactory:
                     inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine
-        a_state = gameengine.ActorState(template.get_name(), level, template.get_base_stats(), inv, 1)
+        a_state = gameengine.ActorState(template.get_name(), level, stat_lookup, inv, 1)
         a_state.set_energy(0 if random.random() < 0.5 else 4)
         a_state.unarmed_projectile_sprite = template.get_projectile_sprite()
 

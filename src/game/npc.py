@@ -395,13 +395,22 @@ class NpcPotionProtocol(NpcTradeProtocol):
         my_level = item.get_level()
         drop_as_level = my_level + 5
 
-        from src.items.itemgen import PotionItemFactory
-        res_item = PotionItemFactory.gen_item(drop_as_level)
-        if res_item is not None:
-            return [res_item]
-        else:
-            print("WARN: failed to generate a potion to trade..?")
-            return [item]
+        import src.items.itemgen as itemgen
+
+        candidates = itemgen.PotionTemplates.all_templates(for_level=drop_as_level)
+
+        # it feels bad to get the same potion back
+        candidates = [c for c in candidates if c.name != item.get_title()]
+
+        if len(candidates) > 0:
+            # rare ones are equally likely as common ones
+            template = random.choice(candidates)
+            res_item = itemgen.PotionItemFactory.gen_item(drop_as_level, template=template)
+            if res_item is not None:
+                return [res_item]
+
+        print("WARN: failed to generate a potion to trade for {}".format(item.get_title()))
+        return [item]
 
     def get_wrong_item_dialog(self, npc_id, item):
         return dialog.NpcDialog("I can't accept that. Only potions.", sprites=get_sprites(npc_id))

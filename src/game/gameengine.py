@@ -209,7 +209,6 @@ class ActorState(StatProvider):
 
     def countdown_status_effects(self):
         all_effects = self.all_status_effects()
-        self.is_nullified()
 
         add_flinch_recovery = False
 

@@ -221,7 +221,7 @@ def default_player_stats():
         StatTypes.SPEED: 4,
         StatTypes.HEAL_AT_LEVEL_END: 5,
         StatTypes.INTELLIGENCE: 5,  # affects nothing, but there's no reason to be mean
-        StatTypes.FLINCH_RESIST: 2
+        StatTypes.FLINCH_RESIST: 1
     }
 
     if debug.insta_kill():

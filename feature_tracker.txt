@@ -23,7 +23,6 @@
  - make sure that statuses 'apply' the correct number of times
  - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
  - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
- - whip perma-stuns enemies...
 
 
 [balance issues]    
@@ -35,11 +34,12 @@
  
  
 [current features]
- - add versioning system
  - add bug reporting system
  - finish up final area
  - spider fight
     - dialog for tombtown residents
+ - figure out how to make windows builds
+ - figure out whether it's even possible to make/distribute mac builds
  
 [what's stressing me out?]
  - won't ever finish

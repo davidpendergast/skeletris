@@ -172,13 +172,13 @@ class PotionTemplate:
 
 
 HEALING = PotionTemplate("Potion of Healing", "That was refreshing.",
-                         min_level=1, drop_rate=10,
+                         min_level=1, drop_rate=8,
                          status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
                                                                balance.POTION_SMALL_HEAL_DURATION))
 
 
 MAJOR_HEALING = PotionTemplate("Potion of Healing II", "That was refreshing!",
-                               min_level=5, drop_rate=6,
+                               min_level=5, drop_rate=4,
                                status=statuseffects.new_regen_effect(balance.POTION_MED_HEAL_VAL,
                                                                      balance.POTION_MED_HEAL_DURATION))
 
@@ -186,6 +186,7 @@ HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I dri
                          min_level=4, drop_rate=4,
                          status=statuseffects.new_poison_effect(balance.POTION_POIS_VAL,
                                                                 balance.POTION_POIS_DURATION))
+
 SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
                               min_level=2, drop_rate=7,
                               status=statuseffects.new_speed_effect(balance.POTION_SPEED_VAL,
@@ -211,7 +212,7 @@ NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my 
                                                                            unique_key="light_potion"))
 
 CONFUSION_POTION = PotionTemplate("Confusion Potion", "<this text isn't even used...>",
-                                  min_level=5, drop_rate=7,
+                                  min_level=5, drop_rate=5,
                                   status=statuseffects.new_confusion_effect(balance.POTION_CONFUSION_DURATION))
 
 
@@ -224,6 +225,13 @@ class PotionTemplates:
             return list(all_of_em)
         else:
             return [t for t in all_of_em if t.min_level <= for_level]
+
+    @staticmethod
+    def get_template_with_name(name):
+        for template in _ALL_POTION_TEMPLATES:
+            if template.name == name:
+                return template
+        return None
 
 
 class PotionItemFactory:
