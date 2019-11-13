@@ -390,8 +390,6 @@ class ZoneBuilder:
 
     @staticmethod
     def _add_entities_for_tile(zone_id, level, x, y, tile_type, world):
-        actual_zone = get_zone(zone_id, or_else=None)
-
         if tile_type == worldgen2.TileType.PLAYER:
             world.add(entities.Player(0, 0), gridcell=(x, y))
         elif tile_type == worldgen2.TileType.CHEST:
@@ -409,8 +407,9 @@ class ZoneBuilder:
             if is_end_of_game(next_zone_id):
                 world.add(entities.EndGameExitEnitity(x, y))
             else:
-                if actual_zone is not None:
-                    if actual_zone.is_boss_zone():
+                actual_next_zone = get_zone(next_zone_id, or_else=None)
+                if actual_next_zone is not None:
+                    if actual_next_zone.is_boss_zone():
                         world.add(entities.BossExitEntity(x, y, next_zone_id))
                     else:
                         world.add(entities.ExitEntity(x, y, next_zone_id))
@@ -1344,6 +1343,9 @@ class TombTownZone(Zone):
 
     def get_music_id(self):
         return music.Songs.SILENCE
+
+    def is_boss_zone(self):
+        return True
 
     def get_special_door_music_id(self):
         return music.Songs.SPIDER_THEME

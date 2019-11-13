@@ -23,6 +23,7 @@
  - make sure that statuses 'apply' the correct number of times
  - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
  - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
+ - whip perma-stuns enemies...
 
 
 [balance issues]    
@@ -30,6 +31,7 @@
     - well now there's two
  - robo boss should do something
     - he big. he tuff. maybe that's enough
+ - doctor shouldn't give the same potion back
  
  
 [current features]
