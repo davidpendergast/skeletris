@@ -1637,9 +1637,11 @@ class InGameUiState(Menu):
             sound_effects.play_sound(soundref.pause_in)
 
         else:
+            target_coords = self.calc_visually_targetable_coords_in_world(world)
+            gs.get_instance().set_targetable_coords_in_world(target_coords)
+
             p = world.get_player()
             if p is not None and not gs.get_instance().world_updates_paused():
-                self.set_visually_targetable_coords_in_world(world)
                 self.send_action_requests(p, world, click_actions=click_actions)
 
         # processing dialog last so that it'll block other things from getting inputs this frame
@@ -1684,12 +1686,14 @@ class InGameUiState(Menu):
         pc.add_requests(res_list)
         pc.add_requests(gameengine.PlayerWaitAction(player, position=target_pos), pc.LOWEST_PRIORITY)
 
-    def set_visually_targetable_coords_in_world(self, world):
+    def calc_visually_targetable_coords_in_world(self, world):
+        """:returns: map: (x, y) -> color"""
         p = world.get_player()
-        target_coords = {}
 
         if p is None:
-            return
+            return {}
+
+        target_coords = {}
 
         pos = world.to_grid_coords(*p.center())
         for n in Utils.neighbors(pos[0], pos[1]):
@@ -1716,7 +1720,7 @@ class InGameUiState(Menu):
                         target_coords[position] = color
                     break
 
-        gs.get_instance().set_targetable_coords_in_world(target_coords)
+        return target_coords
 
     def cleanup(self):
         Menu.cleanup(self)

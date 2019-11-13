@@ -4,10 +4,6 @@
                         *------------------------*
                       
 [P1 bugs]
- - OS issues:
-    - lots of issues with full-screen on Windows (on dk's jank-ass machine anyways)
-    - gotta setup my windows machine to test, need to handle resolution scaling issues
-    - near-zero mac testing (mac friends on git say it's ok though...)
 
 
 [P2 bugs]
@@ -19,10 +15,15 @@
  - enemies double attack when you die (ranged enemies only?)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
+        - haven't seen this in a while.. maybe fixed?
  - tutorial text can become faded. looks like a render order issue
+ 
+ 
+[testing]
  - make sure that statuses 'apply' the correct number of times
- - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
  - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
+ - test window resizing / fullscreen on windows
+ - test anything on mac (where can i find a mac?)
 
 
 [balance issues]    
@@ -39,7 +40,9 @@
  - spider fight
     - dialog for tombtown residents
  - figure out how to make windows builds
+    - hopefully possible without booting to windows?
  - figure out whether it's even possible to make/distribute mac builds
+ 
  
 [what's stressing me out?]
  - won't ever finish
@@ -127,6 +130,7 @@
         - for now, let's just not have any enemies that emit light by default
     - HP on kill doesn't trigger when you kill an enemy with poison
         - I think this makes the game better. leave it.
+    - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
         
 [playtesting notes]
 

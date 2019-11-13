@@ -1935,9 +1935,6 @@ class FrogLeapAction(MoveToAction):
         self.actor_entity.set_sprite_override(None)
 
 
-
-
-
 class SpawnActorAction(Action):
 
     def __init__(self, actor, position, new_actor, art_color=colors.RED, apply_sickness=True):
