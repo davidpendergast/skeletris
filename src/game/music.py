@@ -14,6 +14,8 @@ class Songs:
     UNEARTHED = "07_unearthed.ogg"
     SPIDER_THEME = "08_spider_theme.ogg"
     CAVE_AMBIENT = "09_ambient_cave.ogg"
+    CAVE_LOOP = "10_cave_loop.ogg"
+    SWAMP_LOOP = "11_cave_loop.ogg"
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
 

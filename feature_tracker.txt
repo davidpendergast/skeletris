@@ -31,7 +31,6 @@
     - well now there's two
  - robo boss should do something
     - he big. he tuff. maybe that's enough
- - doctor shouldn't give the same potion back
  
  
 [current features]
