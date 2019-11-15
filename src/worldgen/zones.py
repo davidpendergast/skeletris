@@ -95,13 +95,12 @@ def init_zones():
 
     story_zones = []
 
-    cave_music_id = music.Songs.SILENCE #  music.Songs.CAVE_AMBIENT TODO not ready yet
-    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=cave_music_id))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=cave_music_id))
-    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=cave_music_id))
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=music.Songs.CAVES_1))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=music.Songs.CAVES_2))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=music.Songs.CAVES_3))
     story_zones.append(get_zone(TombTownZone.ZONE_ID))
 
-    swamp_music_id = music.Songs.SILENCE # music.Songs.SWAMP_LOOP TODO not ready yet
+    swamp_music_id = music.Songs.SWAMP_LOOP # TODO not ready yet
     story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
     story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
