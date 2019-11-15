@@ -4,6 +4,7 @@
                         *------------------------*
                       
 [P1 bugs]
+ - songs don't cleanly loop anymore
 
 
 [P2 bugs]
@@ -252,4 +253,7 @@
         - cons:
             - identical to "Crypt of the Fungal Lord", which exists
             - similar to "Curse of the Mushroom King", which exists
+            
+            
+
 

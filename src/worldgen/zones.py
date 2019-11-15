@@ -944,7 +944,7 @@ class FrogLairZone(Zone):
         boss_entity = self.gen_frog_boss_entity(positions)
 
         # end the song when the boss dies, for maximum drama
-        boss_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+        boss_entity.add_special_death_hook("end_song", lambda _w, _e: music.play_song(self.get_music_id()))
 
         w.add(boss_entity, gridcell=boss_spawn)
 
@@ -985,7 +985,7 @@ class RoboLairZone(Zone):
         robo_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_ROBO, self.get_level())
 
         # end the song when the boss dies, for maximum drama
-        robo_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+        robo_entity.add_special_death_hook("end_song", lambda _w, _e: music.play_song(self.get_music_id()))
 
         w.add(robo_entity, gridcell=robo_pos)
 
@@ -1156,7 +1156,7 @@ class CaveHorrorZone(Zone):
         tree_entity = self.gen_tree_entity(bounds_rect, inital_husk_spawns, min_n_husks=2)
 
         # end the song when the boss dies, for maximum drama
-        tree_entity.add_special_death_hook("end_song", lambda _w, _e: music.set_next_song(self.get_music_id()))
+        tree_entity.add_special_death_hook("end_song", lambda _w, _e: music.play_song(self.get_music_id()))
 
         w.add(tree_entity, gridcell=tree_pos)
 
@@ -1306,7 +1306,7 @@ class TombTownZone(Zone):
             spider_count[0] -= 1
 
             if spider_count[0] <= 0:
-                music.set_next_song(self.get_music_id())
+                music.play_song(self.get_music_id())
 
         for key in unknowns:
             if key in TombTownZone.WALL_SIGNS:
