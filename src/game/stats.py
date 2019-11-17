@@ -116,7 +116,6 @@ class StatTypes:
 
     # these are currently only used to control enemy behavior.
     INTELLIGENCE = StatType("INTELLIGENCE")
-    SUPER_PATHING = StatType("SUPER_PATHING")
     WEALTH = StatType("WEALTH")
 
     # 1 = heals self, 2 = heals self and allies, 3 = heals self and attacks others

@@ -1023,15 +1023,16 @@ def _mushroomify_blueprint(bp, focus_pos, close_chance=0.5, far_chance=0.25):
             dist_pct = (dist - min_dist) / (max_dist - min_dist)
 
             chance_to_fungify = Utils.linear_interp(far_chance, close_chance, 1 - dist_pct)
+            chance_to_crack = chance_to_fungify / 2  # take it easy with the floor/wall cracking...
 
             if geo == World.FLOOR:
-                if random.random() < chance_to_fungify or (x, y) == bp.player_spawn:
+                if random.random() < chance_to_crack or (x, y) == bp.player_spawn:
                     bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
                 if y != 0 and bp.get(x, y - 1) == World.WALL and not bp.has_exit_at(x, y):
                     if random.random() < chance_to_fungify:
                         mushroom_positions.append((x, y))
             elif geo == World.WALL:
-                if random.random() < chance_to_fungify:
+                if random.random() < chance_to_crack:
                     bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
 
     return mushroom_positions

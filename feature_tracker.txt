@@ -35,13 +35,17 @@
  
  
 [current features]
- - add bug reporting system
- - finish up final area
- - spider fight
-    - dialog for tombtown residents
- - figure out how to make windows builds
-    - hopefully possible without booting to windows?
+ - add misc dialog + flavor
+ - song for swamps
+ - song for city
+ - song for core
+ - finalize spider boss fight
+ - finalize robo boss fight 
+ - finalize nameless boss fight
+ 
+ - figure out how to (efficiently) make windows builds
  - figure out whether it's even possible to make/distribute mac builds
+    - no opengl? no app notarizaiton w/out developer account? looking grim...
  
  
 [what's stressing me out?]

@@ -1019,13 +1019,11 @@ class NamelessTemplate(EnemyTemplate):
 
     def get_stat_overrides(self):
         return {
-            StatTypes.VIT: 999 if self._invincible else 60,
-            StatTypes.SPEED: 4,
-            StatTypes.ATT: 99 if self._invincible else 8,
-            StatTypes.DEF: 99 if self._invincible else 5,
+            StatTypes.VIT: 60,
+            StatTypes.SPEED: 8,  # sorry..
+            StatTypes.ATT: 8,
+            StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.SUPER_PATHING: 1,
-            StatTypes.NULLIFICATION: 1 if self._invincible else 0,
             StatTypes.UNFLINCHING: 1,
             StatTypes.WEALTH: 3,
         }
