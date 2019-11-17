@@ -109,9 +109,6 @@ class EnemyTemplate:
         from src.game.gameengine import EnemyController
         return EnemyController()
 
-    def is_always_updating(self):
-        return False
-
     def get_idle_anim_rate(self):
         return 4
 
@@ -882,7 +879,7 @@ class HuskTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: player_base_stats.stat_value(StatTypes.UNARMED_ATT),
             StatTypes.DEF: player_base_stats.stat_value(StatTypes.DEF),
             StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 0,
+            StatTypes.WEALTH: 0,  # no item farming off these guys
         }
 
 
@@ -998,9 +995,8 @@ class SpiderBossTemplate(EnemyTemplate):
 
 class NamelessTemplate(EnemyTemplate):
 
-    def __init__(self, invincible):
+    def __init__(self):
         EnemyTemplate.__init__(self, "???")
-        self._invincible = invincible
 
     def get_sprites(self):
         return spriteref.Bosses.nameless_idle
@@ -1027,9 +1023,6 @@ class NamelessTemplate(EnemyTemplate):
             StatTypes.UNFLINCHING: 1,
             StatTypes.WEALTH: 3,
         }
-
-    def is_always_updating(self):
-        return self._invincible
 
     def get_idle_anim_rate(self):
         return 1
@@ -1109,8 +1102,6 @@ TEMPLATE_GIANT = GiantTemplate()
 TEMPLATE_CRAB = CrabTemplate()
 TEMPLATE_WITCH = WitchTemplate()
 TEMPLATE_OYSTER = OysterTemplate()
-TEMPLATE_NAMELESS = NamelessTemplate(False)
-TEMPLATE_NAMELESS_INVINCIBLE = NamelessTemplate(True)
 TEMPLATE_HUSK = HuskTemplate()
 TEMPLATE_SKELEKID = SkeleSpawn()
 TEMPLATE_SKULKER = SkulkerTemplate()
@@ -1122,6 +1113,7 @@ TEMPLATE_SPIDER = SpiderBossTemplate()
 TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
+TEMPLATE_NAMELESS = NamelessTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,

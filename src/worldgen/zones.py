@@ -101,21 +101,28 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=caves_song))
     story_zones.append(get_zone(TombTownZone.ZONE_ID))
 
-    swamp_music_id = music.Songs.SWAMP_LOOP # TODO not ready yet
-    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
-    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
-    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=colors.LIGHT_GREEN, music_id=swamp_music_id))
+    swamp_song = music.Songs.get_basic_swamp_song()
+    green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
+
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
 
-    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=colors.LIGHT_BLUE))
-    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=colors.LIGHT_BLUE))
-    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=colors.LIGHT_BLUE))
+    city_song = music.Songs.get_basic_city_song()
+    blue_color = get_zone(RoboLairZone.ZONE_ID).get_color()
+
+    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color, music_id=city_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color, music_id=city_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song))
     story_zones.append(get_zone(RoboLairZone.ZONE_ID))
 
+    core_song = music.Songs.get_basic_core_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
-    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1", geo_color=red_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color))
+    
+    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1", geo_color=red_color, music_id=core_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color, music_id=core_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color, music_id=core_song))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
     story_zones.append(get_zone(NamelessZone.ZONE_ID))
@@ -1288,7 +1295,7 @@ class TombTownZone(Zone):
         Zone.__init__(self, "Tomb Town", 3, filename="town.png", bg_color=colors.BLACK)
 
         self.music_id = music.Songs.SILENCE
-        self.fight_music_id = music.Songs.SPIDER_THEME
+        self.fight_music_id = music.Songs.ARACHNID
         self.post_fight_music_id = music.Songs.get_basic_caves_song()
 
     WALL_SIGNS = {

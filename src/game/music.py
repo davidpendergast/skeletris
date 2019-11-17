@@ -7,21 +7,13 @@ from src.utils.util import Utils
 
 class Songs:
     MENU_THEME = "01_menu_theme.ogg"
-    AN_ADVENTURE_UNFOLDS = "02_an_adventure_unfolds.ogg"
     AMPHIBIAN = "03_amphibian.ogg"
     TREE_THEME = "04_tree_theme.ogg"
     DEAD_CITY = "06_dead_city.ogg"
     UNEARTHED = "07_unearthed.ogg"
     NAMELESS_THEME = "08_nameless.ogg"
-    SPIDER_THEME = "09_spider_theme.ogg"
+    ARACHNID = "09_arachnid.ogg"
     CAVES = "13_caves.ogg"
-
-    CAVE_AMBIENT = "09_ambient_cave.ogg"  # the rejects
-    CAVE_LOOP = "10_cave_loop.ogg"
-    CAVES_1 = "12_caves_1.ogg"
-    CAVES_2 = "12_caves_2.ogg"
-    CAVES_3 = "12_caves_3.ogg"
-    SWAMP_LOOP = "11_cave_loop.ogg"
 
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
@@ -29,6 +21,18 @@ class Songs:
     @staticmethod
     def get_basic_caves_song():
         return Songs.CAVES
+
+    @staticmethod
+    def get_basic_swamp_song():
+        return Songs.SILENCE  # TODO - not ready yet
+
+    @staticmethod
+    def get_basic_city_song():
+        return Songs.SILENCE  # TODO - not ready yet
+
+    @staticmethod
+    def get_basic_core_song():
+        return Songs.SILENCE  # TODO - not ready yet
 
 
 CURRENT_SONG = Songs.SILENCE

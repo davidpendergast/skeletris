@@ -25,7 +25,7 @@ def init_cinematics():
 
     print("initializing cinematics...")
     opening_cinematic.extend([
-        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony", music_id=music.Songs.AN_ADVENTURE_UNFOLDS),
+        Cinematic(spriteref.Cinematics.intro_skel_ghost_things, "many years ago, skeletons, ghosts, and things lived together in harmony", music_id=music.Songs.MENU_THEME),
         Cinematic(spriteref.Cinematics.intro_skel_slide, "skeletons built towns, farmed crops, and raised families"),
         Cinematic(spriteref.Cinematics.intro_thing_slide, "things lived in tribes, migrating with the seasons to find food"),
         Cinematic(spriteref.Cinematics.intro_ghost_slide, "ghosts mostly just chatted"),
