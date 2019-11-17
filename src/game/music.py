@@ -12,15 +12,22 @@ class Songs:
     TREE_THEME = "04_tree_theme.ogg"
     DEAD_CITY = "06_dead_city.ogg"
     UNEARTHED = "07_unearthed.ogg"
-    SPIDER_THEME = "08_spider_theme.ogg"
-    CAVE_AMBIENT = "09_ambient_cave.ogg"
+    SPIDER_THEME = "12_caves_3.ogg"
+    CAVES = "13_caves.ogg"
+
+    CAVE_AMBIENT = "09_ambient_cave.ogg"  # the rejects
     CAVE_LOOP = "10_cave_loop.ogg"
     CAVES_1 = "12_caves_1.ogg"
     CAVES_2 = "12_caves_2.ogg"
     CAVES_3 = "12_caves_3.ogg"
     SWAMP_LOOP = "11_cave_loop.ogg"
+
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
+
+    @staticmethod
+    def get_basic_caves_song():
+        return Songs.CAVES
 
 
 CURRENT_SONG = Songs.SILENCE

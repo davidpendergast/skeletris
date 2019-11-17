@@ -95,9 +95,10 @@ def init_zones():
 
     story_zones = []
 
-    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=music.Songs.CAVES_1))
-    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=music.Songs.CAVES_2))
-    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=music.Songs.CAVES_3))
+    caves_song = music.Songs.get_basic_caves_song()
+    story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=caves_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=caves_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=caves_song))
     story_zones.append(get_zone(TombTownZone.ZONE_ID))
 
     swamp_music_id = music.Songs.SWAMP_LOOP # TODO not ready yet
@@ -1263,6 +1264,10 @@ class TombTownZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Tomb Town", 3, filename="town.png", bg_color=colors.BLACK)
 
+        self.music_id = music.Songs.SILENCE
+        self.fight_music_id = music.Songs.SPIDER_THEME
+        self.post_fight_music_id = music.Songs.get_basic_caves_song()
+
     WALL_SIGNS = {
         (255, 172, 150): ["The City of Tomb Town\nPopulation: 3"],
         (255, 173, 150): ["Necromancy Supplies and Consultancy"],
@@ -1300,12 +1305,13 @@ class TombTownZone(Zone):
                            TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None)}
 
         spider_count = [0]
+        on_death_song = self.post_fight_music_id
 
         def spider_death_hook(_w, _ent):
             spider_count[0] -= 1
 
             if spider_count[0] <= 0:
-                music.play_song(self.get_music_id())
+                music.play_song(on_death_song)
 
         for key in unknowns:
             if key in TombTownZone.WALL_SIGNS:
@@ -1344,13 +1350,13 @@ class TombTownZone(Zone):
         return w
 
     def get_music_id(self):
-        return music.Songs.SILENCE
+        return self.music_id
+
+    def get_special_door_music_id(self):
+        return self.fight_music_id
 
     def is_boss_zone(self):
         return True
-
-    def get_special_door_music_id(self):
-        return music.Songs.SPIDER_THEME
 
 
 class DoorTestZone(Zone):
