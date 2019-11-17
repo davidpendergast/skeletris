@@ -484,10 +484,6 @@ wall_decoration_switches = [make(64, 376, 16, 24), make(80, 376, 16, 24)]
 
 standalone_sign_decoration = make(96, 368, 16, 16)
 
-save_stations = [make(0 + 16*i, 304, 16, 32) for i in range(0, 8)]
-save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
-
-enemy_glorple_all = [make(0, 144, 32, 32), make(0, 176, 32, 32)]
 enemy_trilla_all = [make(32, 144, 32, 32), make(32, 176, 32, 32)]
 enemy_dicel_all = [make(64, 144, 32, 32), make(64, 176, 32, 32)]
 enemy_cave_crawler_all = [make(96, 144, 32, 32), make(96, 176, 32, 32)]
@@ -518,7 +514,7 @@ enemy_skullwalker = [make(688 + i * 16, 224, 16, 48) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
-mary_skelly_all = [make(272, 144 + i*32, 16, 32) for i in range(0, 2)]
+mary_skelly_all = [make(272, 150 + i*32, 16, 26) for i in range(0, 2)]
 mary_skelly_faces = [make(272, 208 + i*32, 32, 32) for i in range(0, 2)]
 
 mayor_pumpkin_all = [make(304, 144 + i*32, 32, 32) for i in range(0, 2)]
@@ -527,14 +523,22 @@ mayor_pumpkin_faces = [make(304, 208 + i*32, 32, 32) for i in range(0, 2)]
 beanskull_all = [make(336, 144 + i*32, 16, 32) for i in range(0, 2)]
 beanskull_faces = [make(336, 208 + i*32, 32, 32) for i in range(0, 2)]
 
+glorple_all = [make(0, 150 + 32*i, 32, 26) for i in range(0, 2)]
 glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
+
+skullboy_all = [make(256, 156 + i*32, 32, 20) for i in range(0, 2)]
 skullboy_faces = [make(268, 272 + i*32, 32, 32) for i in range(0, 2)]
+
+skull_head_all = [make(288, 182 + i*16, 16, 10) for i in range(0, 2)]
 
 spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 6)]
 spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 
 doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
+
+save_stations = [make(0 + 16*i, 312, 16, 24) for i in range(0, 8)]
+save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]
 cave_horror_faces = [make(368, 336 + i * 32, 32, 32) for i in range(0, 2)]

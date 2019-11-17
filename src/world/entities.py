@@ -1781,11 +1781,14 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1)):
+    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="!"):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
 
         self.npc_template = npc_template
+
+        self.hover_text = hover_text
+        self.hover_text_entity_uid = None
 
         self.color = color
         self._facing_right = True
@@ -1806,6 +1809,12 @@ class NpcEntity(Entity):
             return sprites[(anim_tick // 4) % len(sprites)]
         else:
             return None
+
+    def should_show_hover_text(self):
+        if self.hover_text is None or len(self.hover_text) == 0:
+            return False
+
+        return True
 
     def get_render_center(self):
         xy = super().get_render_center()
@@ -1837,7 +1846,28 @@ class NpcEntity(Entity):
             elif p_x > self.center()[0] + 32:
                 self._facing_right = True
 
+        self.update_hover_text(world)
         self.update_images()
+
+    def update_hover_text(self, world):
+        if self.hover_text_entity_uid is not None:
+            hover_entity = world.get_entity(self.hover_text_entity_uid, onscreen=False)
+            if hover_entity is None:
+                print("WARN: couldn't find NPC hover text with UID = {}".format(self.hover_text_entity_uid))
+                self.hover_text_entity_uid = None
+        else:
+            hover_entity = None
+
+        if not self.should_show_hover_text():
+            self.hover_text_entity_uid = None
+            if hover_entity is not None:
+                world.remove(hover_entity)
+        else:
+            if hover_entity is None:
+                my_height = self.get_sprite().height() * 2
+                hover_entity = HoverTextEntity(self.hover_text, self, z_offset=-(my_height + 12), inset=0)
+                world.add(hover_entity)
+                self.hover_text_entity_uid = hover_entity.get_uid()
 
     def get_npc_id(self):
         return self.get_npc_template().npc_id
@@ -1996,33 +2026,18 @@ class DialogTriggerBox(TriggerBox):
         gs.get_instance().dialog_manager().set_dialog(self.dialog)
 
 
-class MessageTriggerBox(TriggerBox):
-
-    def __init__(self, text, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
-        TriggerBox.__init__(self, grid_pos, grid_size=grid_size, just_once=just_once, delay=delay,
-                            ignore_updates_paused=ignore_updates_paused, box_id=box_id)
-        self.text = text
-        self._hover_text = None
-
-    def fire_action(self, player, world, render_action):
-        self._hover_text = HoverTextEntity(self.text, player, offset=(0, -90), bounds=self.rect)
-        world.add(self._hover_text)
-
-    def player_left(self, player, world, render_action):
-        self._hover_text = None
-
-
 class HoverTextEntity(Entity):
 
-    def __init__(self, text, target_entity, offset=(0, 0)):
+    def __init__(self, text, target_entity, offset=(0, 0), z_offset=0, inset=5):
         Entity.__init__(self, 0, 0, 8, 8)
         self.text = text
         self.target_entity = target_entity
         self.offset = offset
+        self.z_offset = z_offset
         self.anchor_point = (0.5, 1.0)
         self.text_sc = 1
         self.sc = 2
-        self.inset = 5
+        self.inset = inset
 
         self._text_img = None
         self._border_imgs = [None] * 9  # [TL, T, TR, L, C, R, BL, None, BR]
@@ -2045,7 +2060,7 @@ class HoverTextEntity(Entity):
                 changed = True
                 self.set_center(x_pos, y_pos)
 
-        new_bob_height = round(self._y_bob_range + (0.5 * self._y_bob_range * math.cos(6.28 * gs.get_instance().anim_tick / 15)))
+        new_bob_height = self.z_offset + round(self._y_bob_range + (0.5 * self._y_bob_range * math.cos(6.28 * gs.get_instance().anim_tick / 15)))
         if new_bob_height != self.bob_height:
             changed = True
             self.bob_height = new_bob_height
@@ -2080,7 +2095,7 @@ class HoverTextEntity(Entity):
         self._update_position()
 
         if self.target_entity is not None:
-            depth = self.target_entity.get_depth()
+            depth = self.target_entity.get_depth() + 1  # draw behind target entity
         else:
             depth = self.get_depth()
 
@@ -2111,34 +2126,34 @@ class HoverTextEntity(Entity):
 
         if self._border_imgs[0] is not None:  # TL
             self._border_imgs[0] = self._border_imgs[0].update(new_x=tl_pos[0], new_y=tl_pos[1],
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
 
         if self._border_imgs[1] is not None:  # T
             self._border_imgs[1] = self._border_imgs[1].update(new_x=text_x, new_y=tl_pos[1],
                                                                new_ratio=(h_ratio, 1),
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
         if self._border_imgs[2] is not None:  # TR,
             self._border_imgs[2] = self._border_imgs[2].update(new_x=text_x + text_w, new_y=tl_pos[1],
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
 
         if self._border_imgs[3] is not None:  # L,
             self._border_imgs[3] = self._border_imgs[3].update(new_x=tl_pos[0], new_y=text_y,
                                                                new_ratio=(1, v_ratio),
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
         if self._border_imgs[4] is not None:  # C,
             self._border_imgs[4] = self._border_imgs[4].update(new_x=text_x, new_y=text_y,
                                                                new_ratio=(h_ratio, v_ratio),
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
         if self._border_imgs[5] is not None:  # R,
             self._border_imgs[5] = self._border_imgs[5].update(new_x=text_x + text_w, new_y=text_y,
                                                                new_ratio=(1, v_ratio),
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
         if self._border_imgs[6] is not None:  # BL
             self._border_imgs[6] = self._border_imgs[6].update(new_x=tl_pos[0], new_y=text_y + text_h,
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
         if self._border_imgs[8] is not None:  # BR
             self._border_imgs[8] = self._border_imgs[8].update(new_x=text_x + text_w, new_y=text_y + text_h,
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
 
         if self._bottom_imgs[1] is not None:  # Bottom Middle (the little arrow)
             if h_ratio % 2 == 0:
@@ -2150,15 +2165,15 @@ class HoverTextEntity(Entity):
             bm_x = text_x + text_w / 2 - bm_w / 2
 
             self._bottom_imgs[1] = self._bottom_imgs[1].update(new_model=arrow_model, new_x=bm_x, new_y=text_y + text_h,
-                                                               new_depth=depth, new_scale=self.sc)
+                                                               new_depth=depth + 1, new_scale=self.sc)
             if self._bottom_imgs[0] is not None:  # Bottom Left
                 ratio = (int((bm_x - text_x) / border_size_x), 1)
                 self._bottom_imgs[0] = self._bottom_imgs[0].update(new_x=text_x, new_y=text_y + text_h,
-                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
+                                                                   new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
             if self._bottom_imgs[2] is not None:  # Bottom Right
                 ratio = (int((bm_x - text_x) / border_size_x), 1)
                 self._bottom_imgs[2] = self._bottom_imgs[2].update(new_x=bm_x + bm_w, new_y=text_y + text_h,
-                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
+                                                                   new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
 
     def set_target_entity(self, entity, offset=None):
         self.target_entity = entity
@@ -2167,6 +2182,12 @@ class HoverTextEntity(Entity):
 
     def set_text(self, text):
         self.text = text
+
+    def visible_in_darkness(self):
+        if self.target_entity is not None:
+            return self.target_entity.visible_in_darkness()
+        else:
+            return False
 
     def all_bundles(self):
         for bun in Entity.all_bundles(self):

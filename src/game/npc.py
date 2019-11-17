@@ -87,7 +87,7 @@ class BeanskullTemplate(NpcTemplate):
 class GlorpleTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.enemy_glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
+        NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
         if level >= 8:
