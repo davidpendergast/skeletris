@@ -953,8 +953,7 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
             StatTypes.CONFUSION_ON_HIT: 4,
-            StatTypes.UNFLINCHING: 1,
-            StatTypes.UNSWAPPABLE: 1
+            StatTypes.UNFLINCHING: 1
         }
 
 

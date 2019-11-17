@@ -12,7 +12,8 @@ class Songs:
     TREE_THEME = "04_tree_theme.ogg"
     DEAD_CITY = "06_dead_city.ogg"
     UNEARTHED = "07_unearthed.ogg"
-    SPIDER_THEME = "12_caves_3.ogg"
+    NAMELESS_THEME = "08_nameless.ogg"
+    SPIDER_THEME = "09_spider_theme.ogg"
     CAVES = "13_caves.ogg"
 
     CAVE_AMBIENT = "09_ambient_cave.ogg"  # the rejects

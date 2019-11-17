@@ -117,6 +117,8 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color))
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
+
+    story_zones.append(get_zone(NamelessZone.ZONE_ID))
     story_zones.append(get_zone(NamelessLairZone.ZONE_ID))
 
     _STORYLINE_ZONES.clear()
@@ -1004,13 +1006,43 @@ class RoboLairZone(Zone):
         return True
 
 
-class NamelessLairZone(Zone):
+def _mushroomify_blueprint(bp, focus_pos, close_chance=0.5, far_chance=0.25):
+    min_dist = 10
+    max_dist = 75
 
-    ZONE_ID = "???_lair"
+    mushroom_positions = []
+
+    for x in range(0, bp.width()):
+        for y in range(0, bp.height()):
+            geo = bp.get(x, y)
+            if geo == World.EMPTY:
+                continue
+
+            dist = Utils.dist((x, y), focus_pos)
+            dist = Utils.bound(dist, min_dist, max_dist)
+            dist_pct = (dist - min_dist) / (max_dist - min_dist)
+
+            chance_to_fungify = Utils.linear_interp(far_chance, close_chance, 1 - dist_pct)
+
+            if geo == World.FLOOR:
+                if random.random() < chance_to_fungify or (x, y) == bp.player_spawn:
+                    bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
+                if y != 0 and bp.get(x, y - 1) == World.WALL and not bp.has_exit_at(x, y):
+                    if random.random() < chance_to_fungify:
+                        mushroom_positions.append((x, y))
+            elif geo == World.WALL:
+                if random.random() < chance_to_fungify:
+                    bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
+
+    return mushroom_positions
+
+
+class NamelessZone(Zone):
+
+    ZONE_ID = "???_zone"
 
     def __init__(self):
-        Zone.__init__(self, "Unearth", 15, filename="???_lair.png")
-        self._nameless_color = (255, 170, 170)
+        Zone.__init__(self, "Unearth", 15, filename="???_zone.png")
         self._exit_doors = (255, 175, 80)
 
     def gen_mushroom_enemy(self):
@@ -1026,70 +1058,57 @@ class NamelessLairZone(Zone):
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
-        # pick one of n spawn positions randomly
-        nameless_spawns = unknowns[self._nameless_color]
-        nameless_pos = random.choice(nameless_spawns)
-
-        # remove enemies in same room as nameless
-        enemy_spawns_to_rem = []
-        for e_pos in bp.enemy_spawns:
-            if Utils.dist(e_pos, nameless_pos) <= 5:
-                enemy_spawns_to_rem.append(e_pos)
-        for e_pos in enemy_spawns_to_rem:
-            bp.enemy_spawns.remove(e_pos)
-
-        # spawn the exit door at the closest exit spawn position
-        # and spawn chests at the others.
-        closest_exit_door_pos = None
-        for d in unknowns[self._exit_doors]:
-            if closest_exit_door_pos is None:
-                closest_exit_door_pos = d
-            elif Utils.dist(d, nameless_pos) < Utils.dist(closest_exit_door_pos, nameless_pos):
-                closest_exit_door_pos = d
+        # pick one of n door positions randomly
+        exit_door_pos = random.choice(unknowns[self._exit_doors])
 
         next_zone_id = next_storyline_zone(self.get_id())
 
-        bp.add_exit_door(closest_exit_door_pos[0], closest_exit_door_pos[1], next_zone_id)
+        bp.add_exit_door(exit_door_pos[0], exit_door_pos[1], next_zone_id)
         for d in unknowns[self._exit_doors]:
-            if d != closest_exit_door_pos:
+            if d != exit_door_pos:
                 bp.chest_spawns.append(d)
 
-        min_dist = 10
-        min_dist_chance = 0.25
-        max_dist = 75
-        max_dist_chance = 0.75
-
-        mushroom_positions = []
-
-        for x in range(0, bp.width()):
-            for y in range(0, bp.height()):
-                geo = bp.get(x, y)
-                if geo == World.EMPTY:
-                    continue
-
-                # the closer we are, the more mushroomy and cracked it is
-                dist = Utils.dist((x, y), nameless_pos)
-                dist = Utils.bound(dist, min_dist, max_dist)
-                dist_pct = (dist - min_dist) / (max_dist - min_dist)
-
-                chance_to_fungify = min_dist_chance + dist_pct * (max_dist_chance - min_dist_chance)
-
-                if geo == World.FLOOR:
-                    if random.random() < chance_to_fungify or (x, y) == bp.player_spawn:
-                        bp.set_alt_art(x, y, spriteref.FLOOR_CRACKED_ID)
-                    if y != 0 and bp.get(x, y - 1) == World.WALL and not bp.has_exit_at(x, y):
-                        if random.random() < chance_to_fungify:
-                            mushroom_positions.append((x, y))
-                elif geo == World.WALL:
-                    if random.random() < chance_to_fungify:
-                        bp.set_alt_art(x, y, spriteref.WALL_CRACKED_ID)
+        mushroom_positions = _mushroomify_blueprint(bp, exit_door_pos)
 
         bp.set_enemy_supplier(lambda _x, _y: self.gen_mushroom_enemy())
 
         w = bp.build_world()
 
-        nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
+        for xy in mushroom_positions:
+            mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+            mushroom_entity = entities.DecorationEntity.wall_decoration(mushroom_sprite, xy[0], xy[1])
+            w.add(mushroom_entity)
 
+        return w
+
+    def is_boss_zone(self):
+        return False
+
+    def get_color(self):
+        return colors.LIGHT_PURPLE
+
+    def get_music_id(self):
+        return music.Songs.UNEARTHED
+
+
+class NamelessLairZone(Zone):
+
+    ZONE_ID = "???_lair"
+
+    def __init__(self):
+        Zone.__init__(self, "??? Lair", 15, filename="???_lair.png")
+        self._nameless_color = (255, 170, 170)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        nameless_pos = unknowns[self._nameless_color][0]
+
+        mushroom_positions = _mushroomify_blueprint(bp, nameless_pos)
+
+        w = bp.build_world()
+
+        nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
         w.add(nameless_entity, gridcell=nameless_pos)
 
         for xy in mushroom_positions:
@@ -1106,7 +1125,10 @@ class NamelessLairZone(Zone):
         return colors.LIGHT_PURPLE
 
     def get_music_id(self):
-        return music.Songs.UNEARTHED
+        return music.Songs.SILENCE
+
+    def get_special_door_music_id(self):
+        return music.Songs.NAMELESS_THEME
 
 
 class CaveHorrorZone(Zone):
