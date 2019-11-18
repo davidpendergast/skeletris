@@ -43,7 +43,7 @@
  - finalize robo boss fight 
  - finalize nameless boss fight
  
- - "!" bubble over NPC's heads if they have story dialog for you 
+ - use N "dividers" on HP bar where N = max health
 
  - figure out how to make windows builds
  - figure out whether it's even possible to make/distribute mac builds

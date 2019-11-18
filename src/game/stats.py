@@ -123,10 +123,11 @@ class StatTypes:
 
     THROW_AFFINITY = StatType("THROW_AFFINITY", color=colors.LIGHT_RED, enemy_desc="Thrower")
 
-    PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",
-                                 color=colors.YELLOW,
-                                 desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
-                                 local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")
+    # TODO - i'm not crazy about this effect, just delete?
+    #PLUS_SPEED_ON_HIT = StatType("PLUS_SPEED_ON_HIT",
+    #                             color=colors.YELLOW,
+    #                             desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)",
+    #                             local_desc="+{}".format(balance.STATUS_EFFECT_PLUS_SPEED_VAL) + " SPD on Hit (lasts {} turns)")
 
     PLUS_DEFENSE_ON_HIT = StatType("PLUS_DEFENSE_ON_HIT",
                                    color=colors.BLUE,

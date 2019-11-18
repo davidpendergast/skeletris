@@ -14,6 +14,7 @@ class Songs:
     NAMELESS_THEME = "08_nameless.ogg"
     ARACHNID = "09_arachnid.ogg"
     CAVES = "13_caves.ogg"
+    CITY = "14_city.ogg"
 
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
@@ -28,7 +29,7 @@ class Songs:
 
     @staticmethod
     def get_basic_city_song():
-        return Songs.SILENCE  # TODO - not ready yet
+        return Songs.CITY
 
     @staticmethod
     def get_basic_core_song():

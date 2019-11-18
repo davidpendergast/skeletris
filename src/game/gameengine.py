@@ -856,11 +856,12 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
 
         new_status_effects_for_attacker = []
 
-        plus_spd_duration = attacker.stat_value_with_item(StatTypes.PLUS_SPEED_ON_HIT, item_used)
-        if plus_spd_duration > 0:
-            new_status_effects_for_attacker.append(statuseffects.new_speed_effect(balance.STATUS_EFFECT_PLUS_SPEED_VAL,
-                                                                                  plus_spd_duration,
-                                                                                  unique_key="plus_speed_from_item"))
+        # TODO - i'm not crazy about this effect
+        #plus_spd_duration = attacker.stat_value_with_item(StatTypes.PLUS_SPEED_ON_HIT, item_used)
+        #if plus_spd_duration > 0:
+        #    new_status_effects_for_attacker.append(statuseffects.new_speed_effect(balance.STATUS_EFFECT_PLUS_SPEED_VAL,
+        #                                                                          plus_spd_duration,
+        #                                                                          unique_key="plus_speed_from_item"))
 
         plus_def_duration = attacker.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, item_used)
         if plus_def_duration > 0:
