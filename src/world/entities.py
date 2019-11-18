@@ -1896,6 +1896,12 @@ class NpcConversationEntity(NpcEntity):
 
         self.npc_interact_count += 1
 
+    def should_show_hover_text(self):
+        if not super().should_show_hover_text():
+            return False
+        else:
+            return self.npc_interact_count <= 0
+
     def is_interactable(self, world):
         return True
 
@@ -1913,6 +1919,12 @@ class NpcTradeEntity(NpcEntity):
 
     def can_trade(self):
         return True
+
+    def should_show_hover_text(self):
+        if not super().should_show_hover_text():
+            return False
+        else:
+            return self.num_trades_done <= 0
 
     def is_interactable(self, world):
         # trades are a 'TradeItemAction', not an 'InteractAction'
