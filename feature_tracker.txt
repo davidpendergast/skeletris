@@ -37,7 +37,6 @@
 [current features]
  - add misc dialog + flavor
  - song for swamps
- - song for city
  - song for core
  - finalize spider boss fight
  - finalize robo boss fight 
