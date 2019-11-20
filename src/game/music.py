@@ -15,6 +15,7 @@ class Songs:
     ARACHNID = "09_arachnid.ogg"
     CAVES = "13_caves.ogg"
     CITY = "14_city.ogg"
+    SWAMPS = "15_swamps.ogg"
 
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
@@ -25,7 +26,7 @@ class Songs:
 
     @staticmethod
     def get_basic_swamp_song():
-        return Songs.SILENCE  # TODO - not ready yet
+        return Songs.SWAMPSd
 
     @staticmethod
     def get_basic_city_song():
