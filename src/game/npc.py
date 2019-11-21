@@ -527,10 +527,10 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
                               "The designs! It's totally different!", sprites=get_sprites(npc_id)),
              dialog.PlayerDialog("Oh. Hmm. I guess... I don't remember how it used to look."),
              dialog.NpcDialog("What are you, a goldfish? Two seconds pass and everything goes \"poof\"? "
-                              "No one appreciates the little details anymore.", sprites=get_sprites(npc_id)),
+                              "No one cares about the details anymore.", sprites=get_sprites(npc_id)),
              dialog.PlayerDialog("What's a goldfish?"),
              dialog.NpcDialog("...", sprites=get_sprites(npc_id)),
-             dialog.NpcDialog("Just astonishing, you turned out to be.", sprites=get_sprites(npc_id))
+             dialog.NpcDialog("Just astonishing, you turned out to be. ", sprites=get_sprites(npc_id))
             ]
         return dialog.Dialog.link_em_up(d)
 

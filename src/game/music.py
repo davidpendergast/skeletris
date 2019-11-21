@@ -26,7 +26,7 @@ class Songs:
 
     @staticmethod
     def get_basic_swamp_song():
-        return Songs.SWAMPSd
+        return Songs.SWAMPS
 
     @staticmethod
     def get_basic_city_song():
