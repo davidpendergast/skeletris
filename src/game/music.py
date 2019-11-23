@@ -16,6 +16,7 @@ class Songs:
     CAVES = "13_caves.ogg"
     CITY = "14_city.ogg"
     SWAMPS = "15_swamps.ogg"
+    CORE = "16_core.ogg"
 
     SILENCE = "<silence>"
     CONTINUE_CURRENT = "<continue>"
@@ -34,7 +35,7 @@ class Songs:
 
     @staticmethod
     def get_basic_core_song():
-        return Songs.SILENCE  # TODO - not ready yet
+        return Songs.CORE
 
 
 CURRENT_SONG = Songs.SILENCE
