@@ -1,6 +1,7 @@
 import pygame
 from src.utils.util import Utils
 import src.game.sound_effects as sound_effects
+import src.game.music as music
 
 ALL_SETTINGS = {}
 ALL_KEY_SETTINGS = []
@@ -77,19 +78,19 @@ AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True,
 
 EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
                          cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                         on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=True, music=False))
+                         on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
 
 MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
                        cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                       on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=False, music=True))
+                       on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
 
 MUSIC_MUTED = Setting("music muted", "MUSIC_MUTED", False,
                       cleaner=lambda val: bool(val),
-                      on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=False, music=True))
+                      on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
 
 EFFECTS_MUTED = Setting("effects muted", "EFFECTS_MUTED", False,
                         cleaner=lambda val: bool(val),
-                        on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(effects=True, music=False))
+                        on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
 
 FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
 
@@ -213,13 +214,13 @@ class Settings:
                 all_finished_tuts.append(tut_id)
             self.set(FINISHED_TUTORIALS, all_finished_tuts)
 
-    def update_volume_levels(self, music=True, effects=True):
-        if music:
+    def update_volume_levels(self, for_music=True, for_effects=True):
+        if for_music:
             vol_level = 0 if self.get(MUSIC_MUTED) else self.get(MUSIC_VOLUME)
             new_val = Utils.bound(vol_level / 100, 0, 1.0)
-            pygame.mixer.music.set_volume(new_val)
+            music.set_master_volume(new_val)
 
-        if effects:
+        if for_effects:
             vol_level = 0 if self.get(EFFECTS_MUTED) else self.get(EFFECTS_VOLUME)
             new_val = Utils.bound(vol_level / 100, 0, 1.0)
             sound_effects.set_volume(new_val)

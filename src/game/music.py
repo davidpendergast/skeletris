@@ -5,21 +5,57 @@ import time
 from src.utils.util import Utils
 
 
-class Songs:
-    MENU_THEME = "01_menu_theme.ogg"
-    AMPHIBIAN = "03_amphibian.ogg"
-    TREE_THEME = "04_tree_theme.ogg"
-    DEAD_CITY = "06_dead_city.ogg"
-    UNEARTHED = "07_unearthed.ogg"
-    NAMELESS_THEME = "08_nameless.ogg"
-    ARACHNID = "09_arachnid.ogg"
-    CAVES = "13_caves.ogg"
-    CITY = "14_city.ogg"
-    SWAMPS = "15_swamps.ogg"
-    CORE = "16_core.ogg"
+_SILENCE_ID = "<silence>"
+_CONTINUE_ID = "<continue>"
 
-    SILENCE = "<silence>"
-    CONTINUE_CURRENT = "<continue>"
+
+class Song:
+
+    def __init__(self, name, filename, volume=1.0):
+        self.name = name
+        self.filename = filename
+        self.volume = volume
+
+    def is_silence(self):
+        return self.filename == _SILENCE_ID
+
+    def is_continue(self):
+        return self.filename == _CONTINUE_ID
+
+    def __repr__(self):
+        return "{}[name={}, filename={}]".format(
+            type(self).__name__, self.name, self.filename)
+
+    def __eq__(self, other):
+        if isinstance(other, Song):
+            return self.name == other.name and self.filename == other.filename
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self.name) + hash(self.filename)
+
+
+class Songs:
+
+    MENU_THEME = Song("Menu Theme", "menu_theme.ogg")
+
+    # Boss themes
+    AMPHIBIAN = Song("Amphibian", "amphibian.ogg")
+    TREE_THEME = Song("Horror", "horror.ogg", volume=0.9)
+    DEAD_CITY = Song("Robot", "robot.ogg")
+    NAMELESS_THEME = Song("Medusae", "medusae.ogg")
+    ARACHNID = Song("Arachnid", "arachnid.ogg")
+
+    # Regular Zone Themes
+    UNEARTHED = Song("Unearthed", "unearthed.ogg")
+    CAVES = Song("Caves", "caves.ogg", volume=0.66)
+    CITY = Song("City", "city.ogg", volume=0.66)
+    SWAMPS = Song("Swamps", "swamps.ogg", volume=0.66)
+    CORE = Song("Core", "core.ogg", volume=0.66)
+
+    SILENCE = Song("Silence", _SILENCE_ID)
+    CONTINUE_CURRENT = Song("Continue", _CONTINUE_ID)
 
     @staticmethod
     def get_basic_caves_song():
@@ -39,6 +75,17 @@ class Songs:
 
 
 CURRENT_SONG = Songs.SILENCE
+
+
+_MASTER_VOLUME = 1.0
+
+
+def set_master_volume(val):
+    global _MASTER_VOLUME, CURRENT_SONG
+    if val != _MASTER_VOLUME:
+        print("INFO: setting master music volume to {}".format(val))
+        _MASTER_VOLUME = Utils.bound(val, 0.0, 1.0)
+        pygame.mixer.music.set_volume(_MASTER_VOLUME * CURRENT_SONG.volume)
 
 
 # y'all better acquire the lock before you do anything involving fading
@@ -78,60 +125,62 @@ def _do_fadeout(fade_duration_millis):
         _IS_FADING_LOCK.release()
 
 
-def play_song(song_filename):
-    if song_filename == Songs.CONTINUE_CURRENT:
+def play_song(song):
+    if song is None:
+        song = Songs.SILENCE
+
+    if song.is_continue():
         return
 
-    if song_filename is None:
-        song_filename = Songs.SILENCE
-
     global CURRENT_SONG, _IS_FADING_LOCK, _IS_FADING, _NEXT_SONG_AFTER_FADE
+
     _IS_FADING_LOCK.acquire()
     try:
         if _IS_FADING:
             # intercept the active fadeout and insert the new song
-            _NEXT_SONG_AFTER_FADE = song_filename
+            _NEXT_SONG_AFTER_FADE = song
 
-        elif song_filename == CURRENT_SONG:
+        elif song == CURRENT_SONG:
             pass
 
-        elif CURRENT_SONG != Songs.SILENCE:
+        elif not CURRENT_SONG.is_silence():
             _IS_FADING = True
-            _NEXT_SONG_AFTER_FADE = song_filename
+            _NEXT_SONG_AFTER_FADE = song
             print("INFO: starting fadeout thread")
             x = threading.Thread(target=_do_fadeout, args=(2000,))
             x.start()
 
         else:
-            _play_song_forcefully(song_filename)
+            _play_song_forcefully(song)
 
     finally:
         _IS_FADING_LOCK.release()
 
 
-def _play_song_forcefully(song_filename):
-    if song_filename == Songs.CONTINUE_CURRENT or song_filename is None:
-        raise ValueError("_play_song_forcefully needs a real song, instead got: {}".format(song_filename))
+def _play_song_forcefully(song):
+    if song is None or song.is_continue():
+        raise ValueError("_play_song_forcefully needs a real song, instead got: {}".format(song))
 
-    global CURRENT_SONG
-    if CURRENT_SONG != Songs.SILENCE:
-        if CURRENT_SONG != song_filename:
+    global _MASTER_VOLUME, CURRENT_SONG
+    if not CURRENT_SONG.is_silence():
+        if CURRENT_SONG != song:
             print("INFO: stopping song {}".format(CURRENT_SONG))
         pygame.mixer.music.stop()
 
-    if song_filename == Songs.SILENCE:
+    if song.is_silence():
         CURRENT_SONG = Songs.SILENCE
     else:
-        if CURRENT_SONG == song_filename:
-            print("WARN: starting song that's already playing {}".format(song_filename))
+        if CURRENT_SONG == song:
+            print("WARN: starting song that's already playing {}".format(song))
         else:
-            print("INFO: starting song {}".format(song_filename))
+            print("INFO: starting song {}".format(song))
 
-        real_filename = Utils.resource_path(os.path.join("assets", "songs", song_filename))
+        real_filename = Utils.resource_path(os.path.join("assets", "songs", song.filename))
+        pygame.mixer.music.set_volume(_MASTER_VOLUME * song.volume)
         pygame.mixer.music.load(real_filename)
         pygame.mixer.music.play(-1, 0)
 
-        CURRENT_SONG = song_filename
+        CURRENT_SONG = song
 
 
 
