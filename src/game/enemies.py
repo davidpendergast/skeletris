@@ -123,7 +123,7 @@ class SkeleSpawn(EnemyTemplate):
         EnemyTemplate.__init__(self, "Skele-Spawn")
 
     def get_sprites(self):
-        return spriteref.enemy_skelekid_all
+        return spriteref.skelekid_all
 
     def get_types(self):
         return [EnemyTypes.UNDEAD]

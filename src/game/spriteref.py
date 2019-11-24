@@ -494,7 +494,6 @@ enemy_muncher_small_alt_all = [make(384, 144, 32, 32), make(384, 176, 32, 32)]
 enemy_small_trilla_all = [make(192, 176 + i * 16, 16, 16) for i in range(0, 2)]
 enemy_cyclops_all = [make(208, 144 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_wraith_all = [make(240, 144 + i * 32, 16, 32) for i in range(0, 2)]
-enemy_skelekid_all = [make(256, 144 + i * 32, 16, 32) for i in range(0, 2)]
 enemy_fungoi_all = [make(416, 144 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_fungoi_down = [make(448, 176 + i * 16, 32, 16) for i in range(0, 2)]
 enemy_scorpion_all = [make(432, 208 + i * 32, 32, 32) for i in range(0, 2)]
@@ -526,8 +525,8 @@ beanskull_faces = [make(336, 208 + i*32, 32, 32) for i in range(0, 2)]
 glorple_all = [make(0, 150 + 32*i, 32, 26) for i in range(0, 2)]
 glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
 
-skullboy_all = [make(256, 156 + i*32, 32, 20) for i in range(0, 2)]
-skullboy_faces = [make(268, 272 + i*32, 32, 32) for i in range(0, 2)]
+skelekid_all = [make(256, 156 + i * 32, 16, 20) for i in range(0, 2)]
+skelekid_faces = [make(368, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 skull_head_all = [make(288, 182 + i*16, 16, 10) for i in range(0, 2)]
 

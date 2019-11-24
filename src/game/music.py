@@ -42,7 +42,7 @@ class Songs:
 
     # Boss themes
     AMPHIBIAN = Song("Amphibian", "amphibian.ogg")
-    TREE_THEME = Song("Horror", "horror.ogg", volume=0.9)
+    TREE_THEME = Song("Horror", "horde.ogg", volume=0.9)
     DEAD_CITY = Song("Robot", "robot.ogg")
     NAMELESS_THEME = Song("Medusae", "medusae.ogg")
     ARACHNID = Song("Arachnid", "arachnid.ogg")

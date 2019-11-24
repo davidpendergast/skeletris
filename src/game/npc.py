@@ -19,6 +19,7 @@ class NpcID(Enum):
     GLORPLE = "GLORPLE"
     MACHINE = "MACHINE"
     DOCTOR = "DOCTOR"
+    SKELEKID = "SKELEKID"
 
     CAVE_HORROR = "CAVE_HORROR"
 
@@ -57,10 +58,6 @@ class MarySkellyTemplate(NpcTemplate):
     def __init__(self):
         NpcTemplate.__init__(self, NpcID.MARY_SKELLY, "Mary Skelly",
                              sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
-
-    def get_trade_protocol(self, level):
-        if level >= 3:
-            return NpcTradeProtocols.MIRROR_TRADE
 
 
 class MayorPatchesTemplate(NpcTemplate):
@@ -114,6 +111,16 @@ class DoctorTemplate(NpcTemplate):
             return NpcTradeProtocols.POTION_EXCHANGE
 
 
+class SkelekidTemplate(NpcTemplate):
+
+    def __init__(self):
+        NpcTemplate.__init__(self, NpcID.SKELEKID, "Skelekid", sr.skelekid_all, sr.skelekid_faces, ("s", colors.YELLOW))
+
+    def get_trade_protocol(self, level):
+        if level >= 3:
+            return NpcTradeProtocols.MIRROR_TRADE
+
+
 class CaveHorrorNpcTemplate(NpcTemplate):
 
     def __init__(self):
@@ -139,13 +146,14 @@ TEMPLATES = {
     # Clever, mischievous, interested in treasure, food.
 
     NpcID.MACHINE: MachineTemplate(),
-    # The "Machine", the skeleton-built AI that helped manage Skeletris before its fall.
-    # Wants more for itself, seems almost pleased at the skeletons' setbacks.
-    # JK - now it's just a printer
+    # The "Machine", a skeleton-built AI that helped perform printing services in Skeletris
+    # before its fall.
 
     NpcID.DOCTOR: DoctorTemplate(),
     # The "Doctor", career-driven, but goals were cut short when Skeletris fell.
     # Looks down on other citizens, mostly keeps to himself.
+
+    NpcID.SKELEKID: SkelekidTemplate(),
 
     NpcID.CAVE_HORROR: CaveHorrorNpcTemplate()  # TODO - not used, it's stupid to have them talk
 }
