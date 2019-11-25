@@ -256,6 +256,10 @@ class Entity(Updateable):
     def get_uid(self):
         return self._uid
 
+    def get_dependent_entity_uids(self):
+        """yields the uids of entities whose existence depends on this one."""
+        yield
+
     def all_bundles(self):
         if self._shadow is not None:
             yield self._shadow
@@ -1871,6 +1875,12 @@ class NpcEntity(Entity):
 
     def get_npc_id(self):
         return self.get_npc_template().npc_id
+
+    def get_dependent_entity_uids(self):
+        for u in super().get_dependent_entity_uids():
+            yield u
+        if self.hover_text_entity_uid is not None:
+            yield self.hover_text_entity_uid
 
     def is_npc(self):
         return True

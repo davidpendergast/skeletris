@@ -37,7 +37,7 @@ class World:
             self._hidden.append([False] * height)
 
         self.entities = []
-        self._ents_to_remove = []
+        self._ents_to_remove = set()
         self._ents_to_add = []
         self._onscreen_entities = set()
 
@@ -116,7 +116,14 @@ class World:
             self.add(circle)
         
     def remove(self, entity):
-        self._ents_to_remove.append(entity)
+        if entity not in self._ents_to_remove:
+            self._ents_to_remove.add(entity)
+
+            for ent_uid in entity.get_dependent_entity_uids():
+                if ent_uid is not None:
+                    dep_ent = self.get_entity(ent_uid, onscreen=False)
+                    if dep_ent is not None:
+                        self.remove(dep_ent)
 
     def __contains__(self, entity):
         return entity in self.entities

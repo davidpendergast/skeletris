@@ -873,12 +873,28 @@ class HauntedForestZone1(Zone):
         return [enemies.TEMPLATE_CAVE_CRAWLER, enemies.TEMPLATE_MUNCHER_SMALL_ALT, enemies.TEMPLATE_FUNGOI]
 
 
+def _get_remove_entity_on_death_hook(entity_uid, show_explosion=True):
+    def remove_entity_hook(world, entity):
+        if entity_uid is not None:
+            ent = world.get_entity(entity_uid, onscreen=False)
+            if ent is not None:
+                world.remove(ent)
+
+                c_xy = ent.center()
+                if show_explosion:
+                    world.show_explosion(c_xy[0], c_xy[1], 20)
+    return remove_entity_hook
+
+
 class FrogLairZone(Zone):
 
     ZONE_ID = "frog_lair"
 
     FROG_BOSS_SPAWN = (255, 170, 170)
     FROG_SPAWN = (255, 194, 194)
+
+    NPC_SPAWN_1 = (255, 172, 150)
+    NPC_SPAWN_2 = (255, 172, 151)
 
     def __init__(self):
         Zone.__init__(self, "The Dark Pool", 7, filename="frog_lair.png")
@@ -937,6 +953,12 @@ class FrogLairZone(Zone):
                                               self.get_level(),
                                               controller=controller)
 
+    def _gen_npc(self, pre_fight):
+        if pre_fight:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_FROG_FIGHT)
+        else:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_POST_FROG_FIGHT)
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
@@ -961,6 +983,26 @@ class FrogLairZone(Zone):
             for frog_spawn in unknowns[FrogLairZone.FROG_SPAWN]:
                 frog_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SMALL_FROG, self.get_level())
                 w.add(frog_entity, gridcell=frog_spawn)
+
+        pre_fight_npc_uid = None
+
+        if FrogLairZone.NPC_SPAWN_1 in unknowns:
+            pre_fight_npc_pos = unknowns[FrogLairZone.NPC_SPAWN_1][0]
+            pre_fight_npc = self._gen_npc(True)
+            if pre_fight_npc is not None:
+                pre_fight_npc_uid = pre_fight_npc.get_uid()
+                w.add(pre_fight_npc, gridcell=pre_fight_npc_pos)
+
+        if FrogLairZone.NPC_SPAWN_2 in unknowns:
+            post_fight_npc_pos = unknowns[FrogLairZone.NPC_SPAWN_2][0]
+            post_fight_npc = self._gen_npc(False)
+            if post_fight_npc is not None:
+                w.add(post_fight_npc, gridcell=post_fight_npc_pos)
+
+        # remove the pre-fight NPC when the boss dies.
+        if pre_fight_npc_uid is not None:
+            death_hook = _get_remove_entity_on_death_hook(pre_fight_npc_uid, show_explosion=True)
+            boss_entity.add_special_death_hook("remove pre-fight npc", death_hook)
 
         return w
 

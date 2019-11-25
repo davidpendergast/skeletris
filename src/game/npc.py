@@ -235,6 +235,10 @@ class Conversations:
 
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
+    MARY_SKELLY_PRE_FROG_FIGHT = Conversation("MARY_SKELLY_PRE_FROG_FIGHT", NpcID.MARY_SKELLY)
+
+    MARY_SKELLY_POST_FROG_FIGHT = Conversation("MARY_SKELLY_POST_FROG_FIGHT", NpcID.MARY_SKELLY)
+
     MACHINE_INTRO = Conversation("MACHINE_INTRO", NpcID.MACHINE)
 
     BEANSKULL_INTRO = Conversation("BEANSKULL_INTRO", NpcID.BEANSKULL)
@@ -271,6 +275,16 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("It's nice to see a new face. It's been dreadfully boring here.")
                 ]
+
+        if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
+            res_list = [
+                NpcDialog("There's something big behind this door! I can hear it moving.")
+            ]
+
+        if conv == Conversations.MARY_SKELLY_POST_FROG_FIGHT:
+            res_list = [
+                NpcDialog("Wow! Nice moves back there. This is the door to the city. Be careful in there.")
+            ]
 
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:
