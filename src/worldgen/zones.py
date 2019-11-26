@@ -1026,6 +1026,8 @@ class RoboLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Server Room", 11, filename="robo_lair.png")
         self._robo_color = (255, 170, 170)
+        self._npc_spawn_1 = (255, 172, 150)
+        self._npc_spawn_2 = (255, 172, 151)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1040,7 +1042,30 @@ class RoboLairZone(Zone):
 
         w.add(robo_entity, gridcell=robo_pos)
 
+        if self._npc_spawn_1 in unknowns:
+            pre_fight_npc_pos = unknowns[self._npc_spawn_1][0]
+            pre_fight_npc = self._gen_npc(True)
+            if pre_fight_npc is not None:
+                pre_fight_npc_uid = pre_fight_npc.get_uid()
+                w.add(pre_fight_npc, gridcell=pre_fight_npc_pos)
+
+                # remove npc when boss dies
+                death_hook = _get_remove_entity_on_death_hook(pre_fight_npc_uid, show_explosion=True)
+                robo_entity.add_special_death_hook("remove pre-fight npc", death_hook)
+
+        if self._npc_spawn_2 in unknowns:
+            post_fight_npc_pos = unknowns[self._npc_spawn_2][0]
+            post_fight_npc = self._gen_npc(False)
+            if post_fight_npc is not None:
+                w.add(post_fight_npc, gridcell=post_fight_npc_pos)
+
         return w
+
+    def _gen_npc(self, pre_fight):
+        if pre_fight:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_FROG_FIGHT)
+        else:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_POST_FROG_FIGHT)
 
     def get_music_id(self):
         return music.Songs.SILENCE
@@ -1194,6 +1219,9 @@ class CaveHorrorZone(Zone):
         self._bucket_color = (225, 200, 0)
         self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
 
+        self._npc_spawn_1 = (255, 172, 150)
+        self._npc_spawn_2 = (255, 172, 151)
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
@@ -1253,7 +1281,30 @@ class CaveHorrorZone(Zone):
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
 
+        if self._npc_spawn_1 in unknowns:
+            pre_fight_npc_pos = unknowns[self._npc_spawn_1][0]
+            pre_fight_npc = self._gen_npc(True)
+            if pre_fight_npc is not None:
+                pre_fight_npc_uid = pre_fight_npc.get_uid()
+                w.add(pre_fight_npc, gridcell=pre_fight_npc_pos)
+
+                # remove npc when boss dies
+                death_hook = _get_remove_entity_on_death_hook(pre_fight_npc_uid, show_explosion=True)
+                tree_entity.add_special_death_hook("remove pre-fight npc", death_hook)
+
+        if self._npc_spawn_2 in unknowns:
+            post_fight_npc_pos = unknowns[self._npc_spawn_2][0]
+            post_fight_npc = self._gen_npc(False)
+            if post_fight_npc is not None:
+                w.add(post_fight_npc, gridcell=post_fight_npc_pos)
+
         return w
+
+    def _gen_npc(self, pre_fight):
+        if pre_fight:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_FROG_FIGHT)
+        else:
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_POST_FROG_FIGHT)
 
     def is_boss_zone(self):
         return True

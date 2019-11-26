@@ -986,7 +986,10 @@ class AttackAction(Action):
                 return False
 
         target = world.get_actor_in_cell(self.position[0], self.position[1])
-        if target is None or target.get_actor_state().alignment == actor.get_actor_state().alignment:
+        if target is None or not target.get_actor_state().is_alive():
+            return False
+
+        if target.get_actor_state().alignment == actor.get_actor_state().alignment:
             return False
 
         return True

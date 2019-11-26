@@ -13,7 +13,6 @@
         - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
- - enemies double attack when you die (ranged enemies only?)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
         - haven't seen this in a while.. maybe fixed?
@@ -73,8 +72,9 @@
     
 [content design philosophy]
     - if you can't make it in two tries, cut it
+        - (unless it's absolutely essential)
     - done is better than good
-    - but if it's bad delete it
+    - but if it's bad cut it
     
         
 [future features]
