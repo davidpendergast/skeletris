@@ -1408,6 +1408,7 @@ class TombTownZone(Zone):
     BEANSKULL = (255, 170, 255)
     MAYOR = (205, 171, 255)
     MARY = (255, 172, 255)
+    MARY_2 = (255, 177, 255)
     GLORPLE = (255, 173, 255)
 
     SPIDER_BOSS = (255, 170, 170)
@@ -1427,14 +1428,10 @@ class TombTownZone(Zone):
                            TombTownZone.RAKE: (decoration.DecorationType.RAKE, None),
                            TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None)}
 
-        spider_count = [0]
-        on_death_song = self.post_fight_music_id
+        mary_pre_fight_ent_uid = None
+        mary_pos_2 = None
 
-        def spider_death_hook(_w, _ent):
-            spider_count[0] -= 1
-
-            if spider_count[0] <= 0:
-                music.play_song(on_death_song)
+        spider_ent = None
 
         for key in unknowns:
             if key in TombTownZone.WALL_SIGNS:
@@ -1454,21 +1451,37 @@ class TombTownZone(Zone):
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MAYOR, npc.Conversations.MAYOR_INTRO)
                 w.add(e, gridcell=unknowns[key][0])
             elif key == TombTownZone.MARY:
-                e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_INTRO)
+                e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_SPIDER_FIGHT)
                 w.add(e, gridcell=unknowns[key][0])
+                mary_pre_fight_ent_uid = e.get_uid()
+            elif key == TombTownZone.MARY_2:
+                mary_pos_2 = unknowns[key][0]
             elif key == TombTownZone.SPIDER_BOSS:
-                for pos in unknowns[key]:
-                    e = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
-                    spider_count[0] += 1
+                pos = unknowns[key][0]
+                spider_ent = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
+                w.add(spider_ent, gridcell=pos)
 
-                    # end the song when all of them are dead, for maximum drama
-                    e.add_special_death_hook("end_song", spider_death_hook)
+        # setting up all the death hooks on the spider
+        if spider_ent is not None:
 
-                    # they're injured because they were fighting the town
-                    max_hp = e.get_actor_state().max_hp()
-                    e.get_actor_state().set_hp(int((1 - random.random() * 0.333) * max_hp))
+            on_death_song = self.post_fight_music_id
+            if mary_pre_fight_ent_uid is not None:
+                rm_entity_hook = _get_remove_entity_on_death_hook(mary_pre_fight_ent_uid, show_explosion=True)
+                spider_ent.add_special_death_hook("rm mary", rm_entity_hook)
 
-                    w.add(e, gridcell=pos)
+            spider_ent.add_special_death_hook("play on-death song",
+                                              lambda _w, _ent: music.play_song(on_death_song))
+
+            if mary_pos_2 is not None:
+                def add_new_mary_hook(_w, _ent):
+                    mary_2 = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY,
+                                                          npc.Conversations.MARY_SKELLY_POST_SPIDER_FIGHT)
+
+                    if not _w.is_solid(mary_pos_2[0], mary_pos_2[1], including_entities=True):
+                        _w.add(mary_2, gridcell=mary_pos_2)
+                    else:
+                        print("WARN: failed to add npc because position was solid: {}, at {}".format(mary_2, mary_pos_2))
+                spider_ent.add_special_death_hook("add mary 2", add_new_mary_hook)
 
         return w
 

@@ -516,6 +516,9 @@ floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 mary_skelly_all = [make(272, 150 + i*32, 16, 26) for i in range(0, 2)]
 mary_skelly_faces = [make(272, 208 + i*32, 32, 32) for i in range(0, 2)]
 
+shelly_all = [make(288, 146 + i*32, 16, 30) for i in range(0, 2)]
+shelly_faces = [make(400, 208 + i*32, 32, 32) for i in range(0, 2)]
+
 mayor_pumpkin_all = [make(304, 144 + i*32, 32, 32) for i in range(0, 2)]
 mayor_pumpkin_faces = [make(304, 208 + i*32, 32, 32) for i in range(0, 2)]
 
@@ -528,7 +531,8 @@ glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
 skelekid_all = [make(256, 156 + i * 32, 16, 20) for i in range(0, 2)]
 skelekid_faces = [make(368, 272 + i*32, 32, 32) for i in range(0, 2)]
 
-skull_head_all = [make(288, 182 + i*16, 16, 10) for i in range(0, 2)]
+skull_head_all = [make(512 + i*16, 192, 16, 10) for i in range(0, 2)]
+skull_head_faces = [make(304, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 6)]
 spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]

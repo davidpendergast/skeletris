@@ -5,32 +5,35 @@
                       
 [P1 bugs]
  - songs don't cleanly loop anymore
-
+    - i think most do now?
 
 [P2 bugs]
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
     - probably a graphics card issue honestly
         - this is pretty wishful thinking lol, should test on other systems
- - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
+ - if you have temporary speed boost that's about to expire, enemies with z's 
+   can act after you move
     - need to math a little harder here (or just leave it...)
  - possible to get window into an un-resizeable state after disabling fullscreen
     - (potentially linux only - goes back to normal when you toggle fullscreen again) 
         - haven't seen this in a while.. maybe fixed?
- - tutorial text can become faded. looks like a render order issue
+ - right clicking a potion in the equipment grid moves it to the inventory (it should consume)
  
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
- - need to test song starting / stopping / fading thoroughly, there's serious potential for deadlocks in there
+ - need to test song starting / stopping / fading thoroughly, there's 
+   serious potential for deadlocks in there
  - test window resizing / fullscreen on windows
  - test anything on mac (where can i find a mac?)
 
 
 [balance issues]    
- - spider boss should do something
-    - well now there's two
+ - spider boss can be 'out-of-sync' with hit and step technique, causing confusion
  - robo boss should do something
     - he big. he tuff. maybe that's enough
+ - bosses shouldn't "wander" until they become non-hidden
+    - can block-in the player at the door
  
  
 [current features]
@@ -38,6 +41,9 @@
  - finalize spider boss fight
  - finalize robo boss fight 
  - finalize nameless boss fight
+    - it would be so cool if there was some kind of "preview" for this fight 
+      earlier in the game.
+ - re-add breaking out of ground animation
  
  - use N "dividers" on HP bar where N = max health
 

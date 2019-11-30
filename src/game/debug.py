@@ -7,7 +7,7 @@ _DEBUG = True
 
 # these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LOOT_LEVELS = False
-_PLAYER_CANT_DIE = True
+_PLAYER_CANT_DIE = False
 _INSTA_KILL = True
 _MAP_SEES_ALL = False
 _UNLIMITED_TRADES = False

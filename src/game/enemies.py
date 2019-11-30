@@ -982,14 +982,13 @@ class SpiderBossTemplate(EnemyTemplate):
 
     def get_stat_overrides(self):
         return {
-            StatTypes.VIT: 16,
+            StatTypes.VIT: 24,
             StatTypes.SPEED: 2,
             StatTypes.ATT: 3,
             StatTypes.UNARMED_ATT: 0,
             StatTypes.DEF: 1,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.WEALTH: 3,
-            StatTypes.UNARMED_RANGE: 2
+            StatTypes.WEALTH: 2,
         }
 
 

@@ -235,6 +235,10 @@ class Conversations:
 
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
+    MARY_SKELLY_PRE_SPIDER_FIGHT = Conversation("MARY_SKELLY_PRE_SPIDER_FIGHT", NpcID.MARY_SKELLY)
+
+    MARY_SKELLY_POST_SPIDER_FIGHT = Conversation("MARY_SKELLY_POST_SPIDER_FIGHT", NpcID.MARY_SKELLY)
+
     MARY_SKELLY_PRE_FROG_FIGHT = Conversation("MARY_SKELLY_PRE_FROG_FIGHT", NpcID.MARY_SKELLY)
 
     MARY_SKELLY_POST_FROG_FIGHT = Conversation("MARY_SKELLY_POST_FROG_FIGHT", NpcID.MARY_SKELLY)
@@ -276,14 +280,58 @@ class ConversationFactory:
                     NpcDialog("It's nice to see a new face. It's been dreadfully boring here.")
                 ]
 
+        if conv == Conversations.MARY_SKELLY_PRE_SPIDER_FIGHT:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Oh, hello! Are you alone? Did you... come from the city? Do you know what happened? What path did you take? Is..."),
+                    NpcDialog("Sorry, sorry... I'm bombarding you."),
+                    NpcDialog("On any other day I'd welcome you into our outpost but... there's a little... problem right now."),
+                    NpcDialog("Well maybe not that little. Sort of medium. Maybe medium-big. Anyway..."),
+                    NpcDialog("A huge spider found its way in and none of us can safely fight it."),
+                    NpcDialog("We've trapped it in the central chamber, waiting for it to get weak from hunger."),
+                    NpcDialog("But that could take a quarter-cycle or longer depending on when it last fed..."),
+                    NpcDialog("And meanwhile I'm stuck out here, hoping nothing worse comes out of the caves and dismantles me."),
+                    NpcDialog("Do you... think you could help? You must be tough as nails, coming all the way here by yourself."),
+                    NpcDialog("It's strong, but not very fast. The best way to fight it is to hit and step away."),
+                    NpcDialog("Does that make sense? Just hit and step away. And repeat."),
+                    NpcDialog("That way, you can deal damage while it's resting and it will waste its energy chasing you. Make sense?"),
+                    NpcDialog("It's right through that door. Thank you, survivor.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Remember, hit and step away. It's the best way to fight slower creatures.")
+                ]
+
+        if conv == Conversations.MARY_SKELLY_POST_SPIDER_FIGHT:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("You're quite a fighter! Thank you so much! You aren't hurt, are you?"),
+                    NpcDialog("Did you meet the others? Not everyone is here to thank you but you've done a great service for us today."),
+                    NpcDialog("And... I... wonder if you could help with something else too..."),
+                    NpcDialog("The animals... they weren't always like this, you know."),
+                    NpcDialog("They became aggressive 12 cycles ago, around the same time we lost contact with Skeletris."),
+                    NpcDialog("And since then, we haven't received a single message or traveler from the city."),
+                    NpcDialog("There's a path, through the swamps to the north, but it's too dangerous for any of us."),
+                    NpcDialog("We've already... lost some friends, trying..."),
+                    NpcDialog("If we can't reconnect, we'll eventually run out of supplies here and go dormant."),
+                    NpcDialog("Would you help guide us to the city? We'll follow behind and assist you on the journey."),
+                    NpcDialog("What do you say?")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("The path is just north of here, through the swamps."),
+                    NpcDialog("You're our only hope, survivor.")
+                ]
+
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
             res_list = [
-                NpcDialog("There's something big behind this door! I can hear it moving.")
+                NpcDialog("This is the city gate. This creature, this... beast, it's dismantled everyone that's gone in there."),
+                NpcDialog("Can you hear it breathing? Good luck, survivor.")
             ]
 
         if conv == Conversations.MARY_SKELLY_POST_FROG_FIGHT:
             res_list = [
-                NpcDialog("Wow! Nice moves back there. This is the door to the city. Be careful in there.")
+                NpcDialog("Wow! Nice moves back there. This is the door to the city.")
             ]
 
         if conv == Conversations.MACHINE_INTRO:
@@ -338,14 +386,18 @@ class ConversationFactory:
         if conv == Conversations.MAYOR_INTRO:
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("A.. a visitor? You'll have to excuse the mess... it's been so long since we've seen a friendly face!"),
-                    NpcDialog("But nevermind that! Welcome to Tombtown! I'm Patches, the Mayor. What can we do for you, friend?"),
-                    PlayerDialog("I'm not sure. I was just making my way through some caves and now I'm here."),
-                    NpcDialog("Well... be sure to visit some of our shops before you leave! We've been absolutely... DYING for some sales HA HA."),
+                    NpcDialog("What was all that commotion out there? Spiders again?"),
+                    NpcDialog("I keep telling our citizens to close the doors after themselves but they refuse to listen! Can you believe that?"),
+                    NpcDialog("But never mind that! Welcome to Tombtown! I'm Patches, the Mayor."),
+                    NpcDialog("Say... perhaps you'd like to open a savings account!"),
+                    NpcDialog("The activation fee is just a couple of portabellos, and our growing cellar is perfect for any spore, common or exotic!"),
+                    NpcDialog("Up to 4% interest after a cycle or two is practically guaranteed! What do you say?"),
+                    NpcDialog("Oh, unless, you don't seem to have any... Nevermind. Well. Better days ahead then, friend.")
                 ]
             else:
                 res_list = [
-                    NpcDialog("A strong economy makes a strong town, is what I always say.")
+                    NpcDialog("A strong economy makes a strong town, is what I always say."),
+                    NpcDialog("Central bank or not, we'll be ready when the market returns.")
                 ]
 
         if len(res_list) > 0:
