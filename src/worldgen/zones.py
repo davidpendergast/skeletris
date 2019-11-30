@@ -1392,8 +1392,8 @@ class TombTownZone(Zone):
         self.post_fight_music_id = music.Songs.get_basic_caves_song()
 
     WALL_SIGNS = {
-        (255, 172, 150): ["The City of Tomb Town\nPopulation: 3"],
-        (255, 173, 150): ["Necromancy Supplies and Consultancy"],
+        (255, 172, 150): [" - Outpost 53 - \nWelcome to Tomb Town!"],
+        (255, 173, 150): ["Mary's Necromancy Consultancy"],
         (255, 174, 150): ["Beanskull's Tomato Grove"],
         (255, 175, 150): ["Notice Board:\n"
                           "Tax season is coming up! Late fees WILL be enforced."],
@@ -1402,7 +1402,9 @@ class TombTownZone(Zone):
                           "Absolutely NO Unauthorized Access"],
         (255, 178, 150): ["P. Patches:    20,354.76m\n" +
                           "M. Skelly:       -150.00m\n" +
-                          "B. Skull:          17.80m\n"]
+                          "S. Skelly:          0.00m\n" +
+                          "B. Skull:          17.80m\n"],
+        (255, 179, 150): ["Shelly's Swords and Daggers"]
     }
 
     BEANSKULL = (255, 170, 255)
@@ -1418,6 +1420,7 @@ class TombTownZone(Zone):
     WORKBENCH = (255, 220, 115)
     BONE_DECORATIONS = (255, 230, 115)
     RAKE = (255, 225, 115)
+    BUCKET = (255, 235, 115)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1426,7 +1429,9 @@ class TombTownZone(Zone):
         dec_type_lookup = {TombTownZone.MUSHROOMS: (decoration.DecorationType.MUSHROOM, None),
                            TombTownZone.TOMATO_PLANTS: (decoration.DecorationType.PLANT, "It's a tomato plant. It looks well-maintained."),
                            TombTownZone.RAKE: (decoration.DecorationType.RAKE, None),
-                           TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None)}
+                           TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None),
+                           TombTownZone.BONE_DECORATIONS: (decoration.DecorationType.BONES, "It appears to be a memorial plate of some kind. The bones are made from stone."),
+                           TombTownZone.BUCKET: (decoration.DecorationType.BUCKET, None)}
 
         mary_pre_fight_ent_uid = None
         mary_pos_2 = None

@@ -325,8 +325,8 @@ class ConversationFactory:
 
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
             res_list = [
-                NpcDialog("This is the city gate. This creature, this... beast, it's dismantled everyone that's gone in there."),
-                NpcDialog("Can you hear it breathing? Good luck, survivor.")
+                NpcDialog("This is the city gate. The beast behind this door... it dismantled everyone that's gone in there."),
+                NpcDialog("Good luck, survivor.")
             ]
 
         if conv == Conversations.MARY_SKELLY_POST_FROG_FIGHT:
@@ -365,22 +365,18 @@ class ConversationFactory:
         if conv == Conversations.BEANSKULL_INTRO:
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("Hello there! I don't think we've met before. What's your name?"),
-                    PlayerDialog("Hi... I... don't know."),
-                    NpcDialog("Well.. no matter. Welcome to Tomb Town! The final outpost before Skeletris."),
-                    PlayerDialog("Skeletris?"),
-                    NpcDialog("You aren't familiar with the city? The... disaster?"),
-                    PlayerDialog("I'm... not."),
-                    NpcDialog("It used to be the center of civilization. Skeletons and creatures lived in harmony there, growing food, raising families..."),
-                    NpcDialog("..."),
-                    PlayerDialog("Something happened?"),
-                    NpcDialog("Now... well... it isn't like that anymore."),
-                    NpcDialog("If you'll excuse me, I need to go pick those tomatoes before they... get too ripe."),
-                    PlayerDialog("Oh... ok.")
+                    NpcDialog("Hello there! Thank you for taking care of that spider!"),
+                    NpcDialog("We haven't met before, have we? I'm Beanskull. What's your name?"),
+                    NpcDialog("Well... no matter. Welcome to Tomb Town! The final outpost before Skeletris."),
+                    NpcDialog("Although... I don't believe we've heard from them in a while."),
+                    NpcDialog("It's no matter though. I don't need their hi-tech gadgets or artificial what-cha-ma-call-it to grow my tomatoes."),
+                    NpcDialog("The real problem is the wildlife. Very dangerous now. Makes it risky to gather seeds."),
+                    NpcDialog("Something strange is going on out there. I can feel it in my bones.")
                 ]
             else:
                 res_list = [
-                    NpcDialog("Sorry, talking about that stuff... brings back memories.")
+                    NpcDialog("I'd offer you a tomato, but these won't be ready for at least another half-cycle."),
+                    NpcDialog("Come back soon, and you can have a whole basketful! They're to die for, believe me.")
                 ]
 
         if conv == Conversations.MAYOR_INTRO:
