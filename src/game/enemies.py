@@ -325,7 +325,7 @@ class SmallMuncherTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 2,
             StatTypes.DEF: 0,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.WEALTH: 2,
+            StatTypes.WEALTH: 1,  # wealth 1 because they're guaranteed to have a potion
             StatTypes.POTION_AFFINITY: 2
         }
 

@@ -324,18 +324,24 @@ class ConversationFactory:
 
         if conv == Conversations.MARY_SKELLY_SWAMPS_1:
             res_list = [
-                NpcDialog("Gosh this place is nasty.")
+                NpcDialog("You wouldn't be able to tell now, but these swamps used to be a popular place for picnics and hikes."),
+                NpcDialog("City skeletons would come through here all the time, and it was our job at the outpost to make sure none of them accidentally wandered into the caves."),
+                NpcDialog("Getting lost was the biggest danger back then. Not like now. It's so violent now.")
             ]
 
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
             res_list = [
-                NpcDialog("This is the city gate. The beast behind this door... it dismantled everyone that's gone in there."),
+                NpcDialog("This is the gate to the city."),
+                NpcDialog("The monster behind this door... it dismantled... someone important to me."),
+                NpcDialog("If you see any stray bones in there... well just be careful with them, ok?"),
                 NpcDialog("Good luck, survivor.")
             ]
 
         if conv == Conversations.MARY_SKELLY_POST_FROG_FIGHT:
             res_list = [
-                NpcDialog("Wow! Nice moves back there. This is the door to the city.")
+                NpcDialog("No bones, no weapons, not a trace of her. It doesn't add up."),
+                NpcDialog("But thank you. You're a true warrior, and you've given us hope."),
+                NpcDialog("This is the door to the city. I don't know what we'll find on the other side."),
             ]
 
         if conv == Conversations.MACHINE_INTRO:
