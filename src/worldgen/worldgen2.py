@@ -758,7 +758,8 @@ _ALL_FEATURES = {}  # feat_id -> Feature
 class Feature(Tileish):
 
     def __init__(self, feat_id, replace, place, appear_rate=1, can_rotate=True,
-                 max_per_zone=-1, min_level=-1, max_level=-1):
+                 max_per_zone=-1, min_level=-1, max_level=-1,
+                 on_critical_path=False):
         self.feat_id = feat_id
         self.replace = replace
         self.place = place
@@ -767,6 +768,8 @@ class Feature(Tileish):
         self._max_per_zone = max_per_zone
         self._min_level = min_level
         self._max_level = max_level
+
+        self._on_critical_path_only = on_critical_path
 
         self._validate()
 
@@ -808,6 +811,9 @@ class Feature(Tileish):
         else:
             return self._appear_rate
 
+    def is_on_critical_path(self):
+        return self._on_critical_path_only
+
     def w(self):
         return len(self.replace[0])
 
@@ -841,7 +847,8 @@ class Feature(Tileish):
                        appear_rate=self._appear_rate,
                        max_level=self._max_level,
                        min_level=self._min_level,
-                       max_per_zone=self._max_per_zone).rotated(rots=rots-1)
+                       max_per_zone=self._max_per_zone,
+                       on_critical_path=self._on_critical_path_only).rotated(rots=rots-1)
 
     def can_place_at(self, tilish, x, y):
         for feat_x in range(0, self.w()):
@@ -960,7 +967,7 @@ class Features:
 
     STRAY_ITEM = Feature("stray_item",
                          FeatureUtils.convert(["-"]),
-                         FeatureUtils.convert(["i"]), appear_rate=0)  # TODO not implemented, just delete
+                         FeatureUtils.convert(["i"]), appear_rate=0)  # TODO these suck, just delete
 
     DECORATION = Feature("decoration",
                          FeatureUtils.convert(["W", "-"]),
@@ -970,10 +977,10 @@ class Features:
                    FeatureUtils.convert(["W", "-"]),
                    FeatureUtils.convert(["W", "s"]), can_rotate=False, appear_rate=0)  # these just suck
 
-    # Nuking these for now, I can't write as it turns out
-    QUEST_NPC = Feature("conversation_npc",
+    STORY_NPC = Feature("conversation_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),
-                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True, appear_rate=0)
+                        FeatureUtils.convert(["?W?", "?n?", "---"]), can_rotate=True,
+                        appear_rate=0)  # handled as a special case
 
     TRADE_NPC = Feature("trade_npc",
                         FeatureUtils.convert(["?W?", "?-?", "---"]),

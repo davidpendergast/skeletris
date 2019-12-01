@@ -104,7 +104,9 @@ def init_zones():
     swamp_song = music.Songs.get_basic_swamp_song()
     green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
 
-    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song,
+                                                       conversation_ids=[npc.Conversations.MARY_SKELLY_SWAMPS_1.get_id()]))
+
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song))
     story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
@@ -322,6 +324,10 @@ class Zone:
         self.music_id = music.Songs.SILENCE
         self.geo_color = colors.WHITE
 
+        self.conversation_ids = []
+        self.max_n_conversations = 1
+        self.max_n_trades = 1
+
     def get_name(self):
         return self.name
 
@@ -353,8 +359,20 @@ class Zone:
         return False
 
     def get_enemies(self):
-        """List of templates of enemies that can (randomly) spawn here."""
+        """List of templates of enemies that can randomly spawn here."""
         return []
+
+    def get_conversation_ids(self):
+        """List of conversation_ids that can randomly spawn here"""
+        return self.conversation_ids
+
+    def get_max_n_conversations(self):
+        """Max number of conversation npcs that can randomly spawn here"""
+        return self.max_n_conversations
+
+    def get_max_n_trades(self):
+        """Max number of trade npcs that can randomly spawn here"""
+        return self.max_n_trades
 
 
 class TestZone(Zone):
@@ -469,23 +487,34 @@ class ZoneBuilder:
                 else:
                     ZoneBuilder._add_entities_for_tile(zone_id, level, x, y, tile_type, world)
 
-        if len(convo_npc_coords) > 0 or len(trade_npc_coords) > 0:
-            convo_npc_ents, trade_npc_ents = npc.NpcFactory.get_npcs(level, len(convo_npc_coords), len(trade_npc_coords))
+        actual_zone = get_zone(zone_id, or_else=None)
+
+        used_npc_ids = []  # avoid duplicate NPCs popping up
+
+        if actual_zone is not None and len(convo_npc_coords) > 0:
+            valid_convos = actual_zone.get_conversation_ids()
+            convo_npc_ents = npc.NpcFactory.gen_convo_npcs(valid_convos, len(convo_npc_coords),
+                                                           not_npc_ids=used_npc_ids)
             random.shuffle(convo_npc_coords)
             for i in range(0, len(convo_npc_ents)):
                 world.add(convo_npc_ents[i], gridcell=convo_npc_coords[i])
+                used_npc_ids.append(convo_npc_ents[i].get_npc_id())
 
+        if len(trade_npc_coords) > 0:
+            trade_npc_ents = npc.NpcFactory.gen_trade_npcs(level, len(trade_npc_coords),
+                                                           not_npc_ids=used_npc_ids)
             random.shuffle(trade_npc_coords)
             for i in range(0, len(trade_npc_ents)):
                 world.add(trade_npc_ents[i], gridcell=trade_npc_coords[i])
+                used_npc_ids.append(trade_npc_ents[i].get_npc_id())
 
         return world
 
     @staticmethod
-    def generate_tile_grid(level, dims=(3, 3), num_tries=100):
+    def generate_tile_grid(zone_id, level, dims=(3, 3), num_tries=100):
         for i in range(0, num_tries):
             try:
-                res = ZoneBuilder.generate_tile_grid_dangerously(level, dims=dims)
+                res = ZoneBuilder.generate_tile_grid_dangerously(zone_id, level, dims=dims)
 
                 # looks like we did it
                 if res is not None:
@@ -505,7 +534,7 @@ class ZoneBuilder:
                          "after {} tries, crashing...".format(level, dims, num_tries))
 
     @staticmethod
-    def generate_tile_grid_dangerously(level, dims=(3, 3)):
+    def generate_tile_grid_dangerously(zone_id, level, dims=(3, 3)):
         """dangerously = nonzero chance of failing to generate a valid level, and throwing an exception."""
         if dims[0] < 1 or dims[1] < 1 or dims[0] + dims[1] < 3:
             raise ValueError("dims are too small: ({}, {})".format(dims[0], dims[1]))
@@ -544,55 +573,58 @@ class ZoneBuilder:
         if len(empty_rooms) <= 2:
             raise ValueError("no rooms..? n={}".format(len(empty_rooms)))
 
-        start_placed = False
-        for p in path:
-            rooms_in_p = list(room_map.get(p))
-            random.shuffle(rooms_in_p)
-            for r in rooms_in_p:
-                if r not in empty_rooms:
-                    continue
-                if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.START, t_grid, r):
-                    start_placed = True
-                    empty_rooms.remove(r)
-                    break
-            if start_placed:
-                break
+        feature_counts = {}  # feat_id -> int count
 
-        if not start_placed:
+        # list of (Feature, ..., Feature, bool).
+        #
+        # the features represent a feature (and optional backups) to try to place
+        # if bool is True, will try to place the feature near the start. False will try near the end,
+        # and None will place the feature randomly.
+        required_path_features = [(worldgen2.Features.START, worldgen2.Features.BACKUP_START, True),
+                                  (worldgen2.Features.EXIT, False)]
+        optional_path_features = []
+
+        actual_zone = get_zone(zone_id, or_else=None)
+        if actual_zone is not None and len(actual_zone.get_conversation_ids()) > 0:
+            convos = [c for c in actual_zone.get_conversation_ids()]
+            n_to_add = min(len(convos), actual_zone.get_max_n_conversations())
+            for _ in range(0, n_to_add):
+                optional_path_features.append((worldgen2.Features.STORY_NPC, None))
+
+        all_path_features = required_path_features + optional_path_features
+
+        for i in range(0, len(all_path_features)):
+            feat_spec = all_path_features[i]
+            required = i < len(required_path_features)
+            near_start = feat_spec[-1]
+            feats = [feat_spec[i] for i in range(0, len(feat_spec)-1)]
+
+            candidate_rooms = []
+
             for p in path:
                 rooms_in_p = list(room_map.get(p))
                 random.shuffle(rooms_in_p)
                 for r in rooms_in_p:
                     if r not in empty_rooms:
                         continue
-                    if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.BACKUP_START, t_grid, r):
-                        start_placed = True
-                        empty_rooms.remove(r)
-                        break
-                if start_placed:
-                    break
+                    candidate_rooms.append(r)
 
-            if not start_placed:
-                raise ValueError("failed to place start (or backup start) anywhere on path...")
+            if near_start is None:
+                random.shuffle(candidate_rooms)
+            elif near_start is False:
+                candidate_rooms.reverse()
 
-        end_placed = False
-        for p in reversed(path):
-            rooms_in_p = list(room_map.get(p))
-            random.shuffle(rooms_in_p)
-            for r in rooms_in_p:
-                if r not in empty_rooms:
-                    continue
-                if worldgen2.FeatureUtils.try_to_place_feature_into_rect(worldgen2.Features.EXIT, t_grid, r):
-                    end_placed = True
-                    empty_rooms.remove(r)
-                    break
-            if end_placed:
-                break
+            feat_added, to_room = ZoneBuilder._try_to_add_a_feature_to_any_room(t_grid, feats, candidate_rooms)
+            if to_room is not None:
+                empty_rooms.remove(to_room)
 
-        if not start_placed:
-            raise ValueError("failed to place end anywhere on path...")
+                if feat_added.feat_id not in feature_counts:
+                    feature_counts[feat_added.feat_id] = 1
+                else:
+                    feature_counts[feat_added.feat_id] += 1
 
-        feature_counts = {}  # feat_id -> int
+            elif required:
+                raise ValueError("failed to add feature {} to world".format(feat_spec[0].feat_id))
 
         while len(empty_rooms) > 0:
             r = empty_rooms.pop()
@@ -610,6 +642,14 @@ class ZoneBuilder:
         return t_grid
 
     @staticmethod
+    def _try_to_add_a_feature_to_any_room(t_grid, features, rooms):
+        for feat in features:
+            for r in rooms:
+                if worldgen2.FeatureUtils.try_to_place_feature_into_rect(feat, t_grid, r):
+                    return (feat, r)
+        return (None, None)
+
+    @staticmethod
     def generate_new_world(zone, dims=None, min_dims=(3, 3), max_dims=(3, 3)):
         if dims is not None:
             grid_dims = dims
@@ -617,7 +657,7 @@ class ZoneBuilder:
             grid_dims = (random.choice([x for x in range(min(max_dims[0], min_dims[0]), max_dims[0] + 1)]),
                          random.choice([y for y in range(min(min_dims[1], max_dims[1]), max_dims[1] + 1)]))
 
-        t_grid = ZoneBuilder.generate_tile_grid(zone.get_level(), dims=grid_dims)
+        t_grid = ZoneBuilder.generate_tile_grid(zone.get_id(), zone.get_level(), dims=grid_dims)
 
         print("INFO: generated world: level={}".format(zone.get_level()))
         print(t_grid)
@@ -629,17 +669,20 @@ class ZoneBuilder:
 
     @staticmethod
     def make_generated_zone(level, name, zone_id, dims=None, min_dims=(3, 3), max_dims=(3, 3),
-                            music_id=None, geo_color=None):
+                            music_id=None, geo_color=None, conversation_ids=None):
         zone = Zone(name, level)
         zone.ZONE_ID = zone_id
         zone.zone_id = zone_id
 
+        if conversation_ids is not None:
+            zone.conversation_ids = conversation_ids
         if music_id is not None:
             zone.music_id = music_id
         if geo_color is not None:
             zone.geo_color = geo_color
 
-        zone.build_world = lambda: ZoneBuilder.generate_new_world(zone, dims=dims, min_dims=min_dims, max_dims=max_dims)
+        zone.build_world = lambda: ZoneBuilder.generate_new_world(zone, dims=dims,
+                                                                  min_dims=min_dims, max_dims=max_dims)
         return zone
 
 

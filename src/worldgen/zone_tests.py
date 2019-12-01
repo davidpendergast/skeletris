@@ -10,7 +10,7 @@ def test_grids_are_possible(n, level, dims=(3, 3)):
     """
     for _ in range(0, n):
 
-        t_grid = zones.ZoneBuilder.generate_tile_grid_dangerously(level, dims=dims)
+        t_grid = zones.ZoneBuilder.generate_tile_grid_dangerously(None, level, dims=dims)
         player_coords = worldgen2.TileGridBuilder.search(t_grid, worldgen2.TileType.PLAYER)
 
         if len(player_coords) != 1:

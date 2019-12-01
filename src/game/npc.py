@@ -170,17 +170,15 @@ _ALL_CONVERSATIONS = {}  # conv_type -> Conversation
 
 class Conversation:
 
-    def __init__(self, conv_id, npc_id, min_level=0, pre_reqs=(), anti_reqs=()):
+    def __init__(self, conv_id, npc_id, pre_reqs=(), anti_reqs=()):
         """
         conv_id: string id for this conversation
         npc_id: npc who gives the conversation
-        min_level: minimum level at which conversation can appear
         pre_reqs: a list of story_var keys. if non-empty, at least one must be true for the conversation to be available.
         anti_reqs: a list of story_var keys. if non-empty, all must be false for the conversation to appear.
         """
         self.conv_id = conv_id
         self.npc_id = npc_id
-        self.min_level = min_level
 
         # it's seriously way too hard to type single-element tuples in python
         if not isinstance(pre_reqs, tuple):
@@ -199,30 +197,27 @@ class Conversation:
     def get_npc_id(self):
         return self.npc_id
 
-    def is_available(self, level):
-        if self.min_level > level:
-            return False
-        else:
-            # if there are any, at least one pre_req must be true
-            if len(self.pre_reqs) > 0:
-                all_false = True
-                for key in self.pre_reqs:
-                    if gs.get_instance().get_story_var(key, as_bool=True):
-                        all_false = False
-                        break
-                if all_false:
-                    return False
-
-            # all anti_reqs must be false
-            for key in self.anti_reqs:
+    def is_available(self):
+        # if there are any, at least one pre_req must be true
+        if len(self.pre_reqs) > 0:
+            all_false = True
+            for key in self.pre_reqs:
                 if gs.get_instance().get_story_var(key, as_bool=True):
-                    return False
-
-            # no one wants to read the same thing twice
-            if gs.get_instance().get_story_var(self.get_id(), as_bool=True):
+                    all_false = False
+                    break
+            if all_false:
                 return False
 
-            return True
+        # all anti_reqs must be false
+        for key in self.anti_reqs:
+            if gs.get_instance().get_story_var(key, as_bool=True):
+                return False
+
+        # no one wants to read the same thing twice
+        if gs.get_instance().get_story_var(self.get_id(), as_bool=True):
+            return False
+
+        return True
 
     def __eq__(self, other):
         try:
@@ -233,9 +228,11 @@ class Conversation:
 
 class Conversations:
 
-    MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
-
     MARY_SKELLY_PRE_SPIDER_FIGHT = Conversation("MARY_SKELLY_PRE_SPIDER_FIGHT", NpcID.MARY_SKELLY)
+
+    BEANSKULL_INTRO = Conversation("BEANSKULL_INTRO", NpcID.BEANSKULL)
+
+    MAYOR_INTRO = Conversation("MAYOR_INTRO", NpcID.MAYOR)
 
     MARY_SKELLY_POST_SPIDER_FIGHT = Conversation("MARY_SKELLY_POST_SPIDER_FIGHT", NpcID.MARY_SKELLY)
 
@@ -243,11 +240,13 @@ class Conversations:
 
     MARY_SKELLY_POST_FROG_FIGHT = Conversation("MARY_SKELLY_POST_FROG_FIGHT", NpcID.MARY_SKELLY)
 
+    MARY_SKELLY_SWAMPS_1 = Conversation("MARY_SKELLY_SWAMPS_1", NpcID.MARY_SKELLY)
+
+    # TODO - these have all been cut
+    MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
+
     MACHINE_INTRO = Conversation("MACHINE_INTRO", NpcID.MACHINE)
 
-    BEANSKULL_INTRO = Conversation("BEANSKULL_INTRO", NpcID.BEANSKULL)
-
-    MAYOR_INTRO = Conversation("MAYOR_INTRO", NpcID.MAYOR)
 
     @staticmethod
     def get_all():
@@ -322,6 +321,11 @@ class ConversationFactory:
                     NpcDialog("The path is just north of here, through the swamps."),
                     NpcDialog("You're our only hope, survivor.")
                 ]
+
+        if conv == Conversations.MARY_SKELLY_SWAMPS_1:
+            res_list = [
+                NpcDialog("Gosh this place is nasty.")
+            ]
 
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
             res_list = [
@@ -805,48 +809,60 @@ def get_sprites(npc_id):
 class NpcFactory:
 
     @staticmethod
-    def get_npcs(level, n_convo, n_trade):
-        convo_res = []
-        trade_res = []
+    def gen_convo_npcs(from_convo_ids, n, not_npc_ids=None):
+        res = []
 
-        npc_types = []
-        for i in range(0, n_convo):
-            npc_types.append(True)
-        for i in range(0, n_trade):
-            npc_types.append(False)
-        random.shuffle(npc_types)
+        if len(from_convo_ids) == 0:
+            return []
 
         import src.world.entities as entities
 
-        used_npc_ids = []
-
-        available_convos = [c for c in Conversations.get_all() if c.is_available(level)]
-        available_traders = [npc_id for npc_id in TEMPLATES if get_template(npc_id).get_trade_protocol(level) is not None]
-
+        available_convos = [c for c in Conversations.get_all() if (c.get_id() in from_convo_ids and c.is_available())]
         random.shuffle(available_convos)
+
+        # can't have dupes of the same NPC in the zone
+        used_npc_ids = set()
+
+        if not_npc_ids is not None:
+            for npc_id in not_npc_ids:
+                used_npc_ids.add(npc_id)
+
+        while len(available_convos) > 0 and len(res) < n:
+            convo = available_convos.pop()
+            npc_id = convo.get_npc_id()
+            if npc_id not in used_npc_ids:
+                used_npc_ids.add(npc_id)
+                res.append(entities.NpcConversationEntity(0, 0, get_template(npc_id), convo))
+                break
+
+        return res
+
+    @staticmethod
+    def gen_trade_npcs(level, n, not_npc_ids=None):
+        res = []
+
+        available_traders = [npc_id for npc_id in TEMPLATES if
+                             get_template(npc_id).get_trade_protocol(level) is not None]
+
         random.shuffle(available_traders)
 
-        for t in npc_types:
-            if t:
-                # conversation type
-                while len(available_convos) > 0:
-                    next_convo = available_convos.pop()
-                    npc_id = next_convo.get_npc_id()
-                    if npc_id not in used_npc_ids:
-                        used_npc_ids.append(npc_id)
-                        convo_res.append(entities.NpcConversationEntity(0, 0, get_template(npc_id), next_convo))
-                        break
-            else:
-                # trade type
-                while len(available_traders) > 0:
-                    npc_id = available_traders.pop()
-                    if npc_id not in used_npc_ids:
-                        used_npc_ids.append(npc_id)
-                        template = get_template(npc_id)
-                        trade_res.append(entities.NpcTradeEntity(0, 0, template, template.get_trade_protocol(level)))
-                        break
+        import src.world.entities as entities
 
-        return (convo_res, trade_res)
+        # can't have dupes of the same NPC in the zone
+        used_npc_ids = set()
+
+        if not_npc_ids is not None:
+            for npc_id in not_npc_ids:
+                used_npc_ids.add(npc_id)
+
+        while len(available_traders) > 0 and len(res) < n:
+            npc_id = available_traders.pop()
+            if npc_id not in used_npc_ids:
+                used_npc_ids.add(npc_id)
+                template = get_template(npc_id)
+                res.append(entities.NpcTradeEntity(0, 0, template, template.get_trade_protocol(level)))
+
+        return res
 
     @staticmethod
     def gen_trade_npc(npc_id, level):
