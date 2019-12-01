@@ -25,6 +25,8 @@ class DecorationType:
     BONES = _add_dec_type("BONES")
     MUSHROOM = _add_dec_type("MUSHROOM")
     WORKBENCH = _add_dec_type("WORKBENCH", rand_spawn=False)
+    GATE_LEFT = _add_dec_type("GATE_LEFT", rand_spawn=False)
+    GATE_RIGHT = _add_dec_type("GATE_RIGHT", rand_spawn=False)
 
 
 class DecorationFactory:
@@ -76,6 +78,10 @@ class DecorationFactory:
             return spriteref.wall_decoration_mushrooms[idx]
         elif dec_type == DecorationType.WORKBENCH:
             return spriteref.wall_decoration_workbench
+        elif dec_type == DecorationType.GATE_LEFT:
+            return spriteref.wall_decoration_gate_left
+        elif dec_type == DecorationType.GATE_RIGHT:
+            return spriteref.wall_decoration_gate_right
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 

@@ -471,6 +471,8 @@ normal_door_opening = [make(256 + i*16, 112, 16, 32) for i in range(0, 7)]
 large_decs = []
 wall_decoration_mushrooms = [make(0 + 32*i, 352, 32, 24, and_add_to_list=large_decs) for i in range(0, 3)]
 wall_decoration_workbench = make(16, 400, 32, 24, and_add_to_list=large_decs)
+wall_decoration_gate_left = make(48, 400, 32, 24, and_add_to_list=large_decs)
+wall_decoration_gate_right = make(80, 400, 32, 24, and_add_to_list=large_decs)
 
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)

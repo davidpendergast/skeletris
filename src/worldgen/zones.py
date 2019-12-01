@@ -110,6 +110,7 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song))
     story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
+    story_zones.append(get_zone(CityGateZone.ZONE_ID))
 
     city_song = music.Songs.get_basic_city_song()
     blue_color = get_zone(RoboLairZone.ZONE_ID).get_color()
@@ -1057,6 +1058,43 @@ class FrogLairZone(Zone):
 
     def is_boss_zone(self):
         return True
+
+    def get_color(self):
+        return colors.LIGHT_GREEN
+
+
+class CityGateZone(Zone):
+
+    ZONE_ID = "city_gate"
+
+    def __init__(self):
+        Zone.__init__(self, "City Gate", 7, filename="city_gate.png")
+        self._mary_npc_pos = (255, 172, 150)
+        self._head_npc_pos = (255, 173, 150)
+
+        self._gate_left = (255, 234, 150)
+        self._gate_right = (255, 235, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        dec_lookup = {
+            self._gate_left: decoration.DecorationType.GATE_LEFT,
+            self._gate_right: decoration.DecorationType.GATE_RIGHT
+        }
+
+        for key in unknowns:
+            for pos in unknowns[key]:
+                if key in dec_lookup:
+                    dec_type = dec_lookup[key]
+                    ent = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type)
+                    w.add(ent, gridcell=(pos[0], pos[1] - 1))
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
 
     def get_color(self):
         return colors.LIGHT_GREEN
