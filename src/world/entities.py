@@ -1891,7 +1891,7 @@ class NpcEntity(Entity):
 
 class NpcConversationEntity(NpcEntity):
 
-    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1)):
+    def __init__(self, grid_x, grid_y, npc_template, conversation, color=(1, 1, 1), linked_to_uid=None):
         NpcEntity.__init__(self, grid_x, grid_y, npc_template, color=color)
         self.conv = conversation
         self.npc_interact_count = 0
@@ -1914,6 +1914,34 @@ class NpcConversationEntity(NpcEntity):
 
     def is_interactable(self, world):
         return True
+
+
+class NpcLinkedEntity(NpcEntity):
+
+    def __init__(self, grid_x, grid_y, npc_template, parent_uid, color=(1, 1, 1)):
+        NpcEntity.__init__(self, grid_x, grid_y, npc_template, color=color)
+
+        # the uid of another entity that this one is "linked to", meaning interacting with
+        # this one will produce the same result as interacting with the parent.
+        self._parent_uid = parent_uid
+
+    def interact(self, world):
+        parent_ent = world.get_entity(self._parent_uid, onscreen=False)
+        if parent_ent is None:
+            print("WARN: couldn't find parent entity with uid: {}".format(self._parent_uid))
+        else:
+            parent_ent.interact(world)
+
+    def should_show_hover_text(self):
+        return False
+
+    def is_interactable(self, world):
+        parent_ent = world.get_entity(self._parent_uid, onscreen=False)
+        if parent_ent is None:
+            print("WARN: couldn't find parent entity with uid: {}".format(self._parent_uid))
+            return False
+        else:
+            return parent_ent.is_interactable(world)
 
 
 class NpcTradeEntity(NpcEntity):

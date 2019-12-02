@@ -1069,8 +1069,8 @@ class CityGateZone(Zone):
 
     def __init__(self):
         Zone.__init__(self, "City Gate", 7, filename="city_gate.png")
-        self._mary_npc_pos = (255, 172, 150)
-        self._head_npc_pos = (255, 173, 150)
+        self._mary_npc = (255, 172, 150)
+        self._head_npc = (255, 173, 150)
 
         self._gate_left = (255, 234, 150)
         self._gate_right = (255, 235, 150)
@@ -1084,12 +1084,26 @@ class CityGateZone(Zone):
             self._gate_right: decoration.DecorationType.GATE_RIGHT
         }
 
+        head_npc = None
+        mary_pos = None
+
         for key in unknowns:
             for pos in unknowns[key]:
                 if key in dec_lookup:
                     dec_type = dec_lookup[key]
                     ent = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type)
                     w.add(ent, gridcell=(pos[0], pos[1] - 1))
+
+            if key == self._mary_npc:
+                mary_pos = unknowns[key][0]
+
+            elif key == self._head_npc:
+                head_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.HEAD, npc.Conversations.MARY_AND_HEAD_AT_GATE)
+                w.add(head_npc, gridcell=unknowns[key][0])
+
+        if mary_pos is not None and head_npc is not None:
+            mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, head_npc.get_uid())
+            w.add(mary_npc, gridcell=mary_pos)
 
         return w
 

@@ -20,6 +20,7 @@ class NpcID(Enum):
     MACHINE = "MACHINE"
     DOCTOR = "DOCTOR"
     SKELEKID = "SKELEKID"
+    HEAD = "HEAD"
 
     CAVE_HORROR = "CAVE_HORROR"
 
@@ -121,6 +122,12 @@ class SkelekidTemplate(NpcTemplate):
             return NpcTradeProtocols.MIRROR_TRADE
 
 
+class HeadTemplate(NpcTemplate):
+
+    def __init__(self):
+        NpcTemplate.__init__(self, NpcID.HEAD, "Disembodied Head", sr.skull_head_all, sr.skull_head_faces, ("h", colors.YELLOW))
+
+
 class CaveHorrorNpcTemplate(NpcTemplate):
 
     def __init__(self):
@@ -154,6 +161,8 @@ TEMPLATES = {
     # Looks down on other citizens, mostly keeps to himself.
 
     NpcID.SKELEKID: SkelekidTemplate(),
+
+    NpcID.HEAD: HeadTemplate(),
 
     NpcID.CAVE_HORROR: CaveHorrorNpcTemplate()  # TODO - not used, it's stupid to have them talk
 }
@@ -242,11 +251,12 @@ class Conversations:
 
     MARY_SKELLY_SWAMPS_1 = Conversation("MARY_SKELLY_SWAMPS_1", NpcID.MARY_SKELLY)
 
+    MARY_AND_HEAD_AT_GATE = Conversation("MARY_AND_HEAD_AT_GATE", NpcID.HEAD)
+
     # TODO - these have all been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
     MACHINE_INTRO = Conversation("MACHINE_INTRO", NpcID.MACHINE)
-
 
     @staticmethod
     def get_all():
@@ -344,6 +354,29 @@ class ConversationFactory:
                 NpcDialog("This is the door to the city. I don't know what we'll find on the other side."),
             ]
 
+        if conv == Conversations.MARY_AND_HEAD_AT_GATE:
+            head_sprites = get_sprites(NpcID.HEAD)
+            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("AHH! HELP! They took my BONES! MY BONES.", sprites=head_sprites),
+                    NpcDialog("Who did this? Where are the gate guards?", sprites=mary_sprites),
+                    NpcDialog("I'm so NUMB. So UNFEELING. So EMPTY. My BONES...", sprites=head_sprites),
+                    NpcDialog("What happened to your bones?", sprites=mary_sprites),
+                    NpcDialog("Those DAMN scientists with their experiments. Drove the animals MAD with their tinkering.", sprites=head_sprites),
+                    NpcDialog("Attacked the city. Systems failed. Bones, STOLEN. Discarded. DISMANTLED", sprites=head_sprites),
+                    NpcDialog("The animals did this to you?", sprites=mary_sprites),
+                    NpcDialog("No... other... things too. Horrible things...", sprites=head_sprites),
+                    NpcDialog("The whole city fell? How could that.. even happen?", sprites=mary_sprites),
+                    NpcDialog("Need my bones... Where are my BONES...?", sprites=head_sprites),
+                    NpcDialog("We're going to try to find your bones, ok? We're going to fix this.", sprites=mary_sprites)
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Where are my BONES? My precious bones...", sprites=head_sprites),
+                    NpcDialog("We should get moving. There's nothing we can do for him here.", sprites=mary_sprites)
+                ]
+
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:
                 res_list = [
@@ -410,7 +443,7 @@ class ConversationFactory:
             # setting sprites here just to avoid endless clutter above
             npc_sprites = get_template(conv.get_npc_id()).get_dialog_sprites()
             for dia in res_list:
-                if isinstance(dia, NpcDialog):
+                if isinstance(dia, NpcDialog) and dia.sprites is None:
                     dia.sprites = npc_sprites
 
             return dialog.Dialog.link_em_up(res_list)
@@ -882,3 +915,9 @@ class NpcFactory:
         import src.world.entities as entities
 
         return entities.NpcConversationEntity(0, 0, get_template(npc_id), convo)
+
+    @staticmethod
+    def gen_linked_npc(npc_id, parent_uid):
+        import src.world.entities as entities
+
+        return entities.NpcLinkedEntity(0, 0, get_template(npc_id), parent_uid)

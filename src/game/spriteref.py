@@ -533,7 +533,7 @@ glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
 skelekid_all = [make(256, 156 + i * 32, 16, 20) for i in range(0, 2)]
 skelekid_faces = [make(368, 272 + i*32, 32, 32) for i in range(0, 2)]
 
-skull_head_all = [make(512 + i*16, 192, 16, 10) for i in range(0, 2)]
+skull_head_all = [make(512 + i*16, 198, 16, 10) for i in range(0, 2)]
 skull_head_faces = [make(304, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 spinny_cubes = [make(0 + i*16, 352, 16, 16) for i in range(0, 6)]
