@@ -4,6 +4,7 @@
                         *------------------------*
                       
 [P1 bugs]
+ - textures don't load on windows
  - songs don't cleanly loop anymore
     - i think most do now?
 
@@ -14,17 +15,11 @@
  - if you have temporary speed boost that's about to expire, enemies with z's 
    can act after you move
     - need to math a little harder here (or just leave it...)
- - possible to get window into an un-resizeable state after disabling fullscreen
-    - (potentially linux only - goes back to normal when you toggle fullscreen again) 
-        - haven't seen this in a while.. maybe fixed?
  - right clicking a potion in the equipment grid moves it to the inventory (it should consume)
  
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
- - need to test song starting / stopping / fading thoroughly, there's 
-   serious potential for deadlocks in there
- - test window resizing / fullscreen on windows
  - test anything on mac (where can i find a mac?)
 
 
@@ -36,21 +31,30 @@
  - robo boss should do something
     - he big. he tuff. maybe that's enough
  - bosses shouldn't "wander" until they become non-hidden
-    - can block-in the player at the door
+    - otherwise they can block the player at the door
  
  
 [current features]
- - add misc dialog + flavor
- - finalize spider boss fight
+ - the story
+   - the big reveal after fighting robo
+   - giant bone piles in the core
+   - racks of disembodied heads in the unearth
  - finalize robo boss fight 
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
-      earlier in the game.
- - re-add breaking out of ground animation
+      earlier in the game... even just a line of dialog or something
+ - re-add breaking out of ground animation at very begining of the game
+    - this is actually somewhat important
  
  - figure out how to make windows builds
+    - should be able to basically just run pyinstaller on a windows computer
+      - need 32 & 64 bit, or else 32-bitters will cry and leave 1-star reviews
+ - write shaders for newer OpenGL versions for better coverage
  - figure out whether it's even possible to make/distribute mac builds
     - no opengl? no app notarizaiton w/out developer account? looking grim...
+
+[maintanence]
+ - fix up project requirements. can probably update all the dependencies (even python)
  
  
 [what's stressing me out?]
@@ -268,7 +272,3 @@
             - identical to "Crypt of the Fungal Lord", which exists
             - similar to "Curse of the Mushroom King", which exists
             
-            
-
- 
- - figure out how to (efficiently) make windows builds
