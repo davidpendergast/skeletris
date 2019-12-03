@@ -1212,7 +1212,7 @@ class NamelessZone(Zone):
     ZONE_ID = "???_zone"
 
     def __init__(self):
-        Zone.__init__(self, "Unearth", 15, filename="???_zone.png")
+        Zone.__init__(self, "Unearth", 15, filename="nameless_zone.png")
         self._exit_doors = (255, 175, 80)
 
     def gen_mushroom_enemy(self):
@@ -1266,7 +1266,7 @@ class NamelessLairZone(Zone):
     ZONE_ID = "???_lair"
 
     def __init__(self):
-        Zone.__init__(self, "??? Lair", 15, filename="???_lair.png")
+        Zone.__init__(self, "??? Lair", 15, filename="nameless_lair.png")
         self._nameless_color = (255, 170, 170)
 
     def build_world(self):
