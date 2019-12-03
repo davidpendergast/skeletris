@@ -4,6 +4,7 @@ import os
 import json
 import sys
 import numbers
+import pathlib
 
 import pygame
 
@@ -256,10 +257,10 @@ class Utils:
         try:
             # PyInstaller creates a temp folder and stores path in _MEIPASS
             base_path = sys._MEIPASS
-        except Exception:
+        except AttributeError:
             base_path = os.path.abspath(".")
 
-        return os.path.join(base_path, relative_path)
+        return os.path.join(base_path, pathlib.Path(relative_path))
 
     @staticmethod
     def load_json_from_path(filepath):

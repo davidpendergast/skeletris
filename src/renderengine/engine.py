@@ -303,6 +303,7 @@ class RenderEngine:
         
         self.shader = Shader(
             '''
+            #version 110
             varying vec2 vTexCoord;
 
             void main() {
@@ -312,6 +313,7 @@ class RenderEngine:
             }
             ''',
             '''
+            #version 110
             uniform sampler2D tex0;
 
             varying vec2 vTexCoord;
@@ -342,12 +344,13 @@ class RenderEngine:
         glBindTexture(GL_TEXTURE_2D, self.tex_id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glEnable(GL_TEXTURE_2D)    
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+        glEnable(GL_TEXTURE_2D)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 
-                0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        
+
     def set_camera_pos(self, x, y, center=False):
         self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
         self.camera_pos[1] = y - (self.size[1] // 2) if center else 0

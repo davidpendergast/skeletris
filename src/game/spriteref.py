@@ -1164,14 +1164,15 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
 
 
 if __name__ == "__main__":
-    raw = pygame.image.load("assets/image.png")
-    raw2 = pygame.image.load("assets/cinematics.png")
-    raw3 = pygame.image.load("assets/ui.png")
-    raw4 = pygame.image.load("assets/items.png")
-    raw5 = pygame.image.load("assets/bosses.png")
-    raw6 = pygame.image.load("assets/font.png")
-    raw7 = pygame.image.load("assets/title_scene.png")
+    import os
+    raw = pygame.image.load(Utils.resource_path("assets/image.png"))
+    raw2 = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
+    raw3 = pygame.image.load(Utils.resource_path("assets/ui.png"))
+    raw4 = pygame.image.load(Utils.resource_path("assets/items.png"))
+    raw5 = pygame.image.load(Utils.resource_path("assets/bosses.png"))
+    raw6 = pygame.image.load(Utils.resource_path("assets/font.png"))
+    raw7 = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
     output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7)
     print("INFO: created {} sprites".format(len(all_imgs)))
-    pygame.image.save(output, "src/spritesheet.png")
+    pygame.image.save(output, os.path.join("src", "spritesheet.png"))
     
