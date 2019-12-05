@@ -127,30 +127,24 @@ class _Layer:
                     self.colors, 
                     self.indices)
             
-    def render(self):
+    def render(self, engine):
         # split up like this to make it easier to find performance bottlenecks
-        self._set_client_states(True)
-        self._set_pointers()
+        self._set_client_states(True, engine)
+        self._pass_attributes(engine)
         self._draw_elements()
-        self._set_client_states(False)
+        self._set_client_states(False, engine)
 
-    def _set_client_states(self, enable):
-        if enable:
-            glEnableClientState(GL_VERTEX_ARRAY)
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-            if self.uses_color():
-                glEnableClientState(GL_COLOR_ARRAY)
-        else:
-            if self.uses_color():
-                glDisableClientState(GL_COLOR_ARRAY)
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-            glDisableClientState(GL_VERTEX_ARRAY)
-
-    def _set_pointers(self):
-        glVertexPointer(2, GL_FLOAT, 0, self.vertices)
-        glTexCoordPointer(2, GL_FLOAT, 0, self.tex_coords)
+    def _set_client_states(self, enable, engine):
+        engine.set_vertices_enabled(enable)
+        engine.set_texture_coords_enabled(enable)
         if self.uses_color():
-            glColorPointer(3, GL_FLOAT, 0, self.colors)
+            engine.set_colors_enabled(enable)
+
+    def _pass_attributes(self, engine):
+        engine.set_vertices(self.vertices)
+        engine.set_texture_coords(self.tex_coords)
+        if self.uses_color():
+            engine.set_colors(self.colors)
 
     def _draw_elements(self):
         glDrawElements(GL_TRIANGLES, len(self.indices), GL_UNSIGNED_INT, self.indices)
@@ -216,30 +210,32 @@ class Shader:
         glUseProgram(0)
 
 
-class RenderEngine:
+_SINGLETON = None
 
-    _SINGLETON = None
+
+class RenderEngine:
 
     @staticmethod
     def create_instance():
         """intializes the RenderEngine singleton."""
-        if RenderEngine._SINGLETON is not None:
+        global _SINGLETON
+        if _SINGLETON is not None:
             raise ValueError("There is already a RenderEngine initialized.")
         else:
-            RenderEngine._SINGLETON = RenderEngine()
-            return RenderEngine._SINGLETON
+            _SINGLETON = RenderEngine130()
+            return _SINGLETON
 
     @staticmethod
     def get_instance():
         """after init is called, returns the RenderEngine singleton."""
-        return RenderEngine._SINGLETON
+        return _SINGLETON
 
     def __init__(self):
         self.bundles = {}  # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
         self.layers = {}  # layer_id -> layer
-        self.hidden_layers = {} # layer_id -> None
+        self.hidden_layers = {}  # layer_id -> None
         self.ordered_layers = []
         self.shader = None
         self.tex_id = None
@@ -278,13 +274,8 @@ class RenderEngine:
             self.remove(bun)
 
     def resize(self, width, height):
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0, width, height, 0, 1, -1)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glViewport(0, 0, width, height)
         self.size = (width, height)
+        self.resize_internal(width, height)
 
     def set_clear_color(self, r, g, b):
         """
@@ -292,49 +283,57 @@ class RenderEngine:
         """
         glClearColor(r / 255, g / 255, b / 255, 0.0)
 
+    def get_glsl_version(self):
+        raise NotImplementedError()
+
+    def build_shader(self):
+        raise NotImplementedError()
+
+    def setup_shader(self):
+        raise NotImplementedError()
+
+    def set_matrix_offset(self, x, y):
+        raise NotImplementedError()
+
+    def resize_internal(self, width, height):
+        raise NotImplementedError()
+
+    def set_vertices_enabled(self, val):
+        raise NotImplementedError()
+
+    def set_vertices(self, data):
+        raise NotImplementedError()
+
+    def set_texture_coords_enabled(self, val):
+        raise NotImplementedError()
+
+    def set_texture_coords(self, data):
+        raise NotImplementedError()
+
+    def set_colors_enabled(self, val):
+        raise NotImplementedError()
+
+    def set_colors(self, data):
+        raise NotImplementedError()
+
+    def get_shader(self):
+        return self.shader
+
     def init(self, w, h):
-        self.resize(w, h)
         glShadeModel(GL_FLAT)
         glClearColor(0.5, 0.5, 0.5, 0.0)
         
         vstring = glGetString(GL_VERSION)
         vstring = vstring.decode() if vstring is not None else None
         print("INFO: running OpenGL version: {}".format(vstring))
+
+        print("INFO: building shader for GLSL version: {}".format(self.get_glsl_version()))
         
-        self.shader = Shader(
-            '''
-            #version 110
-            varying vec2 vTexCoord;
+        self.shader = self.build_shader()
+        self.shader.begin()
+        self.setup_shader()
 
-            void main() {
-	            vTexCoord = gl_MultiTexCoord0.st;
-	            gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-                gl_FrontColor = gl_Color;
-            }
-            ''',
-            '''
-            #version 110
-            uniform sampler2D tex0;
-
-            varying vec2 vTexCoord;
-
-            void main() {
-                vec4 tcolor = texture2D(tex0, vTexCoord);
-                for (int i = 0; i < 3; i++) {
-                    if (tcolor[i] >= 0.99) {
-                        gl_FragColor[i] = tcolor[i] * gl_Color[i];
-                    } else {
-                        gl_FragColor[i] = tcolor[i] * gl_Color[i] * gl_Color[i];                    
-                    }
-                }
-                gl_FragColor.w = tcolor.w * gl_Color.w;
-                
-            }
-            ''')
-            
-        self.shader.begin()    
-        texLoc = glGetUniformLocation(self.shader.program, "tex0")
-        glUniform1i(texLoc, 0)
+        self.resize(w, h)
 
     def set_texture(self, img_data, width, height):
         """
@@ -344,8 +343,7 @@ class RenderEngine:
         glBindTexture(GL_TEXTURE_2D, self.tex_id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-                     0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
         glEnable(GL_TEXTURE_2D)
 
         glEnable(GL_BLEND)
@@ -392,14 +390,11 @@ class RenderEngine:
             if layer.layer_id in self.hidden_layers:
                 continue
 
-            glMatrixMode(GL_MODELVIEW)
-            glLoadIdentity()
-            
             offs = layer.offset()
-            if offs != (0, 0):
-                glTranslatef(-offs[0], -offs[1], 0.0)
+
+            self.set_matrix_offset(-offs[0], -offs[1])
             
-            layer.render()
+            layer.render(self)
 
     def cleanup(self):
         self.shader.end()
@@ -409,3 +404,216 @@ class RenderEngine:
         for layer in self.layers.values():
             res += layer.num_sprites()
         return res
+
+
+class RenderEngine110(RenderEngine):
+
+    def __init__(self):
+        super().__init__()
+
+    def get_glsl_version(self):
+        return "110"
+
+    def build_shader(self):
+        return Shader(
+            '''
+            #version 110
+            varying vec2 vTexCoord;
+
+            void main() {
+                vTexCoord = gl_MultiTexCoord0.st;
+                gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+                gl_FrontColor = gl_Color;
+            }
+            ''',
+            '''
+            #version 110
+            uniform sampler2D tex0;
+
+            varying vec2 vTexCoord;
+
+            void main() {
+                vec4 tcolor = texture2D(tex0, vTexCoord);
+                for (int i = 0; i < 3; i++) {
+                    if (tcolor[i] >= 0.99) {
+                        gl_FragColor[i] = tcolor[i] * gl_Color[i];
+                    } else {
+                        gl_FragColor[i] = tcolor[i] * gl_Color[i] * gl_Color[i];                    
+                    }
+                }
+                gl_FragColor.w = tcolor.w * gl_Color.w;
+                
+            }
+            ''')
+
+    def set_vertices_enabled(self, val):
+        if val:
+            glEnableClientState(GL_VERTEX_ARRAY)
+        else:
+            glDisableClientState(GL_VERTEX_ARRAY)
+
+    def set_vertices(self, data):
+        glVertexPointer(2, GL_FLOAT, 0, data)
+
+    def set_texture_coords_enabled(self, val):
+        if val:
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+        else:
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
+
+    def set_texture_coords(self, data):
+        glTexCoordPointer(2, GL_FLOAT, 0, data)
+
+    def set_colors_enabled(self, val):
+        if val:
+            glEnableClientState(GL_COLOR_ARRAY)
+        else:
+            glDisableClientState(GL_COLOR_ARRAY)
+
+    def set_colors(self, data):
+        glColorPointer(3, GL_FLOAT, 0, data)
+
+    def setup_shader(self):
+        glUniform1i(glGetUniformLocation(self.get_shader().get_program(), "tex0"), 0)
+
+    def set_matrix_offset(self, x, y):
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glTranslatef(x, y, 0.0)
+
+    def resize_internal(self, width, height):
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, width, height, 0, 1, -1)
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glViewport(0, 0, width, height)
+
+
+def translation_matrix(x, y):
+    res = numpy.identity(4, dtype=numpy.float32)
+    res.itemset((0, 3), float(x))
+    res.itemset((1, 3), float(y))
+    return res
+
+
+def ortho_matrix(left, right, bottom, top, near_val, far_val):
+    res = numpy.identity(4, dtype=numpy.float32)
+    res.itemset((0, 0), float(2 / (right - left)))
+    res.itemset((1, 1), float(2 / (top - bottom)))
+    res.itemset((2, 2), float(-2 / (far_val - near_val)))
+
+    t_x = -(right + left) / (right - left)
+    t_y = -(top + bottom) / (top - bottom)
+    t_z = -(far_val + near_val) / (far_val - near_val)
+    res.itemset((0, 3), float(t_x))
+    res.itemset((1, 3), float(t_y))
+    res.itemset((2, 3), float(t_z))
+
+    return res
+
+
+class RenderEngine130(RenderEngine):
+
+    def __init__(self):
+        super().__init__()
+        self._tex_uniform_loc = None
+        self._modelview_matrix_uniform_loc = None
+        self._proj_matrix_uniform_loc = None
+
+        self._position_attrib_loc = None
+        self._texture_pos_attrib_loc = None
+
+        self._modelview_matrix = numpy.identity(4, dtype=numpy.float32)
+        self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
+
+    def get_glsl_version(self):
+        return "130"
+
+    def build_shader(self):
+        return Shader(
+            '''
+            # version 130
+            in vec2 position;
+            
+            uniform mat4 modelview;
+            uniform mat4 proj;
+            
+            in vec2 vTexCoord;
+            out vec2 texCoord;
+    
+            void main()
+            {
+                texCoord = vTexCoord;
+                gl_Position = proj * modelview * vec4(position.x, position.y, 0.0, 1.0);
+            }
+            ''',
+            '''
+            #version 130
+            in vec2 texCoord;
+            uniform sampler2D tex0;
+
+            void main(void) {
+                 gl_FragColor = texture2D(tex0, texCoord);
+            }
+            '''
+        )
+
+    def setup_shader(self):
+        prog = self.get_shader().get_program()
+
+        self._tex_uniform_loc = glGetUniformLocation(prog, "tex0")
+        glUniform1i(self._tex_uniform_loc, 0)
+
+        self._modelview_matrix_uniform_loc = glGetUniformLocation(prog, "modelview")
+        glUniformMatrix4fv(self._modelview_matrix_uniform_loc, 1, GL_TRUE, self._modelview_matrix)
+
+        self._proj_matrix_uniform_loc = glGetUniformLocation(prog, "proj")
+        glUniformMatrix4fv(self._proj_matrix_uniform_loc, 1, GL_TRUE, self._proj_matrix)
+
+        self._position_attrib_loc = glGetAttribLocation(prog, "position")
+        self._texture_pos_attrib_loc = glGetAttribLocation(prog, "vTexCoord")
+
+    def set_matrix_offset(self, x, y):
+        self._modelview_matrix = numpy.identity(4, dtype=numpy.float32)
+        trans = translation_matrix(x, y)
+        numpy.matmul(self._modelview_matrix, trans, out=self._modelview_matrix)
+        glUniformMatrix4fv(self._modelview_matrix_uniform_loc, 1, GL_TRUE, self._modelview_matrix)
+
+    def resize_internal(self, width, height):
+        self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
+        ortho = ortho_matrix(0, width, height, 0, 1, -1)
+        numpy.matmul(self._proj_matrix, ortho, out=self._proj_matrix)
+        glUniformMatrix4fv(self._proj_matrix_uniform_loc, 1, GL_TRUE, self._proj_matrix)
+
+        self.set_matrix_offset(0, 0)
+
+        glViewport(0, 0, width, height)
+
+    def set_vertices_enabled(self, val):
+        if val:
+            glEnableVertexAttribArray(self._position_attrib_loc)
+        else:
+            glDisableVertexAttribArray(self._position_attrib_loc)
+
+    def set_vertices(self, data):
+        glVertexAttribPointer(self._position_attrib_loc, 2, GL_FLOAT, GL_FALSE, 0, data)
+
+    def set_texture_coords_enabled(self, val):
+        if val:
+            glEnableVertexAttribArray(self._texture_pos_attrib_loc)
+        else:
+            glDisableVertexAttribArray(self._texture_pos_attrib_loc)
+
+    def set_colors_enabled(self, val):
+        pass
+
+    def set_colors(self, data):
+        pass
+
+    def set_texture_coords(self, data):
+        glVertexAttribPointer(self._texture_pos_attrib_loc, 2, GL_FLOAT, GL_FALSE, 0, data)
+
+
+
