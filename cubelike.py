@@ -62,8 +62,8 @@ def run():
     import src.game.cinematics as cinematics
     cinematics.init_cinematics()
 
-    window_icon = pygame.Surface((16, 16), pygame.SRCALPHA)
-    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed.rect())
+    window_icon = pygame.Surface((32, 32), pygame.SRCALPHA)
+    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed_big.rect())
     WindowState.get_instance().set_icon(window_icon)
 
     # XXX for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
