@@ -351,9 +351,6 @@ class RenderEngine:
         if img_data is not None:
             self.set_texture(img_data, w, h, tex_id=self.tex_id)
 
-        glBindTexture(GL_TEXTURE_2D, self.tex_id)
-        glEnable(GL_TEXTURE_2D)
-
         self.resize(self.size[0], self.size[1])
 
     def set_texture(self, img_data, width, height, tex_id=None):
