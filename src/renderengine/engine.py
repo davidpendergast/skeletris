@@ -524,6 +524,7 @@ class RenderEngine130(RenderEngine):
 
         self._position_attrib_loc = None
         self._texture_pos_attrib_loc = None
+        self._color_attrib_loc = None
 
         self._modelview_matrix = numpy.identity(4, dtype=numpy.float32)
         self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
@@ -542,20 +543,33 @@ class RenderEngine130(RenderEngine):
             
             in vec2 vTexCoord;
             out vec2 texCoord;
+            
+            in vec3 vColor;
+            out vec3 color;
     
             void main()
             {
                 texCoord = vTexCoord;
+                color = vColor;
                 gl_Position = proj * modelview * vec4(position.x, position.y, 0.0, 1.0);
             }
             ''',
             '''
             #version 130
             in vec2 texCoord;
+            in vec3 color;
             uniform sampler2D tex0;
 
             void main(void) {
-                 gl_FragColor = texture2D(tex0, texCoord);
+                vec4 tcolor = texture2D(tex0, texCoord);
+                for (int i = 0; i < 3; i++) {
+                    if (tcolor[i] >= 0.99) {
+                        gl_FragColor[i] = tcolor[i] * color[i];
+                    } else {
+                        gl_FragColor[i] = tcolor[i] * color[i] * color[i];                    
+                    }
+                }
+                gl_FragColor.w = tcolor.w;
             }
             '''
         )
@@ -574,6 +588,11 @@ class RenderEngine130(RenderEngine):
 
         self._position_attrib_loc = glGetAttribLocation(prog, "position")
         self._texture_pos_attrib_loc = glGetAttribLocation(prog, "vTexCoord")
+
+        self._color_attrib_loc = glGetAttribLocation(prog, "vColor")
+
+        # set default color to white
+        glVertexAttrib3f(self._color_attrib_loc, 1.0, 1.0, 1.0)
 
     def set_matrix_offset(self, x, y):
         self._modelview_matrix = numpy.identity(4, dtype=numpy.float32)
@@ -606,14 +625,18 @@ class RenderEngine130(RenderEngine):
         else:
             glDisableVertexAttribArray(self._texture_pos_attrib_loc)
 
-    def set_colors_enabled(self, val):
-        pass
-
-    def set_colors(self, data):
-        pass
-
     def set_texture_coords(self, data):
         glVertexAttribPointer(self._texture_pos_attrib_loc, 2, GL_FLOAT, GL_FALSE, 0, data)
+
+    def set_colors_enabled(self, val):
+        if val:
+            glEnableVertexAttribArray(self._color_attrib_loc)
+        else:
+            glDisableVertexAttribArray(self._color_attrib_loc)
+
+    def set_colors(self, data):
+        glVertexAttribPointer(self._color_attrib_loc, 3, GL_FLOAT, GL_FALSE, 0, data)
+
 
 
 
