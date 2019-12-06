@@ -29,14 +29,16 @@ def _generate_readme(name_of_game):
 
 
 if __name__ == "__main__":
+    version_string = "?"
     try:
         import src.game.debug as debug
         import src.game.version as version
 
         debug.init()
         version.load_version_info()
+        version_string = version.get_pretty_version_string()
 
-        print("INFO: started {} version: {}".format(NAME_OF_GAME, version.get_pretty_version_string()))
+        print("INFO: started {} version: {}".format(NAME_OF_GAME, version_string))
         print("INFO: development mode: {}".format(debug.is_dev()))
         print("INFO: debug mode: {}".format(debug.is_debug()))
 
@@ -57,6 +59,11 @@ if __name__ == "__main__":
 
         crash_file_path = pathlib.Path("logs/" + crash_file_name)
         with open(crash_file_path, 'w') as f:
+            print("o--------------------------o", file=f)
+            print("|  Skeletris Crash Report  |", file=f)
+            print("o--------------------------o", file=f)
+            print("\nVersion: {}\n".format(version_string), file=f)
+
             traceback.print_exc(file=f)
 
         raise e

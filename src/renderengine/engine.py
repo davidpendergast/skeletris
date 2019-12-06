@@ -681,7 +681,3 @@ class RenderEngine130(RenderEngine):
     def set_colors(self, data):
         glVertexAttribPointer(self._color_attrib_loc, 3, GL_FLOAT, GL_FALSE, 0, data)
         printOpenGLError()
-
-
-
-
