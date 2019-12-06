@@ -42,11 +42,12 @@ def run():
                                 screen_size=SCREEN_SIZE, window_size=SCREEN_SIZE,
                                 fullscreen_size=monitor_size)
     WindowState.get_instance().set_caption(NAME_OF_THE_GAME)
-    WindowState.get_instance().show_window()
+    WindowState.get_instance().show_window(None)
 
     from src.renderengine.engine import RenderEngine
     render_eng = RenderEngine.create_instance()
     render_eng.init(*SCREEN_SIZE)
+
 
     raw_sheet = pygame.image.load(Utils.resource_path("assets/image.png"))
     cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
@@ -213,7 +214,7 @@ def run():
             elif event.type == pygame.VIDEORESIZE and not ignore_videoresize_events_this_frame:
                 # XXX ideally we'd set the window size to no smaller than the min size
                 # but that seems to break resizing entirely on linux so... (._.)
-                WindowState.get_instance().set_window_size(event.w, event.h, forcefully=True)
+                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance(), forcefully=True)
                 screen_size = (max(800, event.w), max(600, event.h))
                 WindowState.get_instance().set_screen_size(*screen_size)
                 RenderEngine.get_instance().resize(*screen_size)
@@ -245,7 +246,7 @@ def run():
         if input_state.was_pressed(pygame.K_F4):
             win = WindowState.get_instance()
             fullscreen = not win.get_fullscreen()
-            win.set_fullscreen(fullscreen, forcefully=True)
+            win.set_fullscreen(fullscreen, RenderEngine.get_instance(), forcefully=True)
 
             ignore_videoresize_events_this_frame = True
 

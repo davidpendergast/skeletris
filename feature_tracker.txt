@@ -16,7 +16,7 @@
    can act after you move
     - need to math a little harder here (or just leave it...)
  - right clicking a potion in the equipment grid moves it to the inventory (it should consume)
- 
+ - tutorial hover text is misplaced
  
 [testing]
  - make sure that statuses 'apply' the correct number of times

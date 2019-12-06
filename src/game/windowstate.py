@@ -41,13 +41,16 @@ class WindowState:
 
             return res
 
-    def show_window(self):
+    def show_window(self, engine):
         self._window_visible = True
         display_size = self.get_display_size()
         mods = self._get_mods()
 
         # print("INFO: called pygame.display.set_mode({}, {})".format(display_size, mods))
         pygame.display.set_mode(display_size, mods)
+
+        if engine is not None:
+           engine.reset_for_display_mode_change()
 
     def set_caption(self, title):
         pygame.display.set_caption(title)
@@ -64,11 +67,11 @@ class WindowState:
         else:
             return self._window_size
 
-    def set_window_size(self, w, h, forcefully=False):
+    def set_window_size(self, w, h, engine, forcefully=False):
         self._window_size = (w, h)
 
         if forcefully:
-            self.show_window()
+            self.show_window(engine)
 
     def get_screen_size(self):
         return self._screen_size
@@ -79,19 +82,19 @@ class WindowState:
     def get_fullscreen(self):
         return self._is_fullscreen
 
-    def set_fullscreen(self, val, forcefully=True):
+    def set_fullscreen(self, val, engine, forcefully=True):
         print("INFO: setting fullscreen to {}".format(val))
         self._is_fullscreen = val
 
         if forcefully:
-            self.show_window()
+            self.show_window(engine)
 
     def get_resizeable(self):
         return self._is_resizeable
 
-    def set_resizeable(self, val):
+    def set_resizeable(self, engine, val):
         self._is_resizeable = val
-        self.show_window()
+        self.show_window(engine)
 
     def window_to_screen_pos(self, pos):
         if pos is None:

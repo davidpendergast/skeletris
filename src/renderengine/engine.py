@@ -172,7 +172,7 @@ class Shader:
 
     def __init__(self, vertex_shader_source, fragment_shader_source):
         print("INFO: creating program...")
-        self.program=glCreateProgram()
+        self.program = glCreateProgram()
         printOpenGLError()
 
         print("INFO: compile vertex shader...")
@@ -239,6 +239,8 @@ class RenderEngine:
         self.ordered_layers = []
         self.shader = None
         self.tex_id = None
+
+        self.raw_texture_data = (None, 0, 0)  # data, width, height
         
     def add_layer(self, layer_id, layer_name, z_order, sort_sprites, use_color):
         l = _Layer(layer_name, layer_id, z_order, sort_sprites, use_color)
@@ -328,19 +330,41 @@ class RenderEngine:
         print("INFO: running OpenGL version: {}".format(vstring))
 
         print("INFO: building shader for GLSL version: {}".format(self.get_glsl_version()))
-        
         self.shader = self.build_shader()
         self.shader.begin()
         self.setup_shader()
 
         self.resize(w, h)
 
-    def set_texture(self, img_data, width, height):
+    def reset_for_display_mode_change(self):
+        """
+           XXX on Windows, when pygame.display.set_mode is called, it seems to wipe away the active
+           gl context, so we get around that by rebuilding the shader program and rebinding the texture...
+        """
+        self.shader.end()
+
+        self.shader = self.build_shader()
+        self.shader.begin()
+        self.setup_shader()
+
+        img_data, w, h = self.raw_texture_data
+        if img_data is not None:
+            self.set_texture(img_data, w, h, tex_id=self.tex_id)
+
+        glBindTexture(GL_TEXTURE_2D, self.tex_id)
+        glEnable(GL_TEXTURE_2D)
+
+        self.resize(self.size[0], self.size[1])
+
+    def set_texture(self, img_data, width, height, tex_id=None):
         """
             img_data: image data in string RGBA format.
         """
-        self.tex_id = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, self.tex_id)
+        if tex_id is None:
+            tex_id = glGenTextures(1)
+            self.tex_id = tex_id
+
+        glBindTexture(GL_TEXTURE_2D, tex_id)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
@@ -348,6 +372,8 @@ class RenderEngine:
 
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        self.raw_texture_data = (img_data, width, height)
 
     def set_camera_pos(self, x, y, center=False):
         self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
@@ -574,68 +600,94 @@ class RenderEngine130(RenderEngine):
             '''
         )
 
+    def _assert_valid_var(self, varname, loc):
+        if loc < 0:
+            raise ValueError("invalid uniform or attribute: {}".format(varname))
+
     def setup_shader(self):
-        prog = self.get_shader().get_program()
+        prog_id = self.get_shader().get_program()
 
-        self._tex_uniform_loc = glGetUniformLocation(prog, "tex0")
+        self._tex_uniform_loc = glGetUniformLocation(prog_id, "tex0")
+        self._assert_valid_var("tex0", self._tex_uniform_loc)
         glUniform1i(self._tex_uniform_loc, 0)
+        printOpenGLError()
 
-        self._modelview_matrix_uniform_loc = glGetUniformLocation(prog, "modelview")
+        self._modelview_matrix_uniform_loc = glGetUniformLocation(prog_id, "modelview")
+        self._assert_valid_var("modelview", self._modelview_matrix_uniform_loc)
         glUniformMatrix4fv(self._modelview_matrix_uniform_loc, 1, GL_TRUE, self._modelview_matrix)
+        printOpenGLError()
 
-        self._proj_matrix_uniform_loc = glGetUniformLocation(prog, "proj")
+        self._proj_matrix_uniform_loc = glGetUniformLocation(prog_id, "proj")
+        self._assert_valid_var("proj", self._proj_matrix_uniform_loc)
         glUniformMatrix4fv(self._proj_matrix_uniform_loc, 1, GL_TRUE, self._proj_matrix)
+        printOpenGLError()
 
-        self._position_attrib_loc = glGetAttribLocation(prog, "position")
-        self._texture_pos_attrib_loc = glGetAttribLocation(prog, "vTexCoord")
+        self._position_attrib_loc = glGetAttribLocation(prog_id, "position")
+        self._assert_valid_var("position", self._position_attrib_loc)
 
-        self._color_attrib_loc = glGetAttribLocation(prog, "vColor")
+        self._texture_pos_attrib_loc = glGetAttribLocation(prog_id, "vTexCoord")
+        self._assert_valid_var("vTexCoord", self._texture_pos_attrib_loc)
+
+        self._color_attrib_loc = glGetAttribLocation(prog_id, "vColor")
+        self._assert_valid_var("vColor", self._color_attrib_loc)
 
         # set default color to white
         glVertexAttrib3f(self._color_attrib_loc, 1.0, 1.0, 1.0)
+        printOpenGLError()
 
     def set_matrix_offset(self, x, y):
         self._modelview_matrix = numpy.identity(4, dtype=numpy.float32)
         trans = translation_matrix(x, y)
-        numpy.matmul(self._modelview_matrix, trans, out=self._modelview_matrix)
+        numpy.matmul(self._modelview_matrix, trans, out=self._modelview_matrix, dtype=numpy.float32)
+
         glUniformMatrix4fv(self._modelview_matrix_uniform_loc, 1, GL_TRUE, self._modelview_matrix)
+        printOpenGLError()
 
     def resize_internal(self, width, height):
         self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
         ortho = ortho_matrix(0, width, height, 0, 1, -1)
-        numpy.matmul(self._proj_matrix, ortho, out=self._proj_matrix)
+        numpy.matmul(self._proj_matrix, ortho, out=self._proj_matrix, dtype=numpy.float32)
+
         glUniformMatrix4fv(self._proj_matrix_uniform_loc, 1, GL_TRUE, self._proj_matrix)
+        printOpenGLError()
 
         self.set_matrix_offset(0, 0)
 
         glViewport(0, 0, width, height)
+        printOpenGLError()
 
     def set_vertices_enabled(self, val):
         if val:
             glEnableVertexAttribArray(self._position_attrib_loc)
         else:
             glDisableVertexAttribArray(self._position_attrib_loc)
+        printOpenGLError()
 
     def set_vertices(self, data):
         glVertexAttribPointer(self._position_attrib_loc, 2, GL_FLOAT, GL_FALSE, 0, data)
+        printOpenGLError()
 
     def set_texture_coords_enabled(self, val):
         if val:
             glEnableVertexAttribArray(self._texture_pos_attrib_loc)
         else:
             glDisableVertexAttribArray(self._texture_pos_attrib_loc)
+        printOpenGLError()
 
     def set_texture_coords(self, data):
         glVertexAttribPointer(self._texture_pos_attrib_loc, 2, GL_FLOAT, GL_FALSE, 0, data)
+        printOpenGLError()
 
     def set_colors_enabled(self, val):
         if val:
             glEnableVertexAttribArray(self._color_attrib_loc)
         else:
             glDisableVertexAttribArray(self._color_attrib_loc)
+        printOpenGLError()
 
     def set_colors(self, data):
         glVertexAttribPointer(self._color_attrib_loc, 3, GL_FLOAT, GL_FALSE, 0, data)
+        printOpenGLError()
 
 
 
