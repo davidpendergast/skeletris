@@ -7,6 +7,7 @@ gl_examples/
 *.mp4
 dist/
 build/
+logs/
 save_data/*
 assets/sounds/library/*
 src/spritesheet.png
