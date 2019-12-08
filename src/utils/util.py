@@ -190,6 +190,19 @@ class Utils:
         return res
 
     @staticmethod
+    def flatten_list(l):
+        return [x for x in Utils._flatten_helper(l)]
+
+    @staticmethod
+    def _flatten_helper(l):
+        for x in l:
+            if isinstance(x, list):
+                for y in Utils._flatten_helper(x):
+                    yield y
+            else:
+                yield x
+
+    @staticmethod
     def cells_between(p1, p2, include_endpoints=True):
         if p1 == p2:
             return [tuple(p1)] if include_endpoints else []

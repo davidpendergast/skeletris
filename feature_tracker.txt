@@ -14,8 +14,8 @@
  - if you have temporary speed boost that's about to expire, enemies with z's 
    can act after you move
     - need to math a little harder here (or just leave it...)
- - right clicking a potion in the equipment grid moves it to the inventory (it should consume)
  - tutorial hover text is misplaced
+ - window icon no longer works on linux (after making it 32x32 vs. 16x16)
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
@@ -146,9 +146,11 @@
     - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - offscreen light sources that are somewhat nearby will make offscreen enemies act non-instantly
         - for now, let's just not have any enemies that emit light by default
+            - oops, tree boss emits light...
     - HP on kill doesn't trigger when you kill an enemy with poison
         - I think this makes the game better. leave it.
     - as frog boss is leaping diagonally, it'll activate player's attack targeting squares
+    - right clicking a potion in the equipment grid moves it to the inventory (it should consume)
         
 [playtesting notes]
 

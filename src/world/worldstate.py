@@ -294,6 +294,14 @@ class World:
         else:
             return False
 
+    def get_decoration_type(self, grid_x, grid_y):
+        if self.is_valid(grid_x, grid_y):
+            ents = self.get_entities_in_cell(grid_x, grid_y, cond=lambda e: e.is_decoration())
+            if len(ents) == 0:
+                return None
+            else:
+                return ents[0].get_dec_type()
+
     def get_visible(self, grid_x, grid_y):
         return not self.get_hidden(grid_x, grid_y) and self.get_lighting(grid_x, grid_y) > 0
 

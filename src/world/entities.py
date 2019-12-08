@@ -215,9 +215,6 @@ class Entity(Updateable):
     def is_pickup(self):
         return False
 
-    def is_save_station(self):
-        return False
-
     def is_npc(self):
         return False
 
@@ -225,6 +222,9 @@ class Entity(Updateable):
         return False
 
     def is_door(self):
+        return False
+
+    def is_decoration(self):
         return False
 
     def is_interactable(self, world):
@@ -1701,28 +1701,71 @@ class EndGameExitEnitity(ExitEntity):
 
 class DecorationEntity(Entity):
 
-    def __init__(self, sprite, grid_x, grid_y, scale=2, draw_offset=(0, 0), interact_dialog=None):
+    def __init__(self, dec_type, sprites, grid_x, grid_y,
+                 scale=2, draw_offset=(0, 0), interact_dialog=None):
         """
-        sprite: ImageModel or a list of ImageModels
+        sprites: a list of ImageModels or a list of lists of ImageModels
         interact_dialog: Dialog
+        connection_sprites=(left_connect, right_connect, center_connect)
         """
         Entity.__init__(self, int((grid_x + 0.5) * 64), int((grid_y + 0.5) * 64), 1, 0)
 
+        self._dec_type = dec_type
         self._interact_dialog = interact_dialog
         self._draw_offset = draw_offset
-        self._sprites = Utils.listify(sprite)
         self._scale = scale
+
+        sprites = Utils.listify(sprites)
+
+        self._sprites = None
+        self._left_connect_sprites = None
+        self._right_connect_sprites = None
+        self._center_connect_sprites = None
+
+        if len(sprites) == 4:
+            self._sprites = Utils.listify(sprites[0])
+            self._left_connect_sprites = Utils.listify(sprites[1])
+            self._right_connect_sprites = Utils.listify(sprites[2])
+            self._center_connect_sprites = Utils.listify(sprites[3])
+        else:
+            # just treat it as (potentially) multi-frame non-connecting decoration
+            self._sprites = Utils.flatten_list(sprites)
+
+    def get_dec_type(self):
+        return self._dec_type
+
+    def is_decoration(self):
+        return True
 
     def get_render_center(self):
         if self._img is None:
             return super().center()
         return (self.x() + self._draw_offset[0], self.y() + self._draw_offset[1])
 
+    def _get_connection_sprites(self, world):
+        if (self._left_connect_sprites is None and self._right_connect_sprites is None
+                and self._center_connect_sprites is None) or self._dec_type is None:
+            return self._sprites
+        else:
+            my_pos = world.to_grid_coords(*self.center())
+            left_type = world.get_decoration_type(my_pos[0] - 1, my_pos[1])
+            right_type = world.get_decoration_type(my_pos[0] + 1, my_pos[1])
+
+            if left_type == self._dec_type and right_type == self._dec_type:
+                return self._center_connect_sprites
+            elif left_type == self._dec_type:
+                return self._left_connect_sprites
+            elif right_type == self._dec_type:
+                return self._right_connect_sprites
+            else:
+                return self._sprites
+
     def update(self, world):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
-        sprite = self._sprites[gs.get_instance().anim_tick // 2 % len(self._sprites)]
+        sprites = self._get_connection_sprites(world)
+        sprite = sprites[gs.get_instance().anim_tick // 2 % len(sprites)]
         x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
         y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
         depth = self.get_depth()
@@ -1740,7 +1783,7 @@ class DecorationEntity(Entity):
         self._interact_dialog = dialog
 
     @staticmethod
-    def wall_decoration(sprites, grid_x, grid_y, scale=2, interact_dialog=None):
+    def wall_decoration(dec_type, sprites, grid_x, grid_y, scale=2, interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
@@ -1748,7 +1791,7 @@ class DecorationEntity(Entity):
         sprites = Utils.listify(sprites)
         CELLSIZE = 64  # this better never change~
         offset = (0, 8 * scale + CELLSIZE // 2)
-        return DecorationEntity(sprites, grid_x, grid_y - 1, scale=scale, draw_offset=offset,
+        return DecorationEntity(dec_type, sprites, grid_x, grid_y - 1, scale=scale, draw_offset=offset,
                                 interact_dialog=interact_dialog)
 
     @staticmethod
@@ -1760,7 +1803,10 @@ class DecorationEntity(Entity):
         y_bottom = (grid_y + 0.5) * CELLSIZE
         offset = (0, -(sprite.height() - 1) * scale)
 
-        return DecorationEntity(sprite, x_center, y_bottom, scale=scale, draw_offset=offset,
+        import src.game.decoration as decoration
+
+        return DecorationEntity(decoration.DecorationTypes.SIGN, sprite, x_center, y_bottom,
+                                scale=scale, draw_offset=offset,
                                 interact_dialog=PlayerDialog(dialog_text))
 
     def is_visible_in_world(self, world):

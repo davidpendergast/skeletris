@@ -17,7 +17,7 @@ def _add_dec_type(val, rand_spawn=True):
     return val
 
 
-class DecorationType:
+class DecorationTypes:
 
     BUCKET = _add_dec_type("BUCKET")
     PLANT = _add_dec_type("PLANT")
@@ -27,6 +27,8 @@ class DecorationType:
     WORKBENCH = _add_dec_type("WORKBENCH", rand_spawn=False)
     GATE_LEFT = _add_dec_type("GATE_LEFT", rand_spawn=False)
     GATE_RIGHT = _add_dec_type("GATE_RIGHT", rand_spawn=False)
+    BONE_PILE = _add_dec_type("BONE_PILE", rand_spawn=False)
+    SIGN = _add_dec_type("SIGN", rand_spawn=False)
 
 
 class DecorationFactory:
@@ -42,10 +44,10 @@ class DecorationFactory:
         if dec_type is None:
             dec_type = random.choice(_ALL_RAND_SPAWN_DEC_TYPES)
 
-        dec_sprite = DecorationFactory.get_sprite(dec_type, level)
+        dec_sprites = DecorationFactory.get_sprites(dec_type, level)
 
         import src.world.entities as entities
-        dec_ent = entities.DecorationEntity.wall_decoration([dec_sprite], 0, 0)
+        dec_ent = entities.DecorationEntity.wall_decoration(dec_type, dec_sprites, 0, 0)
 
         if with_dialog is None:
             dec_dialog = DecorationFactory.get_dialog(dec_type, level)
@@ -60,44 +62,53 @@ class DecorationFactory:
         return dec_ent
 
     @staticmethod
-    def get_sprite(dec_type, level, rand_seed=None):
+    def get_sprites(dec_type, level, rand_seed=None):
         if rand_seed is None:
             rand_seed = random.random()
 
-        if dec_type == DecorationType.BUCKET:
+        if dec_type == DecorationTypes.BUCKET:
             return spriteref.wall_decoration_bucket
-        elif dec_type == DecorationType.PLANT:
+        elif dec_type == DecorationTypes.PLANT:
             idx = int(rand_seed * len(spriteref.wall_decoration_plants))
             return spriteref.wall_decoration_plants[idx]
-        elif dec_type == DecorationType.RAKE:
+        elif dec_type == DecorationTypes.RAKE:
             return spriteref.wall_decoration_rake
-        elif dec_type == DecorationType.BONES:
+        elif dec_type == DecorationTypes.BONES:
             return spriteref.wall_decoration_bones
-        elif dec_type == DecorationType.MUSHROOM:
+        elif dec_type == DecorationTypes.MUSHROOM:
             idx = int(rand_seed * len(spriteref.wall_decoration_mushrooms))
             return spriteref.wall_decoration_mushrooms[idx]
-        elif dec_type == DecorationType.WORKBENCH:
+        elif dec_type == DecorationTypes.WORKBENCH:
             return spriteref.wall_decoration_workbench
-        elif dec_type == DecorationType.GATE_LEFT:
+        elif dec_type == DecorationTypes.GATE_LEFT:
             return spriteref.wall_decoration_gate_left
-        elif dec_type == DecorationType.GATE_RIGHT:
+        elif dec_type == DecorationTypes.GATE_RIGHT:
             return spriteref.wall_decoration_gate_right
+        elif dec_type == DecorationTypes.SIGN:
+            return spriteref.wall_decoration_sign
+        elif dec_type == DecorationTypes.BONE_PILE:
+            return [
+                spriteref.wall_decoration_bone_pile_single,
+                spriteref.wall_decoration_bone_pile_left,
+                spriteref.wall_decoration_bone_pile_right,
+                spriteref.wall_decoration_bone_pile_center,
+            ]
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 
     @staticmethod
     def get_dialog(dec_type, level, rand_seed=None):
-        if dec_type == DecorationType.BUCKET:
+        if dec_type == DecorationTypes.BUCKET:
             return dialog.Dialog("It's a bucket. No treasure inside.")
-        elif dec_type == DecorationType.PLANT:
+        elif dec_type == DecorationTypes.PLANT:
             return dialog.Dialog("It's a plant. It looks well-maintained.")
-        elif dec_type == DecorationType.RAKE:
+        elif dec_type == DecorationTypes.RAKE:
             return dialog.Dialog("It's a rake.")
-        elif dec_type == DecorationType.BONES:
+        elif dec_type == DecorationTypes.BONES:
             return dialog.Dialog("It seems to be a decoration of some kind.")
-        elif dec_type == DecorationType.MUSHROOM:
+        elif dec_type == DecorationTypes.MUSHROOM:
             return dialog.Dialog("It's a large cluster of mushrooms.")
-        elif dec_type == DecorationType.WORKBENCH:
+        elif dec_type == DecorationTypes.WORKBENCH:
             return dialog.Dialog("It's a workbench. It looks well-used.")
         else:
             return None
@@ -135,7 +146,7 @@ class DecorationFactory:
     @staticmethod
     def get_sign(level, sign_text=None):
         import src.world.entities as entities
-        sign_ent = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, 0, 0)
+        sign_ent = entities.DecorationEntity.wall_decoration(DecorationTypes.SIGN, spriteref.wall_decoration_sign, 0, 0)
 
         if sign_text is None:
             sign_dialog = DecorationFactory.get_sign_dialog(level)

@@ -122,10 +122,14 @@ def init_zones():
 
     core_song = music.Songs.get_basic_core_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
-    
-    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1", geo_color=red_color, music_id=core_song))
-    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2", geo_color=red_color, music_id=core_song))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3", geo_color=red_color, music_id=core_song))
+    core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.20)]
+
+    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1",
+                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2",
+                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3",
+                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
     story_zones.append(get_zone(NamelessZone.ZONE_ID))
@@ -406,7 +410,7 @@ class TestZone(Zone):
                 if geo_above == World.WALL and geo == World.FLOOR and random.random() < 0.6:
                     sprite_to_use, text_to_use = random.choice(decs)
 
-                    decor = entities.DecorationEntity.wall_decoration(sprite_to_use, grid_x, grid_y,
+                    decor = entities.DecorationEntity.wall_decoration(None, sprite_to_use, grid_x, grid_y,
                                                                       interact_dialog=dialog.PlayerDialog(text_to_use))
                     w.add(decor)
 
@@ -459,7 +463,7 @@ class ZoneBuilder:
             world.add(sign_ent, gridcell=(x, y-1))
 
     @staticmethod
-    def _tile_grid_to_world(zone_id, level, t_grid):
+    def _tile_grid_to_world(zone_id, level, t_grid, bonus_decorations=()):
         w = t_grid.w()
         h = t_grid.h()
         world = World(t_grid.w(), t_grid.h())
@@ -487,6 +491,19 @@ class ZoneBuilder:
                     trade_npc_coords.append((x, y))
                 else:
                     ZoneBuilder._add_entities_for_tile(zone_id, level, x, y, tile_type, world)
+
+        # distribute bonus decorations into valid positions
+        if len(bonus_decorations) > 0:
+            bonus_dec_list = list(bonus_decorations)
+            for x in range(0, w):
+                for y in range(0, h):
+                    if t_grid.get(x, y) == worldgen2.TileType.FLOOR and t_grid.get(x, y-1) == worldgen2.TileType.WALL:
+                        random.shuffle(bonus_dec_list)
+                        for type_and_rate in bonus_dec_list:
+                            if random.random() < type_and_rate[1]:
+                                dec_ent = decoration.DecorationFactory.get_decoration(level, dec_type=type_and_rate[0])
+                                world.add(dec_ent, gridcell=(x, y - 1))
+                                break
 
         actual_zone = get_zone(zone_id, or_else=None)
 
@@ -651,7 +668,7 @@ class ZoneBuilder:
         return (None, None)
 
     @staticmethod
-    def generate_new_world(zone, dims=None, min_dims=(3, 3), max_dims=(3, 3)):
+    def generate_new_world(zone, dims=None, min_dims=(3, 3), max_dims=(3, 3), bonus_decorations=()):
         if dims is not None:
             grid_dims = dims
         else:
@@ -663,14 +680,16 @@ class ZoneBuilder:
         print("INFO: generated world: level={}".format(zone.get_level()))
         print(t_grid)
 
-        w = ZoneBuilder._tile_grid_to_world(zone.get_id(), zone.get_level(), t_grid)
+        w = ZoneBuilder._tile_grid_to_world(zone.get_id(), zone.get_level(), t_grid,
+                                            bonus_decorations=bonus_decorations)
         w.set_geo_color(zone.get_color())
 
         return w
 
     @staticmethod
     def make_generated_zone(level, name, zone_id, dims=None, min_dims=(3, 3), max_dims=(3, 3),
-                            music_id=None, geo_color=None, conversation_ids=None):
+                            music_id=None, geo_color=None, conversation_ids=None,
+                            bonus_decorations=()):
         zone = Zone(name, level)
         zone.ZONE_ID = zone_id
         zone.zone_id = zone_id
@@ -682,8 +701,16 @@ class ZoneBuilder:
         if geo_color is not None:
             zone.geo_color = geo_color
 
+        # making sure i didn't screw up this param
+        if len(bonus_decorations) > 0:
+            for type_and_rate in bonus_decorations:
+                if (not isinstance(type_and_rate[0], str)
+                        or type_and_rate[1] < 0 or type_and_rate[1] > 1):
+                    raise ValueError("invalid bonus decoration: {}".format(type_and_rate))
+
         zone.build_world = lambda: ZoneBuilder.generate_new_world(zone, dims=dims,
-                                                                  min_dims=min_dims, max_dims=max_dims)
+                                                                  min_dims=min_dims, max_dims=max_dims,
+                                                                  bonus_decorations=bonus_decorations)
         return zone
 
 
@@ -772,7 +799,7 @@ class DesolateCaveZone(Zone):
         for pos in unknowns[DesolateCaveZone.MUSHROOM_COLOR]:
             m_sprite = random.choice(spriteref.wall_decoration_mushrooms)
             text = "it's a large cluster of mushrooms. they're overgrown and rotten."
-            mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+            mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM, m_sprite, pos[0], pos[1],
                                                                         interact_dialog=dialog.PlayerDialog(text))
             w.add(mushroom_entity)
 
@@ -793,7 +820,7 @@ class DesolateCaveZone(Zone):
                                                 lambda event: event.get_uid() == unlock_dialog.get_uid(),
                                                 single_use=True)
                 gs.get_instance().add_trigger(listener)
-                mushroom_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_switches,
+                mushroom_entity = entities.DecorationEntity.wall_decoration(None,  spriteref.wall_decoration_switches,
                                                                             pos[0], pos[1],
                                                                             interact_dialog=unlock_dialog)
             else:
@@ -801,14 +828,16 @@ class DesolateCaveZone(Zone):
                     text = "there's nothing interesting here. it's just a large cluster of mushrooms."
                 else:
                     text = "this won't help us open the door. it's just a large cluster of mushrooms."
-                mushroom_entity = entities.DecorationEntity.wall_decoration(m_sprite, pos[0], pos[1],
+                mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM,
+                                                                            m_sprite, pos[0], pos[1],
                                                                             interact_dialog=dialog.PlayerDialog(text))
             w.add(mushroom_entity)
 
         for pos in unknowns[DesolateCaveZone.RAKE_COLOR]:
             text = "it's a rake."
-            rake_entity = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_rake,
-                                                            pos[0], pos[1], interact_dialog=dialog.PlayerDialog(text))
+            rake_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.RAKE,
+                                                                    spriteref.wall_decoration_rake,
+                                                                    pos[0], pos[1], interact_dialog=dialog.PlayerDialog(text))
             w.add(rake_entity)
 
         for key in unknowns:
@@ -818,7 +847,8 @@ class DesolateCaveZone(Zone):
                 dialog_text = Utils.listify(DesolateCaveZone.WALL_SIGNS[key][1])
                 d = dialog.Dialog.link_em_up([dialog.PlayerDialog(x) for x in dialog_text])
 
-                sign = entities.DecorationEntity.wall_decoration(spriteref.wall_decoration_sign, pos[0], pos[1],
+                sign = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.SIGN,
+                                                                 spriteref.wall_decoration_sign, pos[0], pos[1],
                                                                  interact_dialog=d)
                 w.add(sign)
 
@@ -887,7 +917,7 @@ class TitleSceneZone(Zone):
 
         if self.mushroom_id in unknowns:
             for pos in unknowns[self.mushroom_id]:
-                ent = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.MUSHROOM)
+                ent = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM)
                 w.add(ent, gridcell=(pos[0], pos[1] - 1))
 
         return w
@@ -1080,8 +1110,8 @@ class CityGateZone(Zone):
         w = bp.build_world()
 
         dec_lookup = {
-            self._gate_left: decoration.DecorationType.GATE_LEFT,
-            self._gate_right: decoration.DecorationType.GATE_RIGHT
+            self._gate_left: decoration.DecorationTypes.GATE_LEFT,
+            self._gate_right: decoration.DecorationTypes.GATE_RIGHT
         }
 
         head_npc = None
@@ -1246,7 +1276,8 @@ class NamelessZone(Zone):
 
         for xy in mushroom_positions:
             mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
-            mushroom_entity = entities.DecorationEntity.wall_decoration(mushroom_sprite, xy[0], xy[1])
+            mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM,
+                                                                        mushroom_sprite, xy[0], xy[1])
             w.add(mushroom_entity)
 
         return w
@@ -1283,7 +1314,8 @@ class NamelessLairZone(Zone):
 
         for xy in mushroom_positions:
             mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
-            mushroom_entity = entities.DecorationEntity.wall_decoration(mushroom_sprite, xy[0], xy[1])
+            mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM,
+                                                                        mushroom_sprite, xy[0], xy[1])
             w.add(mushroom_entity)
 
         return w
@@ -1329,18 +1361,18 @@ class CaveHorrorZone(Zone):
 
         if self._rake_color in unknowns:
             for xy in unknowns[self._rake_color]:
-                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.RAKE)
+                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.RAKE)
                 w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         if self._bucket_color in unknowns:
             for xy in unknowns[self._bucket_color]:
-                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.BUCKET)
+                dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.BUCKET)
                 w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         for mushroom_color in self._mushroom_colors:
             if mushroom_color in unknowns:
                 for xy in unknowns[mushroom_color]:
-                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationType.MUSHROOM)
+                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
@@ -1521,12 +1553,12 @@ class TombTownZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
-        dec_type_lookup = {TombTownZone.MUSHROOMS: (decoration.DecorationType.MUSHROOM, None),
-                           TombTownZone.TOMATO_PLANTS: (decoration.DecorationType.PLANT, "It's a tomato plant. It looks well-maintained."),
-                           TombTownZone.RAKE: (decoration.DecorationType.RAKE, None),
-                           TombTownZone.WORKBENCH: (decoration.DecorationType.WORKBENCH, None),
-                           TombTownZone.BONE_DECORATIONS: (decoration.DecorationType.BONES, "It appears to be a memorial plate of some kind. The bones are made from stone."),
-                           TombTownZone.BUCKET: (decoration.DecorationType.BUCKET, None)}
+        dec_type_lookup = {TombTownZone.MUSHROOMS: (decoration.DecorationTypes.MUSHROOM, None),
+                           TombTownZone.TOMATO_PLANTS: (decoration.DecorationTypes.PLANT, "It's a tomato plant. It looks well-maintained."),
+                           TombTownZone.RAKE: (decoration.DecorationTypes.RAKE, None),
+                           TombTownZone.WORKBENCH: (decoration.DecorationTypes.WORKBENCH, None),
+                           TombTownZone.BONE_DECORATIONS: (decoration.DecorationTypes.BONES, "It appears to be a memorial plate of some kind. The bones are made from stone."),
+                           TombTownZone.BUCKET: (decoration.DecorationTypes.BUCKET, None)}
 
         mary_pre_fight_ent_uid = None
         mary_pos_2 = None
