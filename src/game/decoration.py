@@ -28,6 +28,7 @@ class DecorationTypes:
     GATE_LEFT = _add_dec_type("GATE_LEFT", rand_spawn=False)
     GATE_RIGHT = _add_dec_type("GATE_RIGHT", rand_spawn=False)
     BONE_PILE = _add_dec_type("BONE_PILE", rand_spawn=False)
+    SKULL_RACK = _add_dec_type("SKULL_RACK", rand_spawn=False)
     SIGN = _add_dec_type("SIGN", rand_spawn=False)
 
 
@@ -93,6 +94,8 @@ class DecorationFactory:
                 spriteref.wall_decoration_bone_pile_right,
                 spriteref.wall_decoration_bone_pile_center,
             ]
+        elif dec_type == DecorationTypes.SKULL_RACK:
+            return spriteref.wall_decoration_skull_rack
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 

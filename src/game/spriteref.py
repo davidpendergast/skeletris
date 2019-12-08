@@ -478,6 +478,7 @@ wall_decoration_bone_pile_single = [make(0, 432, 32, 24, and_add_to_list=large_d
 wall_decoration_bone_pile_left = [make(32, 432, 32, 24, and_add_to_list=large_decs)]
 wall_decoration_bone_pile_center = [make(64, 432, 32, 24, and_add_to_list=large_decs)]
 wall_decoration_bone_pile_right = [make(96, 432, 32, 24, and_add_to_list=large_decs)]
+wall_decoration_skull_rack = [make(128, 400, 32, 24, and_add_to_list=large_decs)]
 
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)

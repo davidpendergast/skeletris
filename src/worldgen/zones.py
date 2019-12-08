@@ -122,7 +122,8 @@ def init_zones():
 
     core_song = music.Songs.get_basic_core_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
-    core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.20)]
+    core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.90),
+                       (decoration.DecorationTypes.SKULL_RACK, 0.90)]
 
     story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1",
                                                        geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
@@ -1345,6 +1346,7 @@ class CaveHorrorZone(Zone):
         self._rake_color = (255, 220, 175)
         self._bucket_color = (225, 200, 0)
         self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
+        self._skull_rack_colors = [(255, 200, 100), (225, 200, 100)]
 
         self._npc_spawn_1 = (255, 172, 150)
         self._npc_spawn_2 = (255, 172, 151)
@@ -1373,6 +1375,14 @@ class CaveHorrorZone(Zone):
             if mushroom_color in unknowns:
                 for xy in unknowns[mushroom_color]:
                     dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM)
+                    w.add(dec, gridcell=(xy[0], xy[1] - 1))
+
+        for skull_rack_color in self._skull_rack_colors:
+            if skull_rack_color in unknowns:
+                for xy in unknowns[skull_rack_color]:
+                    d_text = "Their collective yelling and moaning overwhelms you. You can't make out a word."
+                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKULL_RACK,
+                                                                      with_dialog=d_text)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
