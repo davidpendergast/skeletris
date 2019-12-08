@@ -1,6 +1,6 @@
 import os
 
-_IS_DEV = os.path.exists("this_is_dev.txt")
+_IS_DEV = None
 
 # flip to toggle all debug settings
 _DEBUG = True
@@ -16,7 +16,14 @@ _RESET_TUTORIALS_ON_NEWGAME = False
 _NEVER_SHOW_TUTORIALS = False
 
 
+def init():
+    global _IS_DEV
+    _IS_DEV = os.path.isfile("this_is_dev.txt")
+
+
 def is_dev():
+    if _IS_DEV is None:
+        raise ValueError("module has not been initialized")
     return _IS_DEV
 
 

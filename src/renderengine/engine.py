@@ -171,11 +171,9 @@ def printOpenGLError():
 class Shader:
 
     def __init__(self, vertex_shader_source, fragment_shader_source):
-        print("INFO: creating program...")
         self.program = glCreateProgram()
         printOpenGLError()
 
-        print("INFO: compile vertex shader...")
         self.vs = glCreateShader(GL_VERTEX_SHADER)
         glShaderSource(self.vs, [vertex_shader_source])
         glCompileShader(self.vs)
@@ -185,7 +183,6 @@ class Shader:
         if len(info_log) > 0:
             print("INFO: vertex shader has non-empty info log: {}".format(info_log))
 
-        print("INFO: compile fragment shader...")
         self.fs = glCreateShader(GL_FRAGMENT_SHADER)
         glShaderSource(self.fs, [fragment_shader_source])
         glCompileShader(self.fs)
@@ -195,7 +192,6 @@ class Shader:
         if len(info_log) > 0:
             print("INFO: fragment shader has non-empty info log: {}".format(info_log))
 
-        print("INFO: link program...")
         glLinkProgram(self.program)
         printOpenGLError()
 
@@ -685,7 +681,3 @@ class RenderEngine130(RenderEngine):
     def set_colors(self, data):
         glVertexAttribPointer(self._color_attrib_loc, 3, GL_FLOAT, GL_FALSE, 0, data)
         printOpenGLError()
-
-
-
-
