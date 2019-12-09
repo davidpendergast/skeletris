@@ -67,6 +67,7 @@ class DecorationFactory:
         if rand_seed is None:
             rand_seed = random.random()
 
+        # TODO - this is implemented in such a stupid way...
         if dec_type == DecorationTypes.BUCKET:
             return spriteref.wall_decoration_bucket
         elif dec_type == DecorationTypes.PLANT:
@@ -95,7 +96,8 @@ class DecorationFactory:
                 spriteref.wall_decoration_bone_pile_center,
             ]
         elif dec_type == DecorationTypes.SKULL_RACK:
-            return spriteref.wall_decoration_skull_rack
+            # list in a list so it isn't interpreted as 'connection' sprites
+            return [spriteref.wall_decoration_skull_racks]
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 

@@ -249,6 +249,15 @@ class Bosses:
     spider_idle = []
 
 
+class Animations:
+
+    explosions = None
+    sleeping_zees = None
+    floor_breaking = None
+    floor_breaking_fragments = None
+    floor_falling_big = None
+
+
 class Font:
     _alphabet = {}  # str -> img
     _char_mappings = {
@@ -478,7 +487,7 @@ wall_decoration_bone_pile_single = [make(0, 432, 32, 24, and_add_to_list=large_d
 wall_decoration_bone_pile_left = [make(32, 432, 32, 24, and_add_to_list=large_decs)]
 wall_decoration_bone_pile_center = [make(64, 432, 32, 24, and_add_to_list=large_decs)]
 wall_decoration_bone_pile_right = [make(96, 432, 32, 24, and_add_to_list=large_decs)]
-wall_decoration_skull_rack = [make(128, 400, 32, 24, and_add_to_list=large_decs)]
+wall_decoration_skull_racks = [make(i * 32, 464, 32, 24, and_add_to_list=large_decs) for i in range(0, 4)]
 
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
@@ -580,8 +589,6 @@ def get_floor_lighting(val):
 
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
-explosions = [make(i*16, 128, 16, 16) for i in range(0, 8)]
-sleeping_zees = [make(160 + i*16, 448, 16, 16) for i in range(0, 6)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
 
 _cached_text = set()
@@ -937,6 +944,16 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
     Bosses.infected_husk_idle = [make(0 + i * 16, 464, 16, 48, shift=start_pos) for i in range(0, 8)]
 
 
+def build_animations_sheet(start_pos, raw_animations_img, sheet):
+    sheet.blit(raw_animations_img, start_pos)
+
+    Animations.explosions = [make(i * 16, 0, 16, 16, shift=start_pos) for i in range(0, 8)]
+    Animations.sleeping_zees = [make(i * 16, 16, 16, 16, shift=start_pos) for i in range(0, 8)]
+    Animations.floor_breaking = [make(i * 16, 32, 16, 16, shift=start_pos) for i in range(0, 8)]
+    Animations.floor_breaking_fragments = [make(i * 16, 48, 16, 16, shift=start_pos) for i in range(0, 8)]
+    Animations.floor_falling_big = [make(i * 32, 64, 32, 64, shift=start_pos) for i in range(0, 8)]
+
+
 def build_font_sheet(start_pos, raw_font_img, sheet):
     sheet.blit(raw_font_img, start_pos)
     # sheet needs to be a 32x8 grid of characters
@@ -948,7 +965,8 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
             Font._alphabet[c] = make(x * char_w, y * char_h, char_w, char_h, shift=start_pos)
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img, raw_title_scene_img):
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img,
+                      raw_animations_img, raw_title_scene_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -964,12 +982,16 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
         |             *-----------------*
         |             | font.png        |
         |             *-----------------*
+        |             | animations.png  |
+        |             *-----------------*
         |             | title_scene.png |
         *-------------*-----------------*
 
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img]
+    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img,
+                  raw_animations_img, raw_title_scene_img]
+
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
     sheet_h = max(raw_image.get_height() + 2500, sum([im.get_height() for im in right_imgs]))
     sheet_size = (sheet_w, sheet_h)
@@ -996,6 +1018,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     print("INFO: building boss sheet...")
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
     _y += raw_boss_img.get_height()
+
+    print("INFO: building animations sheet...")
+    build_animations_sheet((_x, _y), raw_animations_img, sheet)
+    _y += raw_animations_img.get_height()
 
     print("INFO: building font sheet...")
     build_font_sheet((_x, _y), raw_font_img, sheet)
@@ -1163,9 +1189,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
 
     for img in all_imgs:
         img.set_sheet_size(sheet_size)
-    
-    # pygame.image.save(sheet, "src/spritesheet.png")
-    
+
     return sheet
 
 
@@ -1177,8 +1201,10 @@ if __name__ == "__main__":
     raw4 = pygame.image.load(Utils.resource_path("assets/items.png"))
     raw5 = pygame.image.load(Utils.resource_path("assets/bosses.png"))
     raw6 = pygame.image.load(Utils.resource_path("assets/font.png"))
-    raw7 = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7)
+    raw7 = pygame.image.load(Utils.resource_path("assets/animations.png"))
+    raw8 = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7, raw8)
+
     print("INFO: created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, os.path.join("src", "spritesheet.png"))
     

@@ -99,7 +99,7 @@ class World:
 
     def show_explosion(self, cx, cy, duration, color=None, offs=(0, 0), scale=4):
         import src.world.entities as entities
-        splosion = entities.AnimationEntity(cx, cy, spriteref.explosions, duration, spriteref.ENTITY_LAYER, scale=scale)
+        splosion = entities.AnimationEntity(cx, cy, spriteref.Animations.explosions, duration, spriteref.ENTITY_LAYER, scale=scale)
         if color is not None:
             splosion.set_color(color)
         splosion.set_sprite_offset(offs)

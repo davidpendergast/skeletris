@@ -1160,11 +1160,11 @@ class Enemy(ActorEntity):
             anim_tick = gs.get_instance().anim_tick
             if self._zee_img is None:
                 # want the z's to start on the first frame of the animation
-                self._zee_img_idx_offset = (-anim_tick) % len(spriteref.sleeping_zees)
+                self._zee_img_idx_offset = (-anim_tick) % len(spriteref.Animations.sleeping_zees)
                 self._zee_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER)
 
-            z_idx = (self._zee_img_idx_offset + anim_tick) % len(spriteref.sleeping_zees)
-            sprite = spriteref.sleeping_zees[z_idx]
+            z_idx = (self._zee_img_idx_offset + anim_tick) % len(spriteref.Animations.sleeping_zees)
+            sprite = spriteref.Animations.sleeping_zees[z_idx]
             cx = self.get_render_center()[0]
             y_bottom = self.get_render_center()[1] - self.get_sprite().height() * self._img.scale() // 2
             scale = 2
@@ -1702,7 +1702,8 @@ class EndGameExitEnitity(ExitEntity):
 class DecorationEntity(Entity):
 
     def __init__(self, dec_type, sprites, grid_x, grid_y,
-                 scale=2, draw_offset=(0, 0), interact_dialog=None):
+                 scale=2, draw_offset=(0, 0), interact_dialog=None,
+                 anim_rate=4, synced_animation=False):
         """
         sprites: a list of ImageModels or a list of lists of ImageModels
         interact_dialog: Dialog
@@ -1714,6 +1715,9 @@ class DecorationEntity(Entity):
         self._interact_dialog = interact_dialog
         self._draw_offset = draw_offset
         self._scale = scale
+
+        self._anim_rate = anim_rate
+        self._anim_frm_offset = 0 if synced_animation else random.randint(0, 32)
 
         sprites = Utils.listify(sprites)
 
@@ -1742,7 +1746,7 @@ class DecorationEntity(Entity):
             return super().center()
         return (self.x() + self._draw_offset[0], self.y() + self._draw_offset[1])
 
-    def _get_connection_sprites(self, world):
+    def _get_sprites(self, world):
         if (self._left_connect_sprites is None and self._right_connect_sprites is None
                 and self._center_connect_sprites is None) or self._dec_type is None:
             return self._sprites
@@ -1764,13 +1768,15 @@ class DecorationEntity(Entity):
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=self._scale)
 
-        sprites = self._get_connection_sprites(world)
-        sprite = sprites[gs.get_instance().anim_tick // 2 % len(sprites)]
-        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
-        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
+        sprites = self._get_sprites(world)
+        anim_idx_val = gs.get_instance().anim_tick // self._anim_rate + self._anim_frm_offset
+        cur_sprite = sprites[anim_idx_val % len(sprites)]
+
+        x = self.get_render_center()[0] - (cur_sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (cur_sprite.height() * self._img.scale())
         depth = self.get_depth()
 
-        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+        self._img = self._img.update(new_model=cur_sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_color=world.get_geo_color())
 
     def all_bundles(self):
