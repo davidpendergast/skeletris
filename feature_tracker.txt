@@ -4,8 +4,7 @@
                         *------------------------*
                       
 [P1 bugs]
- - songs don't cleanly loop anymore
-    - i think most do now?
+ - there are probably issues with fullscreening if you have multiple monitors w/ different sizes
 
 [P2 bugs]
  - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
@@ -15,7 +14,6 @@
    can act after you move
     - need to math a little harder here (or just leave it...)
  - tutorial hover text is misplaced
- - window icon no longer works on linux (after making it 32x32 vs. 16x16)
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
@@ -28,10 +26,12 @@
     - teach player to skip their turn at the same time?
     - somehow force it to be in-sync?
         - like setting its energy to 0 or 2 something when the door opens?
+    - also with 3~ defence you can pretty much just facetank it
  - robo boss should do something
     - he big. he tuff. maybe that's enough
  - bosses shouldn't "wander" until they become non-hidden
     - otherwise they can block the player at the door
+ - too much swamp?
  
  
 [current features]

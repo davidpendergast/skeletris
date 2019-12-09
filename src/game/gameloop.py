@@ -17,7 +17,10 @@ def init(name_of_game):
 
     # fyi this needs to happen before any calls to set_mode
     info = pygame.display.Info()
-    monitor_size = (info.current_w, info.current_h)
+    monitor_size = (info.current_w, info.current_h)  # what happens if you have two monitors...?
+
+    window_icon = pygame.image.load(Utils.resource_path("assets/icon.png"))
+    pygame.display.set_icon(window_icon)
 
     from src.game.windowstate import WindowState
     WindowState.create_instance(fullscreen=False, resizeable=True,
@@ -40,10 +43,6 @@ def init(name_of_game):
 
     img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img,
                                               title_scene_img)
-
-    window_icon = pygame.Surface((32, 32), pygame.SRCALPHA)
-    window_icon.blit(img_surface, (0, 0), spriteref.chest_closed_big.rect())
-    WindowState.get_instance().set_icon(window_icon)
 
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
