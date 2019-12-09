@@ -430,7 +430,7 @@ class WitchTemplate(EnemyTemplate):
             StatTypes.ATT: 3,
             StatTypes.DEF: 5,
             StatTypes.INTELLIGENCE: 4,
-            StatTypes.WEALTH: 3,
+            StatTypes.WEALTH: 1,
             StatTypes.POTION_AFFINITY: 3
         }
 

@@ -122,8 +122,8 @@ def init_zones():
 
     core_song = music.Songs.get_basic_core_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
-    core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.90),
-                       (decoration.DecorationTypes.SKULL_RACK, 0.90)]
+    core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.2),
+                       (decoration.DecorationTypes.MUSHROOM, 0.1)]
 
     story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1",
                                                        geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
@@ -1245,6 +1245,7 @@ class NamelessZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Unearth", 15, filename="nameless_zone.png")
         self._exit_doors = (255, 175, 80)
+        self._skull_rack_color = (255, 200, 100)
 
     def gen_mushroom_enemy(self):
         import src.game.enemies as enemies_clz
@@ -1275,11 +1276,22 @@ class NamelessZone(Zone):
 
         w = bp.build_world()
 
+        already_decorated = set()
+
+        if self._skull_rack_color in unknowns:
+            for xy in unknowns[self._skull_rack_color]:
+                dec = decoration.DecorationFactory.get_decoration(self.get_level(),
+                                                                  decoration.DecorationTypes.SKULL_RACK)
+                pos = (xy[0], xy[1] - 1)
+                w.add(dec, gridcell=pos)
+                already_decorated.add(xy)
+
         for xy in mushroom_positions:
-            mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
-            mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM,
-                                                                        mushroom_sprite, xy[0], xy[1])
-            w.add(mushroom_entity)
+            if xy not in already_decorated:
+                mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
+                mushroom_entity = entities.DecorationEntity.wall_decoration(decoration.DecorationTypes.MUSHROOM,
+                                                                            mushroom_sprite, xy[0], xy[1])
+                w.add(mushroom_entity)
 
         return w
 
