@@ -1688,6 +1688,10 @@ class InGameUiState(Menu):
 
     def calc_visually_targetable_coords_in_world(self, world):
         """:returns: map: (x, y) -> color"""
+
+        if gs.get_instance().dialog_manager().is_active():
+            return {}
+
         p = world.get_player()
 
         if p is None:

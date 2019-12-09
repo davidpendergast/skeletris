@@ -103,21 +103,20 @@ def init_zones():
 
     swamp_song = music.Songs.get_basic_swamp_song()
     green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
+    swamp_conv_1 = [npc.Conversations.MARY_SKELLY_SWAMPS_1.get_id()]
 
-    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song,
-                                                       conversation_ids=[npc.Conversations.MARY_SKELLY_SWAMPS_1.get_id()]))
-
-    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song))
-    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song, dims=(3, 2), conversation_ids=swamp_conv_1))
+    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song, dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song, dims=(4, 2)))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
     story_zones.append(get_zone(CityGateZone.ZONE_ID))
 
     city_song = music.Songs.get_basic_city_song()
     blue_color = get_zone(RoboLairZone.ZONE_ID).get_color()
 
-    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color, music_id=city_song))
-    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color, music_id=city_song))
-    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song))
+    story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color, music_id=city_song, dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(10, "City II", "city_2", geo_color=blue_color, music_id=city_song, dims=(4, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song, dims=(3, 3)))
     story_zones.append(get_zone(RoboLairZone.ZONE_ID))
 
     core_song = music.Songs.get_basic_core_song()
@@ -125,12 +124,9 @@ def init_zones():
     core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.2),
                        (decoration.DecorationTypes.MUSHROOM, 0.1)]
 
-    story_zones.append(ZoneBuilder.make_generated_zone(12, "Rotten Core I", "rotten_core_1",
-                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
-    story_zones.append(ZoneBuilder.make_generated_zone(13, "Rotten Core II", "rotten_core_2",
-                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Rotten Core III", "rotten_core_3",
-                                                       geo_color=red_color, music_id=core_song, bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(12, "Core I", "core_1", geo_color=red_color, music_id=core_song, dims=(3, 2), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Core II", "core_2", geo_color=red_color, music_id=core_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Core III", "core_3", geo_color=red_color, music_id=core_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
     story_zones.append(get_zone(NamelessZone.ZONE_ID))

@@ -360,7 +360,7 @@ class ConversationFactory:
             if interact_count == 0:
                 res_list = [
                     NpcDialog("AHH! HELP! They took my BONES! MY BONES.", sprites=head_sprites),
-                    NpcDialog("Who did this? Where are the gate guards?", sprites=mary_sprites),
+                    NpcDialog("Who did this? Where are the guards?", sprites=mary_sprites),
                     NpcDialog("I'm so NUMB. So UNFEELING. So EMPTY. My BONES...", sprites=head_sprites),
                     NpcDialog("What happened to your bones?", sprites=mary_sprites),
                     NpcDialog("Those DAMN scientists with their experiments. Drove the animals MAD with their tinkering.", sprites=head_sprites),
