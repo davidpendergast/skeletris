@@ -48,9 +48,12 @@
  
  - figure out how to make windows builds
     - should be able to basically just run pyinstaller on a windows computer
-      - need 32 & 64 bit, or else 32-bitters will cry and leave 1-star reviews
+      - need 32 & 64 bit
  - figure out whether it's even possible to make/distribute mac builds
     - no opengl? no app notarizaiton w/out developer account? looking grim...
+        - confident i could do this iff i had a mac computer at my disposal
+            - 300-400 for a cheap laptop
+            - 150-200 for a mac mini (barely even a computer though...)
  - logging and crash reports
 
 [maintanence]
