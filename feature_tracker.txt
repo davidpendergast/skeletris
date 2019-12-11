@@ -37,24 +37,19 @@
 [current features]
  - the story
    - the big reveal after fighting robo
-   - giant bone piles in the core
-   - racks of disembodied heads in the unearth
  - finalize robo boss fight 
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
       earlier in the game... even just a line of dialog or something
  - re-add breaking out of ground animation at very begining of the game
-    - this is actually somewhat important
+    - actually somewhat important
  
  - figure out how to make windows builds
     - should be able to basically just run pyinstaller on a windows computer
       - need 32 & 64 bit
- - figure out whether it's even possible to make/distribute mac builds
-    - no opengl? no app notarizaiton w/out developer account? looking grim...
-        - confident i could do this iff i had a mac computer at my disposal
-            - 300-400 for a cheap laptop
-            - 150-200 for a mac mini (barely even a computer though...)
- - logging and crash reports
+ 
+ - make the max view distance of the world no bigger than the map
+    - otherwise ppl with 4K monitors will see almost the entire map
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)
@@ -95,6 +90,7 @@
  - traps / ground effects
  - some kind of checkpoint system (?)
     - wouldn't be too hard to implement actually
+    - could be one-time-use?
  - enemies picking up items (intelligence >= 4)
     - we'd want an "arms up" sprite for eligible enemies I think
  - holding the up/down key in menus should continue scrolling
@@ -108,24 +104,78 @@
     - ice tiles
         - these would be interesting to try to generate
         - enemy pathing on these would be a bit tricky / interesting
-    - water tiles (hurt you when you fall in)
+    - water tiles (kill or hurt you when you fall in)
         - only meaningful if knockback is a thing
     - one-way tiles
-        - (not sure what these would be good for, honestly)
+        - (not sure what these would be good for, honestly.)
+            - force engagement?
+                - running away is sorta hopeless already
+                    - and turtling in doorways only works if you can facetank the enemy
  - backstab attack 
     - jump over target, attack from other side (if possible)
  - new (secondary) item stats
     - poison duration
     - confusion duration
  - quest system
- - some indicator that enemies are still acting
  - permanent effects (aka curses)
  - doors that can only be unlocked with "keys"
  - varying scenery
     - bridges over deep pits, water pits
+ - figure out whether it's possible to make/distribute mac builds
+    - no opengl? no app notarizaiton w/out developer account? looking grim...
+        - confident i could do this iff i had a mac computer at my disposal
+            - 300-400 for a cheap laptop
+            - 150-200 for a mac mini (are these even computers?)
+ 
  - make enemies move at the same time as you...?
+    - this would be my #1 complaint with the game if I were a player
     - maybe there's a reason why all other roguelikes do this...
-    - this will actually require a lot of work.
+    - this will require a lot of work though
+        - essentially:
+            - gets complicated when enemies are taking multiple actions during a single player turn
+            - we actually don't even know in advance how many total steps will be taken by enemies during this phase
+                - depends on various speed-affecting actions that may or may not be taken
+            - so it seems like we'd have to pre-compute the entire phase, and play it back at the proper speed
+            - actually, it might not be so bad if only MoveActions are affected
+                - but I want to be able to toggle other things too.
+            - actually, if we could represent the worldstate (as it pertains to actors) in more abstract way..
+            - HMMM
+            
+            - Plan A
+                - player chooses an action A0.
+                - take a snapshot S0 of the current worldstate (or a relevant part of it)
+                - compute S1 = A0(S0) (the worldstate after the player's action has resolved)
+                - compute the first enemy's action A1 given S1, and let S2 = A1(S1)
+                    - if A_e1 is non-concurrent, animate Ap, then A1
+                    - else find A2, A3, A4, and so on until a non-concurrent action is found 
+                        - or until it's the player's turn again
+                        - hidden enemies do not animate, and therefore their actions are always concurrent
+                        - if the player is gone (AKA dead), all actions are non-concurrent
+                        
+                - then: during animation, sort the actions into lists for each actor
+                - and animate them concurrently 
+                    - increasing the anim rate for longer lists so that all animations finish at the same time.
+                    
+            - issues with Plan A:
+                - how to represent the state of an actor?
+                    - position
+                    - HP
+                    - energy
+                    - base stats
+                    - list of stat modifiers (with X turns remaining)
+                        - this basically includes items and status effects
+                        
+                - how to handle 'unusual actions' like interacting with scenery or talking to an NPC?
+                    - have them be "non-concurrent" and skip this entire process
+                - how to update the 'true' worldstate after the animation phase has occurred?
+                    - just finalize actions as they occur (mid-animation)?
+                        - no, they absolutely must be called in order
+                    - do a "full finalize" of the world at the end?
+                    - refactor current world to have it basically represented this way to begin with
+                        - aka decouple the model from the view
+                
+                    
+                    
  - use N "dividers" on HP bar where N = max health
     
 
@@ -137,6 +187,7 @@
     - would allow weapons to have global stats (not currently possible because 
       it'd become more efficient to stack small weapons instead of cubes)
     - would need to elegantly "fail to equip" somehow
+    - putting skeletons back together with bone pieces
   
 
 

@@ -28,8 +28,6 @@ class ActorState(StatProvider):
 
         self.inventory_ = inventory
 
-        self.permanent_effects = []
-
         self.status_effects = {}  # StatusEffect -> turns remaining
 
         self.current_hp = self.max_hp()
@@ -62,10 +60,6 @@ class ActorState(StatProvider):
 
         # note that this will call back into this same method, gotta be careful not to blow the stack
         nullified = self.is_nullified() if stat_type != StatTypes.NULLIFICATION else False
-
-        for perm_effect in self.permanent_effects:
-            if not nullified or perm_effect.ignores_nullification():
-                res += perm_effect.stat_value(stat_type, local=local)
 
         for status_effect in self.status_effects:
             if not nullified or status_effect.ignores_nullification():
