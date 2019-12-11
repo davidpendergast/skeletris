@@ -1,6 +1,5 @@
 import math
 
-import src.game.stats
 from src.renderengine.img import ImageBundle
 import src.game.spriteref as spriteref
 import src.items.item as item_module
@@ -14,7 +13,6 @@ import src.game.debug as debug
 import src.game.sound_effects as sound_effects
 import src.game.soundref as soundref
 import src.game.gameengine as gameengine
-from src.game.windowstate import WindowState
 
 
 BG_DEPTH = 10
@@ -850,7 +848,7 @@ class MappedActionImage(InteractableImage):
             if self._info_text_img is None:
                 self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER,
                                                         font_lookup=spriteref.tiny_font_lookup,
-                                                        x_kerning=1,
+                                                        x_kerning=2,
                                                         outline_diagonals=True)
 
             char_size = (TextImage.calc_width("a", sc, font_lookup=spriteref.tiny_font_lookup),
@@ -1494,10 +1492,10 @@ class TextImage:
 
     INVISIBLE_CHAR = "`"
 
-    X_KERNING = 0
+    X_KERNING = 1
     Y_KERNING = 0
 
-    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=1, depth=0,
+    def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=0.5, depth=0,
                  x_kerning=None, y_kerning=None, custom_colors=None, font_lookup=None):
 
         if font_lookup is None:

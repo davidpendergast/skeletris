@@ -4,8 +4,9 @@ import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.utils.colors as colors
 import src.game.globalstate as gs
+import src.game.constants as constants
 
-CELLSIZE = 64
+CELLSIZE = constants.CELLSIZE  # it's 32
 
 
 class World:
@@ -93,8 +94,8 @@ class World:
         cy = entity.center()[1]
         x_render_offs = int(15 * (0.5 - random.random()))
         text = entities.FloatingTextEntity(cx, cy, text, 25, color, anchor=None, scale=scale,
-                                           start_offs=(x_render_offs, -32),
-                                           end_offs=(x_render_offs, -64))
+                                           start_offs=(x_render_offs, -16),
+                                           end_offs=(x_render_offs, -32))
         self.add(text)
 
     def show_explosion(self, cx, cy, duration, color=None, offs=(0, 0), scale=4):

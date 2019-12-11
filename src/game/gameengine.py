@@ -816,7 +816,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
 
     if damage <= 0:
         if defender_entity is not None and world is not None:
-            world.show_floating_text("miss", colors.B_TEXT_COLOR, 3, defender_entity)
+            world.show_floating_text("miss", colors.B_TEXT_COLOR, 1.5, defender_entity)
             sound_effects.play_sound(soundref.whiff_noise)
         res.missed = True
     else:
@@ -836,7 +836,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         res.should_swap = do_swap
 
         if defender_entity is not None and world is not None:
-            world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 3, defender_entity)
+            world.show_floating_text("-{}".format(damage), colors.R_TEXT_COLOR, 1.5, defender_entity)
 
             if defender.hp() > 0:
                 defender_entity.animate_damage_taken(world)

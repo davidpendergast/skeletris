@@ -40,9 +40,9 @@ class WorldView:
 
         if bundle is not None:
             new_bun = bundle.update(new_model=sprite,
-                                    new_x=grid_x*self.world.cellsize(),
-                                    new_y=grid_y*self.world.cellsize(),
-                                    new_scale=4,
+                                    new_x=grid_x * self.world.cellsize(),
+                                    new_y=grid_y * self.world.cellsize(),
+                                    new_scale=2,
                                     new_depth=10,
                                     new_color=color)
             self._geo_bundle_lookup[(grid_x, grid_y)] = new_bun

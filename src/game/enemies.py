@@ -9,6 +9,7 @@ import src.items.item as item
 import src.utils.colors as colors
 import src.items.itemgen as itemgen
 import src.game.balance as balance
+import src.game.constants as constants
 
 
 _ALL_TYPES = {}
@@ -496,7 +497,7 @@ class CrabTemplate(EnemyTemplate):
         return ("c", colors.RED)
 
     def get_shadow_offset(self):
-        return (0, -5)
+        return (0, -constants.CELLSIZE / 16)
 
     def get_level_range(self):
         return range(4, 7)
@@ -781,10 +782,10 @@ class FrogBossTemplate(EnemyTemplate):
         return ("F", colors.RED)
 
     def get_sprite_offset(self):
-        return (0, 8)
+        return (0, constants.CELLSIZE / 8)
 
     def get_shadow_offset(self):
-        return (0, -4)
+        return (0, -constants.CELLSIZE / 16)
 
     def get_shadow_sprite(self):
         return spriteref.enormous_shadow
@@ -964,12 +965,6 @@ class SpiderBossTemplate(EnemyTemplate):
 
     def get_level_range(self):
         return [3]
-
-    def get_sprite_offset(self):
-        return (0, 0)
-
-    def get_shadow_offset(self):
-        return (0, 0)
 
     def get_stat_overrides(self):
         return {

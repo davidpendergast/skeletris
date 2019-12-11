@@ -111,6 +111,10 @@ def run():
     # at max screen size, which isn't what we want (on linux at least~)
     ignore_videoresize_events_this_frame = False
 
+    # FOR DEBUG
+    px_mult = 2
+    RenderEngine.get_instance().set_pixel_mult(px_mult)
+
     while running:
         gs.get_instance().event_queue().flip()
         gs.get_instance().update()
@@ -253,6 +257,13 @@ def run():
             manager = gs.get_instance().menu_manager()
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
+
+        if debug.is_debug() and input_state.was_pressed(pygame.K_F7):
+            mults = [1, 2, 3, 4]
+            cur_idx = mults.index(px_mult)
+            new_mult_idx = (cur_idx + 1) % len(mults)
+            px_mult = mults[new_mult_idx]
+            RenderEngine.get_instance().set_pixel_mult(px_mult)
 
         if debug.is_debug() and input_state.was_pressed(pygame.K_F10):
             gs.get_instance().event_queue().add(events.GameWinEvent())

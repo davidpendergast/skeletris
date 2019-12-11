@@ -184,7 +184,7 @@ class Menu:
 
 class OptionsMenu(Menu):
 
-    def __init__(self, menu_id, title, options, title_size=5):
+    def __init__(self, menu_id, title, options, title_size=2):
         """
         title: text or sprite
         options: list of strings
@@ -202,8 +202,8 @@ class OptionsMenu(Menu):
         self.title_size = title_size
         self.options_text = options
 
-        self.spacing = 8
-        self.title_spacing = self.spacing * 4
+        self.spacing = 4
+        self.title_spacing = self.spacing * 3
 
         self._title_img = None
         self._title_rect = None    # tuple(x, y, w, h)
@@ -259,7 +259,7 @@ class OptionsMenu(Menu):
         for i in range(0, self.get_num_options()):
             if self._option_imgs[i] is None:
                 self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i), layer=spriteref.UI_0_LAYER,
-                                                 color=self.get_option_color(i), scale=2)
+                                                 color=self.get_option_color(i), scale=1)
 
     def layout_rects(self):
         if self._title_rect is None:
@@ -419,7 +419,7 @@ class StartMenu(OptionsMenu):
                              MenuManager.START_MENU,
                              spriteref.title_img,
                              ["start", "controls", "sound", "exit"],
-                             title_size=6)
+                             title_size=3)
 
         self.version_text = "[{}]".format(version.get_pretty_version_string())
         self.version_img = None
@@ -430,15 +430,15 @@ class StartMenu(OptionsMenu):
 
         if self.version_text is not None:
             if self.version_img is None:
-                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER)
+                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER, scale=0.5)
 
     def layout_rects(self):
         super().layout_rects()
 
         if self.version_img is not None:
             scr_w, scr_h = RenderEngine.get_instance().get_game_size()
-            x = scr_w - self.version_img.w() - 4
-            y = scr_h - self.version_img.h() - 4
+            x = scr_w - self.version_img.w() - 2
+            y = scr_h - self.version_img.h() - 2
             self.version_rect = [x, y, self.version_img.w(), self.version_img.h()]
 
     def update_imgs(self):
@@ -842,7 +842,7 @@ class FadingInFlavorMenu(OptionsMenu):
     """Displays some flavor text, then becomes a new menu"""
 
     def __init__(self, menu_type, flavor_text, next_menu, auto_next=False):
-        OptionsMenu.__init__(self, menu_type, flavor_text, ["~hidden~"], title_size=3)
+        OptionsMenu.__init__(self, menu_type, flavor_text, ["~hidden~"], title_size=1.5)
         self._flavor_full_brightness_duration = 100
         self._total_duration = 120
         self._flavor_tick = 0
@@ -985,8 +985,8 @@ class YouWinStats(FadingInFlavorMenu):
 
 class CreditsMenu(Menu):
 
-    SMALL = 2
-    NORMAL = 3
+    SMALL = 1
+    NORMAL = 1.5
 
     SLIDE_TEXT = [
         ("created by", SMALL),
@@ -1203,7 +1203,7 @@ class TitleMenu(Menu):
                 self.tick_count = max(self.tick_count, self.show_press_any_tick)
 
         if self.title_img is None:
-            self.title_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4)
+            self.title_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2)
         idx = (gs.get_instance().anim_tick // 4) % len(spriteref.TitleScene.frames)
         model = spriteref.TitleScene.frames[idx]
 
@@ -1246,7 +1246,7 @@ class TitleMenu(Menu):
             self.world_fade_img = self.world_fade_img.update(new_model=sprite, new_x=0, new_y=scr_size[1] // 3,
                                                              new_ratio=ratio, new_color=(0, 0, 0))
 
-        press_any_text_scale = 3
+        press_any_text_scale = 1.5
 
         if self.press_any_key_img is None and self.tick_count > self.show_press_any_tick:
             self.press_any_key_img = TextImage(0, 0, "press any key", spriteref.UI_0_LAYER, scale=press_any_text_scale)

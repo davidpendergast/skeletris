@@ -19,6 +19,7 @@ from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
 import src.game.stats as stats
 import src.game.debug as debug
+import src.game.constants as constants
 
 ENTITY_UID_COUNTER = 0
 
@@ -43,8 +44,8 @@ class Entity(Updateable):
 
     def __str__(self):
         typename = type(self).__name__
-        c_x = self.center()[0] // 64
-        c_y = self.center()[1] // 64
+        c_x = self.center()[0] // constants.CELLSIZE
+        c_y = self.center()[1] // constants.CELLSIZE
         return "{}{}({}, {})".format(typename, self.get_uid(), c_x, c_y)
         
     def x(self):
@@ -179,7 +180,7 @@ class Entity(Updateable):
         if sh_model is not None:
             if self._shadow is None:
                 self._shadow = img.ImageBundle.new_bundle(spriteref.SHADOW_LAYER)
-            sh_scale = 2
+            sh_scale = 1
             sh_x = self.get_render_center()[0] - (sh_model.width() * sh_scale) // 2 + self.get_shadow_offset()[0]
             sh_y = self.get_render_center()[1] - (sh_model.height() * sh_scale) // 2 + self.get_shadow_offset()[1]
             self._shadow = self._shadow.update(new_model=sh_model, new_x=sh_x, new_y=sh_y, new_scale=sh_scale)
@@ -322,7 +323,7 @@ class AnimationEntity(Entity):
         FREEZE_ON_FINISH = 2
         DELETE_ON_FINISH = 3
 
-        def __init__(self, cx, cy, sprites, duration, layer_id, scale=2):
+        def __init__(self, cx, cy, sprites, duration, layer_id, scale=1):
             Entity.__init__(self, cx - 2, cy - 2, 4, 4)
             self.duration = duration
             self.tick_count = 0
@@ -492,7 +493,7 @@ class LightEmitterAnimation(AnimationEntity):
 
 class FloatingTextEntity(Entity):
 
-    def __init__(self, cx, cy, text, duration, color, anchor=None, scale=2, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
+    def __init__(self, cx, cy, text, duration, color, anchor=None, scale=1, start_offs=(0, 0), end_offs=(0, 0), fadeout=True):
         Entity.__init__(self, cx-4, cy-4, 8, 8)
         self.text = text
         self.color = color
@@ -643,7 +644,7 @@ class ActorEntity(Entity):
         self._last_vel = vel
 
     def is_moving(self):
-        return Utils.mag(self.get_vel()) >= 0.05
+        return Utils.mag(self.get_vel()) >= 0.025
 
     def was_moving_recently(self, this_recently=5):
         return self._was_moving <= this_recently
@@ -669,7 +670,7 @@ class ActorEntity(Entity):
             hook(world, self)
 
         sound_effects.play_sound(self.get_death_sound())
-        world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=4)
+        world.show_explosion(pos[0], pos[1], 40, color=(0, 0, 0), offs=(0, 0), scale=2)
         world.remove(self)
 
     def animate_damage_taken(self, world):
@@ -755,7 +756,7 @@ class ActorEntity(Entity):
         """returns: the center point (x, y) of where the actor should be drawn."""
 
         x = self.center()[0] + self.get_draw_offset()[0] + self._sprite_offset[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + 12
+        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + 6
 
         if not ignore_perturbs:
             x += self.get_perturbed_xy()[0]
@@ -825,9 +826,9 @@ class ActorEntity(Entity):
             sound_effects.play_sound(sound)
 
         if new_hp > old_hp:
-            world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 3, self)
+            world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 1.5, self)
         elif new_hp < old_hp:
-            world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 3, self)
+            world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 1.5, self)
 
     def update(self, world):
         Entity.update(self, world)
@@ -835,9 +836,9 @@ class ActorEntity(Entity):
             if self.is_performing_action():
                 self.update_action(world)
 
-            if self.get_vel()[0] < -1.5:
+            if self.get_vel()[0] < -0.75:
                 self.set_facing_right(False)
-            elif self.get_vel()[0] > 1.5:
+            elif self.get_vel()[0] > 0.75:
                 self.set_facing_right(True)
 
             if self.is_moving():
@@ -860,7 +861,7 @@ class ActorEntity(Entity):
 
     def get_sprite_height(self):
         sprite = self.get_sprite()
-        scale = 2
+        scale = 1
         if sprite is not None:
             return sprite.height() * scale
         else:
@@ -907,7 +908,7 @@ class ActorEntity(Entity):
 
     def update_images(self):
         if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2, depth=self.get_depth())
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=1, depth=self.get_depth())
 
         sprite = self.get_sprite()
 
@@ -995,7 +996,7 @@ class Player(ActorEntity):
 
     def update_held_item_image(self):
         held_item = self.get_visually_held_item()
-        scale = 2
+        scale = 1
         if self._held_item_img is not None and held_item is None:
             RenderEngine.get_instance().remove(self._held_item_img)
             self._held_item_img = None
@@ -1006,7 +1007,7 @@ class Player(ActorEntity):
             x_center = self.get_render_center()[0]
             y_center = self.get_render_center()[1]
 
-            my_height = self.get_sprite().height() * scale
+            my_height = self.get_sprite_height()
             item_sprite = held_item.get_entity_sprite()
             sprite_rot = held_item.sprite_rotation()
             sprite_w = item_sprite.width() if sprite_rot % 2 == 0 else item_sprite.height()
@@ -1043,7 +1044,7 @@ class Player(ActorEntity):
             RenderEngine.get_instance().remove(t_img)
 
         while len(positions) > len(self._targeting_animation_imgs):
-            t_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=4, depth=float("inf"))
+            t_img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2, depth=float("inf"))
             self._targeting_animation_imgs.append(t_img)
 
         sprite = spriteref.UI.world_cursors[(gs.get_instance().anim_tick // 2) % len(spriteref.UI.world_cursors)]
@@ -1139,7 +1140,7 @@ class Enemy(ActorEntity):
             RenderEngine.get_instance().remove(bar_img)
 
         while len(self._bar_imgs) < len(bars):
-            self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2))
+            self._bar_imgs.append(img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1))
 
         cx = self.get_render_center(ignore_perturbs=True)[0] + self._bar_offset[0]
         cy = self.get_render_center(ignore_perturbs=True)[1] + 4 + self._bar_offset[1]
@@ -1178,7 +1179,7 @@ class Enemy(ActorEntity):
             sprite = spriteref.Animations.sleeping_zees[z_idx]
             cx = self.get_render_center()[0]
             y_bottom = self.get_render_center()[1] - self.get_sprite().height() * self._img.scale() // 2
-            scale = 2
+            scale = 1
             self._zee_img = self._zee_img.update(new_model=sprite,
                                                  new_x=cx - (sprite.width() * scale) // 2,
                                                  new_y=y_bottom - sprite.height() * scale,
@@ -1224,8 +1225,8 @@ class Enemy(ActorEntity):
 class ChestEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
-        Entity.__init__(self, 0, 0, 24, 24)
-        self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
+        Entity.__init__(self, 0, 0, 12, 12)
+        self.set_center((grid_x + 0.5) * constants.CELLSIZE, (grid_y + 0.5) * constants.CELLSIZE)
         self._is_open = False
         self._left_side = random.random() > 0.5
         
@@ -1259,7 +1260,7 @@ class ChestEntity(Entity):
         x = self.get_render_center()[0] - (model.width() * self._img.scale()) // 2
         y = self.get_render_center()[1] - (model.height() * self._img.scale())
         depth = self.get_depth()
-        self._img = self._img.update(new_model=model, new_scale=2, new_x=x, new_y=y, new_depth=depth)
+        self._img = self._img.update(new_model=model, new_scale=1, new_x=x, new_y=y, new_depth=depth)
         
         self.update_shadow_image()
         sh_x = self._shadow.x()
@@ -1337,7 +1338,7 @@ class PickupEntity(Entity):
 
     def update_images(self):
         if self._img is None:
-            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1)
 
         anim_tick = gs.get_instance().anim_tick
         bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
@@ -1419,7 +1420,11 @@ class ItemEntity(PickupEntity):
 class DoorEntity(Entity):
 
     def __init__(self, grid_x, grid_y):
-        Entity.__init__(self, grid_x*64, grid_y*64, 64, 64)
+        Entity.__init__(self,
+                        grid_x * constants.CELLSIZE,
+                        grid_y * constants.CELLSIZE,
+                        constants.CELLSIZE,
+                        constants.CELLSIZE)
         self._is_horz = None
         self.sprites = None
         self.open_prog = 0
@@ -1436,7 +1441,7 @@ class DoorEntity(Entity):
             return
 
         if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=2)
 
         prog = Utils.bound(self.open_prog, 0, 0.99)
         sprite = self.sprites[int(prog * len(self.sprites))]
@@ -1548,7 +1553,11 @@ class SensorDoorEntity(DoorEntity):
 class ExitEntity(Entity):
 
     def __init__(self, grid_x, grid_y, next_zone_id):
-        Entity.__init__(self, grid_x * 64, (grid_y - 1) * 64, 64, 64)
+        Entity.__init__(self,
+                        grid_x * constants.CELLSIZE,
+                        (grid_y - 1) * constants.CELLSIZE,
+                        constants.CELLSIZE,
+                        constants.CELLSIZE)
 
         self.next_zone_id = next_zone_id
         self._is_opening = False
@@ -1582,17 +1591,18 @@ class ExitEntity(Entity):
         return spriteref.normal_door_opening
 
     def sprite_offset(self, sprite, scale):
-        return (0, 64 - sprite.height() * scale)
+        return (0, constants.CELLSIZE - sprite.height() * scale)
 
     def visible_in_darkness(self):
         return True
 
     def update_images(self, world):
+        scale = 2
         if self._img is None:
-            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=4)
+            self._img = img.ImageBundle(None, 0, 0, layer=spriteref.ENTITY_LAYER, scale=scale)
 
         sprite = self.get_sprite()
-        offs = self.sprite_offset(sprite, 4)
+        offs = self.sprite_offset(sprite, scale)
 
         x = self.x() + offs[0]
         y = self.y() + offs[1]
@@ -1658,7 +1668,7 @@ class ReturnExitEntity(ExitEntity):
 
     def __init__(self, grid_x, grid_y, next_zone_id):
         ExitEntity.__init__(self, grid_x, grid_y, next_zone_id)
-        self.set_y((grid_y + 1) * 64)
+        self.set_y((grid_y + 1) * constants.CELLSIZE)
 
     def make_open_event(self):
         if self.next_zone_id is not None:
@@ -1675,7 +1685,7 @@ class ReturnExitEntity(ExitEntity):
         return sprites[anim_tick % len(sprites)]
 
     def sprite_offset(self, sprite, scale):
-        return (0, -64)
+        return (0, -constants.CELLSIZE)
 
     def can_open(self):
         # maybe one day, but not now~
@@ -1713,14 +1723,16 @@ class EndGameExitEnitity(ExitEntity):
 class DecorationEntity(Entity):
 
     def __init__(self, dec_type, sprites, grid_x, grid_y,
-                 scale=2, draw_offset=(0, 0), interact_dialog=None,
+                 scale=1, draw_offset=(0, 0), interact_dialog=None,
                  anim_rate=4, synced_animation=False):
         """
         sprites: a list of ImageModels or a list of lists of ImageModels
         interact_dialog: Dialog
         connection_sprites=(left_connect, right_connect, center_connect)
         """
-        Entity.__init__(self, int((grid_x + 0.5) * 64), int((grid_y + 0.5) * 64), 1, 0)
+        Entity.__init__(self,
+                        int((grid_x + 0.5) * constants.CELLSIZE),
+                        int((grid_y + 0.5) * constants.CELLSIZE), 1, 0)
 
         self._dec_type = dec_type
         self._interact_dialog = interact_dialog
@@ -1800,24 +1812,22 @@ class DecorationEntity(Entity):
         self._interact_dialog = dialog
 
     @staticmethod
-    def wall_decoration(dec_type, sprites, grid_x, grid_y, scale=2, interact_dialog=None):
+    def wall_decoration(dec_type, sprites, grid_x, grid_y, scale=1, interact_dialog=None):
         """
         sprite: ImageModel or a list of ImageModels
         interact_dialog: Dialog
         """
         sprites = Utils.listify(sprites)
-        CELLSIZE = 64  # this better never change~
-        offset = (0, 8 * scale + CELLSIZE // 2)
+        offset = (0, 8 * scale + constants.CELLSIZE // 2)
         return DecorationEntity(dec_type, sprites, grid_x, grid_y - 1, scale=scale, draw_offset=offset,
                                 interact_dialog=interact_dialog)
 
     @staticmethod
     def sign_decoration(grid_x, grid_y, dialog_text):
         sprite = spriteref.standalone_sign_decoration
-        CELLSIZE = 64  # this better never change~
-        scale = 2
-        x_center = (grid_x + 0.5) * CELLSIZE
-        y_bottom = (grid_y + 0.5) * CELLSIZE
+        scale = 1
+        x_center = (grid_x + 0.5) * constants.CELLSIZE
+        y_bottom = (grid_y + 0.5) * constants.CELLSIZE
         offset = (0, -(sprite.height() - 1) * scale)
 
         import src.game.decoration as decoration
@@ -1850,7 +1860,8 @@ class NpcEntity(Entity):
 
     def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="!"):
         Entity.__init__(self, 0, 0, 24, 24)
-        self.set_center((grid_x + 0.5) * 64, (grid_y + 0.5) * 64)
+        self.set_center((grid_x + 0.5) * constants.CELLSIZE,
+                        (grid_y + 0.5) * constants.CELLSIZE)
 
         self.npc_template = npc_template
 
@@ -1895,7 +1906,7 @@ class NpcEntity(Entity):
 
     def update_images(self):
         if self._img is None:
-            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=2)
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1)
 
         sprite = self.get_sprite()
         x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
@@ -1911,9 +1922,9 @@ class NpcEntity(Entity):
         p = world.get_player()
         if p is not None:
             p_x = p.center()[0]
-            if p_x < self.center()[0] - 32:
+            if p_x < self.center()[0] - constants.CELLSIZE / 2:
                 self._facing_right = False
-            elif p_x > self.center()[0] + 32:
+            elif p_x > self.center()[0] + constants.CELLSIZE / 2:
                 self._facing_right = True
 
         self.update_hover_text(world)
@@ -2085,7 +2096,7 @@ class NpcTradeEntity(NpcEntity):
 class TriggerBox(Entity):
     """performs an action when the player enters or leaves the box"""
     def __init__(self, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
-        cell_size = 64  # ehhh
+        cell_size = constants.CELLSIZE
         Entity.__init__(self, grid_pos[0] * cell_size, grid_pos[1] * cell_size,
                         cell_size * grid_size[0], cell_size * grid_size[1])
         self.player_inside = False
@@ -2151,8 +2162,8 @@ class HoverTextEntity(Entity):
         self.offset = offset
         self.z_offset = z_offset
         self.anchor_point = (0.5, 1.0)
-        self.text_sc = 1
-        self.sc = 2
+        self.text_sc = 0.5
+        self.sc = 1
         self.inset = inset
 
         self._text_img = None
