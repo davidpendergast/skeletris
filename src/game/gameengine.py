@@ -39,8 +39,6 @@ class ActorState(StatProvider):
 
         self.alignment = alignment  # what "team" the actor is on.
 
-        self.unarmed_projectile_sprite = None
-
     def get_all_mappable_action_providers(self):
         # yield ItemActions.UNARMED_ATTACK  # this is unnecessary, confusing
         # TODO - but how does the player know that slapping has 2 damage?
@@ -111,12 +109,6 @@ class ActorState(StatProvider):
 
     def is_flinched(self):
         return self.stat_value(StatTypes.FLINCHED) > 0
-
-    def is_chilled(self):
-        return self.stat_value(StatTypes.CHILLED) > 0
-
-    def get_projectile_sprite(self):
-        return self.unarmed_projectile_sprite
 
     def speed(self):
         raw_val = self.stat_value(StatTypes.SPEED)
@@ -911,7 +903,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)
         slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration))
+            new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration, unique_key=slow_on_hit))
 
         chill_duration = attacker.stat_value_with_item(StatTypes.CHILL_ON_HIT, item_used)
         chill_val = balance.STATUS_EFFECT_CHILL_ON_HIT_VAL
@@ -1079,12 +1071,13 @@ class ProjectileAttackAction(AttackAction):
         self._projectile_animator = None
 
     def _calc_projectile_sprite(self):
-        if self.get_item() is None:
-            res = self.get_actor().get_actor_state().get_projectile_sprite()
-        else:
-            res = self.get_item().get_projectile_sprite()
+        my_item = self.get_item()
+        if my_item is not None:
+            proj_sprite = my_item.get_projectile_sprite()
+            if proj_sprite is not None:
+                return proj_sprite
 
-        return res if res is not None else spriteref.Items.projectile_small
+        return spriteref.Items.projectile_small
 
     def animate_in_world(self, progress, world):
         if self._projectile_animator is None:

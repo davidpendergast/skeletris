@@ -50,6 +50,7 @@
  
  - make the max view distance of the world no bigger than the map
     - otherwise ppl with 4K monitors will see almost the entire map
+    
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)
@@ -129,7 +130,7 @@
  
  - make enemies move at the same time as you...?
     - this would be my #1 complaint with the game if I were a player
-    - maybe there's a reason why all other roguelikes do this...
+    - there's a reason why all other roguelikes do this...
     - this will require a lot of work though
         - essentially:
             - gets complicated when enemies are taking multiple actions during a single player turn
