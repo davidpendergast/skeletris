@@ -1521,31 +1521,32 @@ class InGameUiState(Menu):
         destroy_image = False
         create_image = False
 
-        ps = gs.get_instance().player_state()
+        held_item = gs.get_instance().held_item()
 
-        if not ps.is_alive() or not InputState.get_instance().mouse_in_window():
+        if not gs.get_instance().player_state().is_alive() or not InputState.get_instance().mouse_in_window():
             destroy_image = True
 
-        elif ps.held_item is not None and self.item_on_cursor_info is None:
+        elif held_item is not None and self.item_on_cursor_info is None:
             create_image = True
-        elif ps.held_item is None and self.item_on_cursor_info is not None:
+        elif held_item is None and self.item_on_cursor_info is not None:
             destroy_image = True
-        elif (ps.held_item is not None and self.item_on_cursor_info is not None
-              and ps.held_item != self.item_on_cursor_info[0]):
+        elif (held_item is not None and self.item_on_cursor_info is not None
+              and held_item != self.item_on_cursor_info[0]):
                 destroy_image = True
                 create_image = True
 
         # TODO - this ought to be an action probably
         did_rotate_input = InputState.get_instance().was_pressed(gs.get_instance().settings().rotate_cw_key())
         if did_rotate_input and not gs.get_instance().world_updates_paused():
-            if ps.held_item is not None and ps.held_item.can_rotate():
-                ps.held_item = ps.held_item.rotate()
+            if held_item is not None and held_item.can_rotate():
+                new_held_item = held_item.rotate()
+                gs.get_instance().set_held_item(new_held_item)
 
                 if not destroy_image:  # so you can't flicker the image after death basically
                     create_image = True
                 destroy_image = True
 
-                gs.get_instance().event_queue().add(events.RotatedItemEvent(ps.held_item))
+                gs.get_instance().event_queue().add(events.RotatedItemEvent(new_held_item))
                 sound_effects.play_sound(soundref.item_rotate)
 
         if destroy_image and self.item_on_cursor_info is not None:
@@ -1553,10 +1554,11 @@ class InGameUiState(Menu):
             self.item_on_cursor_info = None
 
         if create_image:
-            size = ItemImage.calc_size(ps.held_item, 2)
-            item_img = ItemImage(0, 0, ps.held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
+            held_item = gs.get_instance().held_item()
+            size = ItemImage.calc_size(held_item, 2)
+            item_img = ItemImage(0, 0, held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
             item_offs = (-size[0] // 2, -size[1] // 2)
-            self.item_on_cursor_info = (ps.held_item, item_img, item_offs)
+            self.item_on_cursor_info = (held_item, item_img, item_offs)
             render_eng = RenderEngine.get_instance()
             for bun in self.item_on_cursor_info[1].all_bundles():
                 render_eng.update(bun)

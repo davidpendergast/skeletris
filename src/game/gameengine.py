@@ -37,8 +37,6 @@ class ActorState(StatProvider):
 
         self.alignment = alignment  # what "team" the actor is on.
 
-        self.held_item = None  # item on the mouse cursor TODO - this doesn't belong here~
-
         self.unarmed_projectile_sprite = None
 
     def get_all_mappable_action_providers(self):
@@ -171,8 +169,10 @@ class ActorState(StatProvider):
         if item_uid is None:
             return None
 
-        if self.held_item is not None and self.held_item.get_uid() == item_uid:
-            return self.held_item
+        # TODO this whole method is kind of a hack, esp. this part
+        held_item = gs.get_instance().held_item()
+        if held_item is not None and held_item.get_uid() == item_uid:
+            return held_item
 
         for it in self.inventory().all_items():
             if it.get_uid() == item_uid:
@@ -1288,8 +1288,9 @@ class TradeItemAction(Action):
         if self.get_item() is None:
             return True  # this triggers the trade explanation dialog
         else:
-            a_state = actor.get_actor_state()
-            if not (self.item in a_state.inventory() or a_state.held_item == self.item):
+            in_inv = self.item in actor.get_actor_state().inventory()
+            on_cursor = actor.is_player() and gs.get_instance().held_item() == self.item
+            if not (in_inv or on_cursor):
                 return False
 
         return True
@@ -1311,8 +1312,8 @@ class TradeItemAction(Action):
             a_state = self.get_actor().get_actor_state()
             removed = a_state.inventory().remove(self.item)
             if not removed:
-                if a_state.held_item == self.item:
-                    a_state.held_item = None
+                if gs.get_instance().held_item() == self.item:
+                    gs.get_instance().set_held_item(None)
                     removed = True
 
             if not removed:
@@ -1364,7 +1365,7 @@ class ThrowItemAction(Action):
 
         actor = self.actor_entity
         a_state = actor.get_actor_state()
-        if not (self.item in a_state.inventory() or a_state.held_item == self.item):
+        if not (self.item in a_state.inventory() or gs.get_instance().held_item() == self.item):
             return False
 
         actor_pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
@@ -1421,8 +1422,8 @@ class ThrowItemAction(Action):
 
         removed = a_state.inventory().remove(self.item)
         if not removed:
-            if a_state.held_item == self.item:
-                a_state.held_item = None
+            if gs.get_instance().held_item() == self.item:
+                gs.get_instance().set_held_item(None)
                 removed = True
 
         if not removed:
@@ -1602,9 +1603,8 @@ class PickUpItemAction(Action):
 
     def is_possible(self, world):
         actor = self.get_actor()
-        a_state = actor.get_actor_state()
 
-        if a_state.held_item is not None:
+        if actor.is_player() and gs.get_instance().held_item() is not None:
             return False
 
         ent_to_pickup = self._get_entity_to_pickup(world)
@@ -1633,7 +1633,7 @@ class PickUpItemAction(Action):
             # but that may not always be the case i suppose
             print("ERROR: item we wanted to pick up isn't there anymore? {}".format(self.get_item()))
         else:
-            self.get_actor().get_actor_state().held_item = ent_to_pickup.get_item()
+            gs.get_instance().set_held_item(ent_to_pickup.get_item())
             world.remove(ent_to_pickup)
 
             sound_effects.play_sound(soundref.item_pickup)
@@ -1652,10 +1652,11 @@ class DropItemAction(Action):
         actor = self.get_actor()
         a_state = actor.get_actor_state()
 
-        if a_state.held_item is None:
+        held_item = gs.get_instance().held_item() if actor.is_player() else None
+        if held_item is None:
             if self.get_item() not in a_state.inventory():
                 return False
-        elif a_state.held_item != self.get_item():
+        elif held_item != self.get_item():
             return False
 
         return True
@@ -1671,10 +1672,11 @@ class DropItemAction(Action):
     def finalize(self, world):
         super().finalize(world)
         actor = self.get_actor()
-        a_state = actor.get_actor_state()
-        if a_state.held_item == self.get_item():
-            a_state.held_item = None
+
+        if gs.get_instance().held_item() == self.get_item():
+            gs.get_instance().set_held_item(None)
         else:
+            a_state = actor.get_actor_state()
             a_state.inventory().remove(self.get_item())
 
         world.add_item_as_entity(self.get_item(), actor.center(), direction=self._drop_dir)
@@ -1684,9 +1686,10 @@ class DropItemAction(Action):
 def _find_accessible_item(item, actor, world, and_remove_it=False):
     a_state = actor.get_actor_state()
     it = item
-    if a_state.held_item is not None and a_state.held_item == it:
+    held_item = gs.get_instance().held_item() if actor.is_player() else None
+    if held_item is not None and held_item == it:
         if and_remove_it:
-            a_state.held_item = None
+            gs.get_instance().set_held_item(None)
         return True
 
     inv_state = a_state.inventory()
@@ -1756,7 +1759,7 @@ class AddItemToGridAction(Action):
 
         if self.get_grid_position() is not None:
             # direct positioning must be done via a held_item
-            if self.get_actor().get_actor_state().held_item != self.get_item():
+            if gs.get_instance().held_item() != self.get_item():
                 return False
             if not grid.can_place(self.get_item(), self.get_grid_position(), allow_replace=True):
                 return False
@@ -1781,13 +1784,13 @@ class AddItemToGridAction(Action):
             sound_effects.play_sound(soundref.item_place)
         else:
             if grid.can_place(it, pos, allow_replace=False):
-                self.get_actor().get_actor_state().held_item = None
+                gs.get_instance().set_held_item(None)
                 res = grid.place(it, pos)
                 sound_effects.play_sound(soundref.item_place)
             else:
                 swapped_with = self.get_grid().try_to_replace(it, self.get_grid_position())
                 if swapped_with is not None:
-                    self.get_actor().get_actor_state().held_item = swapped_with
+                    gs.get_instance().set_held_item(swapped_with)
                     sound_effects.play_sound(soundref.item_replace)
                     res = True
 
@@ -1833,8 +1836,7 @@ class RemoveItemFromGridAction(Action):
         if not self.get_actor().is_player():
             return False  # for now...
 
-        a_state = self.get_actor().get_actor_state()
-        if a_state.held_item is not None:
+        if gs.get_instance().held_item() is not None:
             # can't pick up an item while holding an item
             # (that's an AddItemToGridAction)
             return False
@@ -1859,7 +1861,7 @@ class RemoveItemFromGridAction(Action):
         rem_success = grid.remove(my_item)
         if rem_success:
             sound_effects.play_sound(soundref.item_pickup)
-            self.get_actor().get_actor_state().held_item = my_item
+            gs.get_instance().set_held_item(my_item)
         else:
             print("ERROR: failed to remove item from grid: {}".format(my_item))
 
@@ -2165,7 +2167,7 @@ def get_basic_movement_actions(player, current_pos, move_pos, for_click=False):
     res = []
 
     res.append(InteractAction(player, move_pos))
-    res.append(TradeItemAction(player, player.get_actor_state().held_item, move_pos))
+    res.append(TradeItemAction(player, gs.get_instance().held_item(), move_pos))
 
     if not for_click:
         res.append(OpenDoorAction(player, move_pos))
@@ -2194,7 +2196,7 @@ def get_keyboard_action_requests(world, player, target_pos):
     pos = world.to_grid_coords(*player.center())
     res = []
 
-    if gs.get_instance().player_state().held_item is None:
+    if gs.get_instance().held_item() is None:
         action_prov = gs.get_instance().get_targeting_action_provider()
         if action_prov is not None:
             for i in range(1, 5):
@@ -2275,25 +2277,26 @@ def get_actions_from_click(world, world_pos, button=1):
 
     if player is not None:
         if button == 1:
-            if ps.held_item is not None:
-                throw_action = ThrowItemAction(player, ps.held_item, world_grid_pos)
+            held_item = gs.get_instance().held_item()
+            if held_item is not None:
+                throw_action = ThrowItemAction(player, held_item, world_grid_pos)
                 res.append(throw_action)
 
-                trade_action = TradeItemAction(player, ps.held_item, world_grid_pos)
+                trade_action = TradeItemAction(player, held_item, world_grid_pos)
                 res.append(trade_action)
 
                 # clicking the player either consumes the item or places it into the inventory
                 if world_grid_pos == world.to_grid_coords(*player.center()):
-                    if ps.held_item.can_consume():
-                        consume_action = ConsumeItemAction(player, ps.held_item)
+                    if held_item.can_consume():
+                        consume_action = ConsumeItemAction(player, held_item)
                         res.append(consume_action)
 
-                    right_click_action = get_right_click_action_for_item(ps.held_item)
+                    right_click_action = get_right_click_action_for_item(held_item)
                     if right_click_action is not None:
                         res.append(right_click_action)
 
                 drop_dir = Utils.sub(world_pos, player.center())
-                drop_action = DropItemAction(player, ps.held_item, drop_dir=drop_dir)
+                drop_action = DropItemAction(player, held_item, drop_dir=drop_dir)
                 res.append(drop_action)
             else:
                 # picking up items
@@ -2315,7 +2318,7 @@ def get_actions_from_click(world, world_pos, button=1):
                     res.append(action)
 
         elif button == 3:
-            item_to_apply = ps.held_item
+            item_to_apply = gs.get_instance().held_item()
             if item_to_apply is None:
                 clicked_item_entity = world.get_entity_for_mouseover(world_pos, cond=lambda i: i.is_item())
                 if clicked_item_entity is not None:

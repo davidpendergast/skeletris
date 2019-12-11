@@ -394,7 +394,7 @@ class HowToPutItemInGridStage(EntityNotificationTutorialStage):
     def get_target_entity(self):
         w, p = gs.get_instance().get_world_and_player()
         if p is not None:
-            held_item = p.get_actor_state().held_item
+            held_item = gs.get_instance().held_item()
             if held_item is not None:
                 if self.item_tag is None or held_item.get_type().has_tag(self.item_tag):
                     return p
@@ -432,7 +432,7 @@ class HowToRotateItemStage(EntityNotificationTutorialStage):
     def get_target_entity(self):
         w, p = gs.get_instance().get_world_and_player()
         if p is not None:
-            held_item = p.get_actor_state().held_item
+            held_item = gs.get_instance().held_item()
             if held_item is not None and held_item.can_rotate():
                 return p
         return None
@@ -489,7 +489,7 @@ class HowToConsumeItemStage(EntityNotificationTutorialStage):
     def get_target_entity(self):
         w, p = gs.get_instance().get_world_and_player()
         if p is not None:
-            held_item = p.get_actor_state().held_item
+            held_item = gs.get_instance().held_item()
             if held_item is not None and held_item.can_consume():
                 return p
         return None
@@ -569,7 +569,7 @@ class HowToGetInThrowRangeOfEnemyStage(_HowToGetInActionRangeOfEnemyStage):
 
     def get_test_action(self, world, player, enemy):
         e_pos = world.to_grid_coords(*enemy.center())
-        held_item = player.get_actor_state().held_item
+        held_item = gs.get_instance().held_item()
 
         return gameengine.ThrowItemAction(player, held_item, e_pos)
 
@@ -585,7 +585,7 @@ class HowToGetInThrowRangeOfEnemyStage(_HowToGetInActionRangeOfEnemyStage):
             if p is None:
                 return None
 
-            held_item = p.get_actor_state().held_item
+            held_item = gs.get_instance().held_item()
             if held_item is None or not held_item.get_type().has_tag(ItemTags.THROWABLE):
                 return None
             else:
@@ -607,7 +607,7 @@ class HowToThrowItemStage(EntityNotificationTutorialStage):
         if p is None:
             return None
 
-        held_item = p.get_actor_state().held_item
+        held_item = gs.get_instance().held_item()
         if held_item is None or not held_item.get_type().has_tag(ItemTags.THROWABLE):
             return None
 

@@ -54,6 +54,7 @@ class GlobalState:
         self._camera_center_on_screen = (win.get_screen_size()[0] // 2, win.get_screen_size()[0] // 2)
         self._player_state = None
         self._player_controller = None
+        self._held_item = None
 
         self._active_world = None
 
@@ -235,6 +236,12 @@ class GlobalState:
                 print("INFO: setting story var \"{}\" to {}".format(key, value))
                 self._story_vars[key] = value
 
+    def held_item(self):
+        return self._held_item
+
+    def set_held_item(self, val):
+        self._held_item = val
+
     def dialog_manager(self):
         return self._dialog_manager
 
@@ -299,7 +306,7 @@ class GlobalState:
             return None
 
     def get_targeting_action_provider(self):
-        if self.player_state().held_item is not None:
+        if self.held_item() is not None:
             return None
         elif self._action_to_target is not None:
             item_uid = self._action_to_target.get_item_uid()

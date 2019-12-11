@@ -451,9 +451,11 @@ class InventoryPanel(SidePanel):
         screen_pos = (x, y)
 
         if button == 1:
-            if ps.held_item is not None:
+            held_item = gs.get_instance().held_item()
+
+            if held_item is not None:
                 # when holding an item, gotta offset the click to the top left corner
-                item_size = ItemImage.calc_size(ps.held_item, 2)
+                item_size = ItemImage.calc_size(held_item, 2)
                 grid_click_pos = Utils.add(screen_pos, (-item_size[0] // 2, -item_size[1] // 2))
                 grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
             else:
@@ -462,8 +464,8 @@ class InventoryPanel(SidePanel):
             grid, cell = self.get_grid_and_cell_at_pos(*grid_click_pos)
 
             if grid is not None and cell is not None:
-                if ps.held_item is not None:
-                    put_item_action = gameengine.AddItemToGridAction(player, ps.held_item, grid, grid_position=cell)
+                if held_item is not None:
+                    put_item_action = gameengine.AddItemToGridAction(player, held_item, grid, grid_position=cell)
 
                     if put_item_action.is_possible(w):
                         pc.add_requests(put_item_action, priority=pc.HIGHEST_PRIORITY)
@@ -477,7 +479,7 @@ class InventoryPanel(SidePanel):
                         pc.add_requests(take_item_action, priority=pc.HIGHEST_PRIORITY)
 
         elif button == 3:
-            item_to_apply = ps.held_item
+            item_to_apply = gs.get_instance().held_item()
 
             if item_to_apply is None:
                 item_to_apply = self.get_item_at_pos(x, y)

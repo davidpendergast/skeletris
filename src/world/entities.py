@@ -985,7 +985,7 @@ class Player(ActorEntity):
         if action_prov is not None and action_prov.get_item_uid() is not None:
             return self.get_actor_state().get_item_in_possession_with_uid(action_prov.get_item_uid())
 
-        return self.get_actor_state().held_item
+        return gs.get_instance().held_item()
 
     def perturb(self, max_offset, duration):
         shake_pts = gs.get_instance().add_screenshake(max_offset, duration, falloff=3, freq=4)
