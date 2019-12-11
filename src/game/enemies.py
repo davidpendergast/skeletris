@@ -1172,7 +1172,7 @@ class EnemyFactory:
                     inv.add_to_inv(loot_item)
 
         import src.game.gameengine as gameengine
-        a_state = gameengine.ActorState(template.get_name(), level, stat_lookup, inv, 1)
+        a_state = gameengine.ActorState(template.get_name(), level, stat_lookup, inv, 1, False)
         a_state.set_energy(0 if random.random() < 0.5 else 4)
         a_state.unarmed_projectile_sprite = template.get_projectile_sprite()
 

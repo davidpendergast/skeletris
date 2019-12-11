@@ -21,10 +21,12 @@ import random
 
 class ActorState(StatProvider):
 
-    def __init__(self, name, level, base_stats, inventory, alignment):
+    def __init__(self, name, level, base_stats, inventory, alignment, is_player):
         self.name_ = name
         self.level = level
         self.base_stats = base_stats
+
+        self._is_player = is_player
 
         self.inventory_ = inventory
 
@@ -41,7 +43,7 @@ class ActorState(StatProvider):
 
     def get_all_mappable_action_providers(self):
         # yield ItemActions.UNARMED_ATTACK  # this is unnecessary, confusing
-        # TODO - sort these
+        # TODO - but how does the player know that slapping has 2 damage?
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable():
@@ -64,6 +66,9 @@ class ActorState(StatProvider):
                 res += status_effect.stat_value(stat_type, local=local)
 
         return res
+
+    def is_player(self):
+        return self._is_player
 
     def hp(self):
         return min(self.current_hp, self.max_hp())
@@ -169,8 +174,7 @@ class ActorState(StatProvider):
         if item_uid is None:
             return None
 
-        # TODO this whole method is kind of a hack, esp. this part
-        held_item = gs.get_instance().held_item()
+        held_item = gs.get_instance().held_item() if self.is_player() else None
         if held_item is not None and held_item.get_uid() == item_uid:
             return held_item
 
@@ -185,10 +189,10 @@ class ActorState(StatProvider):
     def add_status_effect(self, status_effect):
         self.status_effects[status_effect] = status_effect.get_duration()
 
-        # TODO - the player's actor state should probably know it's the player's actor state.
-        if self == gs.get_instance().player_state() and status_effect.get_player_text() is not None:
-            dia = dialog.PlayerDialog(status_effect.get_player_text())
-            gs.get_instance().dialog_manager().set_dialog(dia)
+        # TODO either delete or actually implement
+        #if self.is_player() and status_effect.get_player_text() is not None:
+        #    dia = dialog.PlayerDialog(status_effect.get_player_text())
+        #    gs.get_instance().dialog_manager().set_dialog(dia)
 
     def get_turns_remaining(self, status_effect):
         if status_effect not in self.status_effects:
