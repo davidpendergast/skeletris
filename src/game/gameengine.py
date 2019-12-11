@@ -1,12 +1,9 @@
-from enum import Enum
 from src.utils.util import Utils
-
 import src.game.globalstate as gs
 import src.game.settings as settings
 import src.game.spriteref as spriteref
 from src.game.stats import StatTypes
 import src.utils.colors as colors
-import src.game.dialog as dialog
 import src.game.statuseffects as statuseffects
 import src.game.balance as balance
 from src.game.stats import StatProvider

@@ -101,6 +101,11 @@ class Utils:
         return rect[0] <= v[0] < rect[0] + rect[2] and rect[1] <= v[1] < rect[1] + rect[3]
 
     @staticmethod
+    def rect_center(rect):
+        return (int(rect[0] + rect[2] / 2),
+                int(rect[1] + rect[3] / 2))
+
+    @staticmethod
     def get_rect_corners(rect, inclusive=False):
         yield (rect[0], rect[1])
         if inclusive:

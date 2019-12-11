@@ -41,8 +41,8 @@ class World:
         self._ents_to_add = []
         self._onscreen_entities = set()
 
-        # entities within this distance from player receive updates
-        self._entity_update_range = 600
+        # actors within this x, y range from player will act
+        self._entity_act_range = (9, 8)
 
         self._camera_modifiers = []
 
@@ -616,15 +616,21 @@ class World:
 
         player = self.get_player()
 
+        if player is not None:
+            player_xy = self.to_grid_coords(*player.center())
+        else:
+            player_xy = self.to_grid_coords(*Utils.rect_center(cam_rect))
+
         for e in self.entities:
             on_camera = Utils.rect_contains(cam_rect, e.center())
 
-            if player is not None:
-                should_update = Utils.dist(e.center(), player.center()) <= self._entity_update_range
-            else:
-                should_update = on_camera
+            e_xy = self.to_grid_coords(*e.center())
+            in_x_range = abs(e_xy[0] - player_xy[0]) <= self._entity_act_range[0]
+            in_y_range = abs(e_xy[1] - player_xy[1]) <= self._entity_act_range[1]
 
-            if on_camera or should_update:
+            should_act_if_actor = in_x_range and in_y_range
+
+            if on_camera or should_act_if_actor:
                 e.update(self)
                 self._onscreen_entities.add(e)
 
@@ -634,7 +640,7 @@ class World:
                         if e.is_player():
                             gs.get_instance().set_player_turn_to_act(False)
 
-                    elif e.is_actor() and should_update:
+                    elif e.is_actor() and should_act_if_actor:
                         actors_to_process.append(e)
                         if e.is_performing_action():
                             an_actor_is_acting = True
@@ -644,7 +650,6 @@ class World:
                 self._onscreen_entities.remove(e)
 
         if not gs.get_instance().world_updates_paused() and not an_actor_is_acting:
-
             actors_to_process.sort(key=lambda a: -1 if a.is_player() else a.get_uid())
             actors_ready_to_act = [a for a in actors_to_process if a.get_actor_state().ready_to_act()]
 

@@ -23,6 +23,8 @@ class WorldView:
 
         self._fade_overlay_bundle = None  # used to achieve a 'fade to black effect'
 
+        self._max_render_range = (22, 13)  # in grid coords, this is meant to match the in-game map's range
+
     def update_geo_bundle(self, grid_x, grid_y):
         if not self.world.is_valid(grid_x, grid_y):
             return
@@ -90,13 +92,30 @@ class WorldView:
         else:
             return None
 
-    def _update_onscreen_tile_bundles(self):
-        px, py = gs.get_instance().get_actual_camera_xy()
-        pw, ph = gs.get_instance().get_world_camera_size()
-        grid_rect = [px // self.world.cellsize(), py // self.world.cellsize(),
-                     pw // self.world.cellsize() + 3, ph // self.world.cellsize() + 3]
+    def _get_grid_rect_to_render(self):
+        cam_x, cam_y = gs.get_instance().get_actual_camera_xy()
+        cam_w, cam_h = gs.get_instance().get_world_camera_size()
+        grid_rect = [cam_x // self.world.cellsize(), cam_y // self.world.cellsize(),
+                     cam_w // self.world.cellsize() + 2, cam_h // self.world.cellsize() + 2]
 
+        p = self.world.get_player()
+        if p is not None:
+            center_xy = self.world.to_grid_coords(*p.center())
+        else:
+            cam_center = Utils.rect_center([cam_x, cam_y, cam_w, cam_h])
+            center_xy = self.world.to_grid_coords(*cam_center)
+
+        grid_rect[0] = max(grid_rect[0], center_xy[0] - self._max_render_range[0])
+        grid_rect[1] = max(grid_rect[1], center_xy[1] - self._max_render_range[1])
+        grid_rect[2] = min(grid_rect[2], 1 + 2 * self._max_render_range[0])
+        grid_rect[3] = min(grid_rect[3], 1 + 2 * self._max_render_range[1])
+
+        return grid_rect
+
+    def _update_onscreen_tile_bundles(self):
         render_eng = RenderEngine.get_instance()
+
+        grid_rect = self._get_grid_rect_to_render()
 
         old_onscreen_geo = self._onscreen_geo_bundles
         new_onscreen_geo = set()
