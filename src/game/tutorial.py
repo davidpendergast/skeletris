@@ -194,7 +194,8 @@ class EntityNotificationTutorialStage(TutorialStage):
 
             if hover_entity is None:
                 import src.world.entities as entities
-                hover_entity = entities.HoverTextEntity(message, entity, z_offset=48)
+                height = entity.get_sprite_height()
+                hover_entity = entities.HoverTextEntity(message, entity, z_offset=-(height + 32), inset=0)
                 w.add(hover_entity)
                 self._hover_text_ent_id = hover_entity.get_uid()
 

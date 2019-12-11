@@ -196,6 +196,9 @@ class Entity(Updateable):
 
     def get_depth(self):
         return -self.get_render_center()[1]
+
+    def get_sprite_height(self):
+        return 32  # this is only implemented for actors right now
     
     def is_player(self):
         return False
@@ -854,6 +857,14 @@ class ActorEntity(Entity):
         else:
             sprites = self.idle_sprites if not self.was_moving_recently() else self.moving_sprites
             return sprites[(tick // anim_rate) % len(sprites)]
+
+    def get_sprite_height(self):
+        sprite = self.get_sprite()
+        scale = 2
+        if sprite is not None:
+            return sprite.height() * scale
+        else:
+            return 24 * scale
 
     def set_facing_right(self, facing_right):
         self._facing_right = facing_right
@@ -1864,7 +1875,10 @@ class NpcEntity(Entity):
         if sprites is not None and len(sprites) > 0:
             return sprites[(anim_tick // 4) % len(sprites)]
         else:
-            return None
+            return spriteref.player_idle_all[0]
+
+    def get_sprite_height(self):
+        return self.get_sprite().height() * 2
 
     def should_show_hover_text(self):
         if self.hover_text is None or len(self.hover_text) == 0:
@@ -1920,7 +1934,7 @@ class NpcEntity(Entity):
                 world.remove(hover_entity)
         else:
             if hover_entity is None:
-                my_height = self.get_sprite().height() * 2
+                my_height = self.get_sprite_height()
                 hover_entity = HoverTextEntity(self.hover_text, self, z_offset=-(my_height + 12), inset=0)
                 world.add(hover_entity)
                 self.hover_text_entity_uid = hover_entity.get_uid()

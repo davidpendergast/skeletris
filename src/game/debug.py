@@ -8,11 +8,11 @@ _DEBUG = True
 # these flags can be manually flipped before launching to alter the game's behavior
 _IGNORE_LOOT_LEVELS = False
 _PLAYER_CANT_DIE = True
-_INSTA_KILL = True
+_INSTA_KILL = False
 _MAP_SEES_ALL = False
 _UNLIMITED_TRADES = False
 _HOLY_ARTIFACTS_100x_MORE_LIKELY = False
-_RESET_TUTORIALS_ON_NEWGAME = False
+_RESET_TUTORIALS_ON_NEWGAME = True
 _NEVER_SHOW_TUTORIALS = False
 
 
