@@ -194,7 +194,7 @@ class WorldView:
                                                                        scale=1, depth=-float('inf'))
             color, alpha = fade_state
             sprite = spriteref.get_floor_lighting(1-alpha)
-            scr_size = WindowState.get_instance().get_screen_size()
+            scr_size = RenderEngine.get_instance().get_game_size()
             ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + scr_size[1] / sprite.height()))
 
             self._fade_overlay_bundle = self._fade_overlay_bundle.update(new_model=sprite, new_x=0, new_y=0,

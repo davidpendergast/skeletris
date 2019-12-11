@@ -275,15 +275,15 @@ class OptionsMenu(Menu):
                 total_height += opt.size()[1] + self.spacing
         total_height -= self.spacing
 
-        y_pos = WindowState.get_instance().get_screen_size()[1] // 2 - total_height // 2
+        y_pos = RenderEngine.get_instance().get_game_size()[1] // 2 - total_height // 2
         if self._title_img is not None:
-            title_x = WindowState.get_instance().get_screen_size()[0] // 2 - self._title_img.size()[0] // 2
+            title_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._title_img.size()[0] // 2
             self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
             y_pos += self._title_img.size()[1] + self.title_spacing
 
         for i in range(0, self.get_num_options()):
             if self._option_imgs[i] is not None:
-                opt_x = WindowState.get_instance().get_screen_size()[0] // 2 - self._option_imgs[i].size()[0] // 2
+                opt_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._option_imgs[i].size()[0] // 2
                 self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
                 y_pos += self._option_imgs[i].size()[1] + self.spacing
 
@@ -436,7 +436,7 @@ class StartMenu(OptionsMenu):
         super().layout_rects()
 
         if self.version_img is not None:
-            scr_w, scr_h = WindowState.get_instance().get_screen_size()
+            scr_w, scr_h = RenderEngine.get_instance().get_game_size()
             x = scr_w - self.version_img.w() - 4
             y = scr_h - self.version_img.h() - 4
             self.version_rect = [x, y, self.version_img.w(), self.version_img.h()]
@@ -1055,7 +1055,7 @@ class CreditsMenu(Menu):
 
         self.scroll_y_pos += self._scroll_speed()
 
-        screen_size = WindowState.get_instance().get_screen_size()
+        screen_size = RenderEngine.get_instance().get_game_size()
         y_pos = screen_size[1] - int(self.scroll_y_pos)
 
         for i in range(0, len(self._all_images)):
@@ -1207,8 +1207,8 @@ class TitleMenu(Menu):
         idx = (gs.get_instance().anim_tick // 4) % len(spriteref.TitleScene.frames)
         model = spriteref.TitleScene.frames[idx]
 
-        x = WindowState.get_instance().get_screen_size()[0] // 2 - model.size()[0] * self.title_img.scale() // 2
-        y = WindowState.get_instance().get_screen_size()[1] // 2 - model.size()[1] * self.title_img.scale() // 2
+        x = RenderEngine.get_instance().get_game_size()[0] // 2 - model.size()[0] * self.title_img.scale() // 2
+        y = RenderEngine.get_instance().get_game_size()[1] // 2 - model.size()[1] * self.title_img.scale() // 2
 
         self.title_img = self.title_img.update(new_model=model, new_x=x, new_y=y, new_depth=50)
 
@@ -1240,7 +1240,7 @@ class TitleMenu(Menu):
                 self.world_fade_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, depth=-10)
 
             sprite = spriteref.get_floor_lighting(world_alpha)
-            scr_size = WindowState.get_instance().get_screen_size()
+            scr_size = RenderEngine.get_instance().get_game_size()
             ratio = (int(0.5 + scr_size[0] / sprite.width()), int(0.5 + ((scr_size[1] * 2) // 3) / sprite.height()))
 
             self.world_fade_img = self.world_fade_img.update(new_model=sprite, new_x=0, new_y=scr_size[1] // 3,
@@ -1321,7 +1321,7 @@ class InGameUiState(Menu):
             be pushed to the right so that the player's visibily is restricted evenly between the left and right.
         """
 
-        screen_w, screen_h = WindowState.get_instance().get_screen_size()
+        screen_w, screen_h = RenderEngine.get_instance().get_game_size()
         if self.sidepanel is not None:
             inv_w = self.sidepanel.get_rect()[2]
         else:
@@ -1430,10 +1430,10 @@ class InGameUiState(Menu):
             if current_tooltip is not None:
                 tt_width = current_tooltip.get_rect()[2]
                 tt_height = current_tooltip.get_rect()[3]
-                tt_x = min(screen_pos[0], WindowState.get_instance().get_screen_size()[0] - tt_width)
+                tt_x = min(screen_pos[0], RenderEngine.get_instance().get_game_size()[0] - tt_width)
 
                 y_offs = 24
-                if screen_pos[1] + y_offs + tt_height > WindowState.get_instance().get_screen_size()[1]:
+                if screen_pos[1] + y_offs + tt_height > RenderEngine.get_instance().get_game_size()[1]:
                     if screen_pos[1] - y_offs - tt_height >= 0:
                         tt_y = screen_pos[1] - y_offs - tt_height
                     else:

@@ -191,9 +191,12 @@ def run():
                 input_state.set_key(event.key, True)
             elif event.type == pygame.KEYUP:
                 input_state.set_key(event.key, False)
+
             elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                 scr_pos = WindowState.get_instance().window_to_screen_pos(event.pos)
-                input_state.set_mouse_pos(scr_pos)
+                game_pos = Utils.round(Utils.mult(scr_pos, 1 / RenderEngine.get_instance().get_pixel_mult()))
+                input_state.set_mouse_pos(game_pos)
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     input_state.set_mouse_down(True, button=event.button)
                 elif event.type == pygame.MOUSEBUTTONUP:
@@ -202,8 +205,7 @@ def run():
             elif event.type == pygame.VIDEORESIZE and not ignore_videoresize_events_this_frame:
                 # XXX ideally we'd set the window size to no smaller than the min size
                 # but that seems to break resizing entirely on linux so... (._.)
-                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance(),
-                                                           forcefully=True)
+                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance(), forcefully=True)
                 screen_size = (max(800, event.w), max(600, event.h))
                 WindowState.get_instance().set_screen_size(*screen_size)
                 RenderEngine.get_instance().resize(*screen_size)

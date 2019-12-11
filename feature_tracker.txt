@@ -47,9 +47,8 @@
  - figure out how to make windows builds
     - should be able to basically just run pyinstaller on a windows computer
       - need 32 & 64 bit
- 
- - make the max view distance of the world no bigger than the map
-    - otherwise ppl with 4K monitors will see almost the entire map
+
+ - configurable screen scaling
     
 
 [maintanence]

@@ -202,11 +202,6 @@ class ImageModel:
         self._rect = (x, y, w, h)
         
         # texture coords, origin bottom left corner
-        self.x1 = 0
-        self.y1 = 0
-        self.x2 = 0
-        self.y2 = 0
-        
         self.tx1 = 0
         self.ty1 = 0
         self.tx2 = 0
@@ -225,15 +220,10 @@ class ImageModel:
         return self.h
         
     def set_sheet_size(self, size):
-        self.x1 = self.x
-        self.x2 = self.x + self.w
-        self.y1 = size[1] - (self.y + self.h)
-        self.y2 = size[1] - self.y
-        
-        self.tx1 = self.x1 / size[0]
-        self.ty1 = self.y1 / size[1]
-        self.tx2 = self.x2 / size[0]
-        self.ty2 = self.y2 / size[1]
+        self.tx1 = self.x
+        self.tx2 = self.x + self.w
+        self.ty1 = size[1] - (self.y + self.h)
+        self.ty2 = size[1] - self.y
         
     def __repr__(self):
         return "ImageModel({}, {}, {}, {})".format(self.x, self.y, self.w, self.h)

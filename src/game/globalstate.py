@@ -8,7 +8,7 @@ import src.game.settings as settings
 from src.utils.util import Utils
 import src.game.soundref as soundref
 import src.game.sound_effects as sound_effects
-from src.game.windowstate import WindowState
+from src.renderengine.engine import RenderEngine
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -50,8 +50,8 @@ class GlobalState:
         self._settings.load_from_file(self._path_to_settings())
 
         self._camera_center_in_world = (0, 0)
-        win = WindowState.get_instance()
-        self._camera_center_on_screen = (win.get_screen_size()[0] // 2, win.get_screen_size()[0] // 2)
+        self._camera_center_on_screen = (RenderEngine.get_instance().get_game_size()[0] // 2,
+                                         RenderEngine.get_instance().get_game_size()[1] // 2)
         self._player_state = None
         self._player_controller = None
         self._held_item = None
@@ -363,17 +363,17 @@ class GlobalState:
     
     def get_actual_camera_xy(self):
         cam_center = self.get_actual_camera_center()
-        offs_x = cam_center[0] - WindowState.get_instance().get_screen_size()[0] // 2
-        offs_y = cam_center[1] - WindowState.get_instance().get_screen_size()[1] // 2
+        offs_x = cam_center[0] - RenderEngine.get_instance().get_game_size()[0] // 2
+        offs_y = cam_center[1] - RenderEngine.get_instance().get_game_size()[1] // 2
         return (offs_x, offs_y)
 
     def get_actual_camera_center(self):
-        x = self._camera_center_in_world[0] - (self._camera_center_on_screen[0] - WindowState.get_instance().get_screen_size()[0] // 2)
-        y = self._camera_center_in_world[1] - (self._camera_center_on_screen[1] - WindowState.get_instance().get_screen_size()[1] // 2)
+        x = self._camera_center_in_world[0] - (self._camera_center_on_screen[0] - RenderEngine.get_instance().get_game_size()[0] // 2)
+        y = self._camera_center_in_world[1] - (self._camera_center_on_screen[1] - RenderEngine.get_instance().get_game_size()[1] // 2)
         return (x, y)
 
     def get_world_camera_size(self):
-        return WindowState.get_instance().get_screen_size()
+        return RenderEngine.get_instance().get_game_size()
 
     def get_world_camera_rect(self, fudge=0):
         cam_xy = self.get_actual_camera_xy()

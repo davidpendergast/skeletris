@@ -564,8 +564,8 @@ class DialogPanel(InteractableImage):
 
     def _calc_rect(self):
         return [
-            WindowState.get_instance().get_screen_size()[0] // 2 - DialogPanel.SIZE[0] // 2,
-            WindowState.get_instance().get_screen_size()[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1],
+            RenderEngine.get_instance().get_game_size()[0] // 2 - DialogPanel.SIZE[0] // 2,
+            RenderEngine.get_instance().get_game_size()[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1],
             DialogPanel.SIZE[0],
             DialogPanel.SIZE[1]
         ]
@@ -1381,14 +1381,14 @@ class HealthBarPanel(InteractableImage):
         if self._bar_img is None:
             self._bar_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH + 1)
 
-        x = WindowState.get_instance().get_screen_size()[0] // 2 - self._top_img.width() // 2
-        y = WindowState.get_instance().get_screen_size()[1] - self._top_img.height()
+        x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._top_img.width() // 2
+        y = RenderEngine.get_instance().get_game_size()[1] - self._top_img.height()
 
         self._rect = [x, y, self._top_img.width(), self._top_img.height()]
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
         bar_w = spriteref.UI.health_bar_full.width() * 2
-        bar_x = WindowState.get_instance().get_screen_size()[0] // 2 - bar_w // 2
+        bar_x = RenderEngine.get_instance().get_game_size()[0] // 2 - bar_w // 2
 
         self._bar_rect = [bar_x, y, bar_w, 16 * 2]
 
@@ -1833,7 +1833,7 @@ class CinematicPanel:
             self.current_image_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=scale)
 
         image_w = new_sprite.width() * scale
-        new_x = WindowState.get_instance().get_screen_size()[0] // 2 - image_w // 2
+        new_x = RenderEngine.get_instance().get_game_size()[0] // 2 - image_w // 2
         new_y = 0 + self.border
         self.current_image_img = self.current_image_img.update(new_model=new_sprite, new_x=new_x, new_y=new_y)
 
@@ -1846,10 +1846,10 @@ class CinematicPanel:
 
         if self.text_img is None and new_text != "":
             text_scale = CinematicPanel.TEXT_SCALE
-            text_w = WindowState.get_instance().get_screen_size()[0] - self.border*2
+            text_w = RenderEngine.get_instance().get_game_size()[0] - self.border*2
             text_x = self.border
-            text_h = WindowState.get_instance().get_screen_size()[1] // 5 - self.border
-            text_y = WindowState.get_instance().get_screen_size()[1] - text_h - self.border
+            text_h = RenderEngine.get_instance().get_game_size()[1] // 5 - self.border
+            text_y = RenderEngine.get_instance().get_game_size()[1] - text_h - self.border
             wrapped_text = TextImage.wrap_words_to_fit(new_text, text_scale, text_w)
             self.text_img = TextImage(text_x, text_y, wrapped_text, spriteref.UI_0_LAYER, scale=text_scale, y_kerning=2)
             self.current_text = new_text

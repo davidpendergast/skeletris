@@ -230,10 +230,12 @@ class RenderEngine:
         self.bundles = {}  # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
+        self._pixel_mult = 1  # the number of screen "pixels" per game pixel
         self.layers = {}  # layer_id -> layer
         self.hidden_layers = {}  # layer_id -> None
         self.ordered_layers = []
         self.shader = None
+
         self.tex_id = None
 
         self.raw_texture_data = (None, 0, 0)  # data, width, height
@@ -271,15 +273,26 @@ class RenderEngine:
         for bun in bundles:
             self.remove(bun)
 
-    def resize(self, width, height):
-        self.size = (width, height)
-        self.resize_internal(width, height)
+    def resize(self, w, h):
+        self.size = (w, h)
+        self.resize_internal()
+
+    def get_game_size(self):
+        return (int(self.size[0] / self.get_pixel_mult()),
+                int(self.size[1] / self.get_pixel_mult()))
 
     def set_clear_color(self, r, g, b):
         """
             params: ints r,g,b in range [0, 255]
         """
         glClearColor(r / 255, g / 255, b / 255, 0.0)
+
+    def get_pixel_mult(self):
+        return self._pixel_mult
+
+    def set_pixel_mult(self, val):
+        self._pixel_mult = val
+        self.resize(self.size[0], self.size[1])
 
     def get_glsl_version(self):
         raise NotImplementedError()
@@ -293,7 +306,7 @@ class RenderEngine:
     def set_matrix_offset(self, x, y):
         raise NotImplementedError()
 
-    def resize_internal(self, width, height):
+    def resize_internal(self):
         raise NotImplementedError()
 
     def set_vertices_enabled(self, val):
@@ -368,6 +381,11 @@ class RenderEngine:
 
         self.raw_texture_data = (img_data, width, height)
 
+        self.set_texture_internal()
+
+    def set_texture_internal(self):
+        pass
+
     def set_camera_pos(self, x, y, center=False):
         self.camera_pos[0] = x - (self.size[0] // 2) if center else 0
         self.camera_pos[1] = y - (self.size[1] // 2) if center else 0
@@ -424,6 +442,8 @@ class RenderEngine:
             res += layer.num_sprites()
         return res
 
+
+# TODO - welp, this doesn't work anymore
 
 class RenderEngine110(RenderEngine):
 
@@ -500,7 +520,8 @@ class RenderEngine110(RenderEngine):
         glLoadIdentity()
         glTranslatef(x, y, 0.0)
 
-    def resize_internal(self, width, height):
+    def resize_internal(self):
+        width, height = self.size
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glOrtho(0, width, height, 0, 1, -1)
@@ -538,6 +559,7 @@ class RenderEngine130(RenderEngine):
     def __init__(self):
         super().__init__()
         self._tex_uniform_loc = None
+        self._tex_size_uniform_loc = None
         self._modelview_matrix_uniform_loc = None
         self._proj_matrix_uniform_loc = None
 
@@ -577,10 +599,14 @@ class RenderEngine130(RenderEngine):
             #version 130
             in vec2 texCoord;
             in vec3 color;
+            
+            uniform vec2 texSize;
             uniform sampler2D tex0;
 
             void main(void) {
-                vec4 tcolor = texture2D(tex0, texCoord);
+                vec2 texPos = vec2(texCoord.x / texSize.x, texCoord.y / texSize.y);
+                vec4 tcolor = texture2D(tex0, texPos);
+                
                 for (int i = 0; i < 3; i++) {
                     if (tcolor[i] >= 0.99) {
                         gl_FragColor[i] = tcolor[i] * color[i];
@@ -588,6 +614,7 @@ class RenderEngine130(RenderEngine):
                         gl_FragColor[i] = tcolor[i] * color[i] * color[i];                    
                     }
                 }
+                
                 gl_FragColor.w = tcolor.w;
             }
             '''
@@ -603,6 +630,10 @@ class RenderEngine130(RenderEngine):
         self._tex_uniform_loc = glGetUniformLocation(prog_id, "tex0")
         self._assert_valid_var("tex0", self._tex_uniform_loc)
         glUniform1i(self._tex_uniform_loc, 0)
+        printOpenGLError()
+
+        self._tex_size_uniform_loc = glGetUniformLocation(prog_id, "texSize")
+        self._assert_valid_var("texSize", self._tex_size_uniform_loc)
         printOpenGLError()
 
         self._modelview_matrix_uniform_loc = glGetUniformLocation(prog_id, "modelview")
@@ -636,9 +667,12 @@ class RenderEngine130(RenderEngine):
         glUniformMatrix4fv(self._modelview_matrix_uniform_loc, 1, GL_TRUE, self._modelview_matrix)
         printOpenGLError()
 
-    def resize_internal(self, width, height):
+    def resize_internal(self):
+        window_width, window_height = self.size
+        game_width, game_height = self.get_game_size()
+
         self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
-        ortho = ortho_matrix(0, width, height, 0, 1, -1)
+        ortho = ortho_matrix(0, game_width, game_height, 0, 1, -1)
         numpy.matmul(self._proj_matrix, ortho, out=self._proj_matrix, dtype=numpy.float32)
 
         glUniformMatrix4fv(self._proj_matrix_uniform_loc, 1, GL_TRUE, self._proj_matrix)
@@ -646,8 +680,18 @@ class RenderEngine130(RenderEngine):
 
         self.set_matrix_offset(0, 0)
 
-        glViewport(0, 0, width, height)
+        glViewport(0, 0, window_width, window_height)
+        print("INFO: set window size to ({}, {}), game_size to ({}, {})".format(
+            window_width, window_height, game_width, game_height))
         printOpenGLError()
+
+    def set_texture_internal(self):
+        if self.raw_texture_data is not None:
+            tex_w = self.raw_texture_data[1]
+            tex_h = self.raw_texture_data[2]
+
+            glUniform2f(self._tex_size_uniform_loc, float(tex_w), float(tex_h))
+            printOpenGLError()
 
     def set_vertices_enabled(self, val):
         if val:
