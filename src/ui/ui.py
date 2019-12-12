@@ -110,11 +110,12 @@ class SidePanel(InteractableImage):
 
         self.layer = spriteref.UI_0_LAYER
 
-        self.sc = 2
-        self.text_sc = 1
+        self.sc = 1
+        self.text_sc = 0.5
 
         self.title_color = colors.LIGHT_GRAY
-        self.title_rect = [8*self.sc, 0*self.sc + 4, 80*self.sc, 16*self.sc - 4]
+        self.title_rect = [8 * self.sc, (0 + 2) * self.sc,
+                           80 * self.sc, (16 - 2) * self.sc]
 
     def get_panel_type(self):
         return self._panel_type
@@ -158,15 +159,11 @@ class MapPanel(SidePanel):
         # TODO - make this configurable
         map_w = (spriteref.UI.map_panel_top.width() - border_thickness * 2) * self.sc
 
-        self.map_rect = [8 * self.sc,
-                         16 * self.sc,
-                         map_w,
-                         224 * self.sc]
+        self.map_rect = [8 * self.sc, 16 * self.sc, map_w, 224 * self.sc]
 
-        self.total_rect = [0,
-                           0,
-                           map_w + border_thickness * 2 * self.sc,
-                           self.map_rect[1] + self.map_rect[3] + border_thickness * 2 * self.sc]
+        total_w = map_w + border_thickness * 2 * self.sc
+        total_h = self.map_rect[1] + self.map_rect[3] + border_thickness * 2 * self.sc
+        self.total_rect = [0, 0, total_w, total_h]
 
         self.map_center = None  # gets updated when player moves
         self.map_dims = (45, 27)
@@ -280,17 +277,18 @@ class InventoryPanel(SidePanel):
         self.eq_title_text_img = None
         self.inv_title_text_img = None
 
-        self.sc = 2
-        self.text_sc = 1
-        
-        self.total_rect = [0, 0, spriteref.UI.inv_panel_top.width() * self.sc,
-                           (128 + 16 * self.state.rows) * self.sc]
+        self.sc = 1
+        self.text_sc = 0.5
 
-        self.equip_grid_rect = [8*self.sc, 16*self.sc, 80*self.sc, 80*self.sc]
-        self.inv_grid_rect = [8*self.sc, 112*self.sc, 144*self.sc, 16*self.state.rows*self.sc]
-        self.stats_rect = [96*self.sc, 16*self.sc, 56*self.sc, 80*self.sc]
+        total_w = spriteref.UI.inv_panel_top.width() * self.sc
+        total_h = (128 + 16 * self.state.rows) * self.sc
+        self.total_rect = [0, 0, total_w, total_h]
 
-        self.inv_title_rect = [8 * self.sc, 96 * self.sc + 4, 80 * self.sc, 16 * self.sc - 4]
+        self.equip_grid_rect = [8 * self.sc, 16 * self.sc, 80 * self.sc, 80 * self.sc]
+        self.inv_grid_rect = [8 * self.sc, 112 * self.sc, 144 * self.sc, 16 * self.state.rows * self.sc]
+        self.stats_rect = [96 * self.sc, 16 * self.sc, 56 * self.sc, 80 * self.sc]
+
+        self.inv_title_rect = [8 * self.sc, (96 + 2) * self.sc, 80 * self.sc, (16 - 2) * self.sc]
 
         self.lvl_text = None
         self.att_text = None
@@ -338,9 +336,9 @@ class InventoryPanel(SidePanel):
     def _build_images(self):
         self.top_img = ImageBundle(spriteref.UI.inv_panel_top, 0, 0, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
         for i in range(0, self.state.rows - 1):
-            y = (128 + i*16)*self.sc
+            y = (128 + i * 16) * self.sc
             self.mid_imgs.append(ImageBundle(spriteref.UI.inv_panel_mid, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH))
-        y = (128 + self.state.rows*16 - 16)*self.sc
+        y = (128 + self.state.rows * 16 - 16) * self.sc
         self.bot_img = ImageBundle(spriteref.UI.inv_panel_bot, 0, y, layer=self.layer, scale=self.sc, depth=BG_DEPTH)
 
         # despite being called the inventory panel, the title of the panel is actually "Equipment".
@@ -444,7 +442,6 @@ class InventoryPanel(SidePanel):
         if player is None:
             return
 
-        ps = player.get_actor_state()
         pc = player.get_controller()
         screen_pos = (x, y)
 
@@ -538,9 +535,8 @@ class InventoryPanel(SidePanel):
 
 class DialogPanel(InteractableImage):
 
-    BORDER_SIZE = 8, 8
-    TEXT_SCALE = 1
-    SIZE = (256 * 2 - 16 * 2, 48 * 2 - 16)
+    BORDER_SIZE = 4, 4
+    SIZE = (248, 40)
 
     def __init__(self, dialog):
         self._dialog = dialog
@@ -555,6 +551,9 @@ class DialogPanel(InteractableImage):
         self._cur_sprite = None
         self._sprite_on_left_side = True
 
+        self.sc = 1
+        self.text_sc = 0.5
+
         self._dirty = True
 
     def get_dialog(self):
@@ -562,10 +561,10 @@ class DialogPanel(InteractableImage):
 
     def _calc_rect(self):
         return [
-            RenderEngine.get_instance().get_game_size()[0] // 2 - DialogPanel.SIZE[0] // 2,
-            RenderEngine.get_instance().get_game_size()[1] - HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1],
-            DialogPanel.SIZE[0],
-            DialogPanel.SIZE[1]
+            RenderEngine.get_instance().get_game_size()[0] // 2 - self.sc * DialogPanel.SIZE[0] // 2,
+            RenderEngine.get_instance().get_game_size()[1] - self.sc * (HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]),
+            DialogPanel.SIZE[0] * self.sc,
+            DialogPanel.SIZE[1] * self.sc
         ]
 
     def update_images(self):
@@ -584,67 +583,67 @@ class DialogPanel(InteractableImage):
         lay = spriteref.UI_0_LAYER
 
         if len(self._border_imgs) == 0:
-            bw, bh = DialogPanel.BORDER_SIZE
-            right_x = x + DialogPanel.SIZE[0]
+            bw = DialogPanel.BORDER_SIZE[0]
+            bh = DialogPanel.BORDER_SIZE[1]
+            right_x = x + DialogPanel.SIZE[0] * self.sc
+
             border_sprites = spriteref.UI.text_panel_edges
 
             for i in range(0, DialogPanel.SIZE[0] // bw):
-                top_bord = ImageBundle(border_sprites[1], x + bw * i, y - bh,
-                                       layer=lay, scale=2, depth=BG_DEPTH_SUPER)
+                top_bord = ImageBundle(border_sprites[1], x + bw * i * self.sc, y - bh * self.sc,
+                                       layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(top_bord)
             for i in range(0, DialogPanel.SIZE[1] // bh):
-                l_bord = ImageBundle(border_sprites[3], x - bw, y + bh * i,
-                                     layer=lay, scale=2, depth=BG_DEPTH_SUPER)
+                l_bord = ImageBundle(border_sprites[3], x - bw * self.sc, y + bh * i * self.sc,
+                                     layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(l_bord)
-                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i,
-                                     layer=lay, scale=2, depth=BG_DEPTH_SUPER)
+                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i * self.sc,
+                                     layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
                 self._border_imgs.append(r_bord)
-            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw, y - bh,
-                                                 layer=lay, scale=2, depth=BG_DEPTH_SUPER))
-            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh,
-                                                 layer=lay, scale=2, depth=BG_DEPTH_SUPER))
+            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw * self.sc, y - bh * self.sc,
+                                                 layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER))
+            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh * self.sc,
+                                                 layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER))
             needs_update = True
 
         if len(self._bg_imgs) == 0:
             bg_sprite = spriteref.UI.text_panel_edges[4]
             bg_w, bg_h = bg_sprite.size()
-            sc = min(DialogPanel.SIZE[0] // bg_w, DialogPanel.SIZE[1] // bg_h)
-            bg_w *= sc
-            bg_h *= sc
-            for x1 in range(0, DialogPanel.SIZE[0] // bg_w):
-                for y1 in range(0, DialogPanel.SIZE[1] // bg_h):
-                    self._bg_imgs.append(ImageBundle(bg_sprite, x + x1 * bg_w, y + y1 * bg_h,
-                                                     layer=lay, scale=sc, depth=BG_DEPTH_SUPER))
+            ratio = (DialogPanel.SIZE[0] // bg_w, DialogPanel.SIZE[1] // bg_h)
+            self._bg_imgs.append(ImageBundle(bg_sprite, x, y, layer=lay, scale=self.sc, ratio=ratio, depth=BG_DEPTH_SUPER))
             needs_update = True
 
-        text_buffer = 6, 6
-        text_area = [x + text_buffer[0], y + text_buffer[1],
-                     DialogPanel.SIZE[0] - text_buffer[0] * 2,
-                     DialogPanel.SIZE[1] - text_buffer[1] * 2]
+        text_buffer = 2, 2
+        text_area = [x + self.sc * text_buffer[0],
+                     y + self.sc * text_buffer[1],
+                     self.sc * (DialogPanel.SIZE[0] - text_buffer[0] * 2),
+                     self.sc * (DialogPanel.SIZE[1] - text_buffer[1] * 2)]
 
         if sprite is not None:
-            sprite_buffer = 6, 4
+            sprite_buffer = 3, 3
             if self._speaker_img is None:
-                y_pos = y + DialogPanel.SIZE[1] // 2 - sprite.height() * 2 // 2
+                y_pos = y + self.sc * (DialogPanel.SIZE[1] // 2 - sprite.height() // 2)
                 if left_side:
-                    x_pos = x + sprite_buffer[0]
+                    x_pos = x + self.sc * sprite_buffer[0]
                 else:
-                    x_pos = x + DialogPanel.SIZE[0] - sprite.width() * 2 - sprite_buffer[0]
-                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=2, depth=FG_DEPTH_SUPER)
+                    x_pos = x + self.sc * (DialogPanel.SIZE[0] - sprite.width() - sprite_buffer[0])
+
+                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=self.sc, depth=FG_DEPTH_SUPER)
+
             self._speaker_img = self._speaker_img.update(new_model=sprite)
 
             if left_side:
-                text_x = x + self._speaker_img.width() + sprite_buffer[0] + text_buffer[0]
+                text_x = x + self._speaker_img.width() + self.sc * (sprite_buffer[0] * 2 + text_buffer[0])
             else:
-                text_x = x + text_buffer[0]
+                text_x = x + self.sc * text_buffer[0]
 
-            text_area = [text_x, y + text_buffer[0],
-                         DialogPanel.SIZE[0] - self._speaker_img.width() - text_buffer[0] - sprite_buffer[0],
-                         DialogPanel.SIZE[1] - text_buffer[1] * 2]
-            # gets updated automatically
+            text_area = [text_x,
+                         y + self.sc * text_buffer[1],
+                         self.sc * (DialogPanel.SIZE[0] - text_buffer[0] * 2 - sprite_buffer[0]) - self._speaker_img.width(),
+                         self.sc * (DialogPanel.SIZE[1] - text_buffer[1])]
 
         if len(text) > 0 and self._text_img is None:
-            wrapped_text = TextImage.wrap_words_to_fit(text, DialogPanel.TEXT_SCALE, text_area[2])
+            wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2])
             custom_colors = {}
             if self._option_selected is not None:
                 opt_text = self._dialog.get_options()[self._option_selected]
@@ -658,8 +657,8 @@ class DialogPanel(InteractableImage):
                     print("ERROR: option \"{}\" missing from dialog \"{}\"".format(opt_text, wrapped_text))
 
             self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay,
-                                       scale=DialogPanel.TEXT_SCALE,
-                                       y_kerning=3,
+                                       scale=self.text_sc,
+                                       y_kerning=2,
                                        custom_colors=custom_colors,
                                        depth=FG_DEPTH_SUPER)
             needs_update = True
@@ -754,6 +753,8 @@ class MappedActionImage(InteractableImage):
         # the text that appears at the bottom right of the action icon
         self._info_text_img = None
 
+        self.sc = rect[2] // 28
+
     def contains_point(self, x, y):
         if self.action_prov is None:
             return False
@@ -828,11 +829,11 @@ class MappedActionImage(InteractableImage):
             color = gs.get_instance().get_targeting_action_color() if self.action_prov == targeting_action else (1, 1, 1)
 
             if self._icon_img is None:
-                self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=4, depth=FG_DEPTH)
+                self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2 * self.sc, depth=FG_DEPTH)
             self._icon_img = self._icon_img.update(new_model=self.action_prov.get_icon(), new_color=color,
-                                                   new_x=self.rect[0] + 8, new_y=self.rect[1] + 8)
+                                                   new_x=self.rect[0] + 4 * self.sc, new_y=self.rect[1] + 4 * self.sc)
             if self._border_img is None:
-                self._border_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
+                self._border_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=self.sc, depth=FG_DEPTH)
             self._border_img = self._border_img.update(new_model=spriteref.UI.status_bar_action_border, new_color=color,
                                                        new_x=self.rect[0], new_y=self.rect[1])
 
@@ -843,43 +844,27 @@ class MappedActionImage(InteractableImage):
                     RenderEngine.get_instance().remove(bun)
                 self._info_text_img = None
         else:
-            sc = 2
-
+            text_sc = self.sc
             if self._info_text_img is None:
                 self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER,
                                                         font_lookup=spriteref.tiny_font_lookup,
                                                         x_kerning=2,
                                                         outline_diagonals=True)
 
-            char_size = (TextImage.calc_width("a", sc, font_lookup=spriteref.tiny_font_lookup),
-                         TextImage.calc_line_height(sc, font_lookup=spriteref.tiny_font_lookup))
+            char_size = (TextImage.calc_width("a", text_sc, font_lookup=spriteref.tiny_font_lookup),
+                         TextImage.calc_line_height(text_sc, font_lookup=spriteref.tiny_font_lookup))
 
-            inset = 4 + sc
+            inset = 2 * self.sc + text_sc
 
             x_pos = self.rect[0] + inset
             y_pos = self.rect[1] + self.rect[3] - char_size[1] - inset
 
-            #x_pos = max_x_pos
-            #for i in range(0, len(info_text) + 2):
-            #    if i == 0:
-            #        border_sprite = spriteref.UI.single_char_outline_right
-            #    elif i == (len(info_text) + 2) - 1:
-            #        border_sprite = spriteref.UI.single_char_outline_left
-            #    else:
-            #        border_sprite = spriteref.UI.single_char_outline_center
-
-                # this should work as long as the sprite sizes ever don't change
-            #    x_pos = x_pos - int(border_sprite.width() * sc)
-            #    self._info_text_borders[i] = self._info_text_borders[i].update(new_model=border_sprite, new_scale=sc,
-            #                                                                   new_x=x_pos, new_y=y_pos,
-            #                                                                   new_depth=FG_DEPTH - 1)
-
-            self._info_text_img = self._info_text_img.update(new_text=info_text, new_scale=sc,
+            self._info_text_img = self._info_text_img.update(new_text=info_text, new_scale=text_sc,
                                                              new_color=info_color,
                                                              new_x=x_pos,
                                                              new_y=y_pos,
                                                              new_depth=FG_DEPTH - 2,
-                                                             new_outline_thickness=sc,
+                                                             new_outline_thickness=text_sc,
                                                              new_outline_depth=FG_DEPTH - 1.25)
 
     def all_bundles(self):
@@ -887,8 +872,6 @@ class MappedActionImage(InteractableImage):
             yield self._border_img
         if self._icon_img is not None:
             yield self._icon_img
-        #for bun in self._info_text_borders:
-        #    yield bun
         if self._info_text_img is not None:
             for bun in self._info_text_img.all_bundles():
                 yield bun
@@ -901,6 +884,8 @@ class StatusEffectImage(InteractableImage):
         self.rect = rect
 
         self._icon_img = None
+
+        self.sc = rect[2] // 16
 
     def contains_point(self, x, y):
         return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
@@ -921,7 +906,7 @@ class StatusEffectImage(InteractableImage):
         color = gs.get_instance().get_pulsing_color(color)
 
         if self._icon_img is None:
-            self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=FG_DEPTH)
+            self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=self.sc, depth=FG_DEPTH)
         self._icon_img = self._icon_img.update(new_model=self.status_effect.get_icon(), new_color=color,
                                                new_x=self.rect[0], new_y=self.rect[1])
 
@@ -946,6 +931,9 @@ class HotbarSidePanelButton(InteractableImage):
             return (self.rect[0] <= x < self.rect[0] + self.rect[2] and
                     self.rect[1] <= y < self.rect[1] + self.rect[3])
 
+    def get_preferred_size(self):
+        return (15, 15)
+
     def get_icon_sprite(self):
         return None
 
@@ -957,13 +945,16 @@ class HotbarSidePanelButton(InteractableImage):
             return
 
         if self._icon_img is None:
-            self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+            self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER)
+
+        sc = self.rect[2] // self.get_preferred_size()[0]
 
         self._icon_img = self._icon_img.update(new_model=self.get_icon_sprite(),
                                                new_depth=FG_DEPTH,
                                                new_x=self.rect[0],
                                                new_y=self.rect[1],
-                                               new_color=self.get_color())
+                                               new_color=self.get_color(),
+                                               new_scale=sc)
 
     def all_bundles(self):
         if self._icon_img is not None:
@@ -1080,15 +1071,18 @@ class HotbarMoveButton(InteractableImage):
         icon_sprite = self.get_icon_sprite()
         if self.rect is not None and icon_sprite is not None:
             if self._icon_img is None:
-                self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER, scale=2)
+                self._icon_img = ImageBundle.new_bundle(layer_id=spriteref.UI_0_LAYER)
 
             color = self.get_color()
+
+            sc = self.rect[2] // self.get_preferred_size()[0]
 
             self._icon_img = self._icon_img.update(new_model=icon_sprite,
                                                    new_depth=FG_DEPTH,
                                                    new_x=self.rect[0],
                                                    new_y=self.rect[1],
-                                                   new_color=color)
+                                                   new_color=color,
+                                                   new_scale=sc)
         elif self._icon_img is not None:
                 RenderEngine.get_instance().remove(self._icon_img)
                 self._icon_img = None
@@ -1240,18 +1234,20 @@ class HotbarSkipTurnButton(HotbarMoveButton):
 
 class HealthBarPanel(InteractableImage):
 
-    SIZE = (400 * 2, 53 * 2)
+    SIZE = (400, 53)
 
-    def __init__(self):
+    def __init__(self, scale):
         self._top_img = None
         self._bar_img = None
         self._floating_bars = []  # list of [img, duration]
+
+        self.sc = scale
 
         self._rect = [0, 0, 0, 0]
         self._bar_rect = [0, 0, 0, 0]
 
         self._float_dur = 30
-        self._float_height = 30
+        self._float_height = 15 * scale
 
         self._action_imgs = [None] * 6  # list of MappedActionImages
 
@@ -1292,39 +1288,39 @@ class HealthBarPanel(InteractableImage):
             return super().get_tooltip_target_at(x, y)
 
     def _update_sidepanel_buttons(self):
-        x_start = self._rect[0] + 7 * 2
-        y_start = self._rect[1] + 16 * 2
+        x_start = self._rect[0] + 7 * self.sc
+        y_start = self._rect[1] + 16 * self.sc
 
         for i in range(0, len(self._sidepanel_buttons)):
             if self._sidepanel_buttons[i] is not None:
-                self._sidepanel_buttons[i].rect = [x_start + 15 * 2 * (i % 4),
-                                                   y_start + 15 * 2 * (i // 4),
-                                                   15 * 2, 15 * 2]
+                self._sidepanel_buttons[i].rect = [x_start + 15 * self.sc * (i % 4),
+                                                   y_start + 15 * self.sc * (i // 4),
+                                                   15 * self.sc, 15 * self.sc]
 
                 if self._sidepanel_buttons[i].is_dirty():
                     self._sidepanel_buttons[i].update_images()
 
     def _update_move_buttons(self):
-        x_start = self._rect[0] + self._rect[2] - 67 * 2
-        y_start = self._rect[1] + 16 * 2
+        x_start = self._rect[0] + self._rect[2] - 67 * self.sc
+        y_start = self._rect[1] + 16 * self.sc
 
         for i in range(0, len(self._move_buttons)):
             if self._move_buttons[i] is not None:
                 w, h = self._move_buttons[i].get_preferred_size()
-                self._move_buttons[i].rect = [x_start + 15 * 2 * (i % 4),
-                                              y_start + 15 * 2 * (i // 4),
-                                              w * 2, h * 2]
+                self._move_buttons[i].rect = [x_start + 15 * self.sc * (i % 4),
+                                              y_start + 15 * self.sc * (i // 4),
+                                              w * self.sc, h * self.sc]
 
                 if self._move_buttons[i].is_dirty():
                     self._move_buttons[i].update_images()
 
     def _update_action_icons(self):
-        x_starts = [self._rect[0] + 87 * 2 + i * 40 * 2 for i in range(0, 3)] + \
-                   [self._rect[0] + 205 * 2 + i * 40 * 2 for i in range(0, 3)]
-        y_start = self._rect[1] + 19 * 2
+        x_starts = [self._rect[0] + 87 * self.sc + i * 40 * self.sc for i in range(0, 3)] + \
+                   [self._rect[0] + 205 * self.sc + i * 40 * self.sc for i in range(0, 3)]
+        y_start = self._rect[1] + 19 * self.sc
         for i in range(0, 6):
             action_prov = gs.get_instance().get_mapped_action(i)
-            rect = [x_starts[i], y_start, 28 * 2, 28 * 2]
+            rect = [x_starts[i], y_start, 28 * self.sc, 28 * self.sc]
 
             if self._action_imgs[i] is None:
                 self._action_imgs[i] = MappedActionImage(action_prov, rect)
@@ -1336,9 +1332,9 @@ class HealthBarPanel(InteractableImage):
                 self._action_imgs[i].update_images()
 
     def _update_status_effect_icons(self):
-        x_start = self._rect[0] + self._rect[2] - 71 * 2
-        x_starts = [x_start + i*18*2 for i in range(0, 4)]
-        y_start = self._rect[1] + self._rect[3] - 61 * 2
+        x_start = self._rect[0] + self._rect[2] - 71 * self.sc
+        x_starts = [x_start + i * 18 * self.sc for i in range(0, 4)]
+        y_start = self._rect[1] + self._rect[3] - 61 * self.sc
 
         effects = gs.get_instance().player_state().all_status_effects()
 
@@ -1348,7 +1344,7 @@ class HealthBarPanel(InteractableImage):
                 RenderEngine.get_instance().remove(bun)
 
         for i in range(0, len(effects)):
-            r = [x_starts[i % 4], y_start - 18 * 2 * (i // 4), 32, 32]
+            r = [x_starts[i % 4], y_start - 18 * self.sc * (i // 4), 16 * self.sc, 16 * self.sc]
             if i >= len(self._status_imgs):
                 self._status_imgs.append(StatusEffectImage(effects[i], r))
             else:
@@ -1371,13 +1367,15 @@ class HealthBarPanel(InteractableImage):
         p_state = gs.get_instance().player_state()
         cur_hp = p_state.hp()
         max_hp = p_state.max_hp()
+
+        # TODO this effect is actually quite cool, consider re-enabling it
         new_damage = 0
 
         if self._top_img is None:
             self._top_img = ImageBundle(spriteref.UI.status_bar_base, 0, 0,
-                                        layer=spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH)
+                                        layer=spriteref.UI_0_LAYER, scale=self.sc, depth=BG_DEPTH)
         if self._bar_img is None:
-            self._bar_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2, depth=BG_DEPTH + 1)
+            self._bar_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=self.sc, depth=BG_DEPTH + 1)
 
         x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._top_img.width() // 2
         y = RenderEngine.get_instance().get_game_size()[1] - self._top_img.height()
@@ -1385,16 +1383,16 @@ class HealthBarPanel(InteractableImage):
         self._rect = [x, y, self._top_img.width(), self._top_img.height()]
 
         hp_pcnt_full = Utils.bound(cur_hp / max_hp, 0.0, 1.0)
-        bar_w = spriteref.UI.health_bar_full.width() * 2
+        bar_w = spriteref.UI.health_bar_full.width() * self.sc
         bar_x = RenderEngine.get_instance().get_game_size()[0] // 2 - bar_w // 2
 
-        self._bar_rect = [bar_x, y, bar_w, 16 * 2]
+        self._bar_rect = [bar_x, y, bar_w, 16 * self.sc]
 
         if new_damage > 0:
             pcnt_full = Utils.bound(new_damage / max_hp, 0.0, 1.0)
             dmg_x = int(bar_x + hp_pcnt_full * bar_w)
             dmg_sprite = spriteref.UI.get_health_bar(pcnt_full)
-            dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=2, depth=0)
+            dmg_img = ImageBundle(dmg_sprite, dmg_x, 0, layer=spriteref.UI_0_LAYER, scale=self.sc, depth=0)
             self._floating_bars.append([dmg_img, 0])
 
         bar_color = (1.0, 0.25, 0.25)

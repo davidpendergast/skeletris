@@ -1499,7 +1499,7 @@ class InGameUiState(Menu):
 
         else:
             if self.health_bar_panel is None:
-                self.health_bar_panel = HealthBarPanel()
+                self.health_bar_panel = HealthBarPanel(1)
 
             if self.health_bar_panel.is_dirty():
                 self.health_bar_panel.update_images()
