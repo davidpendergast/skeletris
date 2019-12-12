@@ -1432,14 +1432,14 @@ class InGameUiState(Menu):
                 tt_height = current_tooltip.get_rect()[3]
                 tt_x = min(screen_pos[0], RenderEngine.get_instance().get_game_size()[0] - tt_width)
 
-                y_offs = 24
+                y_offs = 12
                 if screen_pos[1] + y_offs + tt_height > RenderEngine.get_instance().get_game_size()[1]:
                     if screen_pos[1] - y_offs - tt_height >= 0:
                         tt_y = screen_pos[1] - y_offs - tt_height
                     else:
-                        tt_y = screen_pos[1] + 24  # if it's too tall to fit on the screen at all, we've got a problem
+                        tt_y = screen_pos[1] + 12  # if it's too tall to fit on the screen at all, we've got a problem
                 else:
-                    tt_y = screen_pos[1] + 24
+                    tt_y = screen_pos[1] + 12
 
                 offs = (-tt_x, -tt_y)
                 render_eng.set_layer_offset(spriteref.UI_TOOLTIP_LAYER, *offs)
@@ -1555,8 +1555,8 @@ class InGameUiState(Menu):
 
         if create_image:
             held_item = gs.get_instance().held_item()
-            size = ItemImage.calc_size(held_item, 2)
-            item_img = ItemImage(0, 0, held_item, spriteref.UI_TOOLTIP_LAYER, 2, 0)
+            size = ItemImage.calc_size(held_item, 1)
+            item_img = ItemImage(0, 0, held_item, spriteref.UI_TOOLTIP_LAYER, 1, 0)
             item_offs = (-size[0] // 2, -size[1] // 2)
             self.item_on_cursor_info = (held_item, item_img, item_offs)
             render_eng = RenderEngine.get_instance()

@@ -893,7 +893,7 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
     6 7 8
     """
     UI.text_panel_edges = [make(4 * (i % 3), 232 + 4 * (i // 3), 4, 4, shift=start_pos) for i in range(0, 9)]
-    UI.hover_text_edges = [make(18 + 3 * (i % 3), 230 + 5 * (i // 3), 3, 5, shift=start_pos) for i in range(0, 9)]
+    UI.hover_text_edges = [make(18 + 2 * (i % 3), 230 + 5 * (i // 3), 2, 5, shift=start_pos) for i in range(0, 9)]
     UI.hover_text_bottom_arrow = make(31, 240, 3, 5, shift=start_pos)
     UI.hover_text_bottom_arrow_double = make(37, 240, 6, 5, shift=start_pos)
 

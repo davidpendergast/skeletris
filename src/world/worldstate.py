@@ -161,7 +161,7 @@ class World:
         return res
 
     def get_entity_for_mouseover(self, xy, visible_only=True, cond=None):
-        hover_rad = 32
+        hover_rad = constants.CELLSIZE // 2
         hover_over = self.entities_in_circle(xy, hover_rad)
         if visible_only:
             hover_over = list(filter(lambda ent: ent.is_visible_in_world(self), hover_over))

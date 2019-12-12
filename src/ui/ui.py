@@ -346,12 +346,12 @@ class InventoryPanel(SidePanel):
         self.eq_title_text_img = self.build_title_img("Equipment")
         self.inv_title_text_img = self.build_title_img("Inventory", rect=self.inv_title_rect)
 
-        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH)
-        self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH)
-        self.def_text = TextImage(0, 0, "def", self.layer, scale=self.text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH)
-        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=self.text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH)
-        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=self.text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH)
-        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=self.text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH)
+        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH, x_leading_kerning=1)
+        self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
+        self.def_text = TextImage(0, 0, "def", self.layer, scale=self.text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
+        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=self.text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
+        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=self.text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
+        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=self.text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH, x_leading_kerning=1)
 
         self.update_stats_imgs()
         self.update_item_grid_imgs()
@@ -450,9 +450,9 @@ class InventoryPanel(SidePanel):
 
             if held_item is not None:
                 # when holding an item, gotta offset the click to the top left corner
-                item_size = ItemImage.calc_size(held_item, 2)
+                item_size = ItemImage.calc_size(held_item, 1)
                 grid_click_pos = Utils.add(screen_pos, (-item_size[0] // 2, -item_size[1] // 2))
-                grid_click_pos = Utils.add(grid_click_pos, (16, 16))  # plus some fudge XXX
+                grid_click_pos = Utils.add(grid_click_pos, (8, 8))  # plus some fudge XXX
             else:
                 grid_click_pos = screen_pos
 
@@ -562,7 +562,7 @@ class DialogPanel(InteractableImage):
     def _calc_rect(self):
         return [
             RenderEngine.get_instance().get_game_size()[0] // 2 - self.sc * DialogPanel.SIZE[0] // 2,
-            RenderEngine.get_instance().get_game_size()[1] - self.sc * (HealthBarPanel.SIZE[1] - DialogPanel.SIZE[1]),
+            RenderEngine.get_instance().get_game_size()[1] - self.sc * (HealthBarPanel.SIZE[1] + DialogPanel.SIZE[1]),
             DialogPanel.SIZE[0] * self.sc,
             DialogPanel.SIZE[1] * self.sc
         ]
@@ -848,7 +848,6 @@ class MappedActionImage(InteractableImage):
             if self._info_text_img is None:
                 self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER,
                                                         font_lookup=spriteref.tiny_font_lookup,
-                                                        x_kerning=2,
                                                         outline_diagonals=True)
 
             char_size = (TextImage.calc_width("a", text_sc, font_lookup=spriteref.tiny_font_lookup),
@@ -1282,7 +1281,7 @@ class HealthBarPanel(InteractableImage):
         if Utils.rect_contains(self._bar_rect, (x, y)):
             ps = gs.get_instance().player_state()
             target = TextBuilder()
-            target.add_line("HP: {}/{}".format(ps.hp(), ps.max_hp()), color=colors.LIGHT_GRAY)
+            target.add_line("HP: {}/{}".format(ps.hp(), ps.max_hp()), color=colors.WHITE)
             return target
         else:
             return super().get_tooltip_target_at(x, y)
@@ -1494,7 +1493,7 @@ class TextImage:
     Y_KERNING = 0
 
     def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=0.5, depth=0,
-                 x_kerning=None, y_kerning=None, custom_colors=None, font_lookup=None):
+                 x_kerning=None, y_kerning=None, x_leading_kerning=0, custom_colors=None, font_lookup=None):
 
         if font_lookup is None:
             font_lookup = spriteref.default_font_lookup
@@ -1515,8 +1514,11 @@ class TextImage:
         self.scale = scale
         self._letter_images = []
         self._letter_image_indexes = []
+
+        # note that kerning is NOT affected by scale
         self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
         self.x_kerning = TextImage.X_KERNING if x_kerning is None else x_kerning
+        self.x_leading_kerning = x_leading_kerning
 
         self._build_images()
 
@@ -1534,10 +1536,13 @@ class TextImage:
         if x_range[0] is None:
             return (0, 0)
 
+        if x_range[1] - x_range[0] > 0:
+            x_range[1] += self.x_leading_kerning
+
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
     @staticmethod
-    def calc_width(text, scale, font_lookup=None, x_kerning=None):
+    def calc_width(text, scale, font_lookup=None, x_kerning=None, x_leading_kerning=0):
         if font_lookup is None:
             font_lookup = spriteref.default_font_lookup
 
@@ -1545,14 +1550,14 @@ class TextImage:
             x_kerning = TextImage.X_KERNING
 
         max_line_w = 0
-        cur_line_w = 0
-        char_w = (font_lookup.get_char("a").width() + x_kerning) * scale
+        cur_line_w = x_leading_kerning
+        char_w = font_lookup.get_char("a").width() * scale + x_kerning
         for c in text:
             if c == "\n":
-                cur_line_w = 0
+                cur_line_w = x_leading_kerning
             else:
                 cur_line_w += char_w
-                max_line_w = max(max_line_w, cur_line_w)
+                max_line_w = max(max_line_w, cur_line_w - x_kerning)  # ignore trailing kerning
         return max_line_w
 
     @staticmethod
@@ -1561,7 +1566,8 @@ class TextImage:
             font_lookup = spriteref.default_font_lookup
 
         y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
-        return (font_lookup.get_char("a").height() + y_kerning) * scale
+
+        return font_lookup.get_char("a").height() * scale + y_kerning
 
     def get_text(self):
         return self.text
@@ -1576,11 +1582,11 @@ class TextImage:
         return self.actual_size[1]
 
     def line_height(self):
-        return (self.font_lookup.get_char("a").height() + self.y_kerning) * self.scale
+        return self.font_lookup.get_char("a").height() * self.scale + self.y_kerning
 
     def _build_images(self):
         ypos = self.y_kerning
-        xpos = self.x_kerning
+        xpos = self.x_leading_kerning
 
         a_sprite = self.font_lookup.get_char("a")
         idx = 0
@@ -1592,10 +1598,10 @@ class TextImage:
 
         for chunk in text_chunks:
             if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
-                xpos += (self.x_kerning + a_sprite.width()) * self.scale
+                xpos += self.x_kerning + a_sprite.width() * self.scale
             elif chunk == "\n":
-                xpos = self.x_kerning
-                ypos += (self.y_kerning + a_sprite.height()) * self.scale
+                xpos = self.x_leading_kerning
+                ypos += self.y_kerning + a_sprite.height() * self.scale
             else:
                 if len(chunk) == 1:
                     sprite = self.font_lookup.get_char(chunk)
@@ -1612,7 +1618,7 @@ class TextImage:
 
                 self._letter_images.append(img)
                 self._letter_image_indexes.append(idx)
-                xpos += (self.x_kerning + sprite.width()) * self.scale
+                xpos += self.x_kerning + sprite.width() * self.scale
 
             idx += len(chunk)
 

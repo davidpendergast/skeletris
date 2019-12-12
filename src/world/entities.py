@@ -756,7 +756,7 @@ class ActorEntity(Entity):
         """returns: the center point (x, y) of where the actor should be drawn."""
 
         x = self.center()[0] + self.get_draw_offset()[0] + self._sprite_offset[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + 6
+        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + constants.CELLSIZE // 4
 
         if not ignore_perturbs:
             x += self.get_perturbed_xy()[0]
@@ -861,11 +861,10 @@ class ActorEntity(Entity):
 
     def get_sprite_height(self):
         sprite = self.get_sprite()
-        scale = 1
         if sprite is not None:
-            return sprite.height() * scale
+            return sprite.height()
         else:
-            return 24 * scale
+            return 24
 
     def set_facing_right(self, facing_right):
         self._facing_right = facing_right
@@ -1858,7 +1857,7 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="!"):
+    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="█"):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * constants.CELLSIZE,
                         (grid_y + 0.5) * constants.CELLSIZE)
@@ -1889,7 +1888,7 @@ class NpcEntity(Entity):
             return spriteref.player_idle_all[0]
 
     def get_sprite_height(self):
-        return self.get_sprite().height() * 2
+        return self.get_sprite().height()
 
     def should_show_hover_text(self):
         if self.hover_text is None or len(self.hover_text) == 0:
@@ -1899,7 +1898,7 @@ class NpcEntity(Entity):
 
     def get_render_center(self):
         xy = super().get_render_center()
-        return (xy[0], xy[1] + 12)
+        return (xy[0], xy[1] + constants.CELLSIZE // 4)
 
     def visible_in_darkness(self):
         return False
@@ -1945,8 +1944,8 @@ class NpcEntity(Entity):
                 world.remove(hover_entity)
         else:
             if hover_entity is None:
-                my_height = self.get_sprite_height()
-                hover_entity = HoverTextEntity(self.hover_text, self, z_offset=-(my_height + 12), inset=0)
+                z_offs = -(self.get_sprite_height() + constants.CELLSIZE // 5)
+                hover_entity = HoverTextEntity(self.hover_text, self, z_offset=z_offs, inset=0)
                 world.add(hover_entity)
                 self.hover_text_entity_uid = hover_entity.get_uid()
 
@@ -2162,14 +2161,14 @@ class HoverTextEntity(Entity):
         self.offset = offset
         self.z_offset = z_offset
         self.anchor_point = (0.5, 1.0)
+        self.inset = inset
         self.text_sc = 0.5
         self.sc = 1
-        self.inset = inset
 
         self._text_img = None
         self._border_imgs = [None] * 9  # [TL, T, TR, L, C, R, BL, None, BR]
         self._bottom_imgs = [None, None, None]  # [B1, B_Arrow, B2]
-        self._y_bob_range = 8
+        self._y_bob_range = 4 * self.sc
         self.bob_height = 0
         self._update_position()
 
@@ -2199,7 +2198,7 @@ class HoverTextEntity(Entity):
             self.text = "?"
 
         if self._text_img is None:
-            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER)
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=self.text_sc,)
 
         for i in range(0, len(self._border_imgs)):
             if i == 7:
@@ -2228,8 +2227,8 @@ class HoverTextEntity(Entity):
 
         actual_text_size = self._text_img.size()
         text_w, text_h = actual_text_size
-        text_w += self.inset * 2
-        text_h += self.inset * 2
+        text_w += self.inset * 2 * self.sc
+        text_h += self.inset * 2 * self.sc
 
         # borders are made up of squares, so text area's dimensions need to be multiples of those squares
         border_size_x = spriteref.UI.hover_text_edges[4].size()[0] * self.sc
@@ -2283,13 +2282,13 @@ class HoverTextEntity(Entity):
                                                                new_depth=depth + 1, new_scale=self.sc)
 
         if self._bottom_imgs[1] is not None:  # Bottom Middle (the little arrow)
-            if h_ratio % 2 == 0:
+            if text_w % 2 == 0:
                 arrow_model = spriteref.UI.hover_text_bottom_arrow_double
             else:
                 arrow_model = spriteref.UI.hover_text_bottom_arrow
 
             bm_w = arrow_model.width() * self.sc
-            bm_x = text_x + text_w / 2 - bm_w / 2
+            bm_x = text_x + (text_w - bm_w) / 2  # guaranteed to be an int
 
             self._bottom_imgs[1] = self._bottom_imgs[1].update(new_model=arrow_model, new_x=bm_x, new_y=text_y + text_h,
                                                                new_depth=depth + 1, new_scale=self.sc)

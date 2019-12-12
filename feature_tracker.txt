@@ -13,7 +13,9 @@
  - if you have temporary speed boost that's about to expire, enemies with z's 
    can act after you move
     - need to math a little harder here (or just leave it...)
- - tutorial hover text is misplaced
+ - tutorial hover text can have a pixel missing on the bottom left edge
+ - dialog box gets screwed up when window resizes
+ - perturbs, action animations, and dropped items still funky due to resolution changes
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
@@ -32,6 +34,7 @@
  - bosses shouldn't "wander" until they become non-hidden
     - otherwise they can block the player at the door
  - too much swamp?
+    - made them a bit smaller
  
  
 [current features]

@@ -4,7 +4,6 @@ import src.world.entities as entities
 from src.renderengine.img import ImageBundle
 from src.ui.ui import TextImage, ItemImage, TextBuilder
 from src.game.stats import StatTypes
-import src.game.enemies as enemies
 import src.game.gameengine as gameengine
 import src.utils.colors as colors
 import src.game.globalstate as gs
@@ -15,7 +14,7 @@ from src.utils.util import Utils
 class TooltipFactory:
 
     @staticmethod
-    def get_item_tooltip_text(target_item, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_item_tooltip_text(target_item):
         text_builder = TextBuilder()
 
         plus_att = target_item.stat_value(StatTypes.ATT, local=True)
@@ -79,7 +78,7 @@ class TooltipFactory:
         return text_builder
 
     @staticmethod
-    def get_enemy_tooltip_text(target_enemy, xy=(0, 0), layer=spriteref.UI_TOOLTIP_LAYER):
+    def get_enemy_tooltip_text(target_enemy):
         text_builder = TextBuilder()
         e_state = target_enemy.get_actor_state()
 
@@ -120,7 +119,6 @@ class TooltipFactory:
             text_builder.add_line(" (Empty)", color=colors.LIGHT_GRAY)
 
         return text_builder
-
 
     @staticmethod
     def get_npc_tooltip_text(target_npc):
@@ -260,7 +258,7 @@ class Tooltip:
 
 class TextOnlyTooltip(Tooltip):
 
-    TEXT_SCALE = 1
+    TEXT_SCALE = 0.5
 
     def __init__(self, text, target=None, xy=(0, 0), custom_colors=None, layer=spriteref.UI_TOOLTIP_LAYER):
         Tooltip.__init__(self, xy=xy, target=target, layer=layer)
@@ -283,20 +281,23 @@ class TextOnlyTooltip(Tooltip):
         x = self.xy[0]
         y = self.xy[1]
 
+        x_inset = 1
+
         self._text_image = TextImage(x, y, self.text, self.layer,
                                      custom_colors=self.custom_colors,
-                                     scale=TextOnlyTooltip.TEXT_SCALE)
+                                     scale=TextOnlyTooltip.TEXT_SCALE,
+                                     x_leading_kerning=x_inset)
 
         self._rect = [self.xy[0], self.xy[1],
-                      self._text_image.size()[0],
+                      self._text_image.size()[0] + x_inset,
                       self._text_image.size()[1]]
 
         if self._rect[2] > 0 and self._rect[3] > 0:
             ratio = (int(0.5 + self._rect[2] / self.bg_sprite.width()),
                      int(0.5 + self._rect[3] / self.bg_sprite.height()))
 
-            self._bg_image = ImageBundle(self.bg_sprite, self.xy[0], self.xy[1], layer=self.layer,
-                                         scale=1, ratio=ratio)
+            self._bg_image = ImageBundle(self.bg_sprite, self.xy[0], self.xy[1],
+                                         layer=self.layer, scale=1, ratio=ratio)
 
     def all_bundles(self):
         if self._bg_image is not None:
