@@ -2302,11 +2302,11 @@ class HoverTextEntity(Entity):
             self._bottom_imgs[1] = self._bottom_imgs[1].update(new_model=arrow_model, new_x=bm_x, new_y=text_y + text_h,
                                                                new_depth=depth + 1, new_scale=self.sc)
             if self._bottom_imgs[0] is not None:  # Bottom Left
-                ratio = (int((bm_x - text_x) / border_size_x), 1)
+                ratio = (int((bm_x - text_x) / border_size_x + 0.5), 1)
                 self._bottom_imgs[0] = self._bottom_imgs[0].update(new_x=text_x, new_y=text_y + text_h,
                                                                    new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
             if self._bottom_imgs[2] is not None:  # Bottom Right
-                ratio = (int((bm_x - text_x) / border_size_x), 1)
+                ratio = (int((bm_x - text_x) / border_size_x + 0.5), 1)
                 self._bottom_imgs[2] = self._bottom_imgs[2].update(new_x=bm_x + bm_w, new_y=text_y + text_h,
                                                                    new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
 
