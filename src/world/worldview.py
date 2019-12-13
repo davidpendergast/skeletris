@@ -7,7 +7,7 @@ from src.world.worldstate import World
 from src.utils.util import Utils
 from src.renderengine.engine import RenderEngine
 import src.utils.colors as colors
-from src.game.windowstate import WindowState
+import src.game.constants as constants
 
 
 class WorldView:
@@ -23,7 +23,8 @@ class WorldView:
 
         self._fade_overlay_bundle = None  # used to achieve a 'fade to black effect'
 
-        self._max_render_range = (22, 13)  # in grid coords, this is meant to match the in-game map's range
+        # so that the in-game map gives the same-ish advantage as a big monitor
+        self._max_render_range = (constants.MAP_DIMS[0] // 2, constants.MAP_DIMS[1] // 2)
 
     def update_geo_bundle(self, grid_x, grid_y):
         if not self.world.is_valid(grid_x, grid_y):

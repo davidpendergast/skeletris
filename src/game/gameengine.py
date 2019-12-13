@@ -901,7 +901,8 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)
         slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration, unique_key=slow_on_hit))
+            new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration,
+                                                                                 unique_key="slow_on_hit"))
 
         chill_duration = attacker.stat_value_with_item(StatTypes.CHILL_ON_HIT, item_used)
         chill_val = balance.STATUS_EFFECT_CHILL_ON_HIT_VAL

@@ -13,6 +13,7 @@ import src.game.debug as debug
 import src.game.sound_effects as sound_effects
 import src.game.soundref as soundref
 import src.game.gameengine as gameengine
+import src.game.constants as constants
 
 
 BG_DEPTH = 10
@@ -166,7 +167,7 @@ class MapPanel(SidePanel):
         self.total_rect = [0, 0, total_w, total_h]
 
         self.map_center = None  # gets updated when player moves
-        self.map_dims = (45, 27)
+        self.map_dims = constants.MAP_DIMS
 
         self.map_raw_text = None  # TextBuilder
         self.map_text_img = None
@@ -231,7 +232,8 @@ class MapPanel(SidePanel):
 
         if has_map_text and self.map_dirty:
             if self.map_text_img is None:
-                self.map_text_img = TextImage(0, 0, "~not built?~", spriteref.UI_0_LAYER, depth=FG_DEPTH)
+                self.map_text_img = TextImage(0, 0, "~not built?~", spriteref.UI_0_LAYER, depth=FG_DEPTH,
+                                              x_kerning=1, x_leading_kerning=0)
 
             self.map_text_img = self.map_text_img.update(new_text=self.map_raw_text.text(),
                                                          new_custom_colors=self.map_raw_text.custom_colors())

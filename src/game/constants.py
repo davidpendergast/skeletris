@@ -1,2 +1,3 @@
 
 CELLSIZE = 32
+MAP_DIMS = (41, 27)
