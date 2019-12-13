@@ -14,8 +14,9 @@
    can act after you move
     - need to math a little harder here (or just leave it...)
  - tutorial hover text can have a pixel missing on the bottom left edge
+ - tutorial text renders awkwardly when it overlaps very large enemies
  - dialog box gets screwed up when window resizes
- - perturbs, action animations, and dropped items still funky due to resolution changes
+ 
  
 [testing]
  - make sure that statuses 'apply' the correct number of times

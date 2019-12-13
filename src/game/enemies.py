@@ -57,7 +57,7 @@ class EnemyTemplate:
         return spriteref.medium_shadow
 
     def get_sprite_offset(self):
-        return (0, 0)
+        return (0, constants.CELLSIZE // 5)
 
     def get_shadow_offset(self):
         return (0, 0)
@@ -497,7 +497,7 @@ class CrabTemplate(EnemyTemplate):
         return ("c", colors.RED)
 
     def get_shadow_offset(self):
-        return (0, -constants.CELLSIZE / 16)
+        return (0, -constants.CELLSIZE // 16)
 
     def get_level_range(self):
         return range(4, 7)
@@ -781,11 +781,8 @@ class FrogBossTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("F", colors.RED)
 
-    def get_sprite_offset(self):
-        return (0, constants.CELLSIZE / 8)
-
     def get_shadow_offset(self):
-        return (0, -constants.CELLSIZE / 16)
+        return (0, -constants.CELLSIZE // 8)
 
     def get_shadow_sprite(self):
         return spriteref.enormous_shadow
@@ -1030,11 +1027,14 @@ class CaveHorrorTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("H", colors.RED)
 
+    def _limb_length(self):
+        return 95  # dist from base of its body to the bottom of the sprite
+
     def get_sprite_offset(self):
-        return (0, 148 + 32)
+        return (0, self._limb_length())
 
     def get_bar_offset(self):
-        return (0, -148 - 42)
+        return (0, -self._limb_length())
 
     def can_xflip(self):
         # the directional shadows on its face look weird flipping back and forth

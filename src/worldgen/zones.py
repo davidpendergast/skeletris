@@ -1138,7 +1138,7 @@ class CityGateZone(Zone):
         return music.Songs.SILENCE
 
     def get_color(self):
-        return colors.LIGHT_RED
+        return colors.LIGHT_GREEN
 
 
 class RoboLairZone(Zone):

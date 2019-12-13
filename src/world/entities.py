@@ -199,7 +199,7 @@ class Entity(Updateable):
         return -self.get_render_center()[1]
 
     def get_sprite_height(self):
-        return 32  # this is only implemented for actors right now
+        return (constants.CELLSIZE * 2) // 3  # this is only implemented for actors right now
     
     def is_player(self):
         return False
@@ -675,7 +675,7 @@ class ActorEntity(Entity):
 
     def animate_damage_taken(self, world):
         self.perturb_color(colors.R_TEXT_COLOR, 25)
-        self.perturb(20, 18)
+        self.perturb(constants.CELLSIZE * 0.375, 18)
         sound_effects.play_sound(self.get_damage_sound())
 
     def cleanup(self):
@@ -756,7 +756,7 @@ class ActorEntity(Entity):
         """returns: the center point (x, y) of where the actor should be drawn."""
 
         x = self.center()[0] + self.get_draw_offset()[0] + self._sprite_offset[0]
-        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1] + constants.CELLSIZE // 4
+        y = self.center()[1] + self.get_draw_offset()[1] + self._sprite_offset[1]
 
         if not ignore_perturbs:
             x += self.get_perturbed_xy()[0]
@@ -864,7 +864,7 @@ class ActorEntity(Entity):
         if sprite is not None:
             return sprite.height()
         else:
-            return 24
+            return super().get_sprite_height()
 
     def set_facing_right(self, facing_right):
         self._facing_right = facing_right
@@ -889,7 +889,10 @@ class ActorEntity(Entity):
         self._perturb_color_duration = duration
         self._perturb_color_ticks = 0
 
-    def perturb_z(self, jump_height=16, jump_duration=20):
+    def perturb_z(self, jump_height=None, jump_duration=20):
+        if jump_height is None:
+            jump_height = constants.CELLSIZE // 4
+
         self._z_perturb_points.clear()
         for i in range(0, jump_duration+1):
             # at start and end of jump, x = 0, at middle x = 1
@@ -927,7 +930,8 @@ class Player(ActorEntity):
 
     def __init__(self, x, y):
         ActorEntity.__init__(self, spriteref.player_idle_all, map_id=("p", colors.WHITE),
-                             idle_anim_rate=4, moving_anim_rate=2)
+                             idle_anim_rate=4, moving_anim_rate=2,
+                             sprite_offset=(0, constants.CELLSIZE // 5))
         self.set_x(x)
         self.set_y(y)
 
@@ -954,6 +958,9 @@ class Player(ActorEntity):
             player_sprites = spriteref.get_player_sprites(self.was_moving_recently(), holding_item)
 
             return player_sprites[(anim_tick // anim_rate) % len(player_sprites)]
+
+    def get_sprite_height(self):
+        return 32
 
     def get_death_sound(self):
         return soundref.rand_deathscream_human()
@@ -1295,27 +1302,27 @@ class PickupEntity(Entity):
 
     @staticmethod
     def rand_vel(speed=None, direction=None):
-        speed = speed if speed is not None else 3 + random.random() * 2
+        speed = speed if speed is not None else 1.5 + random.random()
         if direction is None:
             direction = (0, 0)  # becomes random
         direction = Utils.set_length(direction, 1.0)
         return [speed * direction[0], speed * direction[1]]
 
     def __init__(self, cx, cy, sprites, sprite_rotation=0, vel=None):
-        x = cx - 8
-        y = cy - 8
-        Entity.__init__(self, x, y, 16, 16)
+        x = cx - 4
+        y = cy - 4
+        Entity.__init__(self, x, y, 8, 8)
         self.sprites = sprites
         self.sprite_rotation = sprite_rotation
         self.vel = [vel[0], vel[1]] if vel is not None else ItemEntity.rand_vel()
-        self.fric = 0.95
+        self.fric = 0.94
         self.bounce_offset = int(random.random() * 100)
 
         self.pickup_delay = 45
         self.time_touched = 0
 
         # for moving away from other stuff
-        self.push_radius = 20
+        self.push_radius = constants.CELLSIZE // 4
 
     def get_pickup_progress(self):
         return Utils.bound(self.time_touched / self.pickup_delay, 0, 1.0)
@@ -1336,18 +1343,19 @@ class PickupEntity(Entity):
         return (0, 0)
 
     def update_images(self):
+
         if self._img is None:
             self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1)
 
         anim_tick = gs.get_instance().anim_tick
-        bounce = round(2*math.cos((anim_tick + self.bounce_offset) // 2))
+        bounce = round(1 * math.cos((anim_tick + self.bounce_offset) // 2))
 
         cur_sprite = self.get_sprite()
 
         offs = self.get_sprite_offset()
 
-        spr_w = 2 * cur_sprite.width() if self.sprite_rotation % 2 == 0 else 2 * cur_sprite.height()
-        spr_h = 2 * cur_sprite.height() if self.sprite_rotation % 2 == 0 else 2 * cur_sprite.width()
+        spr_w = cur_sprite.width() if self.sprite_rotation % 2 == 0 else cur_sprite.height()
+        spr_h = cur_sprite.height() if self.sprite_rotation % 2 == 0 else cur_sprite.width()
 
         x = self.get_render_center()[0] - spr_w // 2 + offs[0]
         y = self.get_render_center()[1] - spr_h - bounce + offs[1]
@@ -1365,7 +1373,7 @@ class PickupEntity(Entity):
             if len(other_pickups) > 0:
                 i = other_pickups[int(random.random()*len(other_pickups))]
                 direction = Utils.sub(self.center(), i.center())
-                return Utils.set_length(direction, 0.75)
+                return Utils.set_length(direction, 0.375)
             else:
                 return (0, 0)
 
@@ -1857,7 +1865,7 @@ class DecorationEntity(Entity):
 
 class NpcEntity(Entity):
 
-    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="█"):
+    def __init__(self, grid_x, grid_y, npc_template, color=(1, 1, 1), hover_text="!"):
         Entity.__init__(self, 0, 0, 24, 24)
         self.set_center((grid_x + 0.5) * constants.CELLSIZE,
                         (grid_y + 0.5) * constants.CELLSIZE)
@@ -1898,7 +1906,7 @@ class NpcEntity(Entity):
 
     def get_render_center(self):
         xy = super().get_render_center()
-        return (xy[0], xy[1] + constants.CELLSIZE // 4)
+        return (xy[0], xy[1] + constants.CELLSIZE // 5)
 
     def visible_in_darkness(self):
         return False
@@ -1945,7 +1953,7 @@ class NpcEntity(Entity):
         else:
             if hover_entity is None:
                 z_offs = -(self.get_sprite_height() + constants.CELLSIZE // 5)
-                hover_entity = HoverTextEntity(self.hover_text, self, z_offset=z_offs, inset=0)
+                hover_entity = HoverTextEntity(self.hover_text, self, z_offset=z_offs)
                 world.add(hover_entity)
                 self.hover_text_entity_uid = hover_entity.get_uid()
 
@@ -2154,14 +2162,15 @@ class DialogTriggerBox(TriggerBox):
 
 class HoverTextEntity(Entity):
 
-    def __init__(self, text, target_entity, offset=(0, 0), z_offset=0, inset=5):
+    def __init__(self, text, target_entity, offset=(0, 0), z_offset=0, x_inset=1, y_inset=0):
         Entity.__init__(self, 0, 0, 8, 8)
         self.text = text
         self.target_entity = target_entity
         self.offset = offset
         self.z_offset = z_offset
         self.anchor_point = (0.5, 1.0)
-        self.inset = inset
+        self.x_inset = x_inset
+        self.y_inset = y_inset
         self.text_sc = 0.5
         self.sc = 1
 
@@ -2198,7 +2207,7 @@ class HoverTextEntity(Entity):
             self.text = "?"
 
         if self._text_img is None:
-            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=self.text_sc,)
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=self.text_sc)
 
         for i in range(0, len(self._border_imgs)):
             if i == 7:
@@ -2227,8 +2236,8 @@ class HoverTextEntity(Entity):
 
         actual_text_size = self._text_img.size()
         text_w, text_h = actual_text_size
-        text_w += self.inset * 2 * self.sc
-        text_h += self.inset * 2 * self.sc
+        text_w += self.x_inset * 2
+        text_h += self.y_inset * 2
 
         # borders are made up of squares, so text area's dimensions need to be multiples of those squares
         border_size_x = spriteref.UI.hover_text_edges[4].size()[0] * self.sc
@@ -2238,11 +2247,11 @@ class HoverTextEntity(Entity):
         if text_h % border_size_y != 0:
             text_h += border_size_y - text_h % border_size_y
 
-        text_x = round(self.center()[0] - text_w * self.anchor_point[0] + self.offset[0])
-        text_y = round(self.center()[1] - text_h * self.anchor_point[1] + self.offset[1] + self.bob_height)
+        text_x = int(self.center()[0] - text_w * self.anchor_point[0] + self.offset[0])
+        text_y = int(self.center()[1] - text_h * self.anchor_point[1] + self.offset[1] + self.bob_height)
 
-        self._text_img = self._text_img.update(new_x=round(text_x + text_w / 2 - actual_text_size[0] / 2),
-                                               new_y=round(text_y + text_h / 2 - actual_text_size[1] / 2),
+        self._text_img = self._text_img.update(new_x=int(text_x + text_w / 2 - actual_text_size[0] / 2),
+                                               new_y=int(text_y + text_h / 2 - actual_text_size[1] / 2),
                                                new_depth=depth, new_scale=self.text_sc)
 
         tl_pos = (text_x - border_size_x, text_y - border_size_y)

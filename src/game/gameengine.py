@@ -11,6 +11,7 @@ import src.game.debug as debug
 import src.game.events as events
 import src.game.sound_effects as sound_effects
 import src.game.soundref as soundref
+import src.game.constants as constants
 
 
 import random
@@ -1146,8 +1147,8 @@ class MeleeAttackAction(AttackAction):
 
         vec = Utils.sub(target_at, start_at)
         dist = Utils.mag(vec)
-        if dist > 16:
-            vec = Utils.set_length(vec, dist - 16)
+        if dist > world.cellsize() // 4:
+            vec = Utils.set_length(vec, dist - world.cellsize() // 4)
             stop_at = Utils.add(start_at, vec)
         else:
             stop_at = target_at
@@ -1199,7 +1200,7 @@ class _ThrownItemAnimator:
 
             if not self._did_jump:
                 self._did_jump = True
-                self._actor.perturb_z(jump_height=20, jump_duration=15)
+                self._actor.perturb_z(jump_height=constants.CELLSIZE // 3, jump_duration=15)
 
             start_pos = self._actor.center()
             end_pos = Utils.mult(Utils.add(self._position, (0.5, 0.5)), world.cellsize())
@@ -1207,7 +1208,7 @@ class _ThrownItemAnimator:
             if self._thrown_item_entity is None:
                 from src.world.entities import AnimationEntity
                 self._thrown_item_entity = AnimationEntity(start_pos[0], start_pos[1], [self._item_sprite], 1,
-                                                           spriteref.ENTITY_LAYER, scale=2)
+                                                           spriteref.ENTITY_LAYER, scale=1)
                 self._thrown_item_entity.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
                 self._thrown_item_entity.set_color(self._item_color)
                 self._thrown_item_entity.set_shadow_sprite(spriteref.small_shadow)
@@ -1221,9 +1222,9 @@ class _ThrownItemAnimator:
             x = airtime_prog
 
             # heights at x = 0.0, 0.5, and 1.0 respectively
-            y1 = 48  # TODO - start at actor's actual height
-            y2 = 64
-            y3 = 16
+            y1 = (self._actor.get_sprite_height() * 2) // 3
+            y2 = self._actor.get_sprite_height()
+            y3 = world.cellsize() // 4
 
             # trust me on this
             a = 2 * y1 - 4 * y2 + 2 * y3
@@ -1241,7 +1242,7 @@ class _ThrownItemAnimator:
     def finalize(self, world):
         if self._thrown_item_entity is not None:
             pos = self._thrown_item_entity.center()
-            world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=3)
+            world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=2)
 
             world.remove(self._thrown_item_entity)
 
@@ -1490,7 +1491,7 @@ class SkipTurnAction(Action):
         elif not self._did_enemy_jump:
             if not self._did_enemy_jump:
                 self._did_enemy_jump = True
-                actor.perturb_z(jump_height=15, jump_duration=10)
+                actor.perturb_z(jump_height=constants.CELLSIZE // 4, jump_duration=10)
 
         if not self._did_color_perturb and self._perturb_color is not None:
             self._did_color_perturb = True
@@ -1866,7 +1867,7 @@ class FrogLeapAction(MoveToAction):
         Action.__init__(self, ActionType.FROG_LEAP, 60, actor, position=position)
         self._pre_jump_pcnt = 0.15
         self._post_jump_pcnt = 0.25
-        self._jump_height = 96
+        self._jump_height = constants.CELLSIZE * 1.5
         self._orig_shadow = actor.get_shadow_sprite()
 
         self._did_screen_shake = False
@@ -1903,7 +1904,7 @@ class FrogLeapAction(MoveToAction):
 
             if not self._did_screen_shake:
                 self._did_screen_shake = True
-                gs.get_instance().add_screenshake(24, 18, falloff=3, freq=3)
+                gs.get_instance().add_screenshake(constants.CELLSIZE * 0.375, 18, falloff=3, freq=3)
         else:
             jump_prog = (progress - self._pre_jump_pcnt) / (1 - self._post_jump_pcnt - self._pre_jump_pcnt)
             jump_prog = Utils.bound(jump_prog, 0.0, 1.0)
