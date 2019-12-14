@@ -854,10 +854,21 @@ class ActorEntity(Entity):
         anim_rate = self.get_anim_rate()
 
         if self._sprites_override is not None and len(self._sprites_override) > 0:
-            return self._sprites_override[(tick // anim_rate) % len(self._sprites_override)]
+            sprites = self._sprites_override
         else:
             sprites = self.idle_sprites if not self.was_moving_recently() else self.moving_sprites
-            return sprites[(tick // anim_rate) % len(sprites)]
+
+        # XXX this is actually synchronizing enemies' up-down animations with the player's because
+        # they're drawn reversed on the sprite sheet. originally good and bad actors were supposed
+        # to animate in reverse of each other, but it ultimately didn't look very good
+        if self.get_actor_state().alignment == 0:
+            alignment_offset = 0
+        else:
+            alignment_offset = len(sprites) // 2
+
+        idx = (tick // anim_rate + alignment_offset) % len(sprites)
+
+        return sprites[idx]
 
     def get_sprite_height(self):
         sprite = self.get_sprite()
