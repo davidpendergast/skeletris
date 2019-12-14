@@ -103,12 +103,13 @@ def _get_pixel_scale(px_scale_opt, screen_size, max_scale=4):
         # when the screen is large enough to fit this quantity of (minimal) screens at a
         # particular scaling setting, that scale is considered good enough to switch to.
         # we choose the largest (AKA most zoomed in) "good" scale.
-        step_up_ratio = 1.5
+        step_up_x_ratio = 1.0
+        step_up_y_ratio = 1.0
 
         best = default_scale
         for i in range(default_scale + 1, max_scale + 1):
-            if (default_w / default_scale * i * step_up_ratio <= screen_w
-                    and default_h / default_scale * i * step_up_ratio <= screen_h):
+            if (default_w / default_scale * i * step_up_x_ratio <= screen_w
+                    and default_h / default_scale * i * step_up_y_ratio <= screen_h):
                 best = i
             else:
                 break
