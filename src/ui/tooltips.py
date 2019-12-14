@@ -101,7 +101,7 @@ class TooltipFactory:
         att_val = e_state.stat_value(StatTypes.ATT) + e_state.stat_value(StatTypes.UNARMED_ATT)
         text_builder.add_line("Attack: {}".format(att_val), color=StatTypes.ATT.get_color())
         text_builder.add_line("Defense: {}".format(e_state.stat_value(StatTypes.DEF)), color=StatTypes.DEF.get_color())
-        text_builder.add_line("Speed: {}".format(e_state.stat_value(StatTypes.SPEED)), color=StatTypes.SPEED.get_color())
+        text_builder.add_line("Speed: {}".format(e_state.speed()), color=StatTypes.SPEED.get_color())
         text_builder.add_line("Health: {}/{}".format(e_state.hp(), e_state.max_hp()), color=StatTypes.VIT.get_color())
 
         # debug stuff

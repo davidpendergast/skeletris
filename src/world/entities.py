@@ -561,6 +561,7 @@ class ActorEntity(Entity):
 
         self.idle_anim_rate = idle_anim_rate
         self.moving_anim_rate = moving_anim_rate
+        self._anim_rate_depends_on_current_speed = True
 
         self.map_id = map_id
 
@@ -622,10 +623,17 @@ class ActorEntity(Entity):
         return self.map_id
 
     def get_anim_rate(self):
+        """returns: number of anim ticks per half-cycle (sorry~)"""
         if self.was_moving_recently():
-            return self.moving_anim_rate
+            rate = self.moving_anim_rate
         else:
-            return self.idle_anim_rate
+            rate = self.idle_anim_rate
+
+        if self._anim_rate_depends_on_current_speed:
+            adjusted_rate = int(rate * 4 / self.get_actor_state().speed())
+            return Utils.bound(adjusted_rate, 1, 16)
+        else:
+            return rate
 
     def get_shadow_offset(self):
         return self._shadow_offset
@@ -850,7 +858,6 @@ class ActorEntity(Entity):
         self.update_images()
 
     def get_sprite(self):
-        tick = gs.get_instance().anim_tick
         anim_rate = self.get_anim_rate()
 
         if self._sprites_override is not None and len(self._sprites_override) > 0:
@@ -858,15 +865,21 @@ class ActorEntity(Entity):
         else:
             sprites = self.idle_sprites if not self.was_moving_recently() else self.moving_sprites
 
+        # fudge the math a bit for unusual animation cycle lengths
+        frames_per_cycle = Utils.next_power_of_2(len(sprites))
+
+        # not necessarily an int
+        ticks_per_frame = 2 * anim_rate / frames_per_cycle
+
         # XXX this is actually synchronizing enemies' up-down animations with the player's because
         # they're drawn reversed on the sprite sheet. originally good and bad actors were supposed
         # to animate in reverse of each other, but it ultimately didn't look very good
-        if self.get_actor_state().alignment == 0:
+        if self.get_actor_state().alignment == 0 or frames_per_cycle <= 1:
             alignment_offset = 0
         else:
-            alignment_offset = len(sprites) // 2
+            alignment_offset = frames_per_cycle // 2
 
-        idx = (tick // anim_rate + alignment_offset) % len(sprites)
+        idx = (int(gs.get_instance().anim_tick / ticks_per_frame) + alignment_offset) % len(sprites)
 
         return sprites[idx]
 

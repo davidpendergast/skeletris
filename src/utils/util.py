@@ -21,6 +21,10 @@ class Utils:
             return val
 
     @staticmethod
+    def next_power_of_2(val):
+        return 1 if val <= 0 else 2 ** math.ceil(math.log2(val))
+
+    @staticmethod
     def add(v1, v2):
         return tuple(i[0] + i[1] for i in zip(v1, v2))
 

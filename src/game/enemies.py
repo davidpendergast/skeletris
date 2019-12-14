@@ -886,12 +886,6 @@ class InfectedHuskTemplate(EnemyTemplate):
     def get_map_identifier(self):
         return ("h", colors.RED)
 
-    def get_idle_anim_rate(self):
-        return 1
-
-    def get_moving_anim_rate(self):
-        return 1
-
     def get_level_range(self):
         return [15]
 
@@ -1007,10 +1001,10 @@ class NamelessTemplate(EnemyTemplate):
         }
 
     def get_idle_anim_rate(self):
-        return 1
+        return 8
 
     def get_moving_anim_rate(self):
-        return 1
+        return 8
 
 
 class CaveHorrorTemplate(EnemyTemplate):

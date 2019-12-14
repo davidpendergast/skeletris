@@ -409,7 +409,7 @@ class InventoryPanel(SidePanel):
             render_eng.update(self.vit_text)
         s_xy[1] += self.vit_text.line_height()
 
-        spd_str = "SPD:{}".format(self.player_state.stat_value(StatTypes.SPEED))
+        spd_str = "SPD:{}".format(self.player_state.speed())
         if spd_str != self.spd_text.get_text():
             self.spd_text = self.spd_text.update(new_text=spd_str, new_x=s_xy[0], new_y=s_xy[1])
             render_eng.update(self.spd_text)
