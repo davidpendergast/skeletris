@@ -3,16 +3,23 @@ from src.utils.util import Utils
 import src.game.sound_effects as sound_effects
 import src.game.music as music
 
+import traceback
+
 ALL_SETTINGS = {}
 ALL_KEY_SETTINGS = []
 
+TRANSIENT_SETTINGS = set()  # keys of settings that aren't saved or loaded to disk.
+
 
 class Setting:
-    def __init__(self, name, key, default, cleaner=None, on_set=None):
+    def __init__(self, name, key, default, cleaner=None, on_set=None, transient=False):
         self.name = name
         self.key = key
         self.default = default
         ALL_SETTINGS[key] = self
+
+        if transient:
+            TRANSIENT_SETTINGS.add(key)
 
         self._cleaner = cleaner
         self._on_setter = on_set
@@ -76,6 +83,11 @@ KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys)
 
 AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True, cleaner=lambda x: bool(x))
 
+_pixel_scale_options = [0, 1, 2, 3, 4]  # 0 is automatic mode, where it scales based on window size
+
+PIXEL_SCALE = Setting("pixel scale", "PIXEL_SCALE", _pixel_scale_options[0], transient=True,
+                      cleaner=lambda x: x if x in _pixel_scale_options else _pixel_scale_options[0])
+
 EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
                          cleaner=lambda val: Utils.bound(int(val), 0, 100),
                          on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
@@ -112,7 +124,7 @@ class Settings:
             self.values[setting.key] = new_val
             print("INFO: updated setting {} from {} to {}.".format(setting.key, old_val, new_val))
             setting.on_set(self, old_val, new_val)
-        except ValueError:
+        except:
             print("ERROR: failed to set {} to {}".format(setting.key, val))
 
     def load_from_file(self, filename):
@@ -120,21 +132,32 @@ class Settings:
             loaded_values = Utils.load_json_from_path(filename)
             for key in loaded_values:
                 val = loaded_values[key]
-                if key in ALL_SETTINGS:
+                if key in TRANSIENT_SETTINGS:
+                    continue
+                elif key in ALL_SETTINGS:
                     self.set(ALL_SETTINGS[key], val)
                 else:
                     print("INFO: skipping unknown setting: {}".format(key))
             print("INFO: successfully loaded settings from {}".format(filename))
 
-        except Exception:
+        except IOError:
             print("ERROR: failed to load settings from {}".format(filename))
+            traceback.print_exc()
+        except:
+            print("ERROR: unexpected error while loading settings from {}".format(filename))
+            traceback.print_exc()
 
     def save_to_file(self, filename):
         try:
             Utils.save_json_to_path(self.values, filename)
             print("INFO: successfully saved settings to {}".format(filename))
-        except Exception:
+
+        except IOError:
             print("ERROR: failed to save settings to {}".format(filename))
+            traceback.print_exc()
+        except:
+            print("ERROR: unexpected error while saving settings to {}".format(filename))
+            traceback.print_exc()
 
     def up_key(self):
         return self.get(KEY_UP)
@@ -224,4 +247,14 @@ class Settings:
             vol_level = 0 if self.get(EFFECTS_MUTED) else self.get(EFFECTS_VOLUME)
             new_val = Utils.bound(vol_level / 100, 0, 1.0)
             sound_effects.set_volume(new_val)
+
+    def pixel_scale(self):
+        return self.get(PIXEL_SCALE)
+
+    def set_pixel_scale(self, val):
+        self.set(PIXEL_SCALE, val)
+
+    def pixel_scale_options(self):
+        global _pixel_scale_options
+        return _pixel_scale_options
 

@@ -26,7 +26,7 @@
     - teach player to skip their turn at the same time?
     - somehow force it to be in-sync?
         - like setting its energy to 0 or 2 something when the door opens?
-    - also with 3~ defence you can pretty much just facetank it
+    - also with 3~ defense you can pretty much just facetank it
  - robo boss should do something
     - he big. he tuff. maybe that's enough
  - bosses shouldn't "wander" until they become non-hidden

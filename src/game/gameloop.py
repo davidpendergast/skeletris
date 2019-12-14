@@ -42,7 +42,6 @@ def init(name_of_game):
     animation_img = pygame.image.load(Utils.resource_path("assets/animations.png"))
     title_scene_img = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
 
-
     img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img,
                                               animation_img, title_scene_img)
 
@@ -88,6 +87,54 @@ def init(name_of_game):
     import src.worldgen.zones as zones
     zones.init_zones()
 
+    _update_pixel_scale()
+
+
+def _get_pixel_scale(px_scale_opt, screen_size, max_scale=4):
+    global DEFAULT_SCREEN_SIZE
+    default_w = DEFAULT_SCREEN_SIZE[0]
+    default_h = DEFAULT_SCREEN_SIZE[1]
+    default_scale = 2
+
+    screen_w, screen_h = screen_size
+
+    if px_scale_opt <= 0:
+
+        # when the screen is large enough to fit this quantity of (minimal) screens at a
+        # particular scaling setting, that scale is considered good enough to switch to.
+        # we choose the largest (AKA most zoomed in) "good" scale.
+        step_up_ratio = 1.5
+
+        best = default_scale
+        for i in range(default_scale + 1, max_scale + 1):
+            if (default_w / default_scale * i * step_up_ratio <= screen_w
+                    and default_h / default_scale * i * step_up_ratio <= screen_h):
+                best = i
+            else:
+                break
+
+        return best
+    else:
+        return int(px_scale_opt)
+
+
+def _update_pixel_scale():
+    from src.game.windowstate import WindowState
+    from src.renderengine.engine import RenderEngine
+    import src.game.globalstate as gs
+
+    display_size = WindowState.get_instance().get_display_size()
+    px_scale_opt = gs.get_instance().settings().pixel_scale()
+
+    max_scale = max(gs.get_instance().settings().pixel_scale_options())
+    px_scale = _get_pixel_scale(px_scale_opt, display_size, max_scale=max_scale)
+
+    current_pixel_mult = RenderEngine.get_instance().get_pixel_mult()
+    if current_pixel_mult != px_scale:
+        print("INFO: updating pixel scale to {}{}".format(
+            px_scale, " (auto)" if px_scale_opt == 0 else ""))
+        RenderEngine.get_instance().set_pixel_mult(px_scale)
+
 
 def run():
     # importing is fragile (-_-)
@@ -110,10 +157,6 @@ def run():
     # XXX for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
     # at max screen size, which isn't what we want (on linux at least~)
     ignore_videoresize_events_this_frame = False
-
-    # FOR DEBUG
-    px_mult = 2
-    RenderEngine.get_instance().set_pixel_mult(px_mult)
 
     while running:
         gs.get_instance().event_queue().flip()
@@ -213,6 +256,7 @@ def run():
                 screen_size = (max(800, event.w), max(600, event.h))
                 WindowState.get_instance().set_screen_size(*screen_size)
                 RenderEngine.get_instance().resize(*screen_size)
+                _update_pixel_scale()
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
@@ -258,12 +302,16 @@ def run():
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
-        if debug.is_debug() and input_state.was_pressed(pygame.K_F7):
-            mults = [1, 2, 3, 4]
-            cur_idx = mults.index(px_mult)
-            new_mult_idx = (cur_idx + 1) % len(mults)
-            px_mult = mults[new_mult_idx]
-            RenderEngine.get_instance().set_pixel_mult(px_mult)
+        if input_state.was_pressed(pygame.K_F7):
+            current_scale = gs.get_instance().settings().pixel_scale()
+            options = gs.get_instance().settings().pixel_scale_options()
+            if current_scale in options:
+                new_scale = (options.index(current_scale) + 1) % len(options)
+            else:
+                print("WARN: unrecognized pixel scale={}, reverting to default".format(current_scale))
+                new_scale = options[0]
+            gs.get_instance().settings().set_pixel_scale(new_scale)
+            _update_pixel_scale()
 
         if debug.is_debug() and input_state.was_pressed(pygame.K_F10):
             gs.get_instance().event_queue().add(events.GameWinEvent())
