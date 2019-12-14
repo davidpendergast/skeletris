@@ -24,58 +24,33 @@ class Dialog:
 
     def __init__(self, text, sprites=None, left_side=True):
         """
-        text: str to display. options
-        options: list of strings
+        text: str to display.
         sprites: sprites to represent the speaker
         left_side: bool alignment of the speaker sprites
         """
         self.text = text
         self.sprites = sprites
-        self.next = None
         self.left_side = left_side
 
-        self.selected_opt_idx = 0
-        self.nexts = {}  # int opt_idx -> Dialog
+        self.next = None    # next Dialog after this one
 
         self.scroll_pos = 0
         self.uid = Dialog._gen_uid()
 
     def reset(self):
         self.scroll_pos = 0
-        self.selected_opt_idx = 0
 
-    def build_listener(self, action, single_use=True):
-        return events.EventListener(action,
-                                    events.EventType.DIALOG_EXIT,
-                                    lambda e: e.get_uid() == self.get_uid(),
-                                    single_use=single_use)
-
-    def get_options(self, mangled_text=None):
-        text = self.text if mangled_text is None else mangled_text
-        res = re.findall("\{[^\{]*\}", self.text)
-        return list(res)
-
-    def set_next(self, next_dialog, opt_idx=0):
-        self.nexts[opt_idx] = next_dialog
+    def set_next(self, next_dialog):
+        self.next = next_dialog
 
     def get_uid(self):
         return self.uid
 
-    def get_next(self, opt_idx=None):
-        idx = opt_idx if opt_idx is not None else self.selected_opt_idx
-        if idx in self.nexts:
-            return self.nexts[idx]
-        else:
-            return None
+    def get_next(self):
+        return self.next
 
     def get_text(self):
         return self.text
-
-    def get_selected_opt_idx(self):
-        return self.selected_opt_idx
-
-    def set_selected_opt_idx(self, val):
-        self.selected_opt_idx = val
 
     def get_sprite_side(self):
         return self.left_side
@@ -149,9 +124,8 @@ class DialogManager:
 
     def set_dialog(self, dialog):
         if self._active_dialog is not None:
-            opt_idx = self._active_dialog.get_selected_opt_idx()
             uid = self._active_dialog.get_uid()
-            gs.get_instance().event_queue().add(events.DialogExitEvent(uid, opt_idx))
+            gs.get_instance().event_queue().add(events.DialogExitEvent(uid))
 
         if dialog is not None:
             dialog.reset()
@@ -165,60 +139,38 @@ class DialogManager:
     def update(self, world):
         if self.is_active():
             dialog = self._active_dialog
-            if dialog.is_cutscene():
-                cutscene = dialog
-                if cutscene.is_finished():
-                    self.set_dialog(cutscene.get_next())
+
+            if (dialog.scroll_pos > 0 or len(dialog.get_text()) == 0) and self.did_interact_this_tick:
+                if dialog.is_done_scrolling():
+                    self.set_dialog(dialog.get_next())
+                    sound_effects.play_sound(soundref.dialog_next)
                 else:
-                    cutscene.update(world)
-            else:
-                if (dialog.scroll_pos > 0 or len(dialog.get_text()) == 0) and self.did_interact_this_tick:
-                    if dialog.is_done_scrolling():
-                        self.set_dialog(dialog.get_next())
-                        sound_effects.play_sound(soundref.dialog_next)
-                    else:
-                        dialog.scroll_pos = len(dialog.get_text())
-                        sound_effects.play_sound(soundref.dialog_skip)
+                    dialog.scroll_pos = len(dialog.get_text())
+                    sound_effects.play_sound(soundref.dialog_skip)
 
-                elif not dialog.is_done_scrolling():
-                    cur_delay = gs.get_instance().tick_counter - self.last_scroll_time
+            elif not dialog.is_done_scrolling():
+                cur_delay = gs.get_instance().tick_counter - self.last_scroll_time
 
-                    # it's trendy to pause longer on punctuation
-                    d_text = dialog.get_text()
-                    pos = dialog.scroll_pos
-                    delay = self._scroll_freq
-                    if 0 <= pos-1 < len(d_text):
-                        last_char = d_text[pos-1]
-                        if last_char in self._long_freq:
-                            delay = self._long_freq[last_char]
+                # it's trendy to pause longer on punctuation
+                d_text = dialog.get_text()
+                pos = dialog.scroll_pos
+                delay = self._scroll_freq
+                if 0 <= pos-1 < len(d_text):
+                    last_char = d_text[pos-1]
+                    if last_char in self._long_freq:
+                        delay = self._long_freq[last_char]
 
-                    if cur_delay >= delay:
-                        dialog.scroll_pos += 1
-                        self.last_scroll_time = gs.get_instance().tick_counter
+                if cur_delay >= delay:
+                    dialog.scroll_pos += 1
+                    self.last_scroll_time = gs.get_instance().tick_counter
 
-                    if gs.get_instance().tick_counter % self.noise_freq == 0:
-                        sound_effects.play_sound(soundref.dialog_click)
-
-                    # when we uncover the first option, skip to end
-                    if not dialog.is_done_scrolling() and dialog.get_text()[dialog.scroll_pos] == '{':
-                        dialog.scroll_pos = len(dialog.get_text())
-                else:
-                    # TODO - del this
-                    num_options = len(dialog.get_options())
-                    if dialog.is_done_scrolling() and num_options > 1:
-                        cur_option = dialog.get_selected_opt_idx()
-                        input_state = InputState.get_instance()
-                        if input_state.was_pressed(gs.get_instance().settings().left_key()):
-                            dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(gs.get_instance().settings().right_key()):
-                            dialog.set_selected_opt_idx((cur_option + 1) % num_options)
-                        if input_state.was_pressed(gs.get_instance().settings().up_key()):
-                            dialog.set_selected_opt_idx((cur_option - 1) % num_options)
-                        if input_state.was_pressed(gs.get_instance().settings().down_key()):
-                            dialog.set_selected_opt_idx((cur_option + 1) % num_options)
+                if gs.get_instance().tick_counter % self.noise_freq == 0:
+                    sound_effects.play_sound(soundref.dialog_click)
 
         self.did_interact_this_tick = False
 
+
+# TODO cutscenes aren't used, delete?
 
 class Cutscene(Dialog):
 

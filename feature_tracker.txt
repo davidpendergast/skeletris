@@ -13,7 +13,6 @@
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
- - dialog box gets screwed up when window resizes
  
  
 [testing]

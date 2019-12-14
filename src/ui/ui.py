@@ -542,12 +542,13 @@ class DialogPanel(InteractableImage):
 
     def __init__(self, dialog):
         self._dialog = dialog
-        self._border_imgs = []
-        self._speaker_img = None
-        self._option_selected = None
-        self._text_img = None
-        self._bg_imgs = []
+
         self._rect = [0, 0, 0, 0]
+
+        self._speaker_img = None
+        self._text_img = None
+        self._border_imgs = []
+        self._bg_img = None
 
         self._text_displaying = ""
         self._cur_sprite = None
@@ -562,6 +563,7 @@ class DialogPanel(InteractableImage):
         return self._dialog
 
     def _calc_rect(self):
+        # TODO this assumes that Healthbar's scale is the same as the dialog's scale
         return [
             RenderEngine.get_instance().get_game_size()[0] // 2 - self.sc * DialogPanel.SIZE[0] // 2,
             RenderEngine.get_instance().get_game_size()[1] - self.sc * (HealthBarPanel.SIZE[1] + DialogPanel.SIZE[1]),
@@ -570,150 +572,124 @@ class DialogPanel(InteractableImage):
         ]
 
     def update_images(self):
-        """
-            returns: True if needs a full render engine update, else False
-        """
-        needs_update = False
-
-        text = self._text_displaying
+        text = self._text_displaying if len(self._text_displaying) > 0 else " "
         sprite = self._cur_sprite
         left_side = self._sprite_on_left_side
 
         x = self._rect[0]
         y = self._rect[1]
+        w = self._rect[2]
+        h = self._rect[3]
 
         lay = spriteref.UI_0_LAYER
 
-        if len(self._border_imgs) == 0:
-            bw = DialogPanel.BORDER_SIZE[0]
-            bh = DialogPanel.BORDER_SIZE[1]
-            right_x = x + DialogPanel.SIZE[0] * self.sc
+        while len(self._border_imgs) < 5:
+            # scale intentionally set to 1 and not self.sc because ratio is used to size these
+            self._border_imgs.append(ImageBundle.new_bundle(lay, depth=BG_DEPTH_SUPER, scale=1))
 
-            border_sprites = spriteref.UI.text_panel_edges
+        border_sprites = spriteref.UI.text_panel_edges
 
-            for i in range(0, DialogPanel.SIZE[0] // bw):
-                top_bord = ImageBundle(border_sprites[1], x + bw * i * self.sc, y - bh * self.sc,
-                                       layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
-                self._border_imgs.append(top_bord)
-            for i in range(0, DialogPanel.SIZE[1] // bh):
-                l_bord = ImageBundle(border_sprites[3], x - bw * self.sc, y + bh * i * self.sc,
-                                     layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
-                self._border_imgs.append(l_bord)
-                r_bord = ImageBundle(border_sprites[5], right_x, y + bh * i * self.sc,
-                                     layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER)
-                self._border_imgs.append(r_bord)
-            self._border_imgs.append(ImageBundle(border_sprites[0], x - bw * self.sc, y - bh * self.sc,
-                                                 layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER))
-            self._border_imgs.append(ImageBundle(border_sprites[2], right_x, y - bh * self.sc,
-                                                 layer=lay, scale=self.sc, depth=BG_DEPTH_SUPER))
-            needs_update = True
+        # top border
+        top_border_sprite = border_sprites[1]
+        top_border_ratio = (w // top_border_sprite.width(), self.sc)
+        self._border_imgs[0] = self._border_imgs[0].update(new_model=top_border_sprite, new_x=x,
+                                                           new_y=y - top_border_sprite.height() * top_border_ratio[1],
+                                                           new_ratio=top_border_ratio)
+        # left border
+        left_border_sprite = border_sprites[3]
+        left_border_ratio = (self.sc, h // left_border_sprite.height())
+        self._border_imgs[1] = self._border_imgs[1].update(new_model=left_border_sprite,
+                                                           new_x=x - left_border_sprite.width() * left_border_ratio[0],
+                                                           new_y=y, new_ratio=left_border_ratio)
+        # right border
+        right_border_sprite = border_sprites[5]
+        right_border_ratio = (self.sc, h // right_border_sprite.height())
+        self._border_imgs[2] = self._border_imgs[2].update(new_model=right_border_sprite,
+                                                           new_x=x + w, new_y=y, new_ratio=right_border_ratio)
 
-        if len(self._bg_imgs) == 0:
-            bg_sprite = spriteref.UI.text_panel_edges[4]
-            bg_w, bg_h = bg_sprite.size()
-            ratio = (DialogPanel.SIZE[0] // bg_w, DialogPanel.SIZE[1] // bg_h)
-            self._bg_imgs.append(ImageBundle(bg_sprite, x, y, layer=lay, scale=self.sc, ratio=ratio, depth=BG_DEPTH_SUPER))
-            needs_update = True
+        # top-left corner border
+        tl_border_sprite = border_sprites[0]
+        tl_border_ratio = (self.sc, self.sc)
+        self._border_imgs[3] = self._border_imgs[3].update(new_model=tl_border_sprite,
+                                                           new_x=x - tl_border_sprite.width() * tl_border_ratio[0],
+                                                           new_y=y - tl_border_sprite.height() * tl_border_ratio[1],
+                                                           new_ratio=tl_border_ratio)
+        # top-right corner border
+        tr_border_sprite = border_sprites[2]
+        tr_border_ratio = (self.sc, self.sc)
+        self._border_imgs[4] = self._border_imgs[4].update(new_model=tr_border_sprite,
+                                                           new_x=x + w,
+                                                           new_y=y - tr_border_sprite.height() * tr_border_ratio[1],
+                                                           new_ratio=tr_border_ratio)
 
-        text_buffer = 2, 2
+        if self._bg_img is None:
+            self._bg_img = ImageBundle.new_bundle(lay, scale=1, depth=BG_DEPTH_SUPER)
+
+        # black background rectangle
+        bg_sprite = spriteref.UI.text_panel_edges[4]
+        bg_ratio = (w // bg_sprite.width(), h // bg_sprite.height())
+        self._bg_img = self._bg_img.update(new_model=bg_sprite, new_x=x, new_y=y, new_ratio=bg_ratio)
+
+        text_buffer = 3, 2
         text_area = [x + self.sc * text_buffer[0],
                      y + self.sc * text_buffer[1],
-                     self.sc * (DialogPanel.SIZE[0] - text_buffer[0] * 2),
-                     self.sc * (DialogPanel.SIZE[1] - text_buffer[1] * 2)]
+                     w - self.sc * text_buffer[0] * 2,
+                     h - self.sc * text_buffer[1] * 2]
 
+        # speaker sprite
         if sprite is not None:
-            sprite_buffer = 3, 3
+            sprite_x_buffer = 3
+
             if self._speaker_img is None:
-                y_pos = y + self.sc * (DialogPanel.SIZE[1] // 2 - sprite.height() // 2)
-                if left_side:
-                    x_pos = x + self.sc * sprite_buffer[0]
-                else:
-                    x_pos = x + self.sc * (DialogPanel.SIZE[0] - sprite.width() - sprite_buffer[0])
+                self._speaker_img = ImageBundle.new_bundle(lay, scale=self.sc, depth=FG_DEPTH_SUPER)
 
-                self._speaker_img = ImageBundle(sprite, x_pos, y_pos, layer=lay, scale=self.sc, depth=FG_DEPTH_SUPER)
+            sprite_y_pos = y + h // 2 - self.sc * sprite.height() // 2
 
-            self._speaker_img = self._speaker_img.update(new_model=sprite)
+            text_x1 = text_area[0]
+            text_x2 = text_area[0] + text_area[2]
 
             if left_side:
-                text_x = x + self._speaker_img.width() + self.sc * (sprite_buffer[0] * 2 + text_buffer[0])
+                sprite_x_pos = x + self.sc * sprite_x_buffer
+                text_x1 = sprite_x_pos + self.sc * sprite.width() + self.sc * sprite_x_buffer
             else:
-                text_x = x + self.sc * text_buffer[0]
+                sprite_x_pos = x + w - self.sc * (sprite.width() + sprite_x_buffer)
+                text_x2 = sprite_x_pos - self.sc * sprite_x_buffer
 
-            text_area = [text_x,
-                         y + self.sc * text_buffer[1],
-                         self.sc * (DialogPanel.SIZE[0] - text_buffer[0] * 2 - sprite_buffer[0]) - self._speaker_img.width(),
-                         self.sc * (DialogPanel.SIZE[1] - text_buffer[1])]
+            text_area[0] = text_x1
+            text_area[2] = text_x2 - text_x1
 
-        if len(text) > 0 and self._text_img is None:
-            wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2])
-            custom_colors = {}
-            if self._option_selected is not None:
-                opt_text = self._dialog.get_options()[self._option_selected]
+            self._speaker_img = self._speaker_img.update(new_model=sprite, new_x=sprite_x_pos, new_y=sprite_y_pos)
 
-                try:
-                    pos = wrapped_text.index(opt_text)
-                    for i in range(pos, pos + len(opt_text)):
-                        custom_colors[i] = (255, 0, 0)
-                    print("custom_colors={}".format(custom_colors))
-                except ValueError:
-                    print("ERROR: option \"{}\" missing from dialog \"{}\"".format(opt_text, wrapped_text))
-
-            self._text_img = TextImage(text_area[0], text_area[1], wrapped_text, layer=lay,
-                                       scale=self.text_sc,
-                                       y_kerning=2,
-                                       custom_colors=custom_colors,
-                                       depth=FG_DEPTH_SUPER)
-            needs_update = True
-
-        return needs_update
-
-    def update(self):
-        do_text_rebuild = False
-
-        cur_rect = self._rect
-        new_rect = self._calc_rect()
-
-        if cur_rect != new_rect:
-            do_text_rebuild = True
-            self._rect = new_rect
-
-        new_text = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
-        if self._text_displaying != new_text and self._text_img is not None:
-            do_text_rebuild = True
-
-        self._text_displaying = new_text
-
-        # TODO - just get rid of options in dialog probably
-        option_idx = None
-        if len(self._dialog.get_options()) > 0 and self._dialog.is_done_scrolling():
-            option_idx = self._dialog.get_selected_opt_idx()
-
-        if option_idx != self._option_selected:
-            do_text_rebuild = True
-            self._option_selected = option_idx
-
-        render_eng = RenderEngine.get_instance()
-
-        new_sprite = self._dialog.get_visible_sprite()
-        if new_sprite is None and self._speaker_img is not None:
+        elif self._speaker_img is not None:
+            render_eng = RenderEngine.get_instance()
             render_eng.remove(self._speaker_img)
             self._speaker_img = None
 
-        if do_text_rebuild and self._text_img is not None:
+        # the text
+        if len(text) > 0:
+            if self._text_img is None:
+                self._text_img = TextImage(0, 0, " ", lay, scale=self.text_sc, y_kerning=1, depth=FG_DEPTH_SUPER)
+
+            wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2])
+            self._text_img = self._text_img.update(new_text=wrapped_text, new_x=text_area[0], new_y=text_area[1])
+
+        elif self._text_img is not None:
+            render_eng = RenderEngine.get_instance()
             for bun in self._text_img.all_bundles():
                 render_eng.remove(bun)
             self._text_img = None
 
-        self._cur_sprite = new_sprite
+    def update(self):
+        self._rect = self._calc_rect()
+        self._text_displaying = self._dialog.get_visible_text(invisible_sub=TextImage.INVISIBLE_CHAR)
+        self._cur_sprite = self._dialog.get_visible_sprite()
         self._sprite_on_left_side = self._dialog.get_sprite_side()
 
-        full_update = self.update_images()
+        self.update_images()
 
-        if full_update:
-            for bun in self.all_bundles():
-                render_eng.update(bun)
-        elif self._speaker_img is not None:
-            render_eng.update(self._speaker_img)
+        render_eng = RenderEngine.get_instance()
+        for bun in self.all_bundles():
+            render_eng.update(bun)
 
     def contains_point(self, x, y):
         return True  # when it's open, we block ALL clicks
@@ -730,8 +706,8 @@ class DialogPanel(InteractableImage):
         return True
 
     def all_bundles(self):
-        for bg in self._bg_imgs:
-            yield bg
+        if self._bg_img is not None:
+            yield self._bg_img
         for bord in self._border_imgs:
             yield bord
         if self._speaker_img is not None:
