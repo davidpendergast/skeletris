@@ -119,7 +119,7 @@ class DecorationFactory:
             return None
 
     @staticmethod
-    def get_sign_dialog(level):
+    def get_sign_dialog(level, no_sprite=False):
         rotate_keys = gs.get_instance().settings().rotate_cw_key()
         if len(rotate_keys) > 0:
             rotate_key = Utils.stringify_key(rotate_keys[0])
@@ -146,18 +146,19 @@ class DecorationFactory:
             "You can customize the controls if you don't like them! Press [{}]".format(esc_key)]
 
         message = random.choice(how_to_play_text)
-        return dialog.NpcDialog(message, spriteref.sign_faces)
+        return dialog.NpcDialog(message, None if no_sprite else spriteref.sign_faces)
 
     @staticmethod
-    def get_sign(level, sign_text=None):
+    def get_sign(level, sign_text=None, no_sprite=False):
         import src.world.entities as entities
         sign_ent = entities.DecorationEntity.wall_decoration(DecorationTypes.SIGN, spriteref.wall_decoration_sign, 0, 0)
 
         if sign_text is None:
-            sign_dialog = DecorationFactory.get_sign_dialog(level)
+            sign_dialog = DecorationFactory.get_sign_dialog(level, no_sprite=no_sprite)
         else:
             sign_text = Utils.listify(sign_text)
-            sign_dialog = dialog.Dialog.link_em_up([dialog.NpcDialog(x, spriteref.sign_faces) for x in sign_text])
+            sprite = None if no_sprite else spriteref.sign_faces
+            sign_dialog = dialog.Dialog.link_em_up([dialog.NpcDialog(x, sprite) for x in sign_text])
 
         sign_ent.set_interact_dialog(sign_dialog)
 

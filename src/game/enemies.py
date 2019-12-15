@@ -33,6 +33,7 @@ class EnemyTypes:
     UNDEAD = EnemyType("UNDEAD")
     FUNGUS = EnemyType("FUNGUS")
     MASKED = EnemyType("MASKED")
+    INANIMATE = EnemyType("INANIMATE")
 
     @staticmethod
     def all_types():
@@ -77,6 +78,9 @@ class EnemyTemplate:
     def get_level_range(self):
         return range(0, 64)
 
+    def show_zees(self):
+        return EnemyTypes.INANIMATE not in self.get_types()
+
     def get_stats(self):
         base_stats = {
             StatTypes.VIT: 3,
@@ -114,8 +118,38 @@ class EnemyTemplate:
         return 2
 
 
+class WebTemplate(EnemyTemplate):
+
+    """Essentially just a wall that can be broken down."""
+
+    def __init__(self):
+        EnemyTemplate.__init__(self, "Web")
+
+    def get_sprites(self):
+        return spriteref.enemy_web_all
+
+    def get_map_identifier(self):
+        return ("w", colors.RED)
+
+    def get_types(self):
+        return [EnemyTypes.INANIMATE]
+
+    def get_stat_overrides(self):
+        return {
+            StatTypes.VIT: 4,
+            StatTypes.DEF: 0,
+            StatTypes.SPEED: 1,
+            StatTypes.INTELLIGENCE: 0,
+            StatTypes.WEALTH: 0
+        }
+
+    def get_controller(self):
+        import src.game.gameengine as gameengine
+        return gameengine.NullController(silent=True)
+
+
 class SkeleSpawn(EnemyTemplate):
-    """An 'enemy' that must be summoned"""
+    # TODO not used, delete?
 
     def __init__(self):
         EnemyTemplate.__init__(self, "Skele-Spawn")
@@ -1086,6 +1120,7 @@ TEMPLATE_SKELEKID = SkeleSpawn()
 TEMPLATE_SKULKER = SkulkerTemplate()
 TEMPLATE_LEPIOTA = CrawlingLepiotaTemplate()
 TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
+TEMPLATE_WEB = WebTemplate()
 
 # bosses
 TEMPLATE_SPIDER = SpiderBossTemplate()
@@ -1185,7 +1220,8 @@ class EnemyFactory:
                              shadow_offset=template.get_shadow_offset(),
                              bar_offset=template.get_bar_offset(),
                              can_xflip=template.can_xflip(),
-                             moving_sprites=template.get_moving_sprites()))
+                             moving_sprites=template.get_moving_sprites(),
+                             show_zees=template.show_zees()))
 
         return res
 

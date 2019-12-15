@@ -527,6 +527,7 @@ enemy_husk_moving_all = [make(608 + i * 16, 176, 16, 32) for i in range(0, 4)]
 enemy_snowfolk_all = [make(624, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_crawling_lepiota = [make(656, 208 + i * 32, 32, 32) for i in range(0, 2)]
 enemy_skullwalker = [make(688 + i * 16, 224, 16, 48) for i in range(0, 2)]
+enemy_web_all = [make(720, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 

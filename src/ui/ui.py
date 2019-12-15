@@ -1473,14 +1473,15 @@ class TextImage:
     def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=0.5, depth=0,
                  x_kerning=None, y_kerning=None, x_leading_kerning=0, custom_colors=None, font_lookup=None):
 
-        if font_lookup is None:
-            font_lookup = spriteref.default_font_lookup
-            # TODO - move text splitting out of here, this sucks...
-            self._do_split_text = True
-        else:
-            self._do_split_text = (font_lookup is spriteref.default_font_lookup)
+        self.font_lookup = spriteref.default_font_lookup if font_lookup is None else font_lookup
 
-        self.font_lookup = font_lookup
+        # TODO - remove text splitting, it sucks...
+        self._do_split_text = False
+        #if font_lookup is None:
+        #    font_lookup = spriteref.default_font_lookup
+        #    self._do_split_text = True
+        #else:
+        #    self._do_split_text = (font_lookup is spriteref.default_font_lookup)
 
         self.x = x
         self.y = y

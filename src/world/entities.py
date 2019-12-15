@@ -1132,7 +1132,7 @@ class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4,
                  shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0), bar_offset=(0, 0), moving_sprites=None,
-                 can_xflip=True):
+                 can_xflip=True, show_zees=True):
 
         ActorEntity.__init__(self, sprites, map_id=map_id, idle_anim_rate=idle_anim_rate, moving_anim_rate=moving_anim_rate,
                              sprite_offset=sprite_offset, shadow_offset=shadow_offset, moving_sprites=moving_sprites)
@@ -1152,6 +1152,7 @@ class Enemy(ActorEntity):
         # floating z's above enemy while waiting for player
         self._zee_img_idx_offset = 0
         self._zee_img = None
+        self._show_zees = show_zees
 
     def get_actor_state(self):
         return self._enemy_state
@@ -1240,7 +1241,7 @@ class Enemy(ActorEntity):
 
         show_zees = False
 
-        if not self.is_performing_action() and not es.ready_to_act() and ps.ready_to_act():
+        if self._show_zees and (not self.is_performing_action() and not es.ready_to_act() and ps.ready_to_act()):
             my_turns_til_act = es.turns_until_next_activation()
             p_turns_til_next_act = ps.turns_until_next_activation()
 
@@ -1691,7 +1692,7 @@ class ExitEntity(Entity):
                                       sound=None,  # the sound is kind of distracting
                                       show_text=True)
         else:
-            dia = Dialog("This path doesn't lead anywhere...")
+            dia = Dialog("The pathway is blocked...")
             gs.get_instance().dialog_manager().set_dialog(dia)
 
 

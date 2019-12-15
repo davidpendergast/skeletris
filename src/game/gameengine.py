@@ -263,9 +263,15 @@ class ActorController:
 
 class NullController(ActorController):
 
+    def __init__(self, silent=False):
+        self.is_silent = silent
+
     def get_next_action(self, actor, world):
-        pos = world.to_grid_coords(actor.center())
-        return SkipTurnAction(actor, pos)
+        if self.is_silent:
+            return SilentSkipTurnAction(actor)
+        else:
+            pos = world.to_grid_coords(*actor.center())
+            return SkipTurnAction(actor, pos)
 
 
 class PlayerController(ActorController):
@@ -1514,6 +1520,15 @@ class SkipTurnAction(Action):
         if self.get_actor().is_player():
             self.get_actor().set_sprite_override(None)
             self.get_actor().set_visually_held_item_override(None)
+
+
+class SilentSkipTurnAction(Action):
+
+    def __init__(self, actor):
+        Action.__init__(self, ActionType.SKIP_TURN, 0, actor)
+
+    def is_possible(self, world):
+        return True
 
 
 class InteractAction(Action):

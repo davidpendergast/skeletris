@@ -11,7 +11,6 @@ import src.game.spriteref as spriteref
 import src.game.events as events
 import src.game.dialog as dialog
 import src.game.music as music
-import src.game.cinematics as cinematics
 import src.game.globalstate as gs
 from src.worldgen import worldgen2
 import src.game.npc as npc
@@ -94,6 +93,8 @@ def init_zones():
         make(zone_instance)
 
     story_zones = []
+
+    story_zones.append(get_zone(QuietInlet.ZONE_ID))
 
     caves_song = music.Songs.get_basic_caves_song()
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=caves_song))
@@ -749,6 +750,42 @@ class LootZoneBuilder:
 
         zone.build_world = lambda: LootZoneBuilder.generate_new_world(zone)
         return zone
+
+
+class QuietInlet(Zone):
+
+    ZONE_ID = "quiet_inlet"
+
+    def __init__(self):
+        Zone.__init__(self, "Quiet Inlet", 1, filename="quiet_inlet.png")
+        self._sign_color = (225, 230, 150)
+        self._web_color = (255, 255, 100)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        spawn = bp.player_spawn
+
+        w = bp.build_world()
+
+        if self._sign_color in unknowns:
+            pos = unknowns[self._sign_color][0]
+            text = "It's an epitaph. The words are too faded to read."
+            sign = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=text, no_sprite=True)
+            w.add(sign, gridcell=(pos[0], pos[1] - 1))
+
+        if self._web_color in unknowns:
+            for web_pos in unknowns[self._web_color]:
+                web_ent = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_WEB, self.get_level())
+                w.add(web_ent, gridcell=(web_pos[0], web_pos[1] - 1))
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_color(self):
+        return colors.WHITE
 
 
 class DesolateCaveZone(Zone):
