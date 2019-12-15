@@ -764,9 +764,11 @@ class QuietInlet(Zone):
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
-        spawn = bp.player_spawn
-
+        spawn_pos = bp.player_spawn
         w = bp.build_world()
+
+        sleep_box = entities.PlayerSleepAnimationBox(spawn_pos)
+        w.add(sleep_box)
 
         if self._sign_color in unknowns:
             pos = unknowns[self._sign_color][0]

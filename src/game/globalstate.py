@@ -101,6 +101,9 @@ class GlobalState:
         else:
             return (w, w.get_player())
 
+    def ticks_per_anim_tick(self):
+        return 8
+
     def settings(self):
         return self._settings
 
@@ -439,7 +442,7 @@ class GlobalState:
             self._fade_overlay_sequence.pop(-1)
 
         self.tick_counter += 1
-        if self.tick_counter % 8 == 0:
+        if self.tick_counter % self.ticks_per_anim_tick() == 0:
             self.anim_tick += 1
 
 

@@ -579,6 +579,7 @@ class ActorEntity(Entity):
 
         # used by actions that require a custom animation.
         self._sprites_override = None
+        self._sprite_override_id = None
 
         self._img = None
         self._shadow_sprite = spriteref.medium_shadow
@@ -719,11 +720,19 @@ class ActorEntity(Entity):
     def set_visually_held_item_override(self, val):
         pass
 
-    def set_sprite_override(self, sprites):
+    def set_sprite_override(self, sprites, override_id=None):
         if sprites is None:
             self._sprites_override = None
+            self._sprite_override_id = None
         else:
             self._sprites_override = Utils.listify(sprites)
+            self._sprite_override_id = override_id
+
+    def get_sprite_override_id(self):
+        if self._sprites_override is None:
+            return None
+        else:
+            return self._sprite_override_id
 
     def set_shadow_sprite_override(self, shadow_sprite):
         self._shadow_sprite_override = shadow_sprite
@@ -2135,46 +2144,56 @@ class TriggerBox(Entity):
         cell_size = constants.CELLSIZE
         Entity.__init__(self, grid_pos[0] * cell_size, grid_pos[1] * cell_size,
                         cell_size * grid_size[0], cell_size * grid_size[1])
-        self.player_inside = False
-        self.player_in_range_count = 0
-        self.delay = delay
-        self.just_once = just_once
-        self.no_more_firings = False
-        self.ignore_updates_paused = ignore_updates_paused
-        self.box_id = box_id
+        self._player_currently_inside = False
+        self._player_in_range_count = 0
+
+        self._fire_action_delay = delay
+        self._fire_action_just_once = just_once
+        self._no_more_action_firings = False
+
+        self._ignore_updates_paused = ignore_updates_paused
+        self._box_id = box_id
 
     def update(self, world):
-        if gs.get_instance().world_updates_paused() and not self.ignore_updates_paused:
+        if gs.get_instance().world_updates_paused() and not self._ignore_updates_paused:
             return
 
         p = world.get_player()
         inside = p is not None and Utils.rect_contains(self.rect, p.center())
-        if self.player_inside != inside:
+        if self._player_currently_inside != inside:
             if inside:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_enter_event(self.box_id))
+                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_enter_event(self._box_id))
                 self.player_entered(p, world)
             else:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_exit_event(self.box_id))
-                self.player_left(p, world)
-            self.player_inside = inside
-            self.player_in_range_count = 0
+                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_exit_event(self._box_id))
+                self.player_exited(p, world)
+            self._player_currently_inside = inside
+            self._player_in_range_count = 0
 
-        if self.player_inside:
-            if not self.no_more_firings and self.player_in_range_count == self.delay:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self.box_id))
+        if self._player_currently_inside:
+            if not self._no_more_action_firings and self._player_in_range_count == self._fire_action_delay:
+                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self._box_id))
                 self.fire_action(p, world)
-                if self.just_once:
-                    self.no_more_firings = True
+                if self._fire_action_just_once:
+                    self._no_more_action_firings = True
 
-            self.player_in_range_count += 1
+            self.player_inside(p, world)
+            self._player_in_range_count += 1
 
-    def player_entered(self, player, world, render_action):
+    def fire_action(self, player, world):
+        """called when the player has been inside the box for the proper delay and the box is otherwise ready to act."""
         pass
 
-    def fire_action(self, player, world, render_action):
+    def player_entered(self, player, world):
+        """called any time the player enters the box."""
         pass
 
-    def player_left(self, player, world, render_action):
+    def player_exited(self, player, world):
+        """called any time the player leaves the box."""
+        pass
+
+    def player_inside(self, player, world):
+        """called every frame the player is inside the box."""
         pass
 
 
@@ -2185,8 +2204,92 @@ class DialogTriggerBox(TriggerBox):
                             ignore_updates_paused=ignore_updates_paused, box_id=box_id)
         self.dialog = dialog
 
-    def fire_action(self, player, world, render_action):
+    def fire_action(self, player, world):
         gs.get_instance().dialog_manager().set_dialog(self.dialog)
+
+
+class PlayerSleepAnimationBox(TriggerBox):
+
+    def __init__(self, grid_pos, sleep_dur=5 * 60, wakeup_dur=30):
+        TriggerBox.__init__(self, grid_pos, grid_size=(1, 1), delay=0,
+                            ignore_updates_paused=True, box_id="player_sleep_animation")
+        self._sleep_dur = sleep_dur
+        self._wakeup_dur = wakeup_dur
+
+        self._tick_count = 0
+        self._is_deactivated = False
+
+        self._sprite_override_id = "sleep_animation"
+
+        self._zee_animation_uid = None
+
+    def _deactivate(self, player, world):
+        if player.get_sprite_override_id() == self._sprite_override_id:
+            player.set_sprite_override(None)
+
+        self._try_to_remove_zees(player, world)
+
+        self._is_deactivated = True
+
+    def _try_to_add_zees(self, player, world):
+        if self._zee_animation_uid is not None:
+            return  # it's already here
+        else:
+            player_pos = player.get_render_center(ignore_perturbs=True)
+            zee_sprites = spriteref.Animations.sleeping_zees
+            duration = len(zee_sprites) * gs.get_instance().ticks_per_anim_tick()
+            zee_ent = AnimationEntity(player_pos[0], player_pos[1], zee_sprites, duration,
+                                      layer_id=spriteref.ENTITY_LAYER, scale=1)
+            zee_ent.set_finish_behavior(AnimationEntity.LOOP_ON_FINISH)
+            world.add(zee_ent)
+
+            self._zee_animation_uid = zee_ent.get_uid()
+
+    def _try_to_remove_zees(self, player, world):
+        if self._zee_animation_uid is not None:
+            zee_anim = world.get_entity(self._zee_animation_uid, onscreen=False)
+            if zee_anim is None:
+                print("WARN: couldn't find zee animation with uid: {}".format(zee_anim))
+            else:
+                world.remove(zee_anim)
+            self._zee_animation_uid = None
+
+    def _set_sprites_gently(self, player, sprites):
+        # don't want to stamp out any other sprite overrides that may be occurring due to an action or something
+        if player.get_sprite_override_id() is None or player.get_sprite_override_id() == self._sprite_override_id:
+            player.set_sprite_override(sprites, override_id=self._sprite_override_id)
+
+    def player_inside(self, player, world):
+        if self._is_deactivated:
+            return
+
+        if player.is_performing_action():
+            if self._tick_count < self._sleep_dur:
+                # XXX this is a bit hacky, but it looks okay~ to run the wakeup animation as the
+                # player is moving, and the alternatives have their own issues (e.g. locking the
+                # player in the cell to watch the animation, or instantly snapping to the upright
+                # walking animation)
+                self._tick_count = self._sleep_dur
+                self._wakeup_dur = self._wakeup_dur // 2  # go quick!
+
+        if self._tick_count < self._sleep_dur:
+            self._try_to_add_zees(player, world)
+            self._set_sprites_gently(player, spriteref.player_sleep_idle)
+
+        elif self._tick_count < self._sleep_dur + self._wakeup_dur:
+            self._try_to_remove_zees(player, world)
+
+            wakeup_prog = (self._tick_count - self._sleep_dur) / self._wakeup_dur
+            wakeup_sprites = spriteref.player_wakeup_seq
+            wakeup_idx = Utils.bound(int(wakeup_prog * len(wakeup_sprites)), 0, len(wakeup_sprites) - 1)
+            self._set_sprites_gently(player, wakeup_sprites[wakeup_idx])
+        else:
+            self._deactivate(player, world)
+
+        self._tick_count += 1
+
+    def player_exited(self, player, world):
+        self._deactivate(player, world)
 
 
 class HoverTextEntity(Entity):

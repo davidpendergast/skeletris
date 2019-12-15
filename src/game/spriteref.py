@@ -361,6 +361,9 @@ def get_player_sprites(moving, holding_item):
 
 
 player_death_seq = [make(112 + 32*i, 208, 32, 32) for i in range(0, 5)]
+player_wakeup_seq = [im for im in reversed(player_death_seq)]  # lol
+player_sleep_idle = [make(240, 208 + 32 * i, 32, 32) for i in range(0, 2)]
+
 
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
 player_squat = make(80, 240, 16, 32)
