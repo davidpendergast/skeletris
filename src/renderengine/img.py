@@ -131,13 +131,14 @@ class ImageBundle:
         """
         x = self.x()
         y = self.y()
+
         model = self.model()
         if model is None:
             w = 0
             h = 0
         else:
-            w = int(model.w * self.scale() * self.ratio()[0])
-            h = int(model.h * self.scale() * self.ratio()[1])
+            w = model.w * self.scale() * self.ratio()[0]
+            h = model.h * self.scale() * self.ratio()[1]
 
         if self.rotation() == 1 or self._rotation == 3:
             temp_w = w

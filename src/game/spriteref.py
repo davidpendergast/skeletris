@@ -966,7 +966,7 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
     for y in range(0, 8):
         for x in range(0, 32):
             c = chr(y*32 + x)
-            Font._alphabet[c] = make(x * char_w, y * char_h, char_w - 1, char_h, shift=start_pos)
+            Font._alphabet[c] = make(x * char_w, y * char_h, char_w, char_h, shift=start_pos)
 
 
 def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img,

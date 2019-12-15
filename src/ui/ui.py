@@ -1467,11 +1467,11 @@ class TextImage:
 
     INVISIBLE_CHAR = "`"
 
-    X_KERNING = 1
+    X_KERNING = 0
     Y_KERNING = 0
 
     def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=0.5, depth=0,
-                 x_kerning=None, y_kerning=None, x_leading_kerning=0, custom_colors=None, font_lookup=None):
+                 x_kerning=0.5, y_kerning=0, x_leading_kerning=0, custom_colors=None, font_lookup=None):
 
         self.font_lookup = spriteref.default_font_lookup if font_lookup is None else font_lookup
 

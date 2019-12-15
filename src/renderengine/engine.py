@@ -681,9 +681,11 @@ class RenderEngine130(RenderEngine):
         self.set_matrix_offset(0, 0)
 
         glViewport(0, 0, window_width, window_height)
+        printOpenGLError()
+
         print("INFO: set window size to ({}, {}), game_size to ({}, {})".format(
             window_width, window_height, game_width, game_height))
-        printOpenGLError()
+
 
     def set_texture_internal(self):
         if self.raw_texture_data is not None:
