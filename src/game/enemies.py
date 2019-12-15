@@ -1221,7 +1221,9 @@ class EnemyFactory:
                              bar_offset=template.get_bar_offset(),
                              can_xflip=template.can_xflip(),
                              moving_sprites=template.get_moving_sprites(),
-                             show_zees=template.show_zees()))
+                             show_zees=template.show_zees(),
+                             is_inanimate=EnemyTypes.INANIMATE in template.get_types()))
+
 
         return res
 

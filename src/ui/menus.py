@@ -1129,6 +1129,7 @@ class DebugZoneSelectMenu(OptionsMenu):
         import src.worldgen.zones as zones
         if self.zone_types == DebugZoneSelectMenu.HANDBUILT:
             all_zones = zones.all_handbuilt_zone_ids()
+            all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
         elif self.zone_types == DebugZoneSelectMenu.STORYLINE:
             all_zones = zones.all_storyline_zone_ids()
         elif self.zone_types == DebugZoneSelectMenu.LOOT:
@@ -1136,7 +1137,6 @@ class DebugZoneSelectMenu(OptionsMenu):
         else:
             all_zones = []
 
-        all_zones.sort(key=lambda z_id: zones.get_zone(z_id).get_level())
         return all_zones
 
     def get_enabled(self, idx):

@@ -1132,7 +1132,7 @@ class Enemy(ActorEntity):
 
     def __init__(self, x, y, state, sprites, map_id, controller, idle_anim_rate=2, moving_anim_rate=4,
                  shadow_sprite=None, sprite_offset=(0, 0), shadow_offset=(0, 0), bar_offset=(0, 0), moving_sprites=None,
-                 can_xflip=True, show_zees=True):
+                 can_xflip=True, show_zees=True, is_inanimate=False):
 
         ActorEntity.__init__(self, sprites, map_id=map_id, idle_anim_rate=idle_anim_rate, moving_anim_rate=moving_anim_rate,
                              sprite_offset=sprite_offset, shadow_offset=shadow_offset, moving_sprites=moving_sprites)
@@ -1153,6 +1153,7 @@ class Enemy(ActorEntity):
         self._zee_img_idx_offset = 0
         self._zee_img = None
         self._show_zees = show_zees
+        self._is_inanimate = is_inanimate
 
     def get_actor_state(self):
         return self._enemy_state
@@ -1251,6 +1252,9 @@ class Enemy(ActorEntity):
         
     def is_enemy(self):
         return True
+
+    def is_inanimate(self):
+        return self._is_inanimate
         
 
 class ChestEntity(Entity):

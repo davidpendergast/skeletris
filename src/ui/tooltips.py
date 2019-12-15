@@ -84,7 +84,13 @@ class TooltipFactory:
 
         text_builder.add_line(e_state.name())
 
-        attributes = [("Hostile", colors.LIGHT_GRAY)]
+        attributes = []
+
+        if target_enemy.is_inanimate():
+            attributes.append(("Inanimate", colors.LIGHT_GRAY))
+        else:
+            attributes.append(("Hostile", colors.LIGHT_GRAY))
+
         for st in e_state.all_nonzero_stat_types():
             attrib_name = st.get_enemy_desc(e_state)
             if attrib_name is not None:
