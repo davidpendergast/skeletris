@@ -5,7 +5,6 @@ from enum import Enum
 
 from src.items.cubeutils import CubeUtils
 from src.utils.util import Utils
-from src.game.messages import Messages
 
 from src.renderengine.img import ImageModel 
 
@@ -598,48 +597,6 @@ def get_floor_lighting(val):
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
 
-_cached_text = set()
-_cached_text.update(["att:", "def:", "vit:", "miss", "dodge", "inventory",
-                     "lvl:", "room:", "kill:", "hp:"])
-for i in range(1, 10):
-    _cached_text.add("+0.{}".format(i))
-for i in range(1, 100):
-    _cached_text.add("+{}".format(i))
-    _cached_text.add("-{}".format(i))
-for message in Messages:
-    for word in message.value.split():  # split on whitespace
-        _cached_text.add(word)
-
-_cached_lengths = set([len(t) for t in _cached_text])
-cached_text_imgs = {}
-
-
-def split_text(text, add_to=None):
-    if add_to is None:
-        add_to = []
-
-    if len(text) == 0:
-        return add_to
-    elif len(text) == 1:
-        add_to.append(text)
-        return add_to
-    elif len(text) > 200:
-        # really long strings will blow the stack...
-        for i in range(0, 200):
-            add_to.append(text[i])
-        split_text(text[200:], add_to)
-        return add_to
-    else:
-        for length in _cached_lengths:
-            if len(text) >= length:
-                if text[:length] in cached_text_imgs:
-                    add_to.append(text[:length])
-                    split_text(text[length:], add_to)
-                    return add_to
-        add_to.append(text[0])
-        split_text(text[1:], add_to)
-        return add_to
-
 
 """Lookup table for wall sprites:   
        0    1    2
@@ -1090,24 +1047,6 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
 
     draw_x = 0
     draw_y += 16
-
-    _char_w = Font.get_char("a").width()
-    _char_h = Font.get_char("a").height()
-    for text in _cached_text:
-        width = len(text) * _char_w
-        if draw_x + width >= left_size[0]:
-            draw_y += _char_h
-            draw_x = 0
-
-        cached_text_imgs[text] = make(draw_x, draw_y, width, _char_h)
-
-        for letter in text:
-            if letter != " ":
-                letter_img = Font.get_char(letter)
-                sheet.blit(sheet, (draw_x, draw_y), letter_img.rect())
-                draw_x += _char_w
-
-    draw_y += _char_h
 
     all_cube_configs = CubeUtils.get_all_possible_cube_configs(n=(4, 5, 6, 7))
     print("INFO: building {} item sprites...".format(len(all_cube_configs)))

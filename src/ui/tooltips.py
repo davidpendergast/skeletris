@@ -287,7 +287,7 @@ class TextOnlyTooltip(Tooltip):
         x = self.xy[0]
         y = self.xy[1]
 
-        x_inset = 1
+        x_inset = 2
 
         self._text_image = TextImage(x, y, self.text, self.layer,
                                      custom_colors=self.custom_colors,

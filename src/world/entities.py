@@ -2339,7 +2339,7 @@ class HoverTextEntity(Entity):
             self.text = "?"
 
         if self._text_img is None:
-            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=self.text_sc)
+            self._text_img = TextImage(0, 0, self.text, spriteref.ENTITY_LAYER, scale=self.text_sc, x_leading_kerning=2)
 
         for i in range(0, len(self._border_imgs)):
             if i == 7:

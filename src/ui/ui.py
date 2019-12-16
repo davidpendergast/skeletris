@@ -233,7 +233,7 @@ class MapPanel(SidePanel):
         if has_map_text and self.map_dirty:
             if self.map_text_img is None:
                 self.map_text_img = TextImage(0, 0, "~not built?~", spriteref.UI_0_LAYER, depth=FG_DEPTH,
-                                              x_kerning=1, x_leading_kerning=0)
+                                              x_kerning=1, x_leading_kerning=0, y_kerning=0)
 
             self.map_text_img = self.map_text_img.update(new_text=self.map_raw_text.text(),
                                                          new_custom_colors=self.map_raw_text.custom_colors())
@@ -348,12 +348,12 @@ class InventoryPanel(SidePanel):
         self.eq_title_text_img = self.build_title_img("Equipment")
         self.inv_title_text_img = self.build_title_img("Inventory", rect=self.inv_title_rect)
 
-        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH, x_leading_kerning=1)
-        self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
-        self.def_text = TextImage(0, 0, "def", self.layer, scale=self.text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
-        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=self.text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
-        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=self.text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH, x_leading_kerning=1)
-        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=self.text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH, x_leading_kerning=1)
+        self.lvl_text = TextImage(0, 0, "lvl", self.layer, scale=self.text_sc, depth=FG_DEPTH, x_leading_kerning=2)
+        self.att_text = TextImage(0, 0, "att", self.layer, scale=self.text_sc, color=StatTypes.ATT.get_color(), depth=FG_DEPTH, x_leading_kerning=2)
+        self.def_text = TextImage(0, 0, "def", self.layer, scale=self.text_sc, color=StatTypes.DEF.get_color(), depth=FG_DEPTH, x_leading_kerning=2)
+        self.vit_text = TextImage(0, 0, "vit", self.layer, scale=self.text_sc, color=StatTypes.VIT.get_color(), depth=FG_DEPTH, x_leading_kerning=2)
+        self.spd_text = TextImage(0, 0, "spd", self.layer, scale=self.text_sc, color=StatTypes.SPEED.get_color(), depth=FG_DEPTH, x_leading_kerning=2)
+        self.hp_text = TextImage(0, 0, "hp", self.layer, scale=self.text_sc, color=colors.LIGHT_GRAY, depth=FG_DEPTH, x_leading_kerning=2)
 
         self.update_stats_imgs()
         self.update_item_grid_imgs()
@@ -668,7 +668,7 @@ class DialogPanel(InteractableImage):
         # the text
         if len(text) > 0:
             if self._text_img is None:
-                self._text_img = TextImage(0, 0, " ", lay, scale=self.text_sc, y_kerning=1, depth=FG_DEPTH_SUPER)
+                self._text_img = TextImage(0, 0, " ", lay, scale=self.text_sc, y_kerning=2, depth=FG_DEPTH_SUPER)
 
             wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2])
             self._text_img = self._text_img.update(new_text=wrapped_text, new_x=text_area[0], new_y=text_area[1])
@@ -826,7 +826,8 @@ class MappedActionImage(InteractableImage):
             if self._info_text_img is None:
                 self._info_text_img = OutlinedTextImage(0, 0, info_text, spriteref.UI_0_LAYER,
                                                         font_lookup=spriteref.tiny_font_lookup,
-                                                        outline_diagonals=True)
+                                                        outline_diagonals=True,
+                                                        x_kerning=1)
 
             char_size = (TextImage.calc_width("a", text_sc, font_lookup=spriteref.tiny_font_lookup),
                          TextImage.calc_line_height(text_sc, font_lookup=spriteref.tiny_font_lookup))
@@ -1467,21 +1468,10 @@ class TextImage:
 
     INVISIBLE_CHAR = "`"
 
-    X_KERNING = 0
-    Y_KERNING = 0
-
     def __init__(self, x, y, text, layer, color=(1, 1, 1), scale=0.5, depth=0,
-                 x_kerning=0.5, y_kerning=0, x_leading_kerning=0, custom_colors=None, font_lookup=None):
+                 x_kerning=0, y_kerning=0, x_leading_kerning=0, custom_colors=None, font_lookup=None):
 
         self.font_lookup = spriteref.default_font_lookup if font_lookup is None else font_lookup
-
-        # TODO - remove text splitting, it sucks...
-        self._do_split_text = False
-        #if font_lookup is None:
-        #    font_lookup = spriteref.default_font_lookup
-        #    self._do_split_text = True
-        #else:
-        #    self._do_split_text = (font_lookup is spriteref.default_font_lookup)
 
         self.x = x
         self.y = y
@@ -1494,9 +1484,9 @@ class TextImage:
         self._letter_images = []
         self._letter_image_indexes = []
 
-        # note that kerning is NOT affected by scale
-        self.y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
-        self.x_kerning = TextImage.X_KERNING if x_kerning is None else x_kerning
+        self.y_kerning = y_kerning
+        self.x_kerning = x_kerning
+
         self.x_leading_kerning = x_leading_kerning
 
         self._build_images()
@@ -1516,37 +1506,32 @@ class TextImage:
             return (0, 0)
 
         if x_range[1] - x_range[0] > 0:
-            x_range[1] += self.x_leading_kerning
+            x_range[1] += self.x_leading_kerning * self.scale
 
         return (x_range[1] - x_range[0], y_range[1] - y_range[0])
 
     @staticmethod
-    def calc_width(text, scale, font_lookup=None, x_kerning=None, x_leading_kerning=0):
+    def calc_width(text, scale, font_lookup=None, x_kerning=1, x_leading_kerning=0):
         if font_lookup is None:
             font_lookup = spriteref.default_font_lookup
 
-        if x_kerning is None:
-            x_kerning = TextImage.X_KERNING
-
         max_line_w = 0
-        cur_line_w = x_leading_kerning
-        char_w = font_lookup.get_char("a").width() * scale + x_kerning
+        cur_line_w = x_leading_kerning * scale
+        char_w = (font_lookup.get_char("a").width() + x_kerning) * scale
         for c in text:
             if c == "\n":
-                cur_line_w = x_leading_kerning
+                cur_line_w = x_leading_kerning * scale
             else:
                 cur_line_w += char_w
-                max_line_w = max(max_line_w, cur_line_w - x_kerning)  # ignore trailing kerning
+                max_line_w = max(max_line_w, cur_line_w - x_kerning * scale)  # ignore trailing kerning
         return max_line_w
 
     @staticmethod
-    def calc_line_height(scale, y_kerning=None, font_lookup=None):
+    def calc_line_height(scale, y_kerning=0, font_lookup=None):
         if font_lookup is None:
             font_lookup = spriteref.default_font_lookup
 
-        y_kerning = TextImage.Y_KERNING if y_kerning is None else y_kerning
-
-        return font_lookup.get_char("a").height() * scale + y_kerning
+        return (font_lookup.get_char("a").height() + y_kerning) * scale
 
     def get_text(self):
         return self.text
@@ -1561,31 +1546,25 @@ class TextImage:
         return self.actual_size[1]
 
     def line_height(self):
-        return self.font_lookup.get_char("a").height() * self.scale + self.y_kerning
+        return (self.font_lookup.get_char("a").height() + self.y_kerning) * self.scale
 
     def _build_images(self):
-        ypos = self.y_kerning
-        xpos = self.x_leading_kerning
+        ypos = self.y_kerning * self.scale
+        xpos = self.x_leading_kerning * self.scale
 
         a_sprite = self.font_lookup.get_char("a")
         idx = 0
 
-        if self._do_split_text:
-            text_chunks = spriteref.split_text(self.text)
-        else:
-            text_chunks = [c for c in self.text]
+        chars = [c for c in self.text]
 
-        for chunk in text_chunks:
-            if chunk == " " or chunk == TextImage.INVISIBLE_CHAR:
-                xpos += self.x_kerning + a_sprite.width() * self.scale
-            elif chunk == "\n":
-                xpos = self.x_leading_kerning
-                ypos += self.y_kerning + a_sprite.height() * self.scale
+        for c in chars:
+            if c == " " or c == TextImage.INVISIBLE_CHAR:
+                xpos += (self.x_kerning + a_sprite.width()) * self.scale
+            elif c == "\n":
+                xpos = self.x_leading_kerning * self.scale
+                ypos += (self.y_kerning + a_sprite.height()) * self.scale
             else:
-                if len(chunk) == 1:
-                    sprite = self.font_lookup.get_char(chunk)
-                else:
-                    sprite = spriteref.cached_text_imgs[chunk]
+                sprite = self.font_lookup.get_char(c)
 
                 if idx in self.custom_colors:
                     color = self.custom_colors[idx]
@@ -1597,9 +1576,9 @@ class TextImage:
 
                 self._letter_images.append(img)
                 self._letter_image_indexes.append(idx)
-                xpos += self.x_kerning + sprite.width() * self.scale
+                xpos += (self.x_kerning + sprite.width()) * self.scale
 
-            idx += len(chunk)
+            idx += 1
 
     def _unbuild_images(self):
         render_eng = RenderEngine.get_instance()
@@ -1649,24 +1628,34 @@ class TextImage:
                 yield b
 
     @staticmethod
-    def wrap_words_to_fit(text, scale, width):
+    def wrap_words_to_fit(text, scale, width, x_kerning=0):
         split_on_newlines = text.split("\n")
         if len(split_on_newlines) > 1:
             """if it's got newlines, split it, call this method again, and re-combine"""
-            wrapped_substrings = [TextImage.wrap_words_to_fit(line, scale, width) for line in split_on_newlines]
+            wrapped_substrings = []
+            for line in split_on_newlines:
+                wrapped_substrings.append(TextImage.wrap_words_to_fit(line, scale, width, x_kerning=x_kerning))
+
             return "\n".join(wrapped_substrings)
 
         text = text.replace("\n", " ")  # shouldn't be any at this point, but just to be safe~
         words = text.split(" ")
         lines = []
         cur_line = []
+
         while len(words) > 0:
             if len(cur_line) == 0:
                 cur_line.append(words[0])
                 words = words[1:]
-            if len(words) == 0 or TextImage.calc_width(" ".join(cur_line + [words[0]]), scale) > width:
+
+            if len(words) == 0:
                 lines.append(" ".join(cur_line))
                 cur_line.clear()
+
+            elif TextImage.calc_width(" ".join(cur_line + [words[0]]), scale, x_kerning=x_kerning) > width:
+                lines.append(" ".join(cur_line))
+                cur_line.clear()
+
             elif len(words) > 0:
                 cur_line.append(words[0])
                 words = words[1:]
@@ -1680,7 +1669,7 @@ class OutlinedTextImage(TextImage):
     """beware - these are 5 (or 9) times more expensive to render than regular text."""
 
     def __init__(self, x, y, text, layer, color=(1, 1, 1), outline_color=(0, 0, 0), outline_thickness=1,
-                 outline_depth=None, scale=1, depth=0, x_kerning=None, y_kerning=None,
+                 outline_depth=None, scale=1, depth=0, x_kerning=1, y_kerning=0,
                  custom_colors=None, font_lookup=None, outline_diagonals=False):
 
         self.outline_text_imgs = []

@@ -18,7 +18,6 @@ from src.renderengine.engine import RenderEngine
 from src.game.inputs import InputState
 import src.utils.colors as colors
 import src.game.gameengine as gameengine
-from src.game.windowstate import WindowState
 import src.game.version as version
 
 
@@ -246,7 +245,7 @@ class OptionsMenu(Menu):
         if self.title_text is not None:
             if self._title_img is None:
                 self._title_img = TextImage(0, 0, self.title_text, layer=spriteref.UI_0_LAYER,
-                                            color=self.get_title_color(), scale=self.title_size)
+                                            color=self.get_title_color(), scale=self.title_size, x_kerning=0)
         elif self.title_sprite is not None:
             if self._title_img is None:
                 self._title_img = ImageBundle(self.title_sprite, 0, 0, spriteref.UI_0_LAYER,
@@ -259,7 +258,7 @@ class OptionsMenu(Menu):
         for i in range(0, self.get_num_options()):
             if self._option_imgs[i] is None:
                 self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i), layer=spriteref.UI_0_LAYER,
-                                                 color=self.get_option_color(i), scale=1)
+                                                 color=self.get_option_color(i), scale=1, x_kerning=0)
 
     def layout_rects(self):
         if self._title_rect is None:
@@ -430,7 +429,7 @@ class StartMenu(OptionsMenu):
 
         if self.version_text is not None:
             if self.version_img is None:
-                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER, scale=0.5)
+                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER, scale=0.5, x_kerning=1)
 
     def layout_rects(self):
         super().layout_rects()
@@ -1044,7 +1043,7 @@ class CreditsMenu(Menu):
                     text = line
                     size = CreditsMenu.NORMAL
 
-                self._all_images.append(TextImage(0, 0, text, spriteref.UI_0_LAYER, scale=size))
+                self._all_images.append(TextImage(0, 0, text, spriteref.UI_0_LAYER, scale=size, x_kerning=0))
 
     def update(self, world):
         self.tick_count += 1
@@ -1249,7 +1248,8 @@ class TitleMenu(Menu):
         press_any_text_scale = 1.5
 
         if self.press_any_key_img is None and self.tick_count > self.show_press_any_tick:
-            self.press_any_key_img = TextImage(0, 0, "press any key", spriteref.UI_0_LAYER, scale=press_any_text_scale)
+            self.press_any_key_img = TextImage(0, 0, "press any key", spriteref.UI_0_LAYER, scale=press_any_text_scale,
+                                               x_kerning=0)
 
         if self.press_any_key_img is not None:
             text_w = self.press_any_key_img.w()
@@ -1264,7 +1264,7 @@ class TitleMenu(Menu):
                 for _ in range(0, 4):
                     self.press_any_key_outlines.append(TextImage(0, 0, self.press_any_key_img.get_text(),
                                                                  spriteref.UI_0_LAYER, scale=press_any_text_scale,
-                                                                 depth=10, color=(0, 0, 0)))
+                                                                 depth=10, color=(0, 0, 0), x_kerning=0))
 
             outline_positions = [n for n in Utils.neighbors(text_x, text_y, dist=press_any_text_scale)]
             for i in range(0, len(self.press_any_key_outlines)):
