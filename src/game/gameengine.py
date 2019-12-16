@@ -1038,12 +1038,12 @@ class AttackAction(Action):
                 if target.is_visible_in_world(world):
                     cx, cy = target.get_render_center(ignore_perturbs=True)
                     world.show_effect_circle(cx, cy, spriteref.EffectCircleTypes.STAR_5_ENCLOSED,
-                                             color=colors.WHITE, duration=45, height=96)
+                                             color=colors.WHITE, duration=45, height=constants.CELLSIZE * 1.5)
 
                 if self.actor_entity.is_visible_in_world(world):
                     cx, cy = self.actor_entity.get_render_center(ignore_perturbs=True)
                     world.show_effect_circle(cx, cy, spriteref.EffectCircleTypes.STAR_5_ENCLOSED,
-                                             color=colors.WHITE, duration=45, height=96)
+                                             color=colors.WHITE, duration=45, height=constants.CELLSIZE * 1.5)
 
     def finalize(self, world):
         super().finalize(world)
@@ -1249,7 +1249,7 @@ class _ThrownItemAnimator:
     def finalize(self, world):
         if self._thrown_item_entity is not None:
             pos = self._thrown_item_entity.center()
-            world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -16), scale=2)
+            world.show_explosion(pos[0], pos[1], 20, color=self._item_color, offs=(0, -constants.CELLSIZE // 4), scale=1)
 
             world.remove(self._thrown_item_entity)
 
@@ -2002,7 +2002,7 @@ class SpawnActorAction(Action):
             if self.art_color is not None:
                 cx = (self.get_position()[0] + 0.5) * world.cellsize()
                 cy = (self.get_position()[1] + 0.75) * world.cellsize()
-                world.show_explosion(cx, cy, 30, color=self.art_color, offs=(0, 0), scale=4)
+                world.show_explosion(cx, cy, 30, color=self.art_color, offs=(0, 0), scale=2)
 
             sound_effects.play_sound(soundref.summon_enemy)
 

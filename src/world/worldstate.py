@@ -98,7 +98,7 @@ class World:
                                            end_offs=(x_render_offs, -32))
         self.add(text)
 
-    def show_explosion(self, cx, cy, duration, color=None, offs=(0, 0), scale=4):
+    def show_explosion(self, cx, cy, duration, color=None, offs=(0, 0), scale=2):
         import src.world.entities as entities
         splosion = entities.AnimationEntity(cx, cy, spriteref.Animations.explosions, duration, spriteref.ENTITY_LAYER, scale=scale)
         if color is not None:
@@ -106,7 +106,7 @@ class World:
         splosion.set_sprite_offset(offs)
         self.add(splosion)
 
-    def show_effect_circle(self, cx, cy, art_type, height=64, color=None, duration=45):
+    def show_effect_circle(self, cx, cy, art_type, height=constants.CELLSIZE, color=None, duration=45):
         if art_type is None:
             return
         else:
