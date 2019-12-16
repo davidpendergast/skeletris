@@ -1047,7 +1047,7 @@ class CaveHorrorTemplate(EnemyTemplate):
         EnemyTemplate.__init__(self, "Cave Horror")
 
     def get_sprites(self):
-        return spriteref.Bosses.cave_horror_idle
+        return spriteref.CaveHorror.cave_horror_idle
 
     def get_types(self):
         return [EnemyTypes.FUNGUS]
@@ -1056,7 +1056,7 @@ class CaveHorrorTemplate(EnemyTemplate):
         return ("H", colors.RED)
 
     def _limb_length(self):
-        return 95  # dist from base of its body to the bottom of the sprite
+        return 96  # dist from base of its body to the bottom of the sprite
 
     def get_sprite_offset(self):
         return (0, self._limb_length())

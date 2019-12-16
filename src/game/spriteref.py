@@ -229,9 +229,6 @@ class UI:
 
 
 class Bosses:
-
-    cave_horror_idle = []
-
     frog_idle_1 = []
     frog_idle_2 = []
     frog_idle_mouth = []
@@ -247,6 +244,12 @@ class Bosses:
 
     spider_big_idle = []
     spider_idle = []
+
+
+class CaveHorror:
+
+    cave_horror_idle = []
+    cave_horror_dead = []
 
 
 class Animations:
@@ -929,7 +932,6 @@ def build_ui_sheet(start_pos, raw_ui_img, sheet):
 
 def build_boss_sheet(start_pos, raw_boss_img, sheet):
     sheet.blit(raw_boss_img, start_pos)
-    Bosses.cave_horror_idle = [make(i * 256, 80, 256, 240, shift=start_pos) for i in range(0, 2)]
 
     Bosses.robo_idle = [make(i * 64, 320, 64, 80, shift=start_pos) for i in range(0, 2)]
 
@@ -946,6 +948,13 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
     Bosses.frog_airborn_falling = [make(448, 0, 48, 48, shift=start_pos)]
 
     Bosses.infected_husk_idle = [make(0 + i * 16, 464, 16, 48, shift=start_pos) for i in range(0, 8)]
+
+
+def build_cave_horror_sheet(start_pos, raw_cave_horror_img, sheet):
+    sheet.blit(raw_cave_horror_img, start_pos)
+
+    CaveHorror.cave_horror_idle = [make(i * 256, 0, 256, 240, shift=start_pos) for i in range(0, 2)]
+    CaveHorror.cave_horror_dead = [make(i * 256, 240, 256, 240, shift=start_pos) for i in range(0, 2)]
 
 
 def build_animations_sheet(start_pos, raw_animations_img, sheet):
@@ -969,8 +978,8 @@ def build_font_sheet(start_pos, raw_font_img, sheet):
             Font._alphabet[c] = make(x * char_w, y * char_h, char_w, char_h, shift=start_pos)
 
 
-def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img,
-                      raw_animations_img, raw_title_scene_img):
+def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_cave_horror_img,
+                      raw_font_img, raw_animations_img, raw_title_scene_img):
     """
         returns: Surface
         Here's how the final sheet is arranged:
@@ -984,6 +993,8 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
         |             *-----------------*
         |             | bosses.png      |
         |             *-----------------*
+        |             | cave_horror.png |
+        |             *-----------------*
         |             | font.png        |
         |             *-----------------*
         |             | animations.png  |
@@ -993,7 +1004,7 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
 
     """
     global walls
-    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_font_img,
+    right_imgs = [raw_cine_img, raw_ui_img, raw_items_img, raw_boss_img, raw_cave_horror_img, raw_font_img,
                   raw_animations_img, raw_title_scene_img]
 
     sheet_w = raw_image.get_width() + max([im.get_width() for im in right_imgs])
@@ -1022,6 +1033,10 @@ def build_spritesheet(raw_image, raw_cine_img, raw_ui_img, raw_items_img, raw_bo
     print("INFO: building boss sheet...")
     build_boss_sheet((_x, _y), raw_boss_img, sheet)
     _y += raw_boss_img.get_height()
+
+    print("INFO: building cave_horror sheet...")
+    build_cave_horror_sheet((_x, _y), raw_cave_horror_img, sheet)
+    _y += raw_cave_horror_img.get_height()
 
     print("INFO: building animations sheet...")
     build_animations_sheet((_x, _y), raw_animations_img, sheet)
@@ -1204,10 +1219,11 @@ if __name__ == "__main__":
     raw3 = pygame.image.load(Utils.resource_path("assets/ui.png"))
     raw4 = pygame.image.load(Utils.resource_path("assets/items.png"))
     raw5 = pygame.image.load(Utils.resource_path("assets/bosses.png"))
-    raw6 = pygame.image.load(Utils.resource_path("assets/font.png"))
-    raw7 = pygame.image.load(Utils.resource_path("assets/animations.png"))
-    raw8 = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
-    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7, raw8)
+    raw6 = pygame.image.load(Utils.resource_path("assets/cave_horror.png"))
+    raw7 = pygame.image.load(Utils.resource_path("assets/font.png"))
+    raw8 = pygame.image.load(Utils.resource_path("assets/animations.png"))
+    raw9 = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
+    output = build_spritesheet(raw, raw2, raw3, raw4, raw5, raw6, raw7, raw8, raw9)
 
     print("INFO: created {} sprites".format(len(all_imgs)))
     pygame.image.save(output, os.path.join("src", "spritesheet.png"))

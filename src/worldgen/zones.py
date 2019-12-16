@@ -272,9 +272,13 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None):
     gs.get_instance().prepare_for_new_zone(zone)
     music.play_song(zone.get_music_id())
 
-    from src.game.tutorial import TutorialFactory
-    tutorials = TutorialFactory.get_tutorials_for_level(zone.get_level(), non_complete_only=True)
-    gs.get_instance().set_inactive_tutorials(tutorials)
+    if not debug.never_show_tutorials():
+        from src.game.tutorial import TutorialFactory
+        tutorials = TutorialFactory.get_tutorials_for_level(zone.get_level(), non_complete_only=True)
+        gs.get_instance().set_inactive_tutorials(tutorials)
+    else:
+        gs.get_instance().set_inactive_tutorials([])
+
     gs.get_instance().set_active_tutorial(None)
 
     w = zone.build_world()
@@ -1441,6 +1445,22 @@ class CaveHorrorZone(Zone):
 
         # end the song when the boss dies, for maximum drama
         tree_entity.add_special_death_hook("end_song", lambda _w, _e: music.play_song(self.get_music_id()))
+
+        def add_dead_tree_entity(_world, _ent):
+            _ent_center = _ent.get_render_center(ignore_perturbs=True)
+            new_ent = entities.AnimationEntity(_ent_center[0], _ent_center[1], spriteref.CaveHorror.cave_horror_dead,
+                                               duration=60, layer_id=spriteref.ENTITY_LAYER, scale=1)
+            new_ent.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
+            # new_ent.set_sprite_offset(enemies.TEMPLATE_CAVE_HORROR.get_sprite_offset())
+            new_ent.set_shadow_sprite(None)
+
+            # XXX wowza this is hacky, but it needs to be below everything else
+            new_ent.get_depth = lambda: 10_000
+
+            _world.add(new_ent)
+
+        # add a big, dead version of the boss
+        tree_entity.add_special_death_hook("add_corpse_animation", add_dead_tree_entity)
 
         w.add(tree_entity, gridcell=tree_pos)
 

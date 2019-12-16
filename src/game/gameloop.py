@@ -38,12 +38,13 @@ def init(name_of_game):
     ui_img = pygame.image.load(Utils.resource_path("assets/ui.png"))
     items_img = pygame.image.load(Utils.resource_path("assets/items.png"))
     boss_img = pygame.image.load(Utils.resource_path("assets/bosses.png"))
+    cave_horror_img = pygame.image.load(Utils.resource_path("assets/cave_horror.png"))
     font_img = pygame.image.load(Utils.resource_path("assets/font.png"))
     animation_img = pygame.image.load(Utils.resource_path("assets/animations.png"))
     title_scene_img = pygame.image.load(Utils.resource_path("assets/title_scene.png"))
 
-    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, font_img,
-                                              animation_img, title_scene_img)
+    img_surface = spriteref.build_spritesheet(raw_sheet, cine_img, ui_img, items_img, boss_img, cave_horror_img,
+                                              font_img, animation_img, title_scene_img)
 
     texture_data = pygame.image.tostring(img_surface, "RGBA", 1)
     width = img_surface.get_width()
