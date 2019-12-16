@@ -61,6 +61,9 @@ class ActorState(StatProvider):
             if not nullified or status_effect.ignores_nullification():
                 res += status_effect.stat_value(stat_type, local=local)
 
+        if self.is_player() and debug.insta_kill() and stat_type == StatTypes.ATT:
+            res += 99
+
         return res
 
     def is_player(self):

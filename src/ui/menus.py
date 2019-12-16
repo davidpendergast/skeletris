@@ -413,7 +413,38 @@ class OptionsMenu(Menu):
         return super().cursor_style_at(world, xy)
 
 
-class StartMenu(OptionsMenu):
+class MenuWithVersionDisplay:
+
+    def __init__(self):
+        self._version_text = "[{}]".format(version.get_pretty_version_string())
+        self._version_img = None
+        self._version_rect = [0, 0, 0, 0]
+
+    def build_version_images(self):
+        if self._version_text is not None:
+            if self._version_img is None:
+                self._version_img = TextImage(0, 0, self._version_text, spriteref.UI_0_LAYER, scale=0.5, x_kerning=1)
+
+    def layout_version_rects(self):
+        if self._version_img is not None:
+            scr_w, scr_h = RenderEngine.get_instance().get_game_size()
+            x = scr_w - self._version_img.w() - 2
+            y = scr_h - self._version_img.h() - 2
+            self._version_rect = [x, y, self._version_img.w(), self._version_img.h()]
+
+    def update_version_images(self):
+        if self._version_img is not None:
+            self._version_img = self._version_img.update(new_x=self._version_rect[0],
+                                                         new_y=self._version_rect[1],
+                                                         new_color=colors.LIGHT_GRAY)
+
+    def all_bundles(self):
+        if self._version_img is not None:
+            for bun in self._version_img.all_bundles():
+                yield bun
+
+
+class StartMenu(OptionsMenu, MenuWithVersionDisplay):
 
     START_OPT = 0
     OPTIONS_OPT = 1
@@ -427,33 +458,19 @@ class StartMenu(OptionsMenu):
                              ["start", "controls", "sound", "exit"],
                              title_size=3)
 
-        self.version_text = "[{}]".format(version.get_pretty_version_string())
-        self.version_img = None
-        self.version_rect = [0, 0, 0, 0]
+        MenuWithVersionDisplay.__init__(self)
 
     def build_images(self):
         super().build_images()
-
-        if self.version_text is not None:
-            if self.version_img is None:
-                self.version_img = TextImage(0, 0, self.version_text, spriteref.UI_0_LAYER, scale=0.5, x_kerning=1)
+        MenuWithVersionDisplay.build_version_images(self)
 
     def layout_rects(self):
         super().layout_rects()
-
-        if self.version_img is not None:
-            scr_w, scr_h = RenderEngine.get_instance().get_game_size()
-            x = scr_w - self.version_img.w() - 2
-            y = scr_h - self.version_img.h() - 2
-            self.version_rect = [x, y, self.version_img.w(), self.version_img.h()]
+        MenuWithVersionDisplay.layout_version_rects(self)
 
     def update_imgs(self):
         super().update_imgs()
-
-        if self.version_img is not None:
-            self.version_img = self.version_img.update(new_x=self.version_rect[0],
-                                                       new_y=self.version_rect[1],
-                                                       new_color=colors.LIGHT_GRAY)
+        MenuWithVersionDisplay.update_version_images(self)
 
     def get_song(self):
         return music.Songs.MENU_THEME
@@ -478,9 +495,8 @@ class StartMenu(OptionsMenu):
     def all_bundles(self):
         for bun in super().all_bundles():
             yield bun
-        if self.version_img is not None:
-            for bun in self.version_img.all_bundles():
-                yield bun
+        for bun in MenuWithVersionDisplay.all_bundles(self):
+            yield bun
 
 
 class PauseMenu(OptionsMenu):
@@ -1046,17 +1062,40 @@ class YouWinMenu(FadingInFlavorMenu):
         return music.Songs.CONTINUE_CURRENT
 
 
-class YouWinStats(FadingInFlavorMenu):
+class YouWinStats(FadingInFlavorMenu, MenuWithVersionDisplay):
 
     def __init__(self, total_time, turn_count, kill_count):
         text = ["Time:  {}".format(Utils.ticks_to_time_string(total_time, 60)),
                 "Turns: {}".format(turn_count),
                 "Kills: {}".format(kill_count)]
 
+        self.version_text = "[{}]".format(version.get_pretty_version_string())
+        self.version_img = None
+        self.version_rect = [0, 0, 0, 0]
+
         FadingInFlavorMenu.__init__(self, MenuManager.YOU_WIN_MENU, "\n".join(text), CreditsMenu(), auto_next=False)
+        MenuWithVersionDisplay.__init__(self)
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
+
+    def build_images(self):
+        super().build_images()
+        MenuWithVersionDisplay.build_version_images(self)
+
+    def layout_rects(self):
+        super().layout_rects()
+        MenuWithVersionDisplay.layout_version_rects(self)
+
+    def update_imgs(self):
+        super().update_imgs()
+        MenuWithVersionDisplay.update_version_images(self)
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        for bun in MenuWithVersionDisplay.all_bundles(self):
+            yield bun
 
 
 class CreditsMenu(Menu):

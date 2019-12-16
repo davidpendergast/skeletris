@@ -224,9 +224,6 @@ def default_player_stats():
         StatTypes.FLINCH_RESIST: 1
     }
 
-    if debug.insta_kill():
-        stats[StatTypes.ATT] = 99
-
     return BasicStatLookup(stats)
 
 
