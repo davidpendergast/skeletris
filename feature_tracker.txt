@@ -32,8 +32,6 @@
     - he big. he tuff. maybe that's enough
  - bosses shouldn't "wander" until they become non-hidden
     - otherwise they can block the player at the door
- - too much swamp?
-    - made them a bit smaller
  
  
 [current features]

@@ -1446,27 +1446,37 @@ class CaveHorrorZone(Zone):
         # end the song when the boss dies, for maximum drama
         tree_entity.add_special_death_hook("end_song", lambda _w, _e: music.play_song(self.get_music_id()))
 
-        def add_dead_tree_entity(_world, _ent):
-            _ent_center = _ent.get_render_center(ignore_perturbs=True)
-            new_ent = entities.AnimationEntity(_ent_center[0], _ent_center[1], spriteref.CaveHorror.cave_horror_dead,
-                                               duration=60, layer_id=spriteref.ENTITY_LAYER, scale=1)
-            new_ent.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
-            # new_ent.set_sprite_offset(enemies.TEMPLATE_CAVE_HORROR.get_sprite_offset())
-            new_ent.set_shadow_sprite(None)
+        def do_death_animations(_world, _ent):
+            ent_center = _ent.get_render_center(ignore_perturbs=True)
+            corpse_ent = entities.AnimationEntity(ent_center[0], ent_center[1], spriteref.CaveHorror.cave_horror_dead,
+                                                  duration=30, layer_id=spriteref.ENTITY_LAYER, scale=1)
+            corpse_ent.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
+            corpse_ent.set_shadow_sprite(None)
 
             # XXX wowza this is hacky, but it needs to be below everything else
-            new_ent.get_depth = lambda: 10_000
+            corpse_ent.get_depth = lambda: 10_000
 
-            _world.add(new_ent)
+            _world.add(corpse_ent)
 
-        # add a big, dead version of the boss
-        tree_entity.add_special_death_hook("add_corpse_animation", add_dead_tree_entity)
+            ent_cell = _world.to_grid_coords(*_ent.center())
+            left_explosion_pos = _world.cell_center(ent_cell[0] - 2, ent_cell[1])
+            center_explosion_pos = _world.cell_center(ent_cell[0], ent_cell[1])
+            right_explosion_pos = _world.cell_center(ent_cell[0] + 2, ent_cell[1])
+
+            _world.show_explosion(left_explosion_pos[0], left_explosion_pos[1], 18, color=colors.LIGHT_GRAY,
+                                  offs=(0, -_world.cellsize() * 0.5), scale=3)
+            _world.show_explosion(right_explosion_pos[0], right_explosion_pos[1], 24, color=colors.LIGHT_GRAY,
+                                  offs=(0, -_world.cellsize() * 0.5), scale=3)
+            _world.show_explosion(center_explosion_pos[0], center_explosion_pos[1], 40, color=colors.WHITE,
+                                  offs=(0, -_world.cellsize() * 1), scale=5)
+
+        tree_entity.add_special_death_hook("do_death_animations", do_death_animations)
 
         w.add(tree_entity, gridcell=tree_pos)
 
         import src.world.cameramodifiers as cameramodifiers
         camera_shift_rect = Utils.rect_expand(bounds_rect, left_expand=1)  # gotta encompass the door's square too
-        camera_shifter = cameramodifiers.SnapToEntityModifier(camera_shift_rect, tree_entity)
+        camera_shifter = cameramodifiers.SnapToEntityModifier(camera_shift_rect, tree_entity, fade_out_time=30)
         w.add_camera_modifier(camera_shifter)
 
         tree_uid = tree_entity.get_uid()
