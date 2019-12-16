@@ -21,6 +21,10 @@ def get_instance():
         return _GLOBAL_STATE_INSTANCE
 
 
+def is_initialized():
+    return _GLOBAL_STATE_INSTANCE is not None
+
+
 def set_instance(new_instance):
     global _GLOBAL_STATE_INSTANCE
     _GLOBAL_STATE_INSTANCE = new_instance
@@ -46,8 +50,7 @@ class GlobalState:
         self.current_zone = None
 
         self._settings = settings.Settings()
-        self._settings_filename = "settings.json"
-        self._settings.load_from_file(self._path_to_settings())
+        self._settings.load_from_disk()
 
         self._camera_center_in_world = (0, 0)
         self._camera_center_on_screen = (RenderEngine.get_instance().get_game_size()[0] // 2,
@@ -108,10 +111,7 @@ class GlobalState:
         return self._settings
 
     def save_settings_to_disk(self):
-        self._settings.save_to_file(self._path_to_settings())
-
-    def _path_to_settings(self):
-        return os.path.join("save_data", self._settings_filename)
+        self._settings.save_to_disk()
 
     def event_queue(self):
         return self._event_queue

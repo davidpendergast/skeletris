@@ -31,7 +31,11 @@ class MenuManager:
     PAUSE_MENU = 4
     CONTROLS_MENU = 5
     KEYBINDING_MENU = 7
-    DEBUG_OPTION_MENU = 8
+
+    DEBUG_MENU = 8
+    DEBUG_SETTINGS_MENU = 8.25
+    DEBUG_ZONE_SELECT_MENU = 8.75
+
     SETTINGS_MENU = 9
     TEXT_MENU = 10
     TITLE_MENU = 11
@@ -302,6 +306,9 @@ class OptionsMenu(Menu):
         if idx != self._selection and self.get_enabled(idx):
             sound_effects.play_sound(soundref.menu_move)
             self._selection = idx
+
+    def get_selected_idx(self):
+        return self._selection
 
     def handle_inputs(self, world):
         input_state = InputState.get_instance()
@@ -578,11 +585,11 @@ class SoundSettingsMenu(OptionsMenu):
                                                                         "back"])
         self.prev_id = prev_id
 
-        self.music_pcnt = gs.get_instance().settings().get(settings.MUSIC_VOLUME)
-        self.music_muted = self.music_pcnt == 0 or gs.get_instance().settings().get(settings.MUSIC_MUTED)
+        self.music_pcnt = gs.get_instance().settings().get(settings.SoundSettings.MUSIC_VOLUME)
+        self.music_muted = self.music_pcnt == 0 or gs.get_instance().settings().get(settings.SoundSettings.MUSIC_MUTED)
 
-        self.effects_pcnt = gs.get_instance().settings().get(settings.EFFECTS_VOLUME)
-        self.effects_muted = self.effects_pcnt == 0 or gs.get_instance().settings().get(settings.EFFECTS_MUTED)
+        self.effects_pcnt = gs.get_instance().settings().get(settings.SoundSettings.EFFECTS_VOLUME)
+        self.effects_muted = self.effects_pcnt == 0 or gs.get_instance().settings().get(settings.SoundSettings.EFFECTS_MUTED)
 
     def get_option_text(self, idx):
         if idx == SoundSettingsMenu.MUSIC_TOGGLE_IDX:
@@ -602,10 +609,10 @@ class SoundSettingsMenu(OptionsMenu):
         rebuild = False
         if idx == SoundSettingsMenu.MUSIC_TOGGLE_IDX:
             new_val = not self.music_muted
-            gs.get_instance().settings().set(settings.MUSIC_MUTED, new_val)
+            gs.get_instance().settings().set(settings.SoundSettings.MUSIC_MUTED, new_val)
 
             if new_val is False and self.music_pcnt == 0:
-                gs.get_instance().settings().set(settings.MUSIC_VOLUME, 10)
+                gs.get_instance().settings().set(settings.SoundSettings.MUSIC_VOLUME, 10)
 
             gs.get_instance().save_settings_to_disk()
             rebuild = True
@@ -613,10 +620,10 @@ class SoundSettingsMenu(OptionsMenu):
 
         elif idx == SoundSettingsMenu.EFFECTS_TOGGLE_IDX:
             new_val = not self.effects_muted
-            gs.get_instance().settings().set(settings.EFFECTS_MUTED, new_val)
+            gs.get_instance().settings().set(settings.SoundSettings.EFFECTS_MUTED, new_val)
 
             if new_val is False and self.effects_pcnt == 0:
-                gs.get_instance().settings().set(settings.EFFECTS_VOLUME, 10)
+                gs.get_instance().settings().set(settings.SoundSettings.EFFECTS_VOLUME, 10)
 
             gs.get_instance().save_settings_to_disk()
             rebuild = True
@@ -626,10 +633,10 @@ class SoundSettingsMenu(OptionsMenu):
             change = 10 if idx == SoundSettingsMenu.MUSIC_VOLUME_UP_IDX else -10
             new_vol = Utils.bound(self.music_pcnt + change, 0, 100)
             if new_vol == 0:
-                gs.get_instance().settings().set(settings.MUSIC_MUTED, True)
+                gs.get_instance().settings().set(settings.SoundSettings.MUSIC_MUTED, True)
             else:
-                gs.get_instance().settings().set(settings.MUSIC_MUTED, False)
-            gs.get_instance().settings().set(settings.MUSIC_VOLUME, new_vol)
+                gs.get_instance().settings().set(settings.SoundSettings.MUSIC_MUTED, False)
+            gs.get_instance().settings().set(settings.SoundSettings.MUSIC_VOLUME, new_vol)
 
             gs.get_instance().save_settings_to_disk()
             rebuild = True
@@ -639,10 +646,10 @@ class SoundSettingsMenu(OptionsMenu):
             change = 10 if idx == SoundSettingsMenu.EFFECTS_VOLUME_UP_IDX else -10
             new_vol = Utils.bound(self.effects_pcnt + change, 0, 100)
             if new_vol == 0:
-                gs.get_instance().settings().set(settings.EFFECTS_MUTED, True)
+                gs.get_instance().settings().set(settings.SoundSettings.EFFECTS_MUTED, True)
             else:
-                gs.get_instance().settings().set(settings.EFFECTS_MUTED, False)
-            gs.get_instance().settings().set(settings.EFFECTS_VOLUME, new_vol)
+                gs.get_instance().settings().set(settings.SoundSettings.EFFECTS_MUTED, False)
+            gs.get_instance().settings().set(settings.SoundSettings.EFFECTS_VOLUME, new_vol)
 
             gs.get_instance().save_settings_to_disk()
             rebuild = True
@@ -668,15 +675,14 @@ class SoundSettingsMenu(OptionsMenu):
 class ControlsMenu(OptionsMenu):
 
     OPTS = [
-        ("move up", settings.KEY_UP),
-        ("move left", settings.KEY_LEFT),
-        ("move down", settings.KEY_DOWN),
-        ("move right", settings.KEY_RIGHT),
-        ("skip turn", settings.KEY_SKIP_TURN),
-        ("rotate item", settings.KEY_ROTATE_CW),
-        ("inventory", settings.KEY_INVENTORY),
-        ("map", settings.KEY_MAP),
-        # ("help", settings.KEY_HELP)
+        ("move up", settings.KeyBindings.KEY_UP),
+        ("move left", settings.KeyBindings.KEY_LEFT),
+        ("move down", settings.KeyBindings.KEY_DOWN),
+        ("move right", settings.KeyBindings.KEY_RIGHT),
+        ("skip turn", settings.KeyBindings.KEY_SKIP_TURN),
+        ("rotate item", settings.KeyBindings.KEY_ROTATE_CW),
+        ("inventory", settings.KeyBindings.KEY_INVENTORY),
+        ("map", settings.KeyBindings.KEY_MAP)
     ]
     BACK_OPT_IDX = len(OPTS)
 
@@ -931,17 +937,18 @@ class DebugMenu(OptionsMenu):
     STORYLINE_ZONE_JUMP = 0
     SPECIAL_ZONE_JUMP = 1
     LOOT_ZONE_JUMP = 2
-    EXIT_OPT = 3
+    DEBUG_SETTINGS = 3
+    BACK_OPT = 4
 
     def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "debug menu",
-                             ["storyline zones", "special zones", "loot zones", "back"])
+        OptionsMenu.__init__(self, MenuManager.DEBUG_MENU, "Debug",
+                             ["storyline zones", "special zones", "loot zones", "debug settings", "back"])
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
 
     def esc_pressed(self):
-        self.option_activated(DebugMenu.EXIT_OPT)
+        self.option_activated(DebugMenu.BACK_OPT)
 
     def option_activated(self, idx):
         if idx == DebugMenu.STORYLINE_ZONE_JUMP:
@@ -953,9 +960,79 @@ class DebugMenu(OptionsMenu):
         elif idx == DebugMenu.LOOT_ZONE_JUMP:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(0, DebugZoneSelectMenu.LOOT))
             sound_effects.play_sound(soundref.menu_select)
-        elif idx == DebugMenu.EXIT_OPT:
+        elif idx == DebugMenu.DEBUG_SETTINGS:
+            gs.get_instance().menu_manager().set_active_menu(DebugSettingsMenu())
+        elif idx == DebugMenu.BACK_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)
+
+
+class DebugSettingsMenu(OptionsMenu):
+
+    def _get_all_debug_settings(self):
+        res = []
+        base_class = settings.DebugSettings
+        for attrib_key in base_class.__dict__:
+            attrib_val = base_class.__dict__[attrib_key]
+            if attrib_val is not None and isinstance(attrib_val, settings.Setting):
+                res.append(attrib_val)
+        return res
+
+    def _setting_name(self, setting):
+        cur_val = gs.get_instance().settings().get(setting)
+        return "{}: {}".format(setting.name, cur_val)
+
+    def get_option_color(self, idx):
+        if not self.get_enabled(idx) or idx < 0 or idx >= len(self._debug_settings):
+            return super().get_option_color(idx)
+        else:
+            setting = self._debug_settings[idx]
+            cur_val = gs.get_instance().settings().get(setting)
+
+            if cur_val is True:
+                if self.get_selected_idx() == idx:
+                    return super().get_option_color(idx)
+                else:
+                    return colors.G_TEXT_COLOR
+
+            return super().get_option_color(idx)
+
+    def __init__(self, active_idx=0):
+        self._debug_settings = self._get_all_debug_settings()
+        option_names = [self._setting_name(x) for x in self._debug_settings]
+        self._back_idx = len(option_names)
+        self._debug_enable_idx = 0
+
+        OptionsMenu.__init__(self, MenuManager.DEBUG_SETTINGS_MENU, "",
+                             option_names + ["back"])
+
+        self.set_selected(active_idx)
+
+    def esc_pressed(self):
+        self.option_activated(self._back_idx)
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+    def option_activated(self, idx):
+        if idx == self._back_idx:
+            gs.get_instance().menu_manager().set_active_menu(DebugMenu())
+            sound_effects.play_sound(soundref.menu_back)
+        elif 0 <= idx < len(self._debug_settings):
+            setting = self._debug_settings[idx]
+
+            cur_val = gs.get_instance().settings().get(setting)
+            gs.get_instance().settings().set(setting, not cur_val)
+
+            sound_effects.play_sound(soundref.menu_select)
+            gs.get_instance().menu_manager().set_active_menu(DebugSettingsMenu(active_idx=idx))
+
+    def get_enabled(self, idx):
+        if idx == self._debug_enable_idx or idx == self._back_idx:
+            return True
+        else:
+            enable_debug_setting = settings.DebugSettings.DEBUG_ENABLED
+            return gs.get_instance().settings().get(enable_debug_setting)
 
 
 class YouWinMenu(FadingInFlavorMenu):
@@ -1008,7 +1085,9 @@ class CreditsMenu(Menu):
         #("by Juhani Junkala", SMALL),
         #("released under CC0", SMALL),
         #"",
-        ("made with pygame <3", SMALL)
+        ("made with pygame", SMALL),
+        "",
+        ("thanks for playing <3", SMALL)
     ]
 
     def __init__(self):
@@ -1122,7 +1201,7 @@ class DebugZoneSelectMenu(OptionsMenu):
         self.opts.append("back")
         self.back_idx = len(self.opts) - 1
 
-        OptionsMenu.__init__(self, MenuManager.DEBUG_OPTION_MENU, "zone select", self.opts)
+        OptionsMenu.__init__(self, MenuManager.DEBUG_ZONE_SELECT_MENU, "zone select", self.opts)
 
     def _zones_to_show(self):
         import src.worldgen.zones as zones
@@ -1472,8 +1551,6 @@ class InGameUiState(Menu):
             gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().map_key()):
             gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP)
-        #elif InputState.get_instance().was_pressed(gs.get_instance().settings().help_key()):
-        #    gs.get_instance().toggle_sidepanel(SidePanelTypes.HELP)
 
         # TODO - add 'close' key
 

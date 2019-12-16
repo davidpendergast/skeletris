@@ -2,27 +2,30 @@ import pygame
 from src.utils.util import Utils
 import src.game.sound_effects as sound_effects
 import src.game.music as music
+import src.game.debug as debug
 
+import pathlib
 import traceback
 
 ALL_SETTINGS = {}
 ALL_KEY_SETTINGS = []
 
-TRANSIENT_SETTINGS = set()  # keys of settings that aren't saved or loaded to disk.
+FILENAME = "settings.json"
+DEBUG_FILENAME = "debug_settings.json"
 
 
 class Setting:
-    def __init__(self, name, key, default, cleaner=None, on_set=None, transient=False):
+
+    def __init__(self, name, key, default, cleaner=None, on_set=None, filename=FILENAME):
         self.name = name
         self.key = key
         self.default = default
         ALL_SETTINGS[key] = self
 
-        if transient:
-            TRANSIENT_SETTINGS.add(key)
-
         self._cleaner = cleaner
         self._on_setter = on_set
+
+        self.filename = filename
 
     def clean(self, new_value):
         if self._cleaner is not None:
@@ -58,53 +61,95 @@ def clean_with_hardcoded(hard_key):
     return _cleaner
 
 
-# these are all configurable
-KEY_UP = Setting("move up", "UP", [pygame.K_w], cleaner=clean_keys)
-KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a], cleaner=clean_keys)
-KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d], cleaner=clean_keys)
-KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s], cleaner=clean_keys)
-KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_SPACE], cleaner=clean_keys)
+_num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
+             pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
 
-KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r], cleaner=clean_keys)
-KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e], cleaner=clean_keys)
-KEY_MAP = Setting("map", "MAP", [pygame.K_m], cleaner=clean_keys)
-# KEY_HELP = Setting("help", "HELP", [pygame.K_h], cleaner=clean_keys)
 
-num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4,
-            pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
+class KeyBindings:
 
-KEY_MAPPED_ACTIONS = [Setting("action " + str(i), "ACTION_" + str(i), [num_keys[i]], cleaner=clean_keys) for i in range(1, 7)]
+    # configurable
+    KEY_UP = Setting("move up", "UP", [pygame.K_w], cleaner=clean_keys)
+    KEY_LEFT = Setting("move down", "LEFT", [pygame.K_a], cleaner=clean_keys)
+    KEY_RIGHT = Setting("move right", "RIGHT", [pygame.K_d], cleaner=clean_keys)
+    KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s], cleaner=clean_keys)
+    KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_SPACE], cleaner=clean_keys)
 
-# these are locked
-KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP], cleaner=clean_keys)
-KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN], cleaner=clean_keys)
-KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN], cleaner=clean_keys)
-KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys)
+    KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r], cleaner=clean_keys)
+    KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e], cleaner=clean_keys)
+    KEY_MAP = Setting("map", "MAP", [pygame.K_m], cleaner=clean_keys)
 
-AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True, cleaner=lambda x: bool(x))
+    # not configurable
+    KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP], cleaner=clean_keys)
+    KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN], cleaner=clean_keys)
+    KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN], cleaner=clean_keys)
+    KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys)
 
-_pixel_scale_options = [0, 1, 2, 3, 4]  # 0 is automatic mode, where it scales based on window size
+    KEY_MAPPED_ACTIONS = [Setting("action " + str(i), "ACTION_" + str(i), [_num_keys[i]], cleaner=clean_keys) for i in range(1, 7)]
 
-PIXEL_SCALE = Setting("pixel scale", "PIXEL_SCALE", _pixel_scale_options[0], transient=True,
-                      cleaner=lambda x: x if x in _pixel_scale_options else _pixel_scale_options[0])
 
-EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
-                         cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                         on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
+class MiscSettings:
 
-MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
-                       cleaner=lambda val: Utils.bound(int(val), 0, 100),
-                       on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
+    AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True, cleaner=lambda x: bool(x))
+    FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
 
-MUSIC_MUTED = Setting("music muted", "MUSIC_MUTED", False,
-                      cleaner=lambda val: bool(val),
-                      on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
 
-EFFECTS_MUTED = Setting("effects muted", "EFFECTS_MUTED", False,
-                        cleaner=lambda val: bool(val),
-                        on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
+def pixel_scale_options():
+    return [0, 1, 2, 3, 4]  # 0 is automatic mode, where it scales based on window size
 
-FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
+
+class VideoSettings:
+
+    PIXEL_SCALE = Setting("pixel scale", "PIXEL_SCALE", pixel_scale_options()[0], filename=None,
+                          cleaner=lambda x: x if x in pixel_scale_options() else pixel_scale_options()[0])
+
+
+class SoundSettings:
+
+    EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
+                             cleaner=lambda val: Utils.bound(int(val), 0, 100),
+                             on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
+
+    MUSIC_VOLUME = Setting("music volume", "MUSIC_VOLUME", 100,
+                           cleaner=lambda val: Utils.bound(int(val), 0, 100),
+                           on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
+
+    MUSIC_MUTED = Setting("music muted", "MUSIC_MUTED", False,
+                          cleaner=lambda val: bool(val),
+                          on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=False, for_music=True))
+
+    EFFECTS_MUTED = Setting("effects muted", "EFFECTS_MUTED", False,
+                            cleaner=lambda val: bool(val),
+                            on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
+
+
+class DebugSettings:
+
+    DEBUG_ENABLED = Setting("debug enabled", "DEBUG_ENABLED", False,
+                            cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    IGNORE_LOOT_LEVELS = Setting("ignore loot levels", "IGNORE_LOOT_LEVELS", False,
+                                 cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    PLAYER_CANT_DIE = Setting("invincible", "PLAYER_CANT_DIE", False,
+                              cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    INSTA_KILL = Setting("+99 attack", "INSTA_KILL", False,
+                         cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    MAP_SEES_ALL = Setting("super map", "MAP_SEES_ALL", False,
+                           cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    UNLIMITED_TRADES = Setting("unlimited trades", "UNLIMITED_TRADES", False,
+                               cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    HOLY_ARTIFACTS_100x_MORE_LIKELY = Setting("holy cannoli", "HOLY_ARTIFACTS_100x_MORE_LIKELY", False,
+                                              cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    RESET_TUTORIALS_ON_NEWGAME = Setting("always teaching", "RESET_TUTORIALS_ON_NEWGAME", False,
+                                         cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
+
+    NEVER_SHOW_TUTORIALS = Setting("never teaching", "NEVER_SHOW_TUTORIALS", False,
+                                   cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
 
 
 class Settings:
@@ -122,78 +167,122 @@ class Settings:
             old_val = self.values[setting.key]
             new_val = setting.clean(val)
             self.values[setting.key] = new_val
-            print("INFO: updated setting {} from {} to {}.".format(setting.key, old_val, new_val))
             setting.on_set(self, old_val, new_val)
+
         except:
             print("ERROR: failed to set {} to {}".format(setting.key, val))
-
-    def load_from_file(self, filename):
-        try:
-            loaded_values = Utils.load_json_from_path(filename)
-            for key in loaded_values:
-                val = loaded_values[key]
-                if key in TRANSIENT_SETTINGS:
-                    continue
-                elif key in ALL_SETTINGS:
-                    self.set(ALL_SETTINGS[key], val)
-                else:
-                    print("INFO: skipping unknown setting: {}".format(key))
-            print("INFO: successfully loaded settings from {}".format(filename))
-
-        except IOError:
-            print("ERROR: failed to load settings from {}".format(filename))
-            traceback.print_exc()
-        except:
-            print("ERROR: unexpected error while loading settings from {}".format(filename))
             traceback.print_exc()
 
-    def save_to_file(self, filename):
-        try:
-            Utils.save_json_to_path(self.values, filename)
-            print("INFO: successfully saved settings to {}".format(filename))
+    def all_filenames(self):
+        res = set()
+        for key in ALL_SETTINGS:
+            if ALL_SETTINGS[key].filename is not None:
+                res.add(ALL_SETTINGS[key].filename)
 
-        except IOError:
-            print("ERROR: failed to save settings to {}".format(filename))
-            traceback.print_exc()
-        except:
-            print("ERROR: unexpected error while saving settings to {}".format(filename))
-            traceback.print_exc()
+        if not debug.is_dev() and DEBUG_FILENAME in res:
+            res.remove(DEBUG_FILENAME)
+
+        return [x for x in res]
+
+    def _to_filepath(self, filename):
+        return pathlib.Path("save_data/" + filename)
+
+    def load_from_disk(self, filenames=None):
+        if filenames is None:
+            filenames = self.all_filenames()
+
+        for filename in filenames:
+            filepath = self._to_filepath(filename)
+            if not filepath.exists():
+                print("INFO: setting file {} doesn't exist, skipping loading those prefs".format(filepath))
+                continue
+
+            try:
+                loaded_values = Utils.load_json_from_path(filepath)
+                for key in loaded_values:
+                    val = loaded_values[key]
+                    if key in ALL_SETTINGS:
+                        if ALL_SETTINGS[key].filename == filename:
+                            self.set(ALL_SETTINGS[key], val)
+                        else:
+                            print("WARN: setting was saved into wrong file {} -> {}, skipping it".format(filename, key))
+                            continue
+                    else:
+                        print("INFO: skipping unknown setting: {} -> {}".format(filename, key))
+
+                print("INFO: successfully loaded settings from {}".format(filepath))
+
+            except IOError:
+                print("ERROR: failed to load settings from {}".format(filepath))
+                traceback.print_exc()
+
+            except:
+                print("ERROR: unexpected error while loading settings from {}".format(filepath))
+                traceback.print_exc()
+
+    def save_to_disk(self, filenames=None):
+        if filenames is None:
+            filenames = self.all_filenames()
+
+        blob_per_file = {}  # filename -> {key -> value}
+        for filename in filenames:
+            blob_per_file[filename] = {}
+
+        for key in self.values:
+            filename = ALL_SETTINGS[key].filename
+            if filename in blob_per_file:
+                blob_per_file[filename][key] = self.values[key]
+
+        for filename in blob_per_file:
+            blob = blob_per_file[filename]
+            filepath = self._to_filepath(filename)
+            try:
+                Utils.save_json_to_path(blob, filepath)
+                print("INFO: successfully saved settings to {}".format(filepath))
+
+            except IOError:
+                print("ERROR: failed to save settings to {}".format(filepath))
+                traceback.print_exc()
+
+            except:
+                print("ERROR: unexpected error while saving settings to {}".format(filepath))
+                traceback.print_exc()
 
     def up_key(self):
-        return self.get(KEY_UP)
+        return self.get(KeyBindings.KEY_UP)
 
     def left_key(self):
-        return self.get(KEY_LEFT)
+        return self.get(KeyBindings.KEY_LEFT)
 
     def right_key(self):
-        return self.get(KEY_RIGHT)
+        return self.get(KeyBindings.KEY_RIGHT)
 
     def down_key(self):
-        return self.get(KEY_DOWN)
+        return self.get(KeyBindings.KEY_DOWN)
 
     def skip_turn_key(self):
-        return self.get(KEY_SKIP_TURN)
+        return self.get(KeyBindings.KEY_SKIP_TURN)
 
     def menu_up_key(self):
-        return self.get(KEY_MENU_UP)
+        return self.get(KeyBindings.KEY_MENU_UP)
 
     def menu_down_key(self):
-        return self.get(KEY_MENU_DOWN)
+        return self.get(KeyBindings.KEY_MENU_DOWN)
 
     def inventory_key(self):
-        return self.get(KEY_INVENTORY)
+        return self.get(KeyBindings.KEY_INVENTORY)
 
     def exit_key(self):
-        return self.get(KEY_EXIT)
+        return self.get(KeyBindings.KEY_EXIT)
 
     def enter_key(self):
-        return self.get(KEY_ENTER)
+        return self.get(KeyBindings.KEY_ENTER)
 
     def rotate_cw_key(self):
-        return self.get(KEY_ROTATE_CW)
+        return self.get(KeyBindings.KEY_ROTATE_CW)
 
     def map_key(self):
-        return self.get(KEY_MAP)
+        return self.get(KeyBindings.KEY_MAP)
 
     def all_direction_keys(self):
         res = []
@@ -212,7 +301,7 @@ class Settings:
         return res
 
     def num_mapped_actions(self):
-        return len(KEY_MAPPED_ACTIONS)
+        return len(KeyBindings.KEY_MAPPED_ACTIONS)
 
     def action_key(self, num):
         if num < 0 or num >= self.num_mapped_actions():
@@ -220,41 +309,40 @@ class Settings:
                 self.num_mapped_actions(), num))
             return []
 
-        return self.get(KEY_MAPPED_ACTIONS[num])
+        return self.get(KeyBindings.KEY_MAPPED_ACTIONS[num])
 
     def clear_finished_tutorials(self):
-        self.set(FINISHED_TUTORIALS, [])
+        self.set(MiscSettings.FINISHED_TUTORIALS, [])
 
     def get_tutorial_finished(self, tut_id):
-        return tut_id in self.get(FINISHED_TUTORIALS)
+        return tut_id in self.get(MiscSettings.FINISHED_TUTORIALS)
 
     def set_tutorial_finished(self, tut_id, val):
         if self.get_tutorial_finished(tut_id) != val:
-            all_finished_tuts = self.get(FINISHED_TUTORIALS)
+            all_finished_tuts = self.get(MiscSettings.FINISHED_TUTORIALS)
             if val is False:
                 all_finished_tuts.remove(tut_id)
             else:
                 all_finished_tuts.append(tut_id)
-            self.set(FINISHED_TUTORIALS, all_finished_tuts)
+            self.set(MiscSettings.FINISHED_TUTORIALS, all_finished_tuts)
 
     def update_volume_levels(self, for_music=True, for_effects=True):
         if for_music:
-            vol_level = 0 if self.get(MUSIC_MUTED) else self.get(MUSIC_VOLUME)
+            vol_level = 0 if self.get(SoundSettings.MUSIC_MUTED) else self.get(SoundSettings.MUSIC_VOLUME)
             new_val = Utils.bound(vol_level / 100, 0, 1.0)
             music.set_master_volume(new_val)
 
         if for_effects:
-            vol_level = 0 if self.get(EFFECTS_MUTED) else self.get(EFFECTS_VOLUME)
+            vol_level = 0 if self.get(SoundSettings.EFFECTS_MUTED) else self.get(SoundSettings.EFFECTS_VOLUME)
             new_val = Utils.bound(vol_level / 100, 0, 1.0)
             sound_effects.set_volume(new_val)
 
     def pixel_scale(self):
-        return self.get(PIXEL_SCALE)
+        return self.get(VideoSettings.PIXEL_SCALE)
 
     def set_pixel_scale(self, val):
-        self.set(PIXEL_SCALE, val)
+        self.set(VideoSettings.PIXEL_SCALE, val)
 
     def pixel_scale_options(self):
-        global _pixel_scale_options
-        return _pixel_scale_options
+        return pixel_scale_options()
 

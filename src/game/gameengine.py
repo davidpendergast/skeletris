@@ -1809,7 +1809,7 @@ class AddItemToGridAction(Action):
             raise ValueError("failed to place item {} in grid {}".format(it, grid))
 
     def finalize(self, world):
-        if gs.get_instance().settings().get(settings.AUTO_ACTIVATE_EQUIPMENT):
+        if gs.get_instance().settings().get(settings.MiscSettings.AUTO_ACTIVATE_EQUIPMENT):
             self._handle_auto_activate(world)
 
     def _handle_auto_activate(self, world):

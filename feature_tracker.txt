@@ -14,6 +14,7 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - slight issues with textures on certain (odd-numbered?) resolutions
+ - doctor doesn't give you the potion back... lol
  
  
 [testing]

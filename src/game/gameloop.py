@@ -295,7 +295,7 @@ def run():
             win.set_screen_size(*new_size)
             RenderEngine.get_instance().resize(*new_size)
 
-        if debug.is_debug() and world_active and input_state.was_pressed(pygame.K_F6):
+        if debug.is_dev() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
             sound_effects.play_sound(soundref.pause_in)
 
@@ -314,9 +314,6 @@ def run():
                 new_scale = options[0]
             gs.get_instance().settings().set_pixel_scale(new_scale)
             _update_pixel_scale()
-
-        if debug.is_debug() and input_state.was_pressed(pygame.K_F10):
-            gs.get_instance().event_queue().add(events.GameWinEvent())
 
         world = gs.get_instance().get_world()
         if world is not None:

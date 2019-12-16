@@ -239,6 +239,7 @@ class PotionItemFactory:
     @staticmethod
     def gen_item(level, template=None, not_templates=()):
         if template is None:
+            import src.game.globalstate as gs
             if debug.ignore_loot_levels():
                 all_temps = [t for t in PotionTemplates.all_templates() if t not in not_templates]
                 template = None if len(all_temps) == 0 else random.choice(all_temps)

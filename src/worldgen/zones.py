@@ -544,7 +544,7 @@ class ZoneBuilder:
 
             except ValueError as e:
                 print("WARN: failed to generate tile grid {} time(s): level={}, dims={}".format(i+1, level, dims))
-                if debug.is_debug():
+                if debug.is_dev():
                     # y'all better fix this
                     raise e
                 else:

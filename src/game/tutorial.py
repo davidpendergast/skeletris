@@ -261,12 +261,13 @@ class HowToMoveStage(EntityNotificationTutorialStage):
                                                          predicate=cond)
 
     def get_message(self):
+        sttgs = gs.get_instance().settings()
+        move_keybindings = [sttgs.up_key(), sttgs.left_key(), sttgs.down_key(), sttgs.right_key()]
+
         keystr = ""
-        keys = [settings.KEY_UP, settings.KEY_LEFT, settings.KEY_DOWN, settings.KEY_RIGHT]
-        for k in keys:
-            key_val = gs.get_instance().settings().get(k)
-            if len(key_val) > 0:
-                keystr = keystr + Utils.stringify_key(key_val[0])
+        for keys in move_keybindings:
+            if len(keys) > 0:
+                keystr = keystr + Utils.stringify_key(keys[0])
 
         return "Use [{}] to move.".format(keystr)
 

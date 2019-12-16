@@ -40,7 +40,6 @@ if __name__ == "__main__":
 
         print("INFO: started {} version: {}".format(NAME_OF_GAME, version_string))
         print("INFO: development mode: {}".format(debug.is_dev()))
-        print("INFO: debug mode: {}".format(debug.is_debug()))
 
         if debug.is_dev():
             _generate_readme(NAME_OF_GAME)

@@ -2,19 +2,6 @@ import os
 
 _IS_DEV = None
 
-# flip to toggle all debug settings
-_DEBUG = True
-
-# these flags can be manually flipped before launching to alter the game's behavior
-_IGNORE_LOOT_LEVELS = False
-_PLAYER_CANT_DIE = True
-_INSTA_KILL = True
-_MAP_SEES_ALL = False
-_UNLIMITED_TRADES = False
-_HOLY_ARTIFACTS_100x_MORE_LIKELY = False
-_RESET_TUTORIALS_ON_NEWGAME = True
-_NEVER_SHOW_TUTORIALS = False
-
 
 def init():
     global _IS_DEV
@@ -27,37 +14,54 @@ def is_dev():
     return _IS_DEV
 
 
+def _lookup_val(setting, or_else):
+    import src.game.globalstate as gs
+    if not gs.is_initialized():
+        return or_else
+    else:
+        return gs.get_instance().settings().get(setting)
+
+
 def is_debug():
-    return _DEBUG and is_dev()
+    import src.game.settings as settings
+    return is_dev() and _lookup_val(settings.DebugSettings.DEBUG_ENABLED, False)
 
 
 def ignore_loot_levels():
-    return is_debug() and _IGNORE_LOOT_LEVELS
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.IGNORE_LOOT_LEVELS, False)
 
 
 def player_cant_die():
-    return is_debug() and _PLAYER_CANT_DIE
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.PLAYER_CANT_DIE, False)
 
 
 def insta_kill():
-    return is_debug() and _INSTA_KILL
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.INSTA_KILL, False)
 
 
 def map_sees_all():
-    return is_debug() and _MAP_SEES_ALL
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.MAP_SEES_ALL, False)
 
 
 def holy_artifacts_100x_more_likely():
-    return is_debug() and _HOLY_ARTIFACTS_100x_MORE_LIKELY
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.HOLY_ARTIFACTS_100x_MORE_LIKELY, False)
 
 
 def unlimited_trades():
-    return is_debug() and _UNLIMITED_TRADES
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.UNLIMITED_TRADES, False)
 
 
 def reset_tutorials_each_game():
-    return is_debug() and _RESET_TUTORIALS_ON_NEWGAME
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.RESET_TUTORIALS_ON_NEWGAME, False)
 
 
 def never_show_tutorials():
-    return is_debug() and _NEVER_SHOW_TUTORIALS
+    import src.game.settings as settings
+    return is_debug() and _lookup_val(settings.DebugSettings.NEVER_SHOW_TUTORIALS, False)
