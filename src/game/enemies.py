@@ -33,6 +33,7 @@ class EnemyTypes:
     UNDEAD = EnemyType("UNDEAD")
     FUNGUS = EnemyType("FUNGUS")
     MASKED = EnemyType("MASKED")
+    BOSS = EnemyType("BOSS")
     INANIMATE = EnemyType("INANIMATE")
 
     @staticmethod
@@ -810,7 +811,7 @@ class FrogBossTemplate(EnemyTemplate):
         return spriteref.Bosses.frog_idle_2
 
     def get_types(self):
-        return [EnemyTypes.ANIMAL]
+        return [EnemyTypes.ANIMAL, EnemyTypes.BOSS]
 
     def get_map_identifier(self):
         return ("F", colors.RED)
@@ -846,7 +847,7 @@ class RoboTemplate(EnemyTemplate):
         return spriteref.Bosses.robo_idle
 
     def get_types(self):
-        return [EnemyTypes.UNDEAD]
+        return [EnemyTypes.UNDEAD, EnemyTypes.BOSS]
 
     def get_map_identifier(self):
         return ("S", colors.RED)
@@ -980,7 +981,7 @@ class SpiderBossTemplate(EnemyTemplate):
         return spriteref.Bosses.spider_idle
 
     def get_types(self):
-        return [EnemyTypes.ANIMAL]
+        return [EnemyTypes.ANIMAL, EnemyTypes.BOSS]
 
     def get_map_identifier(self):
         return ("H", colors.RED)
@@ -1012,7 +1013,7 @@ class NamelessTemplate(EnemyTemplate):
         return spriteref.Bosses.nameless_idle
 
     def get_types(self):
-        return [EnemyTypes.FUNGUS]
+        return [EnemyTypes.FUNGUS, EnemyTypes.BOSS]
 
     def get_map_identifier(self):
         return ("?", colors.RED)
@@ -1222,8 +1223,7 @@ class EnemyFactory:
                              can_xflip=template.can_xflip(),
                              moving_sprites=template.get_moving_sprites(),
                              show_zees=template.show_zees(),
-                             is_inanimate=EnemyTypes.INANIMATE in template.get_types()))
-
+                             enemy_types=template.get_types()))
 
         return res
 

@@ -7,9 +7,6 @@
  - there are probably issues with fullscreening if you have multiple monitors w/ different sizes
 
 [P2 bugs]
- - when inventory rebuilds, sometimes artifacts appear on the screen for a frame
-    - probably a graphics card issue honestly
-        - this is pretty wishful thinking lol, should test on other systems
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
@@ -20,7 +17,6 @@
 [testing]
  - make sure that statuses 'apply' the correct number of times
  - test anything on mac (where can i find a mac?)
- - make sure that rebinding the texture 1million times per window resize doesn't leak memory
 
 
 [balance issues]    
@@ -31,8 +27,6 @@
     - also with 3~ defense you can pretty much just facetank it
  - robo boss should do something
     - he big. he tuff. maybe that's enough
- - bosses shouldn't "wander" until they become non-hidden
-    - otherwise they can block the player at the door
  
  
 [current features]
