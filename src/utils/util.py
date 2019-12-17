@@ -297,7 +297,7 @@ class Utils:
             os.makedirs(directory)
 
         with open(filepath, 'w') as outfile:
-            json.dump(json_blob, outfile)
+            json.dump(json_blob, outfile, indent=4, sort_keys=True)
 
     @staticmethod
     def read_int(json_blob, key, default):

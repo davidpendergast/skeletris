@@ -670,7 +670,7 @@ class DialogPanel(InteractableImage):
             if self._text_img is None:
                 self._text_img = TextImage(0, 0, " ", lay, scale=self.text_sc, y_kerning=2, depth=FG_DEPTH_SUPER)
 
-            wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2])
+            wrapped_text = TextImage.wrap_words_to_fit(text, self.text_sc, text_area[2], self._text_img.x_kerning)
             self._text_img = self._text_img.update(new_text=wrapped_text, new_x=text_area[0], new_y=text_area[1])
 
         elif self._text_img is not None:
@@ -1786,6 +1786,7 @@ class ItemImage:
                 return (scale * sprite.height(), scale * sprite.width())
 
 
+# TODO - this probably doesn't work anymore, delete?
 class CinematicPanel:
 
     IMAGE_SCALE = 6
