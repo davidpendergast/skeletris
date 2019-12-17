@@ -253,6 +253,8 @@ class Conversations:
 
     MARY_AND_HEAD_AT_GATE = Conversation("MARY_AND_HEAD_AT_GATE", NpcID.HEAD)
 
+    SKELEKID_GLORPLE_AND_MARY_AT_VENTS = Conversation("SKELEKID_GLORPLE_AND_MARY_AT_VENTS", NpcID.SKELEKID)
+
     # TODO - these have all been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
@@ -375,6 +377,24 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("Where are my BONES? My precious bones...", sprites=head_sprites),
                     NpcDialog("We should get moving. There's nothing we can do for him here.", sprites=mary_sprites)
+                ]
+
+        if conv == Conversations.SKELEKID_GLORPLE_AND_MARY_AT_VENTS:
+            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
+            skelekid_sprites = get_sprites(NpcID.SKELEKID)
+            glorple_sprites = get_sprites(NpcID.GLORPLE)
+
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Shh.. we're testing something.", sprites=skelekid_sprites),
+                    NpcDialog("...", sprites=glorple_sprites),
+                    NpcDialog("Did it work??", sprites=glorple_sprites),
+                    NpcDialog("What's going on here?", sprites=mary_sprites),
+                    NpcDialog("I can't tell if it worked.", sprites=skelekid_sprites)
+                ]
+            else:
+                res_list = [
+                    NpcDialog("I think they're busy.", sprites=mary_sprites)
                 ]
 
         if conv == Conversations.MACHINE_INTRO:

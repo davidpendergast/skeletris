@@ -116,7 +116,8 @@ def init_zones():
     blue_color = get_zone(RoboLairZone.ZONE_ID).get_color()
 
     story_zones.append(ZoneBuilder.make_generated_zone(8, "City I", "city_1", geo_color=blue_color, music_id=city_song, dims=(3, 2)))
-    story_zones.append(ZoneBuilder.make_generated_zone(10, "City II", "city_2", geo_color=blue_color, music_id=city_song, dims=(4, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(9, "City II", "city_2", geo_color=blue_color, music_id=city_song, dims=(4, 2)))
+    story_zones.append(get_zone(VentilationZone.ZONE_ID))
     story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song, dims=(3, 3)))
     story_zones.append(get_zone(RoboLairZone.ZONE_ID))
 
@@ -1182,6 +1183,43 @@ class CityGateZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_GREEN
+
+
+class VentilationZone(Zone):
+
+    ZONE_ID = "vents"
+
+    def __init__(self):
+        Zone.__init__(self, "The Vents", 10, filename="the_vents.png")
+        self.skelekid_pos = (225, 170, 170)
+        self.mary_pos = (255, 171, 171)
+        self.glorple_pos = (255, 172, 172)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        skelekid_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.SKELEKID, npc.Conversations.SKELEKID_GLORPLE_AND_MARY_AT_VENTS)
+        glorple_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GLORPLE, skelekid_npc.get_uid())
+        mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, skelekid_npc.get_uid())
+
+        if self.skelekid_pos in unknowns:
+            w.add(skelekid_npc, gridcell=unknowns[self.skelekid_pos][0])
+
+            # only add these if skelekid is present (which should always be the case)
+            if self.glorple_pos in unknowns:
+                w.add(glorple_npc, gridcell=unknowns[self.glorple_pos][0])
+
+            if self.mary_pos in unknowns:
+                w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_color(self):
+        return colors.LIGHT_BLUE
 
 
 class RoboLairZone(Zone):

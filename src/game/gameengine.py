@@ -510,7 +510,7 @@ class EnemyController(ActorController):
     def get_next_action(self, actor, world):
         is_hidden = world.get_hidden_at(*actor.center())
 
-        # certain bosses can insta-kill the player as they open the door
+        # prevent bosses from blocking or insta-killing the player as they open the door
         if actor.is_boss() and is_hidden:
             pos = world.to_grid_coords(actor.center()[0], actor.center()[1])
             return SkipTurnAction(actor, pos)

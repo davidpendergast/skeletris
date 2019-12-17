@@ -44,6 +44,8 @@
       - need 32 & 64 bit
 
  - configurable screen scaling
+ - replace all instances of "glorple" with a new name
+    - (it seems to be a scat term...?)
     
 
 [maintanence]
