@@ -320,7 +320,7 @@ class ConversationFactory:
                     NpcDialog("Did you meet the others? Not everyone is here to thank you but you've done a great service for us today."),
                     NpcDialog("And... I... wonder if you could help with something else too..."),
                     NpcDialog("The animals... they weren't always like this, you know."),
-                    NpcDialog("They became aggressive 12 cycles ago, around the same time we lost contact with Skeletris."),
+                    NpcDialog("They became aggressive 4 cycles ago, around the same time we lost contact with Skeletris."),
                     NpcDialog("And since then, we haven't received a single message or traveler from the city."),
                     NpcDialog("There's a path, through the swamps to the north, but it's too dangerous for any of us."),
                     NpcDialog("We've already... lost some friends, trying..."),
@@ -386,15 +386,21 @@ class ConversationFactory:
 
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("Shh.. we're testing something.", sprites=skelekid_sprites),
-                    NpcDialog("...", sprites=glorple_sprites),
-                    NpcDialog("Did it work??", sprites=glorple_sprites),
-                    NpcDialog("What's going on here?", sprites=mary_sprites),
-                    NpcDialog("I can't tell if it worked.", sprites=skelekid_sprites)
+                    NpcDialog("K-keep your voice down... sound carries through the vents.", sprites=skelekid_sprites),
+                    NpcDialog("We're from Outpost 53. What happened to the city? Where is everybody?", sprites=mary_sprites),
+                    NpcDialog("We were hoping you could tell us. We've been hiding since the violence started.", sprites=glorple_sprites),
+                    NpcDialog("We know what this was - it was a rebellion. An uprising against the Skeletons, we heard the whole thing.", sprites=skelekid_sprites),
+                    NpcDialog("It was a coordinated attack. They moved from sector to sector, dismantling us like insects.", sprites=skelekid_sprites),
+                    NpcDialog("The animals and the lesser undeads, they wanted the city for themselves so they took it. Somehow.", sprites=skelekid_sprites),
+                    NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", sprites=glorple_sprites),
+                    NpcDialog("The wildlife in the swamp were the same way. Aggressive, all of the sudden.", sprites=mary_sprites),
+                    NpcDialog("Well - whoever it was, they managed to hack the S.K.U.L mainframe and turn it against us.", sprites=skelekid_sprites),
+                    NpcDialog("The doors, weapons, communication systems - it was all locked down. Until the enemy needed to use them.", sprites=skelekid_sprites),
+                    NpcDialog("We should find the mainframe. Maybe there will be more clues there.", sprites=mary_sprites)
                 ]
             else:
                 res_list = [
-                    NpcDialog("I think they're busy.", sprites=mary_sprites)
+                    NpcDialog("We should find the mainframe.", sprites=mary_sprites)
                 ]
 
         if conv == Conversations.MACHINE_INTRO:

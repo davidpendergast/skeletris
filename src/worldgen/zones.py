@@ -1217,7 +1217,9 @@ class VentilationZone(Zone):
                 w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
 
         if self.sign_pos in unknowns:
-            text = "WARNING: Dangerous Fumes!"
+            text = "WARNING: Dangerous Fumes!\n" + \
+                   "NO organic material past this point."
+
             sign_ent = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=text)
             pos = unknowns[self.sign_pos][0]
             w.add(sign_ent, gridcell=(pos[0], pos[1] - 1))

@@ -36,8 +36,6 @@
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
       earlier in the game... even just a line of dialog or something
- - re-add breaking out of ground animation at very begining of the game
-    - actually somewhat important
  
  - figure out how to make windows builds
     - should be able to basically just run pyinstaller on a windows computer
