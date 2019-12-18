@@ -29,6 +29,7 @@ class DecorationTypes:
     GATE_RIGHT = _add_dec_type("GATE_RIGHT", rand_spawn=False)
     BONE_PILE = _add_dec_type("BONE_PILE", rand_spawn=False)
     SKULL_RACK = _add_dec_type("SKULL_RACK", rand_spawn=False)
+    FAN = _add_dec_type("FAN", rand_spawn=False)
     SIGN = _add_dec_type("SIGN", rand_spawn=False)
 
 
@@ -98,6 +99,8 @@ class DecorationFactory:
         elif dec_type == DecorationTypes.SKULL_RACK:
             # list in a list so it isn't interpreted as 'connection' sprites
             return [spriteref.wall_decoration_skull_racks]
+        elif dec_type == DecorationTypes.FAN:
+            return [spriteref.wall_decoration_fans]
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 

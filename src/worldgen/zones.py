@@ -1195,6 +1195,9 @@ class VentilationZone(Zone):
         self.mary_pos = (255, 171, 171)
         self.glorple_pos = (255, 172, 172)
 
+        self.sign_pos = (255, 175, 150)
+        self.fan_wall_pos = (0, 170, 170)
+
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
@@ -1212,6 +1215,17 @@ class VentilationZone(Zone):
 
             if self.mary_pos in unknowns:
                 w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
+
+        if self.sign_pos in unknowns:
+            text = "WARNING: Dangerous Fumes!"
+            sign_ent = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=text)
+            pos = unknowns[self.sign_pos][0]
+            w.add(sign_ent, gridcell=(pos[0], pos[1] - 1))
+
+        if self.fan_wall_pos in unknowns:
+            for wall_pos in unknowns[self.fan_wall_pos]:
+                fan_dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.FAN)
+                w.add(fan_dec, gridcell=(wall_pos[0], wall_pos[1]))
 
         return w
 
