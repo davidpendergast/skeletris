@@ -11,7 +11,16 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - slight issues with textures on certain (odd-numbered?) resolutions
- - doctor doesn't give you the potion back... lol
+ - doctor doesn't give you the potion back... lol (sometimes?)
+	- neither does skelekid...
+ - mary says "lost some friends", when really the outpost only lost one person
+ - going into fullscreen mode doesn't re-calculate the new pixel scale to account for the new size
+ - "flinched" status doesn't show up in enemy tooltips
+ - trade npcs appear in zones before we meet them in the story (skelekid, probably glorple too) 
+ - amphibian song is too quiet?
+ - you can quite easily juke out the frog boss by standing next to door, skipping your turn, and 
+   waiting for it to jump into the darkness.
+	- make it prefer to not jump into dark squares?
  
  
 [testing]
