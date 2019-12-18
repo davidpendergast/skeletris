@@ -46,7 +46,6 @@
  - configurable screen scaling
  - replace all instances of "glorple" with a new name
     - (it seems to be a scat term...?)
- - remove unused 'auto enable equipment' pref
     
 
 [maintanence]

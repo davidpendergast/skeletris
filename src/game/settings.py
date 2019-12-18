@@ -91,7 +91,6 @@ class KeyBindings:
 
 class MiscSettings:
 
-    AUTO_ACTIVATE_EQUIPMENT = Setting("auto equip", "AUTO_ACTIVATE_EQUIPMENT", True, cleaner=lambda x: bool(x))
     FINISHED_TUTORIALS = Setting("finished tutorials", "FINISHED_TUTORIALS", [])
 
 
