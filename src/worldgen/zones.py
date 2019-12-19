@@ -1193,7 +1193,7 @@ class VentilationZone(Zone):
         Zone.__init__(self, "The Vents", 10, filename="the_vents.png")
         self.skelekid_pos = (225, 170, 170)
         self.mary_pos = (255, 171, 171)
-        self.glorple_pos = (255, 172, 172)
+        self.grok_pos = (255, 172, 172)
 
         self.sign_pos = (255, 175, 150)
         self.fan_wall_pos = (0, 170, 170)
@@ -1202,16 +1202,16 @@ class VentilationZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
-        skelekid_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.SKELEKID, npc.Conversations.SKELEKID_GLORPLE_AND_MARY_AT_VENTS)
-        glorple_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GLORPLE, skelekid_npc.get_uid())
+        skelekid_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.SKELEKID, npc.Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS)
+        grok_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GROK, skelekid_npc.get_uid())
         mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, skelekid_npc.get_uid())
 
         if self.skelekid_pos in unknowns:
             w.add(skelekid_npc, gridcell=unknowns[self.skelekid_pos][0])
 
             # only add these if skelekid is present (which should always be the case)
-            if self.glorple_pos in unknowns:
-                w.add(glorple_npc, gridcell=unknowns[self.glorple_pos][0])
+            if self.grok_pos in unknowns:
+                w.add(grok_npc, gridcell=unknowns[self.grok_pos][0])
 
             if self.mary_pos in unknowns:
                 w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
@@ -1679,7 +1679,7 @@ class TombTownZone(Zone):
     MAYOR = (205, 171, 255)
     MARY = (255, 172, 255)
     MARY_2 = (255, 177, 255)
-    GLORPLE = (255, 173, 255)
+    GROK = (255, 173, 255)
 
     SPIDER_BOSS = (255, 170, 170)
 

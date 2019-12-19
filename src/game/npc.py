@@ -16,7 +16,7 @@ class NpcID(Enum):
     MAYOR = "MAYOR"
     MARY_SKELLY = "MARY_SKELLY"
     BEANSKULL = "BEANSKULL"
-    GLORPLE = "GLORPLE"
+    GROK = "GROK"
     MACHINE = "MACHINE"
     DOCTOR = "DOCTOR"
     SKELEKID = "SKELEKID"
@@ -82,10 +82,10 @@ class BeanskullTemplate(NpcTemplate):
             return NpcTradeProtocols.REROLL_STATS
 
 
-class GlorpleTemplate(NpcTemplate):
+class GrokTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.GLORPLE, "Glorple", sr.glorple_all, sr.glorple_faces, ("g", colors.YELLOW))
+        NpcTemplate.__init__(self, NpcID.GROK, "Grok", sr.grok_all, sr.grok_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
         if level >= 8:
@@ -148,7 +148,7 @@ TEMPLATES = {
     # The "Farmer", well liked, provides food and equipment for the remaining citizens.
     # Interested in all things related to plants.
 
-    NpcID.GLORPLE: GlorpleTemplate(),
+    NpcID.GROK: GrokTemplate(),
     # The "Thing", not actually a skeleton, but unaffected by the Madness and accepted by the others.
     # Clever, mischievous, interested in treasure, food.
 
@@ -253,7 +253,7 @@ class Conversations:
 
     MARY_AND_HEAD_AT_GATE = Conversation("MARY_AND_HEAD_AT_GATE", NpcID.HEAD)
 
-    SKELEKID_GLORPLE_AND_MARY_AT_VENTS = Conversation("SKELEKID_GLORPLE_AND_MARY_AT_VENTS", NpcID.SKELEKID)
+    SKELEKID_GROK_AND_MARY_AT_VENTS = Conversation("SKELEKID_GROK_AND_MARY_AT_VENTS", NpcID.SKELEKID)
 
     # TODO - these have all been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
@@ -379,20 +379,20 @@ class ConversationFactory:
                     NpcDialog("We should get moving. There's nothing we can do for him here.", sprites=mary_sprites)
                 ]
 
-        if conv == Conversations.SKELEKID_GLORPLE_AND_MARY_AT_VENTS:
+        if conv == Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS:
             mary_sprites = get_sprites(NpcID.MARY_SKELLY)
             skelekid_sprites = get_sprites(NpcID.SKELEKID)
-            glorple_sprites = get_sprites(NpcID.GLORPLE)
+            grok_sprites = get_sprites(NpcID.GROK)
 
             if interact_count == 0:
                 res_list = [
                     NpcDialog("K-keep your voice down... sound carries through the vents.", sprites=skelekid_sprites),
                     NpcDialog("We're from Outpost 53. What happened to the city? Where is everybody?", sprites=mary_sprites),
-                    NpcDialog("We were hoping you could tell us. We've been hiding since the violence started.", sprites=glorple_sprites),
+                    NpcDialog("We were hoping you could tell us. We've been hiding since the violence started.", sprites=grok_sprites),
                     NpcDialog("We know what this was - it was a rebellion. An uprising against the Skeletons, we heard the whole thing.", sprites=skelekid_sprites),
                     NpcDialog("It was a coordinated attack. They moved from sector to sector, dismantling us like insects.", sprites=skelekid_sprites),
                     NpcDialog("The animals and the lesser undeads, they wanted the city for themselves so they took it. Somehow.", sprites=skelekid_sprites),
-                    NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", sprites=glorple_sprites),
+                    NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", sprites=grok_sprites),
                     NpcDialog("The wildlife in the swamp were the same way. Aggressive, all of the sudden.", sprites=mary_sprites),
                     NpcDialog("Well - whoever it was, they managed to hack the S.K.U.L mainframe and turn it against us.", sprites=skelekid_sprites),
                     NpcDialog("The doors, weapons, communication systems - it was all locked down. Until the enemy needed to use them.", sprites=skelekid_sprites),

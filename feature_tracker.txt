@@ -13,7 +13,6 @@
  - slight issues with textures on certain (odd-numbered?) resolutions
  - mary says "lost some friends", when really the outpost only lost one person
  - going into fullscreen mode doesn't re-calculate the new pixel scale to account for the new size
- - "flinched" status doesn't show up in enemy tooltips
  - trade npcs appear in zones before we meet them in the story (skelekid, probably glorple too) 
  - amphibian song is too quiet?
  
@@ -36,6 +35,7 @@
 [current features]
  - the story
    - the big reveal after fighting robo
+   
  - finalize robo boss fight 
  
  - finalize nameless boss fight
@@ -45,9 +45,6 @@
  - figure out how to make 32-bit windows builds
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
-
- - replace all instances of "glorple" with a new name
-    - (it seems to be a scat term...?)
     
 
 [maintanence]
@@ -100,6 +97,7 @@
         - an interesting way to get away from enemies, assuming they don't follow you
         - could use "ReturnExitEntity" sprites for this
             - although tests have shown people are afraid of it..
+        - this also makes the maps a lot more "mazy" and harder to visualize
     - ice tiles
         - these would be interesting to try to generate
         - enemy pathing on these would be a bit tricky / interesting
@@ -120,6 +118,7 @@
  - doors that can only be unlocked with "keys"
  - varying scenery
     - bridges over deep pits, water pits
+ 
  - figure out whether it's possible to make/distribute mac builds
     - no opengl? no app notarizaiton w/out developer account? looking grim...
         - confident i could do this iff i had a mac computer at my disposal
@@ -176,6 +175,9 @@
                     
                     
  - use N "dividers" on HP bar where N = max health
+ - when enemies are "flinched" it should be shown to the player somehow
+    - in the tooltip?
+    - this should be done with pink zees I think, and other status effects should have similar effects
     
 
 [rejected future features]

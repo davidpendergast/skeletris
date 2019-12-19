@@ -549,8 +549,8 @@ mayor_pumpkin_faces = [make(304, 208 + i*32, 32, 32) for i in range(0, 2)]
 beanskull_all = [make(336, 144 + i*32, 16, 32) for i in range(0, 2)]
 beanskull_faces = [make(336, 208 + i*32, 32, 32) for i in range(0, 2)]
 
-glorple_all = [make(0, 150 + 32*i, 32, 26) for i in range(0, 2)]
-glorple_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
+grok_all = [make(0, 150 + 32*i, 32, 26) for i in range(0, 2)]
+grok_faces = [make(368, 208 + i*32, 32, 32) for i in range(0, 2)]
 
 skelekid_all = [make(256, 156 + i * 32, 16, 20) for i in range(0, 2)]
 skelekid_faces = [make(368, 272 + i*32, 32, 32) for i in range(0, 2)]
