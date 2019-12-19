@@ -139,9 +139,7 @@ def run():
     clock = pygame.time.Clock()
     running = True
 
-    # XXX for some reason, when you un-fullscreen it sends a boo VIDEORESIZE event
-    # at max screen size, which isn't what we want (on linux at least~)
-    ignore_videoresize_events_this_frame = False
+    ignore_resize_events_next_tick = False
 
     while running:
         gs.get_instance().event_queue().flip()
@@ -214,6 +212,9 @@ def run():
             elif event.get_type() == events.EventType.PLAYER_DIED:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
+        all_resize_events = []
+        toggled_fullscreen = False
+
         input_state = InputState.get_instance()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -234,16 +235,39 @@ def run():
                 elif event.type == pygame.MOUSEBUTTONUP:
                     input_state.set_mouse_down(False, button=event.button)
 
-            elif event.type == pygame.VIDEORESIZE and not ignore_videoresize_events_this_frame:
-                # XXX ideally we'd set the window size to no smaller than the min size
-                # but that seems to break resizing entirely on linux so... (._.)
-                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance())
-                RenderEngine.get_instance().resize(event.w, event.h, px_scale=_calc_pixel_scale((event.w, event.h)))
+            elif event.type == pygame.VIDEORESIZE:
+                all_resize_events.append(event)
+
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_F4:
+                toggled_fullscreen = True
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
 
-        ignore_videoresize_events_this_frame = False
+        ignore_resize_events_this_tick = ignore_resize_events_next_tick
+        ignore_resize_events_next_tick = False
+
+        if toggled_fullscreen:
+            # print("INFO {}: toggled fullscreen".format(gs.get_instance().tick_counter))
+            win = WindowState.get_instance()
+            win.set_fullscreen(not win.is_fullscreen(), RenderEngine.get_instance())
+
+            new_pixel_scale = _calc_pixel_scale(win.get_display_size())
+            if new_pixel_scale != RenderEngine.get_instance().get_pixel_mult():
+                RenderEngine.get_instance().set_pixel_mult(new_pixel_scale)
+
+            ignore_resize_events_next_tick = True
+
+        if not ignore_resize_events_this_tick and len(all_resize_events) > 0:
+            # print("INFO {}: got {} resize event(s)".format(gs.get_instance().tick_counter, len(all_resize_events)))
+            last_resize_event = all_resize_events[-1]
+            # XXX ideally we'd set the window size to no smaller than the min size
+            # but that seems to break resizing entirely on linux so... (._.)
+            WindowState.get_instance().set_window_size(last_resize_event.w, last_resize_event.h, None)
+
+            display_w, display_h = WindowState.get_instance().get_display_size()
+            new_pixel_scale = _calc_pixel_scale((last_resize_event.w, last_resize_event.h))
+            RenderEngine.get_instance().resize(display_w, display_h, px_scale=new_pixel_scale)
 
         input_state.update(gs.get_instance().tick_counter)
         sound_effects.update()
@@ -264,14 +288,6 @@ def run():
             import src.utils.profiling as profiling
             profiling.get_instance().toggle()
 
-        if input_state.was_pressed(pygame.K_F4):
-            win = WindowState.get_instance()
-            win.set_fullscreen(not win.is_fullscreen(), RenderEngine.get_instance())
-
-            ignore_videoresize_events_this_frame = True
-
-            RenderEngine.get_instance().resize(*win.get_display_size(), px_scale=_calc_pixel_scale(win.get_display_size()))
-
         if debug.is_dev() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
             sound_effects.play_sound(soundref.pause_in)
@@ -287,7 +303,7 @@ def run():
             if current_scale in options:
                 new_scale = (options.index(current_scale) + 1) % len(options)
             else:
-                print("WARN: unrecognized pixel scale={}, reverting to default".format(current_scale))
+                print("WARN: illegal pixel scale={}, reverting to default".format(current_scale))
                 new_scale = options[0]
             gs.get_instance().settings().set_pixel_scale(new_scale)
 

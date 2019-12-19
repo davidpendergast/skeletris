@@ -354,7 +354,7 @@ class RenderEngine:
 
         self.resize(w, h)
 
-    def reset_for_display_mode_change(self):
+    def reset_for_display_mode_change(self, new_w=None, new_h=None):
         """
            XXX on Windows, when pygame.display.set_mode is called, it seems to wipe away the active
            gl context, so we get around that by rebuilding the shader program and rebinding the texture...
@@ -369,7 +369,8 @@ class RenderEngine:
         if img_data is not None:
             self.set_texture(img_data, w, h, tex_id=self.tex_id)
 
-        self.resize(self.size[0], self.size[1])
+        self.resize(self.size[0] if new_w is None else new_w,
+                    self.size[1] if new_h is None else new_h)
 
     def set_texture(self, img_data, width, height, tex_id=None):
         """
@@ -692,9 +693,8 @@ class RenderEngine130(RenderEngine):
         glViewport(0, 0, window_width, window_height)
         printOpenGLError()
 
-        print("INFO: set window size to ({}, {}), game_size to ({}, {})".format(
-            window_width, window_height, game_width, game_height))
-
+        #print("INFO: set render engine size to ({}, {}), game_size to ({}, {})".format(
+        #    window_width, window_height, game_width, game_height))
 
     def set_texture_internal(self):
         if self.raw_texture_data is not None:
