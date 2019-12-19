@@ -1336,17 +1336,20 @@ class TradeItemAction(Action):
 
         if self._received_items is not None and len(self._received_items) > 0:
             actor_pos = self.get_actor().get_render_center()
-            actor_pos = [actor_pos[0], actor_pos[1] + 10]  # want it to land slightly in front of actor
+            actor_pos = [actor_pos[0], actor_pos[1] + constants.CELLSIZE // 6]  # want it to land slightly in front of actor
 
             trader_pos = self._recipient_npc.get_render_center()
-            trader_pos = [trader_pos[0], trader_pos[1] + 10]
+            trader_pos = [trader_pos[0], trader_pos[1] + constants.CELLSIZE // 6]
 
             actor_grid_pos = world.to_grid_coords(*self.get_actor().center())
             trader_grid_pos = world.to_grid_coords(*self._recipient_npc.center())
             if actor_grid_pos[0] == trader_grid_pos[0]:
                 # offset the x pos during vertical trades, or else the character sprites will
                 # block the item sprites.
-                actor_pos[0] = actor_pos[0] + 30 - random.random() * 60
+                if random.random() < 0.5:
+                    actor_pos[0] += int(constants.CELLSIZE * (0.25 + random.random() / 2))
+                else:
+                    actor_pos[0] -= int(constants.CELLSIZE * (0.25 + random.random() / 2))
 
             throw_dir = Utils.sub(actor_pos, trader_pos)
             throw_dir = Utils.set_length(throw_dir, 1.0)
