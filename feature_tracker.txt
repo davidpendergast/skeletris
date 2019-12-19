@@ -18,9 +18,6 @@
  - "flinched" status doesn't show up in enemy tooltips
  - trade npcs appear in zones before we meet them in the story (skelekid, probably glorple too) 
  - amphibian song is too quiet?
- - you can quite easily juke out the frog boss by standing next to door, skipping your turn, and 
-   waiting for it to jump into the darkness.
-	- make it prefer to not jump into dark squares?
  
  
 [testing]
@@ -42,15 +39,15 @@
  - the story
    - the big reveal after fighting robo
  - finalize robo boss fight 
+ 
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
       earlier in the game... even just a line of dialog or something
  
- - figure out how to make windows builds
-    - should be able to basically just run pyinstaller on a windows computer
-      - need 32 & 64 bit
+ - figure out how to make 32-bit windows builds
+    - download 32-bit python and dependencies and fire away?
+    - could also consider only shipping 32 bit exes?
 
- - configurable screen scaling
  - replace all instances of "glorple" with a new name
     - (it seems to be a scat term...?)
     

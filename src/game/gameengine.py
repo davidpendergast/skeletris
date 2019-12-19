@@ -1905,6 +1905,10 @@ class FrogLeapAction(MoveToAction):
         if world.is_solid(pos[0], pos[1], including_entities=True):
             return False
 
+        # letting the frog jump into dark positions makes it too easy to skip the fight
+        if world.get_lighting(pos[0], pos[1]) <= 0:
+            return False
+
         return True
 
     def _get_z_height(self, jump_pct):
