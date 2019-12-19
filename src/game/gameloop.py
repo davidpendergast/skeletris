@@ -294,6 +294,7 @@ def run():
             new_size = win.get_display_size()
             win.set_screen_size(*new_size)
             RenderEngine.get_instance().resize(*new_size)
+            _update_pixel_scale()
 
         if debug.is_dev() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())

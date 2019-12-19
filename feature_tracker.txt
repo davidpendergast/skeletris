@@ -45,6 +45,7 @@
  - figure out how to make 32-bit windows builds
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
+        - i think this is normal way, yeah
     
 
 [maintanence]

@@ -10,6 +10,7 @@ class WindowState:
         self._is_fullscreen = fullscreen
 
         self._fullscreen_size = fullscreen_size  # AKA the monitor's size
+
         self._window_size = window_size
 
         self._window_visible = False
