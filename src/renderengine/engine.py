@@ -230,6 +230,7 @@ class RenderEngine:
         self.bundles = {}  # (int) id -> bundle
         self.camera_pos = [0, 0]
         self.size = (0, 0)
+        self.min_size = (0, 0)
         self._pixel_mult = 1  # the number of screen "pixels" per game pixel
         self.layers = {}  # layer_id -> layer
         self.hidden_layers = {}  # layer_id -> None
@@ -273,9 +274,18 @@ class RenderEngine:
         for bun in bundles:
             self.remove(bun)
 
-    def resize(self, w, h):
-        self.size = (w, h)
+    def resize(self, w, h, px_scale=None):
+        if px_scale is not None:
+            self._pixel_mult = px_scale
+        self.size = (max(w, self.min_size[0]),
+                     max(h, self.min_size[1]))
         self.resize_internal()
+
+    def set_min_size(self, w, h):
+        self.min_size = (w, h)
+
+        if self.size[0] < self.min_size[0] or self.size[1] < self.min_size[1]:
+            self.resize(self.size[0], self.size[1])
 
     def get_game_size(self):
         return (int(self.size[0] / self.get_pixel_mult()),
@@ -291,8 +301,7 @@ class RenderEngine:
         return self._pixel_mult
 
     def set_pixel_mult(self, val):
-        self._pixel_mult = val
-        self.resize(self.size[0], self.size[1])
+        self.resize(self.size[0], self.size[1], px_scale=val)
 
     def get_glsl_version(self):
         raise NotImplementedError()

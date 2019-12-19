@@ -11,11 +11,12 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - slight issues with textures on certain (odd-numbered?) resolutions
- - mary says "lost some friends", when really the outpost only lost one person
- - going into fullscreen mode doesn't re-calculate the new pixel scale to account for the new size
- - trade npcs appear in zones before we meet them in the story (skelekid, probably glorple too) 
+ - going in and out of fullscreen mode loses the window position (or something like that?)
  - amphibian song is too quiet?
  
+[story bugs]
+ - mary says "lost some friends", when really the outpost only lost one person
+ - trade npcs appear in zones before we meet them in the story (skelekid, probably grok too) 
  
 [testing]
  - make sure that statuses 'apply' the correct number of times

@@ -5,6 +5,7 @@ from src.utils.util import Utils
 import src.game.debug as debug
 
 DEFAULT_SCREEN_SIZE = (800, 600)
+MINIMUM_SCREEN_SIZE = (800, 600)
 
 
 def init(name_of_game):
@@ -15,23 +16,18 @@ def init(name_of_game):
     pygame.mixer.init()
     pygame.init()
 
-    # fyi this needs to happen before any calls to set_mode
-    info = pygame.display.Info()
-    monitor_size = (info.current_w, info.current_h)  # what happens if you have two monitors...?
-
     window_icon = pygame.image.load(Utils.resource_path("assets/icon.png"))
     pygame.display.set_icon(window_icon)
 
     from src.game.windowstate import WindowState
-    WindowState.create_instance(fullscreen=False, resizeable=True,
-                                screen_size=DEFAULT_SCREEN_SIZE, window_size=DEFAULT_SCREEN_SIZE,
-                                fullscreen_size=monitor_size)
+    WindowState.create_instance(window_size=DEFAULT_SCREEN_SIZE, min_size=MINIMUM_SCREEN_SIZE)
     WindowState.get_instance().set_caption(name_of_game)
-    WindowState.get_instance().show_window(None)
+    WindowState.get_instance().show()
 
     from src.renderengine.engine import RenderEngine
     render_eng = RenderEngine.create_instance()
     render_eng.init(*DEFAULT_SCREEN_SIZE)
+    render_eng.set_min_size(*MINIMUM_SCREEN_SIZE)
 
     raw_sheet = pygame.image.load(Utils.resource_path("assets/image.png"))
     cine_img = pygame.image.load(Utils.resource_path("assets/cinematics.png"))
@@ -88,10 +84,15 @@ def init(name_of_game):
     import src.worldgen.zones as zones
     zones.init_zones()
 
-    _update_pixel_scale()
+    px_scale = _calc_pixel_scale(DEFAULT_SCREEN_SIZE, px_scale_opt=gs.get_instance().settings().pixel_scale())
+    render_eng.set_pixel_mult(px_scale)
 
 
-def _get_pixel_scale(px_scale_opt, screen_size, max_scale=4):
+def _calc_pixel_scale(screen_size, px_scale_opt=None, max_scale=4):
+    if px_scale_opt is None:
+        import src.game.globalstate as gs
+        px_scale_opt = gs.get_instance().settings().pixel_scale()
+
     global DEFAULT_SCREEN_SIZE
     default_w = DEFAULT_SCREEN_SIZE[0]
     default_h = DEFAULT_SCREEN_SIZE[1]
@@ -118,24 +119,6 @@ def _get_pixel_scale(px_scale_opt, screen_size, max_scale=4):
         return best
     else:
         return int(px_scale_opt)
-
-
-def _update_pixel_scale():
-    from src.game.windowstate import WindowState
-    from src.renderengine.engine import RenderEngine
-    import src.game.globalstate as gs
-
-    display_size = WindowState.get_instance().get_display_size()
-    px_scale_opt = gs.get_instance().settings().pixel_scale()
-
-    max_scale = max(gs.get_instance().settings().pixel_scale_options())
-    px_scale = _get_pixel_scale(px_scale_opt, display_size, max_scale=max_scale)
-
-    current_pixel_mult = RenderEngine.get_instance().get_pixel_mult()
-    if current_pixel_mult != px_scale:
-        print("INFO: updating pixel scale to {}{}".format(
-            px_scale, " (auto)" if px_scale_opt == 0 else ""))
-        RenderEngine.get_instance().set_pixel_mult(px_scale)
 
 
 def run():
@@ -254,11 +237,8 @@ def run():
             elif event.type == pygame.VIDEORESIZE and not ignore_videoresize_events_this_frame:
                 # XXX ideally we'd set the window size to no smaller than the min size
                 # but that seems to break resizing entirely on linux so... (._.)
-                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance(), forcefully=True)
-                screen_size = (max(800, event.w), max(600, event.h))
-                WindowState.get_instance().set_screen_size(*screen_size)
-                RenderEngine.get_instance().resize(*screen_size)
-                _update_pixel_scale()
+                WindowState.get_instance().set_window_size(event.w, event.h, RenderEngine.get_instance())
+                RenderEngine.get_instance().resize(event.w, event.h, px_scale=_calc_pixel_scale((event.w, event.h)))
 
             if not pygame.mouse.get_focused():
                 input_state.set_mouse_pos(None)
@@ -286,15 +266,11 @@ def run():
 
         if input_state.was_pressed(pygame.K_F4):
             win = WindowState.get_instance()
-            fullscreen = not win.get_fullscreen()
-            win.set_fullscreen(fullscreen, RenderEngine.get_instance(), forcefully=True)
+            win.set_fullscreen(not win.is_fullscreen(), RenderEngine.get_instance())
 
             ignore_videoresize_events_this_frame = True
 
-            new_size = win.get_display_size()
-            win.set_screen_size(*new_size)
-            RenderEngine.get_instance().resize(*new_size)
-            _update_pixel_scale()
+            RenderEngine.get_instance().resize(*win.get_display_size(), px_scale=_calc_pixel_scale(win.get_display_size()))
 
         if debug.is_dev() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
@@ -314,7 +290,10 @@ def run():
                 print("WARN: unrecognized pixel scale={}, reverting to default".format(current_scale))
                 new_scale = options[0]
             gs.get_instance().settings().set_pixel_scale(new_scale)
-            _update_pixel_scale()
+
+            display_size = WindowState.get_instance().get_display_size()
+            new_pixel_scale = _calc_pixel_scale(display_size)
+            RenderEngine.get_instance().set_pixel_mult(new_pixel_scale)
 
         world = gs.get_instance().get_world()
         if world is not None:
