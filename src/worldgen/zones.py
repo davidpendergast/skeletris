@@ -1245,8 +1245,17 @@ class RoboLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Server Room", 11, filename="robo_lair.png")
         self._robo_color = (255, 170, 170)
-        self._npc_spawn_1 = (255, 172, 150)
-        self._npc_spawn_2 = (255, 172, 151)
+
+        self._mary_spawn_1 = (255, 170, 150)
+        self._mary_spawn_2 = (255, 170, 151)
+
+        self._skelekid_spawn_1 = (255, 171, 150)
+        self._skelekid_spawn_2 = (255, 171, 151)
+
+        self._grok_spawn_1 = (225, 172, 150)
+        self._grok_spawn_2 = (225, 172, 151)
+
+        self._machine_spawn = (255, 173, 151)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1261,30 +1270,49 @@ class RoboLairZone(Zone):
 
         w.add(robo_entity, gridcell=robo_pos)
 
-        if self._npc_spawn_1 in unknowns:
-            pre_fight_npc_pos = unknowns[self._npc_spawn_1][0]
-            pre_fight_npc = self._gen_npc(True)
-            if pre_fight_npc is not None:
-                pre_fight_npc_uid = pre_fight_npc.get_uid()
-                w.add(pre_fight_npc, gridcell=pre_fight_npc_pos)
+        pre_fight_npcs = self._gen_npcs(True)
+        if all([(color_id in unknowns) for color_id in pre_fight_npcs]):
+            for color_id in pre_fight_npcs:
+                npc_ent = pre_fight_npcs[color_id]
+                grid_pos = unknowns[color_id][0]
+                w.add(npc_ent, gridcell=grid_pos)
 
                 # remove npc when boss dies
-                death_hook = _get_remove_entity_on_death_hook(pre_fight_npc_uid, show_explosion=True)
-                robo_entity.add_special_death_hook("remove pre-fight npc", death_hook)
+                death_hook = _get_remove_entity_on_death_hook(npc_ent.get_uid(), show_explosion=True)
+                robo_entity.add_special_death_hook("remove pre-fight npc {}".format(npc_ent.get_npc_id()), death_hook)
 
-        if self._npc_spawn_2 in unknowns:
-            post_fight_npc_pos = unknowns[self._npc_spawn_2][0]
-            post_fight_npc = self._gen_npc(False)
-            if post_fight_npc is not None:
-                w.add(post_fight_npc, gridcell=post_fight_npc_pos)
+        post_fight_npcs = self._gen_npcs(False)
+        if all([(color_id in unknowns) for color_id in post_fight_npcs]):
+            for color_id in post_fight_npcs:
+                npc_ent = post_fight_npcs[color_id]
+                grid_pos = unknowns[color_id][0]
+                w.add(npc_ent, gridcell=grid_pos)
 
         return w
 
-    def _gen_npc(self, pre_fight):
+    def _gen_npcs(self, pre_fight):
         if pre_fight:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_FROG_FIGHT)
+            mary_pre = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.PRE_ROBO_FIGHT)
+            skelekid_pre = npc.NpcFactory.gen_linked_npc(npc.NpcID.SKELEKID, mary_pre.get_uid())
+            grok_pre = npc.NpcFactory.gen_linked_npc(npc.NpcID.GROK, mary_pre.get_uid())
+
+            return {
+                self._mary_spawn_1: mary_pre,
+                self._skelekid_spawn_1: skelekid_pre,
+                self._grok_spawn_1: grok_pre
+            }
         else:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_POST_FROG_FIGHT)
+            grok_post = npc.NpcFactory.gen_convo_npc(npc.NpcID.GROK, npc.Conversations.POST_ROBO_FIGHT)
+            machine_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.MACHINE, grok_post.get_uid())
+            mary_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, grok_post.get_uid())
+            skelekid_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.SKELEKID, grok_post.get_uid())
+
+            return {
+                self._grok_spawn_2: grok_post,
+                self._machine_spawn: machine_post,
+                self._mary_spawn_2: mary_post,
+                self._skelekid_spawn_2: skelekid_post
+            }
 
     def get_music_id(self):
         return music.Songs.SILENCE

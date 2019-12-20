@@ -15,7 +15,6 @@
  
 [story bugs]
  - mary says "lost some friends", when really the outpost only lost one person
- - trade npcs appear in zones before we meet them in the story (skelekid, probably grok too) 
  
 [testing]
  - make sure that statuses 'apply' the correct number of times

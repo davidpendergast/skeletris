@@ -256,6 +256,10 @@ class Conversations:
 
     SKELEKID_GROK_AND_MARY_AT_VENTS = Conversation("SKELEKID_GROK_AND_MARY_AT_VENTS", NpcID.SKELEKID)
 
+    PRE_ROBO_FIGHT = Conversation("MARY_PRE_ROBO_FIGHT", NpcID.MARY_SKELLY)
+
+    POST_ROBO_FIGHT = Conversation("MARY_POST_ROBO_FIGHT", NpcID.MACHINE)
+
     # TODO - these have all been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
@@ -403,6 +407,25 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("We should find the mainframe.", sprites=mary_sprites)
                 ]
+
+        if conv == Conversations.PRE_ROBO_FIGHT:
+            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
+            skelekid_sprites = get_sprites(NpcID.SKELEKID)
+            grok_sprites = get_sprites(NpcID.GROK)
+
+            res_list = [
+                NpcDialog("Testing... 1")
+            ]
+
+        if conv == Conversations.POST_ROBO_FIGHT:
+            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
+            skelekid_sprites = get_sprites(NpcID.SKELEKID)
+            grok_sprites = get_sprites(NpcID.GROK)
+            machine_sprites = get_sprites(NpcID.MACHINE)
+
+            res_list = [
+                NpcDialog("Testing.... 2")
+            ]
 
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:
