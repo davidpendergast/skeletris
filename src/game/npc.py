@@ -68,7 +68,7 @@ class MayorPatchesTemplate(NpcTemplate):
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 12:  # first meet in town, but he only starts showing up in the core
             return NpcTradeProtocols.REROLL_ART
 
 
@@ -78,7 +78,7 @@ class BeanskullTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.BEANSKULL, "Beanskull", sr.beanskull_all, sr.beanskull_faces, ("b", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 4:  # first meet in town
             return NpcTradeProtocols.REROLL_STATS
 
 
@@ -88,7 +88,7 @@ class GrokTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.GROK, "Grok", sr.grok_all, sr.grok_faces, ("g", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 8:
+        if level >= 10:  # first meet at the vents
             return NpcTradeProtocols.REROLL_CUBES
 
 
@@ -98,7 +98,7 @@ class MachineTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.MACHINE, "PrintBot", sr.save_stations, sr.save_station_faces, ("P", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 8:
+        if level >= 8:  # city only
             return NpcTradeProtocols.ITEM_THAT_FITS
 
 
@@ -108,7 +108,7 @@ class DoctorTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.DOCTOR, "Doc", sr.doctor_all, sr.doctor_faces, ("d", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 4:  # unexplained, first meet at swamps
             return NpcTradeProtocols.POTION_EXCHANGE
 
 
@@ -118,7 +118,7 @@ class SkelekidTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.SKELEKID, "Skelekid", sr.skelekid_all, sr.skelekid_faces, ("s", colors.YELLOW))
 
     def get_trade_protocol(self, level):
-        if level >= 3:
+        if level >= 10:  # first meet at vents
             return NpcTradeProtocols.MIRROR_TRADE
 
 
@@ -128,6 +128,7 @@ class HeadTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.HEAD, "Disembodied Head", sr.skull_head_all, sr.skull_head_faces, ("h", colors.YELLOW))
 
 
+# TODO - delete? not ever used as an NPC, feels like it shouldn't talk?
 class CaveHorrorNpcTemplate(NpcTemplate):
 
     def __init__(self):
