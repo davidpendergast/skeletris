@@ -35,15 +35,18 @@ class WindowState:
         return mods
 
     def show(self):
-        self._update_window(None)
+        self._update_display_mode()
 
-    def _update_window(self, engine):
+    def _update_display_mode(self):
+        """WARNING: anytime this is called, it is crucial to """
         new_size = self.get_display_size()
         pygame.display.set_mode(new_size, self._get_mods())
 
-        if engine is not None:
-           engine.reset_for_display_mode_change(new_w=max(new_size[0], self._min_size[0]),
-                                                new_h=max(new_size[1], self._min_size[1]))
+        from src.renderengine.engine import RenderEngine
+        render_eng = RenderEngine.get_instance()
+        if render_eng is not None:
+            # XXX otherwise everything breaks on Windows (see docs on this method)
+            render_eng.reset_for_display_mode_change()
 
     def set_caption(self, title):
         pygame.display.set_caption(title)
@@ -71,24 +74,23 @@ class WindowState:
 
         return self._cached_fullscreen_size
 
-    def set_window_size(self, w, h, engine):
+    def set_window_size(self, w, h):
         # print("INFO: set window size to: ({}, {})".format(w, h))
         self._window_size = (w, h)
-        self._update_window(engine)
+        self._update_display_mode()
 
     def is_fullscreen(self):
         return self._is_fullscreen
 
-    def set_fullscreen(self, val, engine):
+    def set_fullscreen(self, val):
         if self.is_fullscreen() == val:
             return
         else:
             # print("INFO: set fullscreen to: {}".format(val))
-            # wipe out the possibly outdated cache value
             self._cached_fullscreen_size = None
 
             self._is_fullscreen = val
-            self._update_window(engine)
+            self._update_display_mode()
 
     def window_to_screen_pos(self, pos):
         if pos is None:

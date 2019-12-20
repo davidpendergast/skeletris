@@ -250,23 +250,30 @@ def run():
         if toggled_fullscreen:
             # print("INFO {}: toggled fullscreen".format(gs.get_instance().tick_counter))
             win = WindowState.get_instance()
-            win.set_fullscreen(not win.is_fullscreen(), RenderEngine.get_instance())
+            engine = RenderEngine.get_instance()
+            win.set_fullscreen(not win.is_fullscreen())
 
-            new_pixel_scale = _calc_pixel_scale(win.get_display_size())
+            new_size = win.get_display_size()
+            new_pixel_scale = _calc_pixel_scale(new_size)
             if new_pixel_scale != RenderEngine.get_instance().get_pixel_mult():
                 RenderEngine.get_instance().set_pixel_mult(new_pixel_scale)
+            engine.resize(new_size[0], new_size[1], px_scale=new_pixel_scale)
 
+            # when it goes from fullscreen to windowed mode, pygame sends a VIDEORESIZE event
+            # on the next frame that claims the window has been resized to the maximum resolution.
+            # this is annoying so we ignore it. we want the window to remain the same size it was
+            # before the fullscreen happened.
             ignore_resize_events_next_tick = True
 
         if not ignore_resize_events_this_tick and len(all_resize_events) > 0:
             # print("INFO {}: got {} resize event(s)".format(gs.get_instance().tick_counter, len(all_resize_events)))
             last_resize_event = all_resize_events[-1]
-            # XXX ideally we'd set the window size to no smaller than the min size
-            # but that seems to break resizing entirely on linux so... (._.)
-            WindowState.get_instance().set_window_size(last_resize_event.w, last_resize_event.h, None)
+
+            WindowState.get_instance().set_window_size(last_resize_event.w, last_resize_event.h)
 
             display_w, display_h = WindowState.get_instance().get_display_size()
             new_pixel_scale = _calc_pixel_scale((last_resize_event.w, last_resize_event.h))
+
             RenderEngine.get_instance().resize(display_w, display_h, px_scale=new_pixel_scale)
 
         input_state.update(gs.get_instance().tick_counter)
