@@ -2,6 +2,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 
 import numpy
+import math
 
 
 def assert_int(val):
@@ -231,7 +232,7 @@ class RenderEngine:
         self.camera_pos = [0, 0]
         self.size = (0, 0)
         self.min_size = (0, 0)
-        self._pixel_mult = 1  # the number of screen "pixels" per game pixel
+        self._pixel_scale = 1  # the number of screen "pixels" per game pixel
         self.layers = {}  # layer_id -> layer
         self.hidden_layers = {}  # layer_id -> None
         self.ordered_layers = []
@@ -276,9 +277,13 @@ class RenderEngine:
 
     def resize(self, w, h, px_scale=None):
         if px_scale is not None:
-            self._pixel_mult = px_scale
-        self.size = (max(w, self.min_size[0]),
-                     max(h, self.min_size[1]))
+            self._pixel_scale = px_scale
+
+        w = max(w, self.min_size[0])
+        h = max(h, self.min_size[1])
+
+        self.size = (w, h)
+
         self.resize_internal()
 
     def set_min_size(self, w, h):
@@ -288,8 +293,8 @@ class RenderEngine:
             self.resize(self.size[0], self.size[1])
 
     def get_game_size(self):
-        return (int(self.size[0] / self.get_pixel_mult()),
-                int(self.size[1] / self.get_pixel_mult()))
+        return (math.ceil(self.size[0] / self.get_pixel_scale()),
+                math.ceil(self.size[1] / self.get_pixel_scale()))
 
     def set_clear_color(self, r, g, b):
         """
@@ -297,10 +302,10 @@ class RenderEngine:
         """
         glClearColor(r / 255, g / 255, b / 255, 0.0)
 
-    def get_pixel_mult(self):
-        return self._pixel_mult
+    def get_pixel_scale(self):
+        return self._pixel_scale
 
-    def set_pixel_mult(self, val):
+    def set_pixel_scale(self, val):
         self.resize(self.size[0], self.size[1], px_scale=val)
 
     def get_glsl_version(self):
@@ -675,7 +680,6 @@ class RenderEngine130(RenderEngine):
         printOpenGLError()
 
     def resize_internal(self):
-        window_width, window_height = self.size
         game_width, game_height = self.get_game_size()
 
         self._proj_matrix = numpy.identity(4, dtype=numpy.float32)
@@ -687,11 +691,24 @@ class RenderEngine130(RenderEngine):
 
         self.set_matrix_offset(0, 0)
 
-        glViewport(0, 0, window_width, window_height)
+        vp_width, vp_height = self._calc_optimal_vp_size(self.size, self.get_pixel_scale())
+        glViewport(0, 0, vp_width, vp_height)
         printOpenGLError()
 
         #print("INFO: set render engine size to ({}, {}), game_size to ({}, {})".format(
         #    window_width, window_height, game_width, game_height))
+
+    def _calc_optimal_vp_size(self, window_size, px_scale):
+        """
+            finds the smallest dimensions greater than or equal to window_size
+            that are evenly divisible by px_scale.
+        """
+        w, h = window_size
+        if w % px_scale != 0:
+            w += (px_scale - w % px_scale)
+        if h % px_scale != 0:
+            h += (px_scale - h % px_scale)
+        return (w, h)
 
     def set_texture_internal(self):
         if self.raw_texture_data is not None:

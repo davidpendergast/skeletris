@@ -10,7 +10,6 @@
  - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
- - slight issues with textures on certain (odd-numbered?) resolutions
  - going in and out of fullscreen mode loses the window position (or something like that?)
  - amphibian song is too quiet?
  

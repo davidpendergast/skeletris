@@ -85,7 +85,7 @@ def init(name_of_game):
     zones.init_zones()
 
     px_scale = _calc_pixel_scale(DEFAULT_SCREEN_SIZE, px_scale_opt=gs.get_instance().settings().pixel_scale())
-    render_eng.set_pixel_mult(px_scale)
+    render_eng.set_pixel_scale(px_scale)
 
 
 def _calc_pixel_scale(screen_size, px_scale_opt=None, max_scale=4):
@@ -227,7 +227,7 @@ def run():
 
             elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                 scr_pos = WindowState.get_instance().window_to_screen_pos(event.pos)
-                game_pos = Utils.round(Utils.mult(scr_pos, 1 / RenderEngine.get_instance().get_pixel_mult()))
+                game_pos = Utils.round(Utils.mult(scr_pos, 1 / RenderEngine.get_instance().get_pixel_scale()))
                 input_state.set_mouse_pos(game_pos)
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -255,8 +255,8 @@ def run():
 
             new_size = win.get_display_size()
             new_pixel_scale = _calc_pixel_scale(new_size)
-            if new_pixel_scale != RenderEngine.get_instance().get_pixel_mult():
-                RenderEngine.get_instance().set_pixel_mult(new_pixel_scale)
+            if new_pixel_scale != RenderEngine.get_instance().get_pixel_scale():
+                RenderEngine.get_instance().set_pixel_scale(new_pixel_scale)
             engine.resize(new_size[0], new_size[1], px_scale=new_pixel_scale)
 
             # when it goes from fullscreen to windowed mode, pygame sends a VIDEORESIZE event
@@ -316,7 +316,7 @@ def run():
 
             display_size = WindowState.get_instance().get_display_size()
             new_pixel_scale = _calc_pixel_scale(display_size)
-            RenderEngine.get_instance().set_pixel_mult(new_pixel_scale)
+            RenderEngine.get_instance().set_pixel_scale(new_pixel_scale)
 
         world = gs.get_instance().get_world()
         if world is not None:
