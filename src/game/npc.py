@@ -413,9 +413,18 @@ class ConversationFactory:
             skelekid_sprites = get_sprites(NpcID.SKELEKID)
             grok_sprites = get_sprites(NpcID.GROK)
 
-            res_list = [
-                NpcDialog("Testing... 1")
-            ]
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("This is the place, right?", sprites=mary_sprites),
+                    NpcDialog("The mainframe is right through there. Be careful though - we have no idea what's been done to it.", sprites=grok_sprites),
+                    NpcDialog("We just need to access the server logs and get out. Then we'll know who was behind this and how to fight back.", sprites=skelekid_sprites),
+                    NpcDialog("And hey, it might not even be that dangerous. It's just a computer after all.", sprites=grok_sprites),
+                    NpcDialog("Well, there's only one way to find out.", sprites=mary_sprites),
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Good luck, survivor. We're all counting on you.", sprites=mary_sprites),
+                ]
 
         if conv == Conversations.POST_ROBO_FIGHT:
             mary_sprites = get_sprites(NpcID.MARY_SKELLY)
@@ -424,7 +433,17 @@ class ConversationFactory:
             machine_sprites = get_sprites(NpcID.MACHINE)
 
             res_list = [
-                NpcDialog("Testing.... 2")
+                NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", sprites=grok_sprites),
+                NpcDialog("You said it was just a computer! What the hell was that?", sprites=mary_sprites),
+                NpcDialog(">> DEFENSE FORM\n>> Version 3.4.1a", sprites=machine_sprites),
+                NpcDialog("It's still online?! It's listening to us?", sprites=skelekid_sprites),
+                NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", sprites=skelekid_sprites),
+                NpcDialog(">> Running Security Checks....\n" +
+                          ">> Result: 59/59 PASSED\n" +
+                          ">> No illicit activity detected.", sprites=machine_sprites),
+                NpcDialog("Then why didn't you PROTECT us?", sprites=skelekid_sprites),
+                NpcDialog(">> Scanning...\n" +
+                          ">> Result: 98.25% of citizens are protected.", sprites=machine_sprites)
             ]
 
         if conv == Conversations.MACHINE_INTRO:
