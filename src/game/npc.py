@@ -328,7 +328,7 @@ class ConversationFactory:
                     NpcDialog("They became aggressive 4 cycles ago, around the same time we lost contact with Skeletris."),
                     NpcDialog("And since then, we haven't received a single message or traveler from the city."),
                     NpcDialog("There's a path, through the swamps to the north, but it's too dangerous for any of us."),
-                    NpcDialog("We've already... lost some friends, trying..."),
+                    NpcDialog("We've already... lost someone, trying to pass through..."),
                     NpcDialog("If we can't reconnect, we'll eventually run out of supplies here and go dormant."),
                     NpcDialog("Would you help guide us to the city? We'll follow behind and assist you on the journey."),
                     NpcDialog("What do you say?")

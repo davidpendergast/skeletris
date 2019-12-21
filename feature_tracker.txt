@@ -14,7 +14,6 @@
  - amphibian song is too quiet?
  
 [story bugs]
- - mary says "lost some friends", when really the outpost only lost one person
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
