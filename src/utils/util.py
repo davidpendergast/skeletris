@@ -2,9 +2,9 @@ import math
 import random
 import os
 import json
-import sys
 import numbers
 import pathlib
+import sys
 
 import pygame
 
@@ -404,4 +404,12 @@ class Utils:
                 return mapper(json_blob[key])
             except ValueError:
                 return default
+
+    @staticmethod
+    def python_version_string():
+        major = sys.version_info[0]
+        minor = sys.version_info[1]
+        patch = sys.version_info[2]
+        return "{}.{}.{}".format(major, minor, patch)
+
 

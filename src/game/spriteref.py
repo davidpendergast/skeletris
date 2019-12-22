@@ -495,6 +495,11 @@ wall_decoration_bone_pile_right = [make(96, 432, 32, 24, and_add_to_list=large_d
 wall_decoration_skull_racks = [make(i * 32, 464, 32, 24, and_add_to_list=large_decs) for i in range(0, 4)]
 wall_decoration_fans = [make(i * 32, 496, 32, 24, and_add_to_list=large_decs) for i in range(0, 4)]
 
+wall_decoration_skul_console_left = make(128, 432, 32, 24, and_add_to_list=large_decs)
+wall_decoration_skul_console_skull = make(160, 416, 32, 40, and_add_to_list=large_decs)
+wall_decoration_skul_console_right = make(192, 432, 32, 24, and_add_to_list=large_decs)
+wall_decoration_skul_console_empty = make(224, 416, 32, 40, and_add_to_list=large_decs)
+
 smol_decs = []
 wall_decoration_bucket = make(0, 384, 8, 16, and_add_to_list=smol_decs)
 wall_decoration_plants = [make(8, 376, 8, 24, and_add_to_list=smol_decs),
@@ -569,6 +574,7 @@ save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]
 cave_horror_faces = [make(368, 336 + i * 32, 32, 32) for i in range(0, 2)]
+skul_faces = [make(400, 336 + i * 32, 32, 32) for i in range(0, 2)]
 
 
 def get_item_entity_sprite(cubes):

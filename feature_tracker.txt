@@ -12,6 +12,8 @@
  - tutorial text renders awkwardly when it overlaps very large enemies
  - going in and out of fullscreen mode loses the window position (or something like that?)
  - amphibian song is too quiet?
+ - player is standing up for a single frame at start of game
+ - talking sprites bob too quickly
  
 [story bugs]
  

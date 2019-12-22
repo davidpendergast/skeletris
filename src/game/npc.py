@@ -1,6 +1,7 @@
 
 from enum import Enum
 import random
+import traceback
 
 import src.game.spriteref as sr
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
@@ -21,6 +22,7 @@ class NpcID(Enum):
     DOCTOR = "DOCTOR"
     SKELEKID = "SKELEKID"
     HEAD = "HEAD"
+    SKUL = "SKUL"
 
     CAVE_HORROR = "CAVE_HORROR"
 
@@ -128,6 +130,12 @@ class HeadTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.HEAD, "Disembodied Head", sr.skull_head_all, sr.skull_head_faces, ("h", colors.YELLOW))
 
 
+class SkulTemplate(NpcTemplate):
+
+    def __init__(self):
+        NpcTemplate.__init__(self, NpcID.SKUL, "S.K.U.L", sr.wall_decoration_skul_console_skull, sr.skul_faces, ("S", colors.YELLOW))
+
+
 # TODO - delete? not ever used as an NPC, feels like it shouldn't talk?
 class CaveHorrorNpcTemplate(NpcTemplate):
 
@@ -165,7 +173,9 @@ TEMPLATES = {
 
     NpcID.HEAD: HeadTemplate(),
 
-    NpcID.CAVE_HORROR: CaveHorrorNpcTemplate()  # TODO - not used, it's stupid to have them talk
+    NpcID.CAVE_HORROR: CaveHorrorNpcTemplate(),  # TODO - not used, it's stupid to have them talk
+
+    NpcID.SKUL: SkulTemplate()
 }
 
 
@@ -430,21 +440,53 @@ class ConversationFactory:
             mary_sprites = get_sprites(NpcID.MARY_SKELLY)
             skelekid_sprites = get_sprites(NpcID.SKELEKID)
             grok_sprites = get_sprites(NpcID.GROK)
-            machine_sprites = get_sprites(NpcID.MACHINE)
+            skul_sprites = get_sprites(NpcID.SKUL)
 
-            res_list = [
-                NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", sprites=grok_sprites),
-                NpcDialog("You said it was just a computer! What the hell was that?", sprites=mary_sprites),
-                NpcDialog(">> DEFENSE FORM\n>> Version 3.4.1a", sprites=machine_sprites),
-                NpcDialog("It's still online?! It's listening to us?", sprites=skelekid_sprites),
-                NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", sprites=skelekid_sprites),
-                NpcDialog(">> Running Security Checks....\n" +
-                          ">> Result: 59/59 PASSED\n" +
-                          ">> No illicit activity detected.", sprites=machine_sprites),
-                NpcDialog("Then why didn't you PROTECT us?", sprites=skelekid_sprites),
-                NpcDialog(">> Scanning...\n" +
-                          ">> Result: 98.25% of citizens are protected.", sprites=machine_sprites)
-            ]
+            skul_version = Utils.python_version_string()  # lol
+
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", sprites=grok_sprites),
+                    NpcDialog("You said it was just a computer! What the hell was that?", sprites=mary_sprites),
+                    NpcDialog(">> S.K.U.L DEFENSE FORM\n>> Version {}".format(skul_version), sprites=skul_sprites),
+                    NpcDialog("It's still online?! It's listening to us?", sprites=skelekid_sprites),
+                    NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", sprites=skelekid_sprites),
+                    NpcDialog(">> Running Security Checks....\n" +
+                              ">> Result: 59/59 PASSED\n" +
+                              ">> No illicit activity detected.", sprites=skul_sprites),
+                    NpcDialog("Then why didn't you PROTECT us?", sprites=skelekid_sprites),
+                    NpcDialog(">> Scanning...\n" +
+                              ">> 96.25% of citizens are protected.", sprites=skul_sprites),
+                    NpcDialog("It thinks they're protected? But no one is even here.", sprites=mary_sprites),
+                    NpcDialog("Computer, where is everyone?", sprites=grok_sprites),
+                    NpcDialog(">> Skeletris Catacombs", sprites=skul_sprites),
+                    NpcDialog("The catacombs? That's where the city's fungus reserves are kept. Why would it move everyone down there?", sprites=grok_sprites),
+                    NpcDialog("Maybe it malfunctioned?", sprites=mary_sprites),
+                    NpcDialog("Stupid machine! Why did you move everyone down there? You destroyed the city!", sprites=skelekid_sprites),
+                    NpcDialog(">> Citizens were moved to satisfy the PRIMARY GOALS.", sprites=skul_sprites),
+                    NpcDialog("What are the primary goals?", sprites=mary_sprites),
+                    NpcDialog(">> 1. Protect Citizens from Harm\n" +
+                              ">> 2. Maintain Order and Justice\n" +
+                              ">> 3. Increase Gross Assets of Skeletris"),
+                    NpcDialog("Those seem... reasonable?", sprites=skelekid_sprites),
+                    NpcDialog("I wonder... computer, how have the city's gross assets changed over the past eight cycles?", sprites=mary_sprites),
+                    NpcDialog(">> Cycle 1532: +3.9%\n" +
+                              ">> Cycle 1533: +4.2%\n" +
+                              ">> Cycle 1534: +3.7%\n" +
+                              ">> Cycle 1535: +3.9%", sprites=skul_sprites),
+                    NpcDialog(">> Cycle 1536: +45,023.2%\n" +
+                              ">> Cycle 1537: +113,003,203.3%\n" +
+                              ">> Cycle 1538: +5.2%\n" +
+                              ">> Cycle 1539: +4.9%", sprites=skul_sprites),
+                    NpcDialog("Those numbers are impossible. Mushrooms don't grow that fast.", sprites=grok_sprites),
+                    NpcDialog("It was... raising revenue? Those spikes happened immediately before and during the attacks.", sprites=mary_sprites),
+                    NpcDialog("So it did malfunction?! How could our leaders let this happen?", sprites=skelekid_sprites),
+                    NpcDialog("Let's search the catacombs. If the computer is telling the truth that's where everyone is being held.", sprites=mary_sprites),
+                ]
+            else:
+                res_list = [
+                    NpcDialog("We should search the catacombs.", sprites=mary_sprites),
+                ]
 
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:
