@@ -32,6 +32,10 @@ class DecorationTypes:
     FAN = _add_dec_type("FAN", rand_spawn=False)
     SIGN = _add_dec_type("SIGN", rand_spawn=False)
 
+    SKUL_LEFT = _add_dec_type("SKUL_CONSOLE_LEFT", rand_spawn=False)
+    SKUL_RIGHT = _add_dec_type("SKUL_CONSOLE_RIGHT", rand_spawn=False)
+    SKUL_CONSOLE = _add_dec_type("SKUL_CONSOLE_CONSOLE", rand_spawn=False)
+
 
 class DecorationFactory:
 
@@ -101,6 +105,12 @@ class DecorationFactory:
             return [spriteref.wall_decoration_skull_racks]
         elif dec_type == DecorationTypes.FAN:
             return [spriteref.wall_decoration_fans]
+        elif dec_type == DecorationTypes.SKUL_LEFT:
+            return spriteref.wall_decoration_skul_console_left
+        elif dec_type == DecorationTypes.SKUL_RIGHT:
+            return spriteref.wall_decoration_skul_console_right
+        elif dec_type == DecorationTypes.SKUL_CONSOLE:
+            return spriteref.wall_decoration_skul_console_skull
         else:
             raise ValueError("unknown decoration type: {}".format(dec_type))
 

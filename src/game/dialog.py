@@ -46,6 +46,9 @@ class Dialog:
     def get_uid(self):
         return self.uid
 
+    def get_speaker_id(self):
+        return None
+
     def get_next(self):
         return self.next
 
@@ -91,14 +94,27 @@ class Dialog:
 
 class PlayerDialog(Dialog):
 
+    PLAYER_ID = "PLAYER"
+
     def __init__(self, text):
         Dialog.__init__(self, text, sprites=spriteref.player_faces, left_side=True)
+
+    def get_speaker_id(self):
+        return PlayerDialog.PLAYER_ID
 
 
 class NpcDialog(Dialog):
 
-    def __init__(self, text, sprites=None):
+    def __init__(self, text, sprites=None, npc_id=None):
+        if sprites is None and npc_id is not None:
+            import src.game.npc as npc
+            sprites = npc.get_sprites(npc_id)
+
         Dialog.__init__(self, text, sprites=sprites, left_side=False)
+        self.npc_id = npc_id
+
+    def get_speaker_id(self):
+        return self.npc_id
 
 
 class DialogManager:

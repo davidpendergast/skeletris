@@ -1255,7 +1255,9 @@ class RoboLairZone(Zone):
         self._grok_spawn_1 = (225, 172, 150)
         self._grok_spawn_2 = (225, 172, 151)
 
-        self._machine_spawn = (255, 173, 151)
+        self._skul_console_left = (0, 130, 150)
+        self._skul_console = (0, 170, 150)
+        self._skul_console_right = (0, 190, 150)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1288,6 +1290,31 @@ class RoboLairZone(Zone):
                 grid_pos = unknowns[color_id][0]
                 w.add(npc_ent, gridcell=grid_pos)
 
+        if self._skul_console_left in unknowns:
+            pos = unknowns[self._skul_console_left][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_LEFT)
+            w.add(dec, gridcell=pos)
+
+        if self._skul_console_right in unknowns:
+            pos = unknowns[self._skul_console_right][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_RIGHT)
+            w.add(dec, gridcell=pos)
+
+        if self._skul_console in unknowns:
+            pos = unknowns[self._skul_console][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_CONSOLE)
+
+            def _get_skul_sprites(_ent, _world):
+                if gs.get_instance().dialog_manager().is_active():
+                    dia = gs.get_instance().dialog_manager().get_dialog()
+                    if dia is not None and dia.get_speaker_id() == npc.NpcID.SKUL:
+                        return [spriteref.wall_decoration_skul_console_skull]
+                return [spriteref.wall_decoration_skul_console_empty]
+
+            dec.set_sprite_provider(_get_skul_sprites)
+
+            w.add(dec, gridcell=pos)
+
         return w
 
     def _gen_npcs(self, pre_fight):
@@ -1303,13 +1330,11 @@ class RoboLairZone(Zone):
             }
         else:
             grok_post = npc.NpcFactory.gen_convo_npc(npc.NpcID.GROK, npc.Conversations.POST_ROBO_FIGHT)
-            machine_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.MACHINE, grok_post.get_uid())
             mary_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, grok_post.get_uid())
             skelekid_post = npc.NpcFactory.gen_linked_npc(npc.NpcID.SKELEKID, grok_post.get_uid())
 
             return {
                 self._grok_spawn_2: grok_post,
-                self._machine_spawn: machine_post,
                 self._mary_spawn_2: mary_post,
                 self._skelekid_spawn_2: skelekid_post
             }

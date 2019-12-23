@@ -376,22 +376,22 @@ class ConversationFactory:
             mary_sprites = get_sprites(NpcID.MARY_SKELLY)
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("AHH! HELP! They took my BONES! MY BONES.", sprites=head_sprites),
-                    NpcDialog("Who did this? Where are the guards?", sprites=mary_sprites),
-                    NpcDialog("I'm so NUMB. So UNFEELING. So EMPTY. My BONES...", sprites=head_sprites),
-                    NpcDialog("What happened to your bones?", sprites=mary_sprites),
-                    NpcDialog("Those DAMN scientists with their experiments. Drove the animals MAD with their tinkering.", sprites=head_sprites),
-                    NpcDialog("Attacked the city. Systems failed. Bones, STOLEN. Discarded. DISMANTLED", sprites=head_sprites),
-                    NpcDialog("The animals did this to you?", sprites=mary_sprites),
-                    NpcDialog("No... other... things too. Horrible things...", sprites=head_sprites),
-                    NpcDialog("The whole city fell? How could that.. even happen?", sprites=mary_sprites),
-                    NpcDialog("Need my bones... Where are my BONES...?", sprites=head_sprites),
-                    NpcDialog("We're going to try to find your bones, ok? We're going to fix this.", sprites=mary_sprites)
+                    NpcDialog("AHH! HELP! They took my BONES! MY BONES.", npc_id=NpcID.HEAD),
+                    NpcDialog("Who did this? Where are the guards?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("I'm so NUMB. So UNFEELING. So EMPTY. My BONES...", npc_id=NpcID.HEAD),
+                    NpcDialog("What happened to your bones?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Those DAMN scientists with their experiments. Drove the animals MAD with their tinkering.", npc_id=NpcID.HEAD),
+                    NpcDialog("Attacked the city. Systems failed. Bones, STOLEN. Discarded. DISMANTLED", npc_id=NpcID.HEAD),
+                    NpcDialog("The animals did this to you?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("No... other... things too. Horrible things...", npc_id=NpcID.HEAD),
+                    NpcDialog("The whole city fell? How could that.. even happen?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Need my bones... Where are my BONES...?", npc_id=NpcID.HEAD),
+                    NpcDialog("We're going to try to find your bones, ok? We're going to fix this.", npc_id=NpcID.MARY_SKELLY)
                 ]
             else:
                 res_list = [
-                    NpcDialog("Where are my BONES? My precious bones...", sprites=head_sprites),
-                    NpcDialog("We should get moving. There's nothing we can do for him here.", sprites=mary_sprites)
+                    NpcDialog("Where are my BONES? My precious bones...", npc_id=NpcID.HEAD),
+                    NpcDialog("We should get moving. There's nothing we can do for him here.", npc_id=NpcID.MARY_SKELLY)
                 ]
 
         if conv == Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS:
@@ -401,21 +401,21 @@ class ConversationFactory:
 
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("K-keep your voice down... sound carries through the vents.", sprites=skelekid_sprites),
-                    NpcDialog("We're from Outpost 53. What happened to the city? Where is everybody?", sprites=mary_sprites),
-                    NpcDialog("We were hoping you could tell us. We've been hiding since the violence started.", sprites=grok_sprites),
-                    NpcDialog("We know what this was - it was a rebellion. An uprising against the Skeletons, we heard the whole thing.", sprites=skelekid_sprites),
-                    NpcDialog("It was a coordinated attack. They moved from sector to sector, dismantling us like insects.", sprites=skelekid_sprites),
-                    NpcDialog("The animals and the lesser undeads, they wanted the city for themselves so they took it. Somehow.", sprites=skelekid_sprites),
-                    NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", sprites=grok_sprites),
-                    NpcDialog("The wildlife in the swamp were the same way. Aggressive, all of the sudden.", sprites=mary_sprites),
-                    NpcDialog("Well - whoever it was, they managed to hack the S.K.U.L mainframe and turn it against us.", sprites=skelekid_sprites),
-                    NpcDialog("The doors, weapons, communication systems - it was all locked down. Until the enemy needed to use them.", sprites=skelekid_sprites),
-                    NpcDialog("We should find the mainframe. Maybe there will be more clues there.", sprites=mary_sprites)
+                    NpcDialog("K-keep your voice down... sound carries through the vents.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("We're from Outpost 53. What happened to the city? Where is everybody?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("We were hoping you could tell us. We've been hiding since the violence started.", npc_id=NpcID.GROK),
+                    NpcDialog("We know what this was - it was a rebellion. An uprising against the Skeletons, we heard the whole thing.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("It was a coordinated attack. They moved from sector to sector, dismantling us like insects.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("The animals and the lesser undeads, they wanted the city for themselves so they took it. Somehow.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", npc_id=NpcID.GROK),
+                    NpcDialog("The wildlife in the swamp were the same way. Aggressive, all of the sudden.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Well - whoever it was, they managed to hack the S.K.U.L mainframe and turn it against us.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("The doors, weapons, communication systems - it was all locked down. Until the enemy needed to use them.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("We should find the mainframe. Maybe there will be more clues there.", npc_id=NpcID.MARY_SKELLY)
                 ]
             else:
                 res_list = [
-                    NpcDialog("We should find the mainframe.", sprites=mary_sprites)
+                    NpcDialog("We should find the mainframe.", npc_id=NpcID.MARY_SKELLY)
                 ]
 
         if conv == Conversations.PRE_ROBO_FIGHT:
@@ -425,15 +425,15 @@ class ConversationFactory:
 
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("This is the place, right?", sprites=mary_sprites),
-                    NpcDialog("The mainframe is right through there. Be careful though - we have no idea what's been done to it.", sprites=grok_sprites),
-                    NpcDialog("We just need to access the server logs and get out. Then we'll know who was behind this and how to fight back.", sprites=skelekid_sprites),
-                    NpcDialog("And hey, it might not even be that dangerous. It's just a computer after all.", sprites=grok_sprites),
-                    NpcDialog("Well, there's only one way to find out.", sprites=mary_sprites),
+                    NpcDialog("This is the place, right?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("The mainframe is right through there. Be careful though - we have no idea what's been done to it.", npc_id=NpcID.GROK),
+                    NpcDialog("We just need to access the server logs and get out. Then we'll know who was behind this and how to fight back.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("And hey, it might not even be that dangerous. It's just a computer after all.", npc_id=NpcID.GROK),
+                    NpcDialog("Well, there's only one way to find out.", npc_id=NpcID.MARY_SKELLY),
                 ]
             else:
                 res_list = [
-                    NpcDialog("Good luck, survivor. We're all counting on you.", sprites=mary_sprites),
+                    NpcDialog("Good luck, survivor. We're all counting on you.", npc_id=NpcID.MARY_SKELLY),
                 ]
 
         if conv == Conversations.POST_ROBO_FIGHT:
@@ -446,46 +446,46 @@ class ConversationFactory:
 
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", sprites=grok_sprites),
-                    NpcDialog("You said it was just a computer! What the hell was that?", sprites=mary_sprites),
-                    NpcDialog(">> S.K.U.L DEFENSE FORM\n>> Version {}".format(skul_version), sprites=skul_sprites),
-                    NpcDialog("It's still online?! It's listening to us?", sprites=skelekid_sprites),
-                    NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", sprites=skelekid_sprites),
+                    NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", npc_id=NpcID.GROK),
+                    NpcDialog("You said it was just a computer! What the hell was that?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog(">> S.K.U.L DEFENSE FORM\n>> Version {}".format(skul_version), npc_id=NpcID.SKUL),
+                    NpcDialog("It's still online?! It's listening to us?", npc_id=NpcID.SKELEKID),
+                    NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", npc_id=NpcID.SKELEKID),
                     NpcDialog(">> Running Security Checks....\n" +
                               ">> Result: 59/59 PASSED\n" +
-                              ">> No illicit activity detected.", sprites=skul_sprites),
-                    NpcDialog("Then why didn't you PROTECT us?", sprites=skelekid_sprites),
+                              ">> No illicit activity detected.", npc_id=NpcID.SKUL),
+                    NpcDialog("Then why didn't you PROTECT us?", npc_id=NpcID.SKELEKID),
                     NpcDialog(">> Scanning...\n" +
-                              ">> 96.25% of citizens are protected.", sprites=skul_sprites),
-                    NpcDialog("It thinks they're protected? But no one is even here.", sprites=mary_sprites),
-                    NpcDialog("Computer, where is everyone?", sprites=grok_sprites),
-                    NpcDialog(">> Skeletris Catacombs", sprites=skul_sprites),
-                    NpcDialog("The catacombs? That's where the city's fungus reserves are kept. Why would it move everyone down there?", sprites=grok_sprites),
-                    NpcDialog("Maybe it malfunctioned?", sprites=mary_sprites),
-                    NpcDialog("Stupid machine! Why did you move everyone down there? You destroyed the city!", sprites=skelekid_sprites),
-                    NpcDialog(">> Citizens were moved to satisfy the PRIMARY GOALS.", sprites=skul_sprites),
-                    NpcDialog("What are the primary goals?", sprites=mary_sprites),
+                              ">> 96.25% of citizens are protected.", npc_id=NpcID.SKUL),
+                    NpcDialog("It thinks they're protected? But no one is even here.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Computer, where is everyone?", npc_id=NpcID.GROK),
+                    NpcDialog(">> Skeletris Catacombs", npc_id=NpcID.SKUL),
+                    NpcDialog("The catacombs? That's where the city's fungus reserves are kept. Why would it move everyone down there?", npc_id=NpcID.GROK),
+                    NpcDialog("Maybe it malfunctioned?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Stupid machine! Why did you move everyone down there? You destroyed the city!", npc_id=NpcID.SKELEKID),
+                    NpcDialog(">> Citizens were moved to satisfy the PRIMARY GOALS.", npc_id=NpcID.SKUL),
+                    NpcDialog("What are the primary goals?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog(">> 1. Protect Citizens from Harm\n" +
                               ">> 2. Maintain Order and Justice\n" +
                               ">> 3. Increase Gross Assets of Skeletris"),
-                    NpcDialog("Those seem... reasonable?", sprites=skelekid_sprites),
-                    NpcDialog("I wonder... computer, how have the city's gross assets changed over the past eight cycles?", sprites=mary_sprites),
+                    NpcDialog("Those seem... reasonable?", npc_id=NpcID.SKELEKID),
+                    NpcDialog("I wonder... computer, how have the city's gross assets changed over the past eight cycles?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog(">> Cycle 1532: +3.9%\n" +
                               ">> Cycle 1533: +4.2%\n" +
                               ">> Cycle 1534: +3.7%\n" +
-                              ">> Cycle 1535: +3.9%", sprites=skul_sprites),
+                              ">> Cycle 1535: +3.9%", npc_id=NpcID.SKUL),
                     NpcDialog(">> Cycle 1536: +45,023.2%\n" +
                               ">> Cycle 1537: +113,003,203.3%\n" +
                               ">> Cycle 1538: +5.2%\n" +
-                              ">> Cycle 1539: +4.9%", sprites=skul_sprites),
-                    NpcDialog("Those numbers are impossible. Mushrooms don't grow that fast.", sprites=grok_sprites),
-                    NpcDialog("It was... raising revenue? Those spikes happened immediately before and during the attacks.", sprites=mary_sprites),
-                    NpcDialog("So it did malfunction?! How could our leaders let this happen?", sprites=skelekid_sprites),
-                    NpcDialog("Let's search the catacombs. If the computer is telling the truth that's where everyone is being held.", sprites=mary_sprites),
+                              ">> Cycle 1539: +4.9%", npc_id=NpcID.SKUL),
+                    NpcDialog("Those numbers are impossible. Mushrooms don't grow that fast.", npc_id=NpcID.GROK),
+                    NpcDialog("It was... raising revenue? Those spikes happened immediately before and during the attacks.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("So it did malfunction?! How could our leaders let this happen?", npc_id=NpcID.SKELEKID),
+                    NpcDialog("Let's search the catacombs. If the computer is telling the truth that's where everyone is being held.", npc_id=NpcID.MARY_SKELLY),
                 ]
             else:
                 res_list = [
-                    NpcDialog("We should search the catacombs.", sprites=mary_sprites),
+                    NpcDialog("We should search the catacombs.", npc_id=NpcID.MARY_SKELLY),
                 ]
 
         if conv == Conversations.MACHINE_INTRO:
@@ -552,10 +552,13 @@ class ConversationFactory:
 
         if len(res_list) > 0:
             # setting sprites here just to avoid endless clutter above
-            npc_sprites = get_template(conv.get_npc_id()).get_dialog_sprites()
             for dia in res_list:
-                if isinstance(dia, NpcDialog) and dia.sprites is None:
-                    dia.sprites = npc_sprites
+                if isinstance(dia, NpcDialog):
+                    if dia.sprites is None and dia.npc_id is not None:
+                        dia.sprites = get_template(dia.npc_id).get_dialog_sprites()
+                    elif dia.sprites is None and dia.npc_id is None:
+                        dia.npc_id = conv.get_npc_id()
+                        dia.sprites = get_template(conv.get_npc_id()).get_dialog_sprites()
 
             return dialog.Dialog.link_em_up(res_list)
         else:
@@ -572,19 +575,19 @@ class NpcTradeProtocol:
         return [item]
 
     def get_explain_dialog(self, npc_id):
-        return dialog.NpcDialog("You give me an item, I give it back. Simple.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("You give me an item, I give it back. Simple.", npc_id=npc_id)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Here's your item! Have a nice day.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Here's your item! Have a nice day.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
-        return dialog.NpcDialog("I hope you're enjoying the item!", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("I hope you're enjoying the item!", npc_id=npc_id)
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("I can't accept that type of item.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("I can't accept that type of item.", npc_id=npc_id)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("No more trades today. Sorry!", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("No more trades today. Sorry!", npc_id=npc_id)
 
 
 class NpcMirrorTradeProtocol(NpcTradeProtocol):
@@ -597,16 +600,16 @@ class NpcMirrorTradeProtocol(NpcTradeProtocol):
         return [item.mirror()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Care to make a trade?", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Care to make a trade?", npc_id=npc_id),
              dialog.PlayerDialog("What's the trade?"),
-             dialog.NpcDialog("It's simple. You give me an Artifact, and I'll flip it for you.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("It's simple. You give me an Artifact, and I'll flip it for you.", npc_id=npc_id),
              dialog.PlayerDialog("Flip it for me?"),
-             dialog.NpcDialog("You'll see. Interested?", sprites=get_sprites(npc_id))]
+             dialog.NpcDialog("You'll see. Interested?", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
         return dialog.NpcDialog("No, no. Not that kind of item. It needs to be more... " +
-                                "how do I describe it... cubelike?", sprites=get_sprites(npc_id))
+                                "how do I describe it... cubelike?", npc_id=npc_id)
 
 
 class NpcPotionProtocol(NpcTradeProtocol):
@@ -637,19 +640,19 @@ class NpcPotionProtocol(NpcTradeProtocol):
         return [item]
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("I can't accept that. Only potions.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("I can't accept that. Only potions.", npc_id=npc_id)
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", npc_id=npc_id),
              dialog.PlayerDialog("What's the catch?"),
-             dialog.NpcDialog("No catch. Just an honest deal. How about it?", sprites=get_sprites(npc_id))]
+             dialog.NpcDialog("No catch. Just an honest deal. How about it?", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_post_success_dialog(self, npc_id):
-        return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", npc_id=npc_id)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("Hey, hey. I think you've had enough.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Hey, hey. I think you've had enough.", npc_id=npc_id)
 
 
 class NpcRerollCubesProtocol(NpcTradeProtocol):
@@ -662,28 +665,28 @@ class NpcRerollCubesProtocol(NpcTradeProtocol):
         return [item.reroll_cubes()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", npc_id=npc_id),
              dialog.PlayerDialog("What kind of things?"),
-             dialog.NpcDialog("Artifacts! What else? Come on. Give me one. Quickly.", sprites=get_sprites(npc_id))]
+             dialog.NpcDialog("Artifacts! What else? Come on. Give me one. Quickly.", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Stop screwing around! An Artifact! Give me an Artifact.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Stop screwing around! An Artifact! Give me an Artifact.", npc_id=npc_id)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Look at that! Completely reforged. Does it fit better now?", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Look at that! Completely reforged. Does it fit better now?", npc_id=npc_id)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("Sorry kid. I'm spent. Come back another time.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Sorry kid. I'm spent. Come back another time.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
         d = [dialog.NpcDialog("Enjoying that item I gave you?"),
              dialog.PlayerDialog("Yeah, it's pretty nice."),
              dialog.NpcDialog("No need to thank me. I do accept tips though. And positive reviews are appreciated. " +
-                              "And have you seen my twitter?", sprites=get_sprites(npc_id)),
+                              "And have you seen my twitter?", npc_id=npc_id),
              dialog.PlayerDialog("Yeah! yeah. I'll check it out. I gotta... get going, though, ya know."),
              dialog.NpcDialog("Oh, right, right. Very busy. You will check it out though? " +
-                              "Let me just get you the URL...", sprites=get_sprites(npc_id)),
+                              "Let me just get you the URL...", npc_id=npc_id),
              dialog.PlayerDialog("Yeah! No worries, I'll find it. Thanks! Love the item. Bye!")]
         return dialog.Dialog.link_em_up(d)
 
@@ -699,23 +702,23 @@ class NpcRerollStatsProtocol(NpcTradeProtocol):
 
     def get_explain_dialog(self, npc_id):
         d = [dialog.NpcDialog("Need some help? Give me an Artifact, and I'll re-roll the stats for you.",
-                              sprites=get_sprites(npc_id)),
+                              npc_id=npc_id),
              dialog.PlayerDialog("That does sound helpful."),
              dialog.NpcDialog("I'll do my best! But it's unpredictable. " +
-                              "No guarantees it'll improve, I'm afraid.", sprites=get_sprites(npc_id)),
-             dialog.NpcDialog("Care to give it a shot?", sprites=get_sprites(npc_id))
+                              "No guarantees it'll improve, I'm afraid.", npc_id=npc_id),
+             dialog.NpcDialog("Care to give it a shot?", npc_id=npc_id)
             ]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Oh, I've confused you. The item needs to be an Artifact.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Oh, I've confused you. The item needs to be an Artifact.", npc_id=npc_id)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Here you go! I hope you like it.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Here you go! I hope you like it.", npc_id=npc_id)
 
     def get_no_more_trades_dialog(self, npc_id):
         return dialog.NpcDialog("I can't do any more right now I'm afraid. " +
-                                "But if you see me around, don't hesitate to say hello!", sprites=get_sprites(npc_id))
+                                "But if you see me around, don't hesitate to say hello!", npc_id=npc_id)
 
 
 class NpcRerollArtProtocol(NpcTradeProtocol):
@@ -728,38 +731,38 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
         return [item.reroll_art()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Hey, you there! Hey! You! I've got something for you.", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Hey, you there! Hey! You! I've got something for you.", npc_id=npc_id),
              dialog.PlayerDialog("I'm standing right here... no need to yell..."),
              dialog.NpcDialog("I can do something quite special. Something no one else can do. " +
-                              "Something few can even wrap their minds around.", sprites=get_sprites(npc_id)),
+                              "Something few can even wrap their minds around.", npc_id=npc_id),
              dialog.PlayerDialog("What are you going to do?"),
-             dialog.NpcDialog("Just give me your best, favorite, Artifact, and then you'll see.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Just give me your best, favorite, Artifact, and then you'll see.", npc_id=npc_id),
              dialog.PlayerDialog("You can't just tell me?"),
-             dialog.NpcDialog("And spoil the surprise? No way! What do you say?", sprites=get_sprites(npc_id))
+             dialog.NpcDialog("And spoil the surprise? No way! What do you say?", npc_id=npc_id)
              ]
         return dialog.Dialog.link_em_up(d)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Ah-ha, see? Look at that. Spectacular.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Ah-ha, see? Look at that. Spectacular.", npc_id=npc_id)
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Are you deaf? It's gotta be an artifact. This won't work.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Are you deaf? It's gotta be an artifact. This won't work.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
         d = [dialog.PlayerDialog("Did anything... change?"),
              dialog.NpcDialog("Ha, ha... you're joking, right? Look at the color! " +
-                              "The designs! It's totally different!", sprites=get_sprites(npc_id)),
+                              "The designs! It's totally different!", npc_id=npc_id),
              dialog.PlayerDialog("Oh. Hmm. I guess... I don't remember how it used to look."),
              dialog.NpcDialog("What are you, a goldfish? Two seconds pass and everything goes \"poof\"? "
-                              "No one cares about the details anymore.", sprites=get_sprites(npc_id)),
+                              "No one cares about the details anymore.", npc_id=npc_id),
              dialog.PlayerDialog("What's a goldfish?"),
-             dialog.NpcDialog("...", sprites=get_sprites(npc_id)),
-             dialog.NpcDialog("Just astonishing, you turned out to be. ", sprites=get_sprites(npc_id))
+             dialog.NpcDialog("...", npc_id=npc_id),
+             dialog.NpcDialog("Just astonishing, you turned out to be. ", npc_id=npc_id)
             ]
         return dialog.Dialog.link_em_up(d)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("Only one per customer! I'm very busy you know.", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Only one per customer! I'm very busy you know.", npc_id=npc_id)
 
 
 class NpcItemThatFitsProtocol(NpcTradeProtocol):
@@ -905,36 +908,36 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         return [new_item]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. How can I help you?", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. How can I help you?", npc_id=npc_id),
              dialog.PlayerDialog("How does this work?"),
-             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then I'll re-print it so it fits in your grid.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then I'll re-print it so it fits in your grid.", npc_id=npc_id),
              dialog.PlayerDialog("Will the item's stats change?"),
-             dialog.NpcDialog("Sometimes. That's part of the fun!", sprites=get_sprites(npc_id)),
-             dialog.NpcDialog("Just make sure there is enough space for the new item. Otherwise it definitely won't work.", sprites=get_sprites(npc_id)),
+             dialog.NpcDialog("Sometimes. That's part of the fun!", npc_id=npc_id),
+             dialog.NpcDialog("Just make sure there is enough space for the new item. Otherwise it definitely won't work.", npc_id=npc_id),
         ]
         return dialog.Dialog.link_em_up(d)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Print completed successfully. Enjoy!", sprites=get_sprites(npc_id))
+        return dialog.NpcDialog("Print completed successfully. Enjoy!", npc_id=npc_id)
 
     def get_wrong_item_dialog(self, npc_id, item):
         if not self._is_valid_item_type(item):
             return dialog.NpcDialog("ERROR: PrintBot is not compatible with this item. Only artifacts are supported.",
-                                    sprites=get_sprites(npc_id))
+                                    npc_id=npc_id)
         elif not self._is_enough_space_for_new_item(item):
-            return dialog.NpcDialog("ERROR: Not enough space in equipment grid.", sprites=get_sprites(npc_id))
+            return dialog.NpcDialog("ERROR: Not enough space in equipment grid.", npc_id=npc_id)
         else:
-            return dialog.NpcDialog("ERROR: Unexpected error.", sprites=get_sprites(npc_id))
+            return dialog.NpcDialog("ERROR: Unexpected error.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Please rate the service you received from [1] to [5] stars.", sprites=get_sprites(npc_id)),
+        d = [dialog.NpcDialog("Please rate the service you received from [1] to [5] stars.", npc_id=npc_id),
              dialog.PlayerDialog("I..."),
-             dialog.NpcDialog("Confirming [5] star rating. Thank you!", sprites=get_sprites(npc_id))]
+             dialog.NpcDialog("Confirming [5] star rating. Thank you!", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_no_more_trades_dialog(self, npc_id):
         return dialog.NpcDialog("ERROR: Toner cartridge is not genuine. Please install a genuine PrintBot toner cartridge and try again.",
-                                sprites=get_sprites(npc_id))
+                                npc_id=npc_id)
 
 
 class NpcTradeProtocols:
@@ -953,7 +956,11 @@ def get_template(npc_id):
 
 
 def get_sprites(npc_id):
-    return TEMPLATES[npc_id].get_dialog_sprites()
+    if npc_id in TEMPLATES:
+        return TEMPLATES[npc_id].get_dialog_sprites()
+    else:
+        print("WARN: no npc template exists for id: {}".format(npc_id))
+        return None
 
 
 class NpcFactory:

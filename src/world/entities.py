@@ -1817,6 +1817,8 @@ class DecorationEntity(Entity):
             # just treat it as (potentially) multi-frame non-connecting decoration
             self._sprites = Utils.flatten_list(sprites)
 
+        self._sprite_provider = None
+
     def get_dec_type(self):
         return self._dec_type
 
@@ -1828,7 +1830,16 @@ class DecorationEntity(Entity):
             return super().center()
         return (self.x() + self._draw_offset[0], self.y() + self._draw_offset[1])
 
+    def set_sprite_provider(self, provider):
+        """provider: lambda: entity, world -> list of ImageModels"""
+        self._sprite_provider = provider
+
     def _get_sprites(self, world):
+        if self._sprite_provider is not None:
+            provided_sprites = self._sprite_provider(self, world)
+            if provided_sprites is not None:
+                return Utils.listify(provided_sprites)
+
         if (self._left_connect_sprites is None and self._right_connect_sprites is None
                 and self._center_connect_sprites is None) or self._dec_type is None:
             return self._sprites
