@@ -63,7 +63,7 @@ class Dialog:
 
     def get_visible_sprite(self):
         if self.sprites is not None and len(self.sprites) > 0:
-            return self.sprites[(gs.get_instance().anim_tick // 2) % len(self.sprites)]
+            return self.sprites[(gs.get_instance().anim_tick // 4) % len(self.sprites)]
         else:
             return None
 
