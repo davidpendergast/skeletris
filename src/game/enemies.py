@@ -468,7 +468,7 @@ class WitchTemplate(EnemyTemplate):
         }
 
     def get_spawn_items(self, level, randval=None):
-        n_potions = 2
+        n_potions = 1
         for _ in range(0, n_potions):
             templates_to_use = itemgen.PotionTemplates.all_templates(level)
             if len(templates_to_use) > n_potions:

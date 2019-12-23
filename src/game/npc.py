@@ -270,7 +270,9 @@ class Conversations:
 
     POST_ROBO_FIGHT = Conversation("MARY_POST_ROBO_FIGHT", NpcID.MACHINE)
 
-    # TODO - these have all been cut
+    MARY_SKELLY_CATACOMBS = Conversation("MARY_SKELLY_CATACOMBS", NpcID.MARY_SKELLY)
+
+    # TODO - these have been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
     MACHINE_INTRO = Conversation("MACHINE_INTRO", NpcID.MACHINE)
@@ -372,8 +374,6 @@ class ConversationFactory:
             ]
 
         if conv == Conversations.MARY_AND_HEAD_AT_GATE:
-            head_sprites = get_sprites(NpcID.HEAD)
-            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
             if interact_count == 0:
                 res_list = [
                     NpcDialog("AHH! HELP! They took my BONES! MY BONES.", npc_id=NpcID.HEAD),
@@ -395,10 +395,6 @@ class ConversationFactory:
                 ]
 
         if conv == Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS:
-            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
-            skelekid_sprites = get_sprites(NpcID.SKELEKID)
-            grok_sprites = get_sprites(NpcID.GROK)
-
             if interact_count == 0:
                 res_list = [
                     NpcDialog("K-keep your voice down... sound carries through the vents.", npc_id=NpcID.SKELEKID),
@@ -419,10 +415,6 @@ class ConversationFactory:
                 ]
 
         if conv == Conversations.PRE_ROBO_FIGHT:
-            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
-            skelekid_sprites = get_sprites(NpcID.SKELEKID)
-            grok_sprites = get_sprites(NpcID.GROK)
-
             if interact_count == 0:
                 res_list = [
                     NpcDialog("This is the place, right?", npc_id=NpcID.MARY_SKELLY),
@@ -437,11 +429,6 @@ class ConversationFactory:
                 ]
 
         if conv == Conversations.POST_ROBO_FIGHT:
-            mary_sprites = get_sprites(NpcID.MARY_SKELLY)
-            skelekid_sprites = get_sprites(NpcID.SKELEKID)
-            grok_sprites = get_sprites(NpcID.GROK)
-            skul_sprites = get_sprites(NpcID.SKUL)
-
             skul_version = Utils.python_version_string()  # lol
 
             if interact_count == 0:
@@ -486,6 +473,17 @@ class ConversationFactory:
             else:
                 res_list = [
                     NpcDialog("We should search the catacombs.", npc_id=NpcID.MARY_SKELLY),
+                ]
+
+        if conv == Conversations.MARY_SKELLY_CATACOMBS:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("The bones... they're everywhere. Scattered like garbage..."),
+                    NpcDialog("How could this happen...?"),
+                ]
+            else:
+                res_list = [
+                    NpcDialog("And... where are the heads?")
                 ]
 
         if conv == Conversations.MACHINE_INTRO:

@@ -125,9 +125,10 @@ def init_zones():
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
     core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.2),
                        (decoration.DecorationTypes.MUSHROOM, 0.1)]
+    catacombs_conv = [npc.Conversations.MARY_SKELLY_CATACOMBS.get_id()]
 
     story_zones.append(ZoneBuilder.make_generated_zone(12, "Catacombs I", "core_1", geo_color=red_color, music_id=catacombs_song, dims=(3, 2), bonus_decorations=core_bonus_decs))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs II", "core_2", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs II", "core_2", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs, conversation_ids=catacombs_conv))
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs III", "core_3", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
@@ -1456,7 +1457,7 @@ class NamelessLairZone(Zone):
     ZONE_ID = "???_lair"
 
     def __init__(self):
-        Zone.__init__(self, "??? Lair", 15, filename="nameless_lair.png")
+        Zone.__init__(self, "Unearthed Lair", 15, filename="nameless_lair.png")
         self._nameless_color = (255, 170, 170)
 
     def build_world(self):

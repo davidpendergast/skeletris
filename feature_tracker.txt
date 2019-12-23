@@ -15,6 +15,20 @@
  - player is standing up for a single frame at start of game
  
 [story bugs]
+ - core
+    - mary: "the bones... they're everywhere. who could do this"
+ - cave horror zone
+    - who should be in the cave horror zone?
+        - everyone? (maybe not beanskull?)
+    - mary: "look at all these heads, how terrible"
+    - mayor: "whatever's in that room, it's the most valuable mushroom ever"
+    - grok: "we'll start putting them back together, you investigate the vault"
+ - post cave horror zone
+    - doctor?: "it seems to be using some kind of mind control"
+        - "the animals in the swamp, even the undead, they all have the same fungal infection"
+        - "but it doesn't match this one. there's something else controlling them"
+ - unearthed
+    
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
@@ -40,6 +54,7 @@
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
       earlier in the game... even just a line of dialog or something
+    - also please just come up with a name... this is stupid
  
  - figure out how to make 32-bit windows builds
     - download 32-bit python and dependencies and fire away?
@@ -123,6 +138,7 @@
     - no opengl? no app notarizaiton w/out developer account? looking grim...
         - confident i could do this iff i had a mac computer at my disposal
             - 300-400 for a cheap laptop
+                - 600-800 probably more realistic (refurb'd 2015 macbook air?)
             - 150-200 for a mac mini (are these even computers?)
  
  - make enemies move at the same time as you...?
@@ -172,12 +188,12 @@
                     - refactor current world to have it basically represented this way to begin with
                         - aka decouple the model from the view
                 
-                    
-                    
  - use N "dividers" on HP bar where N = max health
  - when enemies are "flinched" it should be shown to the player somehow
     - in the tooltip?
     - this should be done with pink zees I think, and other status effects should have similar effects
+        - or just regular zees?
+        - or just flash the status's color...?
     
 
 [rejected future features]
