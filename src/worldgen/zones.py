@@ -121,14 +121,14 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song, dims=(3, 3)))
     story_zones.append(get_zone(RoboLairZone.ZONE_ID))
 
-    core_song = music.Songs.get_basic_core_song()
+    catacombs_song = music.Songs.get_basic_catacombs_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
     core_bonus_decs = [(decoration.DecorationTypes.BONE_PILE, 0.2),
                        (decoration.DecorationTypes.MUSHROOM, 0.1)]
 
-    story_zones.append(ZoneBuilder.make_generated_zone(12, "Core I", "core_1", geo_color=red_color, music_id=core_song, dims=(3, 2), bonus_decorations=core_bonus_decs))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Core II", "core_2", geo_color=red_color, music_id=core_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
-    story_zones.append(ZoneBuilder.make_generated_zone(14, "Core III", "core_3", geo_color=red_color, music_id=core_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(12, "Catacombs I", "core_1", geo_color=red_color, music_id=catacombs_song, dims=(3, 2), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs II", "core_2", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
+    story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs III", "core_3", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
     story_zones.append(get_zone(NamelessZone.ZONE_ID))

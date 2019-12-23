@@ -70,7 +70,7 @@ class MayorPatchesTemplate(NpcTemplate):
                              ("p", colors.YELLOW), shadow_sprite=sr.large_shadow)
 
     def get_trade_protocol(self, level):
-        if level >= 12:  # first meet in town, but he only starts showing up in the core
+        if level >= 12:  # first meet in town, but he only starts showing up in the catacombs
             return NpcTradeProtocols.REROLL_ART
 
 

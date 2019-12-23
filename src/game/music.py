@@ -70,7 +70,7 @@ class Songs:
         return Songs.CITY
 
     @staticmethod
-    def get_basic_core_song():
+    def get_basic_catacombs_song():
         return Songs.CORE
 
 
