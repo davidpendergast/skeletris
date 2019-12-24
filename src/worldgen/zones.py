@@ -1507,8 +1507,10 @@ class CaveHorrorZone(Zone):
         self._mushroom_colors = [(255, 175, 100), (225, 175, 100)]  # mushrooms for varying floor types
         self._skull_rack_colors = [(255, 200, 100), (225, 200, 100)]
 
-        self._npc_spawn_1 = (255, 172, 150)
-        self._npc_spawn_2 = (255, 172, 151)
+        self._mary_spawn_1 = (255, 172, 150)
+        self._mary_spawn_2 = (255, 172, 151)
+
+        self._doctor_spawn = (255, 173, 151)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1603,30 +1605,41 @@ class CaveHorrorZone(Zone):
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
 
-        if self._npc_spawn_1 in unknowns:
-            pre_fight_npc_pos = unknowns[self._npc_spawn_1][0]
-            pre_fight_npc = self._gen_npc(True)
-            if pre_fight_npc is not None:
-                pre_fight_npc_uid = pre_fight_npc.get_uid()
-                w.add(pre_fight_npc, gridcell=pre_fight_npc_pos)
+        pre_fight_npcs = self._gen_npcs(True)
+        if all([color_id in unknowns for color_id in pre_fight_npcs]):
+            for color_id in pre_fight_npcs:
+                npc_for_id = pre_fight_npcs[color_id]
+                npc_pos = unknowns[color_id][0]
+                w.add(npc_for_id, gridcell=npc_pos)
 
                 # remove npc when boss dies
-                death_hook = _get_remove_entity_on_death_hook(pre_fight_npc_uid, show_explosion=True)
-                tree_entity.add_special_death_hook("remove pre-fight npc", death_hook)
+                death_hook = _get_remove_entity_on_death_hook(npc_for_id.get_uid(), show_explosion=True)
+                tree_entity.add_special_death_hook("remove pre-fight npc: {}".format(npc_for_id.get_npc_id()), death_hook)
 
-        if self._npc_spawn_2 in unknowns:
-            post_fight_npc_pos = unknowns[self._npc_spawn_2][0]
-            post_fight_npc = self._gen_npc(False)
-            if post_fight_npc is not None:
-                w.add(post_fight_npc, gridcell=post_fight_npc_pos)
+        post_fight_npcs = self._gen_npcs(False)
+        if all([color_id in unknowns for color_id in post_fight_npcs]):
+            for color_id in post_fight_npcs:
+                npc_for_id = post_fight_npcs[color_id]
+                npc_pos = unknowns[color_id][0]
+                w.add(npc_for_id, gridcell=npc_pos)
 
         return w
 
-    def _gen_npc(self, pre_fight):
+    def _gen_npcs(self, pre_fight):
         if pre_fight:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, npc.Conversations.MARY_PRE_CAVE_HORROR)
+            mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, npc.Conversations.MARY_PRE_CAVE_HORROR)
+
+            return {
+                self._mary_spawn_1: mary_npc
+            }
         else:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, npc.Conversations.MARY_POST_CAVE_HORROR)
+            doctor_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.DOCTOR, npc.Conversations.MARY_DOCTOR_POST_CAVE_HORROR)
+            mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, doctor_npc.get_uid())
+
+            return {
+                self._mary_spawn_2: mary_npc,
+                self._doctor_spawn: doctor_npc
+            }
 
     def is_boss_zone(self):
         return True

@@ -571,7 +571,7 @@ spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
-save_stations = [make(0 + 16*i, 312, 16, 24) for i in range(0, 8)]
+save_stations = [make(0 + 16 * i, 312, 16, 24) for i in range(0, 8)]
 save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]

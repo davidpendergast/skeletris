@@ -15,6 +15,13 @@
  - player is standing up for a single frame at start of game
  
 [story bugs]
+ - S.K.U.L doesn't actually stand for anything
+    - replace with "B.O.S.S.", maybe?
+        - "Better Organization System for Skeletris"
+        - "Benevolent Organization System for Skeletris"
+
+
+[story planning]
  - core
     - mary: "the bones... they're everywhere. who could do this"
  - cave horror zone

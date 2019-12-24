@@ -282,6 +282,8 @@ class Conversations:
 
     MARY_POST_CAVE_HORROR = Conversation("MARY_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
 
+    MARY_DOCTOR_POST_CAVE_HORROR = Conversation("MARY_DOCTOR_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
+
     # TODO - these have been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
 
@@ -511,9 +513,39 @@ class ConversationFactory:
                     NpcDialog("Thank you, survivor.")
                 ]
 
-        if conv == Conversations.MARY_POST_CAVE_HORROR:
+        if conv == Conversations.MARY_DOCTOR_POST_CAVE_HORROR:
             res_list = [
-                NpcDialog("test")
+                NpcDialog("It's not enough, you know. No matter how many fights you win, the fungus will rebuild.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Everything that breathes is already infected. The spread can't be stopped.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Who the hell are you? Why are you following us?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("I knew this would happen. These systems were NOT designed to carry out genetic experiments. But they wouldn't listen.", npc_id=NpcID.DOCTOR),
+                NpcDialog("What are you talking about?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("I tried to stop them. I knew they wouldn't control it. This all could have been avoided.", npc_id=NpcID.DOCTOR),
+                NpcDialog("You're talking about S.K.U.L? How were you involved?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("Many, many, cycles ago, I helped build the first prototype of S.K.U.L.", npc_id=NpcID.DOCTOR),
+                NpcDialog("They wanted to modernize the city and automate certain tasks that were tedious for skeletons.", npc_id=NpcID.DOCTOR),
+                NpcDialog("So we developed a system to meet those needs. And it was marvelous.", npc_id=NpcID.DOCTOR),
+                NpcDialog("It was always learning, observing, and improving, and it remembered everything. It become so clever...", npc_id=NpcID.DOCTOR),
+                NpcDialog("At first, it was just recommending cafes and shops to tourists. It was harmless.", npc_id=NpcID.DOCTOR),
+                NpcDialog("But then they wanted to use it for other things, like helping to protect the city.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Predicting the movement of criminals, sending out threat alerts, even locking down entire sections to contain gas leaks.", npc_id=NpcID.DOCTOR),
+                NpcDialog("And it worked pretty well. But it made mistakes. One time it intentionally crushed a skeleton in a doorway.", npc_id=NpcID.DOCTOR),
+                NpcDialog("I remember that. That person had committed some crimes though, right?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("Yes, Minor ones. But that's not why they were crushed. The doorway's sensor malfunctioned and S.K.U.L thought they were a muncher.", npc_id=NpcID.DOCTOR),
+                NpcDialog("I tried to get them to shut the whole thing down, but the justification was always the same: It's doing better than any skeleton could do.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Soon it was used to help manage the city's finances and infrastructure too.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Watching over the fungus reserves, caring for them, breeding them. The growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
+                NpcDialog("And then it started making new species of mushrooms. More beautiful than we ever could. Skeletons went crazy for them and revenue soared.", npc_id=NpcID.DOCTOR),
+                NpcDialog("And then... well... it found the perfect formula.", npc_id=NpcID.DOCTOR),
+                NpcDialog("It created a parasite.", npc_id=NpcID.DOCTOR),
+                NpcDialog("A tiny spore that enters the respitory system, attaches to the brain stem, and takes control of its muscles and mind.", npc_id=NpcID.DOCTOR),
+                NpcDialog("Skeletons are immune of course, but almost nothing else was. The infection spread silently and rapidly.", npc_id=NpcID.DOCTOR),
+                NpcDialog("And S.K.U.L, in all its wisdom, considers its fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
+                NpcDialog("But... why did it let them attack us, the skeletons? Wasn't its primary objective to protect us?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("It was. But you can't restrict something with such power and... creativity.", npc_id=NpcID.DOCTOR),
+                NpcDialog("It knew the city would shut everything down when they realized what it was doing, which would affect its goals.", npc_id=NpcID.DOCTOR),
+                NpcDialog("So it gave its army a very specific goal: Dismember skeletons, and bring their skulls here - unharmed. And it worked, as you can see.", npc_id=NpcID.DOCTOR),
+                NpcDialog("So what now? How do we reverse this?", npc_id=NpcID.MARY_SKELLY),
             ]
 
         if conv == Conversations.MACHINE_INTRO:
