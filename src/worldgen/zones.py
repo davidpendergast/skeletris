@@ -1624,9 +1624,9 @@ class CaveHorrorZone(Zone):
 
     def _gen_npc(self, pre_fight):
         if pre_fight:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_FROG_FIGHT)
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, npc.Conversations.MARY_PRE_CAVE_HORROR)
         else:
-            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_POST_FROG_FIGHT)
+            return npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD, npc.Conversations.MARY_POST_CAVE_HORROR)
 
     def is_boss_zone(self):
         return True

@@ -23,6 +23,7 @@ class NpcID(Enum):
     SKELEKID = "SKELEKID"
     HEAD = "HEAD"
     SKUL = "SKUL"
+    MARY_SKELLY_WITH_HEAD = "MARY_WITH_HEAD"
 
     CAVE_HORROR = "CAVE_HORROR"
 
@@ -58,9 +59,12 @@ class NpcTemplate:
 
 class MarySkellyTemplate(NpcTemplate):
 
-    def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MARY_SKELLY, "Mary Skelly",
-                             sr.mary_skelly_all, sr.mary_skelly_faces, ("m", colors.YELLOW))
+    def __init__(self, with_head=False):
+        NpcTemplate.__init__(self,
+                             NpcID.MARY_SKELLY if not with_head else NpcID.MARY_SKELLY_WITH_HEAD,
+                             "Mary Skelly",
+                             sr.mary_skelly_all if not with_head else sr.mary_holding_shelly_all,
+                             sr.mary_skelly_faces, ("m", colors.YELLOW))
 
 
 class MayorPatchesTemplate(NpcTemplate):
@@ -148,6 +152,8 @@ TEMPLATES = {
     NpcID.MARY_SKELLY: MarySkellyTemplate(),
     # The "Flesh Weaver", known for experimentation on the dead. Fearless. Gay.
     # Interested in bone collection, arts and crafts, rule-breaking.
+
+    NpcID.MARY_SKELLY_WITH_HEAD: MarySkellyTemplate(with_head=True),
 
     NpcID.MAYOR: MayorPatchesTemplate(),
     # The "Mayor" of Skeletris, "voted" into office after The Event, harmless.
@@ -271,6 +277,10 @@ class Conversations:
     POST_ROBO_FIGHT = Conversation("MARY_POST_ROBO_FIGHT", NpcID.MACHINE)
 
     MARY_SKELLY_CATACOMBS = Conversation("MARY_SKELLY_CATACOMBS", NpcID.MARY_SKELLY)
+
+    MARY_PRE_CAVE_HORROR = Conversation("MARY_PRE_CAVE_HORROR", NpcID.MARY_SKELLY)
+
+    MARY_POST_CAVE_HORROR = Conversation("MARY_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
 
     # TODO - these have been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
@@ -485,6 +495,26 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("And... where are the heads?")
                 ]
+
+        if conv == Conversations.MARY_PRE_CAVE_HORROR:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("I... I found her. My wife."),
+                    NpcDialog("I'm going to rebuild her. And then the others."),
+                    NpcDialog("They're in agony. I can't leave them like this."),
+                    NpcDialog("The central vault is up ahead. Whatever's in there... the computer thinks it's more valuable than the city itself."),
+                    NpcDialog("I don't know what that means, but be careful."),
+                    NpcDialog("Thank you for everything, survivor."),
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Thank you, survivor.")
+                ]
+
+        if conv == Conversations.MARY_POST_CAVE_HORROR:
+            res_list = [
+                NpcDialog("test")
+            ]
 
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:

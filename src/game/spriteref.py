@@ -548,7 +548,7 @@ mary_skelly_faces = [make(272, 208 + i*32, 32, 32) for i in range(0, 2)]
 shelly_all = [make(288, 146 + i*32, 16, 30) for i in range(0, 2)]
 shelly_faces = [make(400, 208 + i*32, 32, 32) for i in range(0, 2)]
 
-mary_holding_shelly_all = [make(672 + i * 16, 182, 16, 32) for i in range(0, 2)]
+mary_holding_shelly_all = [make(672 + i * 16, 182, 16, 26) for i in range(0, 2)]
 
 mayor_pumpkin_all = [make(304, 144 + i*32, 32, 32) for i in range(0, 2)]
 mayor_pumpkin_faces = [make(304, 208 + i*32, 32, 32) for i in range(0, 2)]
