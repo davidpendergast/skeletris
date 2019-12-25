@@ -48,7 +48,7 @@ class Songs:
     ARACHNID = Song("Arachnid", "arachnid.ogg")
 
     # Regular Zone Themes
-    UNEARTHED = Song("Unearthed", "unearthed.ogg")
+    UNEARTHED = Song("Undergrowth", "unearthed.ogg")
     CAVES = Song("Caves", "caves.ogg", volume=0.66)
     CITY = Song("City", "city.ogg", volume=0.66)
     SWAMPS = Song("Swamps", "swamps.ogg", volume=0.66)

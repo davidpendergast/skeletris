@@ -1390,7 +1390,7 @@ class NamelessZone(Zone):
     ZONE_ID = "???_zone"
 
     def __init__(self):
-        Zone.__init__(self, "Unearth", 15, filename="nameless_zone.png")
+        Zone.__init__(self, "Undergrowth", 15, filename="nameless_zone.png")
         self._exit_doors = (255, 175, 80)
         self._skull_rack_color = (255, 200, 100)
 
@@ -1457,7 +1457,7 @@ class NamelessLairZone(Zone):
     ZONE_ID = "???_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Unearthed Lair", 15, filename="nameless_lair.png")
+        Zone.__init__(self, "Undergrowth Lair", 15, filename="nameless_lair.png")
         self._nameless_color = (255, 170, 170)
 
     def build_world(self):
