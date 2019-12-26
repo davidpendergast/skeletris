@@ -167,13 +167,16 @@ class DialogManager:
             elif not dialog.is_done_scrolling():
                 cur_delay = gs.get_instance().tick_counter - self.last_scroll_time
 
-                # it's trendy to pause longer on punctuation
                 d_text = dialog.get_text()
                 pos = dialog.scroll_pos
                 delay = self._scroll_freq
+
+                # it's trendy to pause longer on punctuation
                 if 0 <= pos-1 < len(d_text):
                     last_char = d_text[pos-1]
-                    if last_char in self._long_freq:
+
+                    # but not when it's in the middle of an acronym
+                    if not self._is_part_of_an_acronym(d_text, pos) and last_char in self._long_freq:
                         delay = self._long_freq[last_char]
 
                 if cur_delay >= delay:
@@ -184,6 +187,32 @@ class DialogManager:
                     sound_effects.play_sound(soundref.dialog_click)
 
         self.did_interact_this_tick = False
+
+    def _is_part_of_an_acronym(self, text, index):
+        """
+            returns: True if index is contained by a substring of text whose form is: 'X.X.'
+        """
+        for offset in (-3, -2, -1, 0):
+            if self._is_part_of_an_acronym_helper(text, index + offset):
+                return True
+
+        return False
+
+    def _is_part_of_an_acronym_helper(self, text, start_index):
+        if start_index < 0 or start_index + 3 >= len(text):
+            return False
+
+        for i in (start_index, start_index + 2):
+            char_at = text[i]
+            if not char_at.isalpha():
+                return False
+
+        for i in (start_index + 1, start_index + 3):
+            char_at = text[i]
+            if char_at != ".":
+                return False
+
+        return True
 
 
 # TODO cutscenes aren't used, delete?

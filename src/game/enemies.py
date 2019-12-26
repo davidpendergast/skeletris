@@ -841,7 +841,7 @@ class FrogBossTemplate(EnemyTemplate):
 class RoboTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "S.K.U.L.")
+        EnemyTemplate.__init__(self, "B.O.S.S.")
 
     def get_sprites(self):
         return spriteref.Bosses.robo_idle

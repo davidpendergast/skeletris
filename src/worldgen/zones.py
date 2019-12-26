@@ -1256,9 +1256,9 @@ class RoboLairZone(Zone):
         self._grok_spawn_1 = (225, 172, 150)
         self._grok_spawn_2 = (225, 172, 151)
 
-        self._skul_console_left = (0, 130, 150)
-        self._skul_console = (0, 170, 150)
-        self._skul_console_right = (0, 190, 150)
+        self._robo_console_left = (0, 130, 150)
+        self._robo_console = (0, 170, 150)
+        self._robo_console_right = (0, 190, 150)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1291,28 +1291,28 @@ class RoboLairZone(Zone):
                 grid_pos = unknowns[color_id][0]
                 w.add(npc_ent, gridcell=grid_pos)
 
-        if self._skul_console_left in unknowns:
-            pos = unknowns[self._skul_console_left][0]
-            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_LEFT)
+        if self._robo_console_left in unknowns:
+            pos = unknowns[self._robo_console_left][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.ROBO_LEFT)
             w.add(dec, gridcell=pos)
 
-        if self._skul_console_right in unknowns:
-            pos = unknowns[self._skul_console_right][0]
-            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_RIGHT)
+        if self._robo_console_right in unknowns:
+            pos = unknowns[self._robo_console_right][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.ROBO_RIGHT)
             w.add(dec, gridcell=pos)
 
-        if self._skul_console in unknowns:
-            pos = unknowns[self._skul_console][0]
-            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKUL_CONSOLE)
+        if self._robo_console in unknowns:
+            pos = unknowns[self._robo_console][0]
+            dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.ROBO_CONSOLE)
 
-            def _get_skul_sprites(_ent, _world):
+            def _get_robo_sprites(_ent, _world):
                 if gs.get_instance().dialog_manager().is_active():
                     dia = gs.get_instance().dialog_manager().get_dialog()
-                    if dia is not None and dia.get_speaker_id() == npc.NpcID.SKUL:
-                        return [spriteref.wall_decoration_skul_console_skull]
-                return [spriteref.wall_decoration_skul_console_empty]
+                    if dia is not None and dia.get_speaker_id() == npc.NpcID.ROBO:
+                        return [spriteref.wall_decoration_robo_console_skull]
+                return [spriteref.wall_decoration_robo_console_empty]
 
-            dec.set_sprite_provider(_get_skul_sprites)
+            dec.set_sprite_provider(_get_robo_sprites)
 
             w.add(dec, gridcell=pos)
 

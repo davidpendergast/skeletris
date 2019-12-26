@@ -22,7 +22,7 @@ class NpcID(Enum):
     DOCTOR = "DOCTOR"
     SKELEKID = "SKELEKID"
     HEAD = "HEAD"
-    SKUL = "SKUL"
+    ROBO = "ROBO"
     MARY_SKELLY_WITH_HEAD = "MARY_WITH_HEAD"
 
     CAVE_HORROR = "CAVE_HORROR"
@@ -134,10 +134,10 @@ class HeadTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.HEAD, "Disembodied Head", sr.skull_head_all, sr.skull_head_faces, ("h", colors.YELLOW))
 
 
-class SkulTemplate(NpcTemplate):
+class RoboTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.SKUL, "S.K.U.L", sr.wall_decoration_skul_console_skull, sr.skul_faces, ("S", colors.YELLOW))
+        NpcTemplate.__init__(self, NpcID.ROBO, "B.O.S.S.", sr.wall_decoration_robo_console_skull, sr.robo_faces, ("B", colors.YELLOW))
 
 
 # TODO - delete? not ever used as an NPC, feels like it shouldn't talk?
@@ -181,7 +181,7 @@ TEMPLATES = {
 
     NpcID.CAVE_HORROR: CaveHorrorNpcTemplate(),  # TODO - not used, it's stupid to have them talk
 
-    NpcID.SKUL: SkulTemplate()
+    NpcID.ROBO: RoboTemplate()
 }
 
 
@@ -417,7 +417,7 @@ class ConversationFactory:
                     NpcDialog("The animals and the lesser undeads, they wanted the city for themselves so they took it. Somehow.", npc_id=NpcID.SKELEKID),
                     NpcDialog("We don't know who organized this. The animals were crazed - you could see it in their eyes.", npc_id=NpcID.GROK),
                     NpcDialog("The wildlife in the swamp were the same way. Aggressive, all of the sudden.", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Well - whoever it was, they managed to hack the S.K.U.L mainframe and turn it against us.", npc_id=NpcID.SKELEKID),
+                    NpcDialog("Well - whoever it was, they managed to hack the B.O.S.S. mainframe and turn it against us.", npc_id=NpcID.SKELEKID),
                     NpcDialog("The doors, weapons, communication systems - it was all locked down. Until the enemy needed to use them.", npc_id=NpcID.SKELEKID),
                     NpcDialog("We should find the mainframe. Maybe there will be more clues there.", npc_id=NpcID.MARY_SKELLY)
                 ]
@@ -441,28 +441,28 @@ class ConversationFactory:
                 ]
 
         if conv == Conversations.POST_ROBO_FIGHT:
-            skul_version = Utils.python_version_string()  # lol
+            robo_version = Utils.python_version_string()  # lol
 
             if interact_count == 0:
                 res_list = [
                     NpcDialog("Wow - that thing would have crushed me with one step. Nice moves back there.", npc_id=NpcID.GROK),
                     NpcDialog("You said it was just a computer! What the hell was that?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog(">> S.K.U.L DEFENSE FORM\n>> Version {}".format(skul_version), npc_id=NpcID.SKUL),
+                    NpcDialog(">> B.O.S.S. DEFENSE FORM\n>> Version {}".format(robo_version), npc_id=NpcID.ROBO),
                     NpcDialog("It's still online?! It's listening to us?", npc_id=NpcID.SKELEKID),
                     NpcDialog("Who hacked you? Who attacked the city? Why didn't you protect us?", npc_id=NpcID.SKELEKID),
                     NpcDialog(">> Running Security Checks....\n" +
                               ">> Result: 59/59 PASSED\n" +
-                              ">> No illicit activity detected.", npc_id=NpcID.SKUL),
+                              ">> No illicit activity detected.", npc_id=NpcID.ROBO),
                     NpcDialog("Then why didn't you PROTECT us?", npc_id=NpcID.SKELEKID),
                     NpcDialog(">> Scanning...\n" +
-                              ">> 96.25% of citizens are protected.", npc_id=NpcID.SKUL),
+                              ">> 96.25% of citizens are protected.", npc_id=NpcID.ROBO),
                     NpcDialog("It thinks they're protected? But no one is even here.", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("Computer, where is everyone?", npc_id=NpcID.GROK),
-                    NpcDialog(">> Skeletris Catacombs", npc_id=NpcID.SKUL),
+                    NpcDialog(">> Skeletris Catacombs", npc_id=NpcID.ROBO),
                     NpcDialog("The catacombs? That's where the city's fungus reserves are kept. Why would it move everyone down there?", npc_id=NpcID.GROK),
                     NpcDialog("Maybe it malfunctioned?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("Stupid machine! Why did you move everyone down there? You destroyed the city!", npc_id=NpcID.SKELEKID),
-                    NpcDialog(">> Citizens were moved to satisfy the PRIMARY GOALS.", npc_id=NpcID.SKUL),
+                    NpcDialog(">> Citizens were moved to satisfy the PRIMARY GOALS.", npc_id=NpcID.ROBO),
                     NpcDialog("What are the primary goals?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog(">> 1. Protect Citizens from Harm\n" +
                               ">> 2. Maintain Order and Justice\n" +
@@ -472,11 +472,11 @@ class ConversationFactory:
                     NpcDialog(">> Cycle 1532: +3.9%\n" +
                               ">> Cycle 1533: +4.2%\n" +
                               ">> Cycle 1534: +3.7%\n" +
-                              ">> Cycle 1535: +3.9%", npc_id=NpcID.SKUL),
+                              ">> Cycle 1535: +3.9%", npc_id=NpcID.ROBO),
                     NpcDialog(">> Cycle 1536: +45,023.2%\n" +
                               ">> Cycle 1537: +113,003,203.3%\n" +
                               ">> Cycle 1538: +5.2%\n" +
-                              ">> Cycle 1539: +4.9%", npc_id=NpcID.SKUL),
+                              ">> Cycle 1539: +4.9%", npc_id=NpcID.ROBO),
                     NpcDialog("Those numbers are impossible. Mushrooms don't grow that fast.", npc_id=NpcID.GROK),
                     NpcDialog("It was... raising revenue? Those spikes happened immediately before and during the attacks.", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("So it did malfunction?! How could our leaders let this happen?", npc_id=NpcID.SKELEKID),
@@ -522,7 +522,7 @@ class ConversationFactory:
                     NpcDialog("I knew this would happen. These systems were NOT designed to carry out genetic experiments. But they wouldn't listen.", npc_id=NpcID.DOCTOR),
                     NpcDialog("I tried to stop them. I knew they wouldn't control it. This all could have been avoided.", npc_id=NpcID.DOCTOR),
                     NpcDialog("What are you talking about?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Many, many, cycles ago, I helped build the first prototype of S.K.U.L.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Many, many, cycles ago, I helped build the first prototype of B.O.S.S.", npc_id=NpcID.DOCTOR),
                     NpcDialog("They wanted to modernize the city and automate certain tasks that were tedious for skeletons.", npc_id=NpcID.DOCTOR),
                     NpcDialog("So we developed a system to meet those needs. And it was marvelous.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It was always learning, observing, and improving, and it remembered everything. It become so clever...", npc_id=NpcID.DOCTOR),
@@ -531,7 +531,7 @@ class ConversationFactory:
                     NpcDialog("Predicting the movement of criminals, sending out threat alerts, even locking down entire sections to contain spills.", npc_id=NpcID.DOCTOR),
                     NpcDialog("And it worked pretty well. But it made mistakes. One time it intentionally crushed a skeleton in a doorway.", npc_id=NpcID.DOCTOR),
                     NpcDialog("I remember that. That person had committed some crimes though, right?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Minor ones. But that's not why they were crushed. The doorway's sensor malfunctioned and S.K.U.L thought they were a muncher.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Minor ones. But that's not why they were crushed. The doorway's sensor malfunctioned and B.O.S.S. thought they were a muncher.", npc_id=NpcID.DOCTOR),
                     NpcDialog("I tried to get them to shut the whole thing down, but the justification was always the same: It's doing better than any skeleton could do.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Soon it was used to help manage the city's finances and infrastructure too.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Watching over the fungus reserves, caring for them, breeding them. The growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
@@ -541,14 +541,14 @@ class ConversationFactory:
                     NpcDialog("A tiny spore that enters the respiratory system, attaches to the brain stem, and lays dormant waiting for the signal.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Skeletons are immune, of course, because they don't have brains. But almost everything with a central nervous system is susceptable.", npc_id=NpcID.DOCTOR),
                     NpcDialog("The parasite spread silently. And rapidly.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("And S.K.U.L, in all its wisdom, considers these new fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And B.O.S.S. in all its wisdom, considers these new fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
                     NpcDialog("But... why did it let them attack us, the skeletons? Wasn't its primary objective to protect us?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("It was. But you can't restrict something with such power and... creativity.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It knew the city would shut this plan down when they realized what was happening. So it found a loophole.", npc_id=NpcID.DOCTOR),
                     NpcDialog("When the parasite activates, the host becomes a zombie with one goal: Dismantle skeletons, and bring their skulls here - unharmed."),
                     NpcDialog("And it worked, as you can see.", npc_id=NpcID.DOCTOR),
                     NpcDialog("So what now? How do we reverse this?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("The activation signal - it wasn't released by S.K.U.L directly. It's a pheromone. Something biological.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("The activation signal - it wasn't released by B.O.S.S. directly. It's a pheromone. Something biological.", npc_id=NpcID.DOCTOR),
                     NpcDialog("If we destroy the source, the parasite will deactivate once again, and the infected will return to normal.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Where is the pheromone coming from?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("The Undergrowth. Where the city's rot is kept. Destroy the source, and the hivemind will fall.", npc_id=NpcID.DOCTOR),
