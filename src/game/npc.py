@@ -1,7 +1,6 @@
 
 from enum import Enum
 import random
-import traceback
 
 import src.game.spriteref as sr
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
@@ -15,7 +14,6 @@ import src.game.balance as balance
 class NpcID(Enum):
 
     MAYOR = "MAYOR"
-    MARY_SKELLY = "MARY_SKELLY"
     BEANSKULL = "BEANSKULL"
     GROK = "GROK"
     MACHINE = "MACHINE"
@@ -23,8 +21,14 @@ class NpcID(Enum):
     SKELEKID = "SKELEKID"
     HEAD = "HEAD"
     ROBO = "ROBO"
+
+    MARY_SKELLY = "MARY_SKELLY"
     MARY_SKELLY_WITH_HEAD = "MARY_WITH_HEAD"
 
+    MATHILDA = "MATHILDA"
+    MATHILDA_INCOMPLETE = "MATHILDA_INCOMPLETE"
+
+    WANDERER = "WANDERER"
     CAVE_HORROR = "CAVE_HORROR"
 
 
@@ -140,6 +144,23 @@ class RoboTemplate(NpcTemplate):
         NpcTemplate.__init__(self, NpcID.ROBO, "B.O.S.S.", sr.wall_decoration_robo_console_skull, sr.robo_faces, ("B", colors.YELLOW))
 
 
+class ScorpionTemplate(NpcTemplate):
+
+    def __init__(self):
+        NpcTemplate.__init__(self, NpcID.WANDERER, "Wanderer", sr.enemy_scorpion_all, sr.scorpion_faces, ("s", colors.YELLOW))
+
+
+class MathildaTemplate(NpcTemplate):
+
+    def __init__(self, incomplete=False):
+        NpcTemplate.__init__(self,
+                             NpcID.MATHILDA if not incomplete else NpcID.MATHILDA_INCOMPLETE,
+                             "Mathilda Skelly",
+                             sr.mathilda_all if not incomplete else sr.mathilda_incomplete_all,
+                             sr.mathilda_faces,
+                             ("m", colors.YELLOW))
+
+
 # TODO - delete? not ever used as an NPC, feels like it shouldn't talk?
 class CaveHorrorNpcTemplate(NpcTemplate):
 
@@ -154,6 +175,11 @@ TEMPLATES = {
     # Interested in bone collection, arts and crafts, rule-breaking.
 
     NpcID.MARY_SKELLY_WITH_HEAD: MarySkellyTemplate(with_head=True),
+
+    NpcID.MATHILDA: MathildaTemplate(),
+    # Mary's wife. Missing for most of the story.
+
+    NpcID.MATHILDA_INCOMPLETE: MathildaTemplate(incomplete=True),
 
     NpcID.MAYOR: MayorPatchesTemplate(),
     # The "Mayor" of Skeletris, "voted" into office after The Event, harmless.
@@ -181,7 +207,10 @@ TEMPLATES = {
 
     NpcID.CAVE_HORROR: CaveHorrorNpcTemplate(),  # TODO - not used, it's stupid to have them talk
 
-    NpcID.ROBO: RoboTemplate()
+    NpcID.ROBO: RoboTemplate(),
+
+    NpcID.WANDERER: ScorpionTemplate(),
+
 }
 
 
@@ -283,6 +312,14 @@ class Conversations:
     MARY_POST_CAVE_HORROR = Conversation("MARY_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
 
     MARY_DOCTOR_POST_CAVE_HORROR = Conversation("MARY_DOCTOR_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
+
+    DOCTOR_PRE_NAMELESS = Conversation("DOCTOR_PRE_NAMELESS", NpcID.DOCTOR)
+
+    DOCTOR_SCORP_EPILOGUE = Conversation("DOCTOR_SCORP_EPILOGUE", NpcID.DOCTOR)
+
+    SCORP_EPILOGUE = Conversation("SCORP_EPILOGUE", NpcID.WANDERER)
+
+    MARY_MATHILDA_EPILOGUE = Conversation("MARY_MATHILDA_EPILOGUE", NpcID.MARY_SKELLY)
 
     # TODO - these have been cut
     MARY_SKELLY_INTRO = Conversation("MARY_SKELLY_INTRO", NpcID.MARY_SKELLY)
@@ -557,6 +594,45 @@ class ConversationFactory:
             else:
                 res_list = [
                     NpcDialog("You must destroy the source of the pheromone. It's our only hope.", npc_id=NpcID.DOCTOR)
+                ]
+
+        if conv == Conversations.DOCTOR_PRE_NAMELESS:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("I've traced the signal to this room. Whatever's in there, it's controlling the rest of them."),
+                    NpcDialog("Let's end this nightmare, right here, right now. For Skeletris!")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Good luck, friend.")
+                ]
+
+        if conv == Conversations.DOCTOR_SCORP_EPILOGUE:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Look - I think it's working."),
+                    NpcDialog("See? It's acting normal. I think."),
+                    NpcDialog("Now we can start to rebuild. Thank you, hero.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("I might go back into government. Make sure this kind of thing never happens again.")
+                ]
+
+        if conv == Conversations.SCORP_EPILOGUE:
+            res_list = [
+                NpcDialog("Grrr grrr. Grrr...", npc_id=NpcID.WANDERER)
+            ]
+
+        if conv == Conversations.MARY_MATHILDA_EPILOGUE:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Look, she's fixed! Well, mostly..."),
+                    NpcDialog("I'll be complete again soon", npc_id=NpcID.MATHILDA_INCOMPLETE)
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Yess")
                 ]
 
         if conv == Conversations.MACHINE_INTRO:

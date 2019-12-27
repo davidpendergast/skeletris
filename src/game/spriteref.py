@@ -542,10 +542,13 @@ enemy_web_all = [make(720, 208 + i * 32, 32, 32) for i in range(0, 2)]
 
 floaty_guys = [make(192, 144 + i * 16, 16, 16) for i in range(0, 2)]
 
+scorpion_faces = [make(432, 272 + i * 32, 32, 32) for i in range(0, 2)]
+
 mary_skelly_all = [make(272, 150 + i*32, 16, 26) for i in range(0, 2)]
 mary_skelly_faces = [make(272, 208 + i*32, 32, 32) for i in range(0, 2)]
 
 mathilda_all = [make(288, 146 + i*32, 16, 30) for i in range(0, 2)]
+mathilda_incomplete_all = [make(704 + i * 16, 176, 16, 32) for i in range(0, 2)]
 mathilda_faces = [make(400, 208 + i*32, 32, 32) for i in range(0, 2)]
 
 mary_holding_mathilda_all = [make(672 + i * 16, 182, 16, 26) for i in range(0, 2)]

@@ -135,6 +135,8 @@ def init_zones():
     story_zones.append(get_zone(NamelessZone.ZONE_ID))
     story_zones.append(get_zone(NamelessLairZone.ZONE_ID))
 
+    story_zones.append(get_zone(EpilogueZone.ZONE_ID))
+
     _STORYLINE_ZONES.clear()
 
     for z in story_zones:
@@ -1459,6 +1461,7 @@ class NamelessLairZone(Zone):
     def __init__(self):
         Zone.__init__(self, "Undergrowth Lair", 15, filename="nameless_lair.png")
         self._nameless_color = (255, 170, 170)
+        self._doctor_npc_color = (255, 170, 150)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -1471,6 +1474,10 @@ class NamelessLairZone(Zone):
 
         nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
         w.add(nameless_entity, gridcell=nameless_pos)
+
+        doctor_position = unknowns[self._doctor_npc_color][0]
+        doctor_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.DOCTOR, npc.Conversations.DOCTOR_PRE_NAMELESS)
+        w.add(doctor_npc, gridcell=doctor_position)
 
         for xy in mushroom_positions:
             mushroom_sprite = random.choice(spriteref.wall_decoration_mushrooms)
@@ -1490,6 +1497,50 @@ class NamelessLairZone(Zone):
         return music.Songs.SILENCE
 
     def get_special_door_music_id(self):
+        return music.Songs.NAMELESS_THEME
+
+
+class EpilogueZone(Zone):
+
+    ZONE_ID = "epilogue"
+
+    def __init__(self):
+        Zone.__init__(self, "Epilogue", 15, filename="epilogue.png")
+        self._doc_color = (255, 170, 150)
+        self._scorp_color = (255, 171, 150)
+        self._mary_color = (255, 172, 150)
+        self._mathilda_color = (255, 173, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        w = bp.build_world()
+
+        if self._doc_color in unknowns and self._scorp_color in unknowns:
+            doc_pos = unknowns[self._doc_color][0]
+            doc_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.DOCTOR, npc.Conversations.DOCTOR_SCORP_EPILOGUE)
+            w.add(doc_npc, gridcell=doc_pos),
+
+            scorp_pos = unknowns[self._scorp_color][0]
+            scorp_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.WANDERER, npc.Conversations.SCORP_EPILOGUE)
+            w.add(scorp_npc, gridcell=scorp_pos)
+
+        if self._mary_color in unknowns and self._mathilda_color in unknowns:
+            mary_pos = unknowns[self._mary_color][0]
+            mathilda_pos = unknowns[self._mathilda_color][0]
+
+            mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_MATHILDA_EPILOGUE)
+            mathilda_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MATHILDA_INCOMPLETE, mary_npc.get_uid())
+
+            w.add(mary_npc, gridcell=mary_pos)
+            w.add(mathilda_npc, gridcell=mathilda_pos)
+
+        return w
+
+    def get_color(self):
+        return colors.LIGHT_PURPLE
+
+    def get_music_id(self):
         return music.Songs.NAMELESS_THEME
 
 
