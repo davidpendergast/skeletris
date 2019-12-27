@@ -63,7 +63,7 @@ class MarySkellyTemplate(NpcTemplate):
         NpcTemplate.__init__(self,
                              NpcID.MARY_SKELLY if not with_head else NpcID.MARY_SKELLY_WITH_HEAD,
                              "Mary Skelly",
-                             sr.mary_skelly_all if not with_head else sr.mary_holding_shelly_all,
+                             sr.mary_skelly_all if not with_head else sr.mary_holding_mathilda_all,
                              sr.mary_skelly_faces, ("m", colors.YELLOW))
 
 

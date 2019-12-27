@@ -1735,11 +1735,10 @@ class TombTownZone(Zone):
         (255, 176, 150): ["Tomb Town City Hall"],
         (205, 177, 150): ["Tomb Town Treasury\n" +
                           "Absolutely NO Unauthorized Access"],
-        (255, 178, 150): ["P. Patches:    20,354.76m\n" +
-                          "M. Skelly:       -150.00m\n" +
-                          "S. Skelly:          0.00m\n" +
-                          "B. Skull:          17.80m\n"],
-        (255, 179, 150): ["Shelly's Swords and Daggers"]
+        (255, 178, 150): ["P. Patches:            20,354.76m\n" +
+                          "Ms. & Ms. Skelly:        -150.00m\n" +
+                          "B. Skull:                  17.80m\n"],
+        (255, 179, 150): ["Mathilda's Swords and Daggers"]
     }
 
     BEANSKULL = (255, 170, 255)
