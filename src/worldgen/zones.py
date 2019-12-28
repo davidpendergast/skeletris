@@ -683,8 +683,11 @@ class ZoneBuilder:
 
         t_grid = ZoneBuilder.generate_tile_grid(zone.get_id(), zone.get_level(), dims=grid_dims)
 
-        print("INFO: generated world: level={}".format(zone.get_level()))
-        print(t_grid)
+        print("INFO: generated world: zone={}, dims={}, level={}".format(zone.get_id(), grid_dims, zone.get_level()))
+
+        if debug.is_dev():
+            print(t_grid)
+            print("\n")
 
         w = ZoneBuilder._tile_grid_to_world(zone.get_id(), zone.get_level(), t_grid,
                                             bonus_decorations=bonus_decorations)
