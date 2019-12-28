@@ -419,7 +419,7 @@ class ConversationFactory:
             res_list = [
                 NpcDialog("No bones, no weapons, not a trace of her. It doesn't add up."),
                 NpcDialog("But thank you. You're a true warrior, and you've given us hope."),
-                NpcDialog("This is the door to the city. I don't know what we'll find on the other side."),
+                NpcDialog("The city gate is up ahead. I don't know what we'll find on the other side."),
             ]
 
         if conv == Conversations.MARY_AND_HEAD_AT_GATE:
@@ -429,10 +429,9 @@ class ConversationFactory:
                     NpcDialog("Who did this? Where are the guards?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("I'm so NUMB. So UNFEELING. So EMPTY. My BONES...", npc_id=NpcID.HEAD),
                     NpcDialog("What happened to your bones?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Those DAMN scientists with their experiments. Drove the animals MAD with their tinkering.", npc_id=NpcID.HEAD),
-                    NpcDialog("Attacked the city. Systems failed. Bones, STOLEN. Discarded. DISMANTLED", npc_id=NpcID.HEAD),
+                    NpcDialog("Those ungrateful CREATURES. Attacked the city. Systems failed. Bones, STOLEN. Discarded. DISMANTLED", npc_id=NpcID.HEAD),
                     NpcDialog("The animals did this to you?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("No... other... things too. Horrible things...", npc_id=NpcID.HEAD),
+                    NpcDialog("Animals, the UNDEAD. And some... other BEASTS. Never seen before. Overwhelmed us. Took my BONES, took their SKULLS...", npc_id=NpcID.HEAD),
                     NpcDialog("The whole city fell? How could that.. even happen?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("Need my bones... Where are my BONES...?", npc_id=NpcID.HEAD),
                     NpcDialog("We're going to try to find your bones, ok? We're going to fix this.", npc_id=NpcID.MARY_SKELLY)

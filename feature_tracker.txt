@@ -14,28 +14,15 @@
  - amphibian song is too quiet?
  - player is standing up for a single frame at start of game
  
+ 
 [story bugs]
- - S.K.U.L doesn't actually stand for anything
-    - replace with "B.O.S.S.", maybe?
-        - "Better Organization System for Skeletris"
-        - "Benevolent Organization System for Skeletris"
+ - the head reveals that scientists caused the issues too soon
 
 
 [story planning]
- - core
-    - mary: "the bones... they're everywhere. who could do this"
- - cave horror zone
-    - who should be in the cave horror zone?
-        - everyone? (maybe not beanskull?)
-    - mary: "look at all these heads, how terrible"
-    - mayor: "whatever's in that room, it's the most valuable mushroom ever"
-    - grok: "we'll start putting them back together, you investigate the vault"
- - post cave horror zone
-    - doctor?: "it seems to be using some kind of mind control"
-        - "the animals in the swamp, even the undead, they all have the same fungal infection"
-        - "but it doesn't match this one. there's something else controlling them"
- - unearthed
-    
+ - post cave-horror dialog isn't finalized
+ - epilogue dialog is incomplete
+
  
 [testing]
  - make sure that statuses 'apply' the correct number of times
@@ -48,16 +35,13 @@
     - somehow force it to be in-sync?
         - like setting its energy to 0 or 2 something when the door opens?
     - also with 3~ defense you can pretty much just facetank it
+ 
  - robo boss should do something
     - he big. he tuff. maybe that's enough
  
  
 [current features]
- - the story
-   - the big reveal after fighting robo
-   
- - finalize robo boss fight 
- 
+
  - finalize nameless boss fight
     - it would be so cool if there was some kind of "preview" for this fight 
       earlier in the game... even just a line of dialog or something
