@@ -781,6 +781,8 @@ class QuietInlet(Zone):
         sleep_box = entities.PlayerSleepAnimationBox(spawn_pos)
         w.add(sleep_box)
 
+        sleep_box.update(w)   # XXX so that the player's sprite is set instantly
+
         if self._sign_color in unknowns:
             pos = unknowns[self._sign_color][0]
             text = "It's an epitaph. The words are too faded to read."

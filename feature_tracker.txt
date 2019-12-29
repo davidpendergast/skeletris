@@ -11,12 +11,9 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - going in and out of fullscreen mode loses the window position (or something like that?)
- - amphibian song is too quiet?
- - player is standing up for a single frame at start of game
  
  
 [story bugs]
- - the head reveals that scientists caused the issues too soon
 
 
 [story planning]
