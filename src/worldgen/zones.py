@@ -1597,7 +1597,7 @@ class CaveHorrorZone(Zone):
         for skull_rack_color in self._skull_rack_colors:
             if skull_rack_color in unknowns:
                 for xy in unknowns[skull_rack_color]:
-                    d_text = "Their collective yelling and moaning overwhelms you. You can't make out a word."
+                    d_text = "Their collective screams overwhelm you. You can't make out a word."
                     dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKULL_RACK,
                                                                       with_dialog=d_text)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
@@ -1784,17 +1784,17 @@ class TombTownZone(Zone):
 
     WALL_SIGNS = {
         (255, 172, 150): [" - Outpost 53 - \nWelcome to Tomb Town!"],
-        (255, 173, 150): ["Mary's Necromancy Consultancy"],
+        (255, 173, 150): ["Mary's Adventure Tours"],
         (255, 174, 150): ["Beanskull's Tomato Grove"],
+        (255, 179, 150): ["Mathilda's Blades and Swords"],
         (255, 175, 150): ["Notice Board:\n"
                           "Tax season is coming up! Late fees WILL be enforced."],
         (255, 176, 150): ["Tomb Town City Hall"],
         (205, 177, 150): ["Tomb Town Treasury\n" +
                           "Absolutely NO Unauthorized Access"],
-        (255, 178, 150): ["P. Patches:            20,354.76m\n" +
-                          "Ms. & Ms. Skelly:        -150.00m\n" +
-                          "B. Skull:                  17.80m\n"],
-        (255, 179, 150): ["Mathilda's Swords and Daggers"]
+        (255, 178, 150): ["P. Patches:         20,354.76m\n" +
+                          "Ms. & Ms. Skelly:      702.10m\n" +
+                          "B. Skull:               37.80m\n"]
     }
 
     BEANSKULL = (255, 170, 255)

@@ -11,9 +11,11 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - going in and out of fullscreen mode loses the window position (or something like that?)
+ - in menus, clicking two options in a row without moving the mouse selects the wrong option
  
  
 [story bugs]
+ - "mary's necromancy" isn't ever used or referenced
 
 
 [story planning]
@@ -79,10 +81,9 @@
     
     
 [content design philosophy]
-    - if you can't make it in two tries, cut it
-        - (unless it's absolutely essential)
     - done is better than good
     - but if it's bad cut it
+    - after two tries, move on
     
         
 [future features]
@@ -177,11 +178,19 @@
                         - aka decouple the model from the view
                 
  - use N "dividers" on HP bar where N = max health
+ 
  - when enemies are "flinched" it should be shown to the player somehow
     - in the tooltip?
     - this should be done with pink zees I think, and other status effects should have similar effects
         - or just regular zees?
         - or just flash the status's color...?
+        
+ - checkpoints
+    - should be a mechanism to start from a checkpoint after each of the first three boss fights
+    - maybe some kind of item-scavenging mechanism?
+        - after each boss, if you place an artifact with a very specific shape into the checkpoint,
+          you gain the ability to restart from there
+        - (AND, you can reuse that artifact + a weapon on subsequent runs??)
     
 
 [rejected future features]

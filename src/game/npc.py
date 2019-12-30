@@ -558,26 +558,29 @@ class ConversationFactory:
                     NpcDialog("I knew this would happen. These systems were NOT designed to carry out genetic experiments. But they wouldn't listen.", npc_id=NpcID.DOCTOR),
                     NpcDialog("I tried to stop them. I knew they wouldn't control it. This all could have been avoided.", npc_id=NpcID.DOCTOR),
                     NpcDialog("What are you talking about?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Many, many, cycles ago, I helped build the first prototype of B.O.S.S.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("They wanted to modernize the city and automate certain tasks that were tedious for skeletons.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("So we developed a system to meet those needs. And it was marvelous.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("It was always learning, observing, and improving, and it remembered everything. It become so clever...", npc_id=NpcID.DOCTOR),
-                    NpcDialog("At first, it was just recommending cafes and shops to tourists.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("But then they wanted to use it for other things, like helping to protect the city.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Many, many, cycles ago, the city planners wanted to modernize Skeletris and automate certain tasks.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("So my team was tasked to build a supercomputer to meet those needs.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("We called it the \"Benevolent Organization System for Skeletris.\" And it was marvelous.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("B.O.S.S. was always learning, observing, and improving. It become so clever...", npc_id=NpcID.DOCTOR),
+                    NpcDialog("At first, it was only used for basic civic duties, like waste management, coordinating traffic, and monitoring the ventilation systems.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And soon its services were made available to the private sector too, for things like advertising and managing inventories.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("It quickly became a major economic force in the city, and anyone who didn't embrace it fell behind.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And it didn't stop there. The city officials wanted to use B.O.S.S. for more serious things too, like helping to protect the city.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Predicting the movement of criminals, sending out threat alerts, even locking down entire sections to contain spills.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("And it worked pretty well. But it made mistakes. One time it intentionally crushed a skeleton in a doorway.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("I remember that. That person had committed some crimes though, right?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("Minor ones. But that's not why they were crushed. The doorway's sensor malfunctioned and B.O.S.S. thought they were a muncher.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("I tried to get them to shut the whole thing down, but the justification was always the same: It's doing better than any skeleton could do.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("Soon it was used to help manage the city's finances and infrastructure too.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("Watching over the fungus reserves, caring for them, breeding them. The growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("And then it started making new species of mushrooms. More beautiful than we ever could. Skeletons went crazy for them and revenue soared.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And it worked pretty well. But it made mistakes. Mostly minor, but some serious ones too. A few were deadly.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("I tried to get them to reduce the scope of the AI's responsibilities, but they always refused.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Instead, they would just patch out the most recent issues, and claim that overall it was still doing better than any skeleton could.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("It was a complete mockery of the safety protocols we outlined.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Eventually, they enlisted it to help manage the city's finances, which was deeply unpopular at the time.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Giving such a sacred and important job to a computer was almost.. blasphemous.  Citizens resisted at first.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("But there it was, watching over the fungus reserves, caring for them, breeding them. And, of course, the growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("It started inventing new species of mushrooms. More exotic and beautiful than we ever could. Revenue soared, and complaints died down.", npc_id=NpcID.DOCTOR),
                     NpcDialog("And then... well... it found the perfect formula.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It created a parasite.", npc_id=NpcID.DOCTOR),
                     NpcDialog("A tiny spore that enters the respiratory system, attaches to the brain stem, and lays dormant waiting for the signal.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Skeletons are immune, of course, because they don't have brains. But almost everything with a central nervous system is susceptable.", npc_id=NpcID.DOCTOR),
                     NpcDialog("The parasite spread silently. And rapidly.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("And B.O.S.S. in all its wisdom, considers these new fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And B.O.S.S. in all its wisdom, considered these new fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
                     NpcDialog("But... why did it let them attack us, the skeletons? Wasn't its primary objective to protect us?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("It was. But you can't restrict something with such power and... creativity.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It knew the city would shut this plan down when they realized what was happening. So it found a loophole.", npc_id=NpcID.DOCTOR),
@@ -609,13 +612,15 @@ class ConversationFactory:
         if conv == Conversations.DOCTOR_SCORP_EPILOGUE:
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("Look - I think it's working."),
-                    NpcDialog("See? It's acting normal. I think."),
-                    NpcDialog("Now we can start to rebuild. Thank you, hero.")
+                    NpcDialog("Look - it's working."),
+                    NpcDialog("See? It's acting normal. I think. It's not attacking us, at least."),
+                    NpcDialog("After the pheromone dissipates from the city and surrounding areas, it should become safe to start rebuilding."),
+                    NpcDialog("We'll get the city, and its inhabitants, up and running in no time."),
+                    NpcDialog("Thank you, hero. They'll build statues to commemorate this moment, I'm sure of it.")
                 ]
             else:
                 res_list = [
-                    NpcDialog("I might go back into government. Make sure this kind of thing never happens again.")
+                    NpcDialog("I might return to public service. Make sure this kind of thing never happens again.")
                 ]
 
         if conv == Conversations.SCORP_EPILOGUE:
@@ -626,12 +631,25 @@ class ConversationFactory:
         if conv == Conversations.MARY_MATHILDA_EPILOGUE:
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("Look, she's fixed! Well, mostly..."),
-                    NpcDialog("I'll be complete again soon", npc_id=NpcID.MATHILDA_INCOMPLETE)
+                    NpcDialog("Look, she's fixed! Well, mostly...", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("Hi! I'm Mathilda. Mary's been telling me all about you. And I saw some of it for myself too.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("The way you fought that huge monster was unlike anything I'd ever seen! You use your weapons with such deadly efficiency. It's incredible.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("And without you, I would be sitting on a shelf somewhere right now.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("I owe you a debt of gratitude, adventurer. Thank you.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("Listen, we've been talking - and if you're up for it, we'd like you to come live with us at Tombtown.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("You can test out Mathilda's weapons as much as you like, and we can explore the caves together and try to figure out where you really came from.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("We'll carve out a room for you, and we'd be a family.", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("We'd love to have you! Take some time to think it over.", npc_id=NpcID.MATHILDA_INCOMPLETE)
                 ]
             else:
                 res_list = [
-                    NpcDialog("Yess")
+                    NpcDialog("Oh - and by the way, that frog in the swamps didn't dismantle me. Contrary to what SOMEONE's been apparently telling everyone.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("Oh no, here we go...", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("I wouldn't lose to something that SLOW! I'm a trained fighter. I just slipped past it!", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("I just assumed...", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("I was AMBUSHED in the city! Hundreds of creatures descended on me in an instant. It was a bloodbath.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("After cutting dozens of them down, my blade was still sharp, but my strength ran out. And so I fell. A warrior, defeated.", npc_id=NpcID.MATHILDA_INCOMPLETE),
+                    NpcDialog("I believe you <3", npc_id=NpcID.MARY_SKELLY),
                 ]
 
         if conv == Conversations.MACHINE_INTRO:
