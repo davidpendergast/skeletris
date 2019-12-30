@@ -3,7 +3,7 @@ from enum import Enum
 import random
 
 import src.game.spriteref as sr
-from src.game.dialog import Dialog, NpcDialog, PlayerDialog
+from src.game.dialog import NpcDialog, PlayerDialog
 import src.game.globalstate as gs
 import src.game.dialog as dialog
 import src.utils.colors as colors

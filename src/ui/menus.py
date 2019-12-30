@@ -214,6 +214,8 @@ class OptionsMenu(Menu):
         self._option_imgs = None   # list of ImgBundle
         self._selection = 0
 
+        self._first_frame_active = True
+
     def get_clear_color(self):
         return (0, 0, 0)
 
@@ -346,7 +348,7 @@ class OptionsMenu(Menu):
 
             if input_state.mouse_in_window():
                 pos = input_state.mouse_pos()
-                if input_state.mouse_moved():
+                if input_state.mouse_moved() or self._first_frame_active:
                     for i in range(0, self.get_num_options()):
                         if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
                             self.set_selected(i)
@@ -375,6 +377,8 @@ class OptionsMenu(Menu):
                             self.option_activated(self._selection)
                         else:
                             pass  # TODO sound effect
+
+        self._first_frame_active = False
 
     def update(self, world):
         self.build_images()

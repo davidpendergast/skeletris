@@ -11,16 +11,12 @@
     - need to math a little harder here (or just leave it...)
  - tutorial text renders awkwardly when it overlaps very large enemies
  - going in and out of fullscreen mode loses the window position (or something like that?)
- - in menus, clicking two options in a row without moving the mouse selects the wrong option
  
  
 [story bugs]
- - "mary's necromancy" isn't ever used or referenced
 
 
 [story planning]
- - post cave-horror dialog isn't finalized
- - epilogue dialog is incomplete
 
  
 [testing]
