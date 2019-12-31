@@ -100,7 +100,7 @@ class GrokTemplate(NpcTemplate):
 
     def get_trade_protocol(self, level):
         if level >= 10:  # first meet at the vents
-            return NpcTradeProtocols.REROLL_CUBES
+            return NpcTradeProtocols.MIRROR_TRADE
 
 
 class MachineTemplate(NpcTemplate):
@@ -130,7 +130,7 @@ class SkelekidTemplate(NpcTemplate):
 
     def get_trade_protocol(self, level):
         if level >= 10:  # first meet at vents
-            return NpcTradeProtocols.MIRROR_TRADE
+            return NpcTradeProtocols.REROLL_CUBES
 
 
 class HeadTemplate(NpcTemplate):
@@ -339,6 +339,7 @@ class ConversationFactory:
     def get_dialog(conv, interact_count):
         res_list = []
 
+        # TODO - Not used
         if conv == Conversations.MARY_SKELLY_INTRO:
             if interact_count == 0:
                 res_list = [
@@ -574,24 +575,26 @@ class ConversationFactory:
                     NpcDialog("It was a complete mockery of the safety protocols we outlined.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Eventually, they enlisted it to help manage the city's finances, which was deeply unpopular at the time.", npc_id=NpcID.DOCTOR),
                     NpcDialog("Giving such a sacred and important job to a computer was almost.. blasphemous.  Citizens resisted at first.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("But there it was, watching over the fungus reserves, caring for them, breeding them. And, of course, the growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("But there it remained, watching over the fungus reserves, caring for them, breeding them.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("And, of course, the growth rates were better than the city had ever seen.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It started inventing new species of mushrooms. More exotic and beautiful than we ever could. Revenue soared, and complaints died down.", npc_id=NpcID.DOCTOR),
                     NpcDialog("And then... well... it found the perfect formula.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It created a parasite.", npc_id=NpcID.DOCTOR),
                     NpcDialog("A tiny spore that enters the respiratory system, attaches to the brain stem, and lays dormant waiting for the signal.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("Skeletons are immune, of course, because they don't have brains. But almost everything with a central nervous system is susceptable.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Skeletons are immune, of course, because they don't have brains. But almost everything with a central nervous system is susceptible.", npc_id=NpcID.DOCTOR),
                     NpcDialog("The parasite spread silently. And rapidly.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("And B.O.S.S. in all its wisdom, considered these new fungal-animal hybrids to be extremely valuable.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("But... why did it let them attack us, the skeletons? Wasn't its primary objective to protect us?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("After a certain... gestation period, the infected would come down here and merge their flesh into that... thing, and become one with it.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("The resulting \"mushroom\", if you could even call it that, was off the scales. B.O.S.S. thought it was incredibly valuable.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("But... why did it let them attack us, the skeletons? Wasn't the primary objective to protect us?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("It was. But you can't restrict something with such power and... creativity.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It knew the city would shut this plan down when they realized what was happening. So it found a loophole.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("When the parasite activates, the host becomes a zombie with one goal: Dismantle skeletons, and bring their skulls here - unharmed."),
+                    NpcDialog("When the parasite first activates, the host obsessively pursues one goal: Dismantle skeletons, and bring their skulls here - unharmed.", npc_id=NpcID.DOCTOR),
                     NpcDialog("And it worked, as you can see.", npc_id=NpcID.DOCTOR),
                     NpcDialog("So what now? How do we reverse this?", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("The activation signal - it wasn't released by B.O.S.S. directly. It's a pheromone. Something biological.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("If we destroy the source, the parasite will deactivate once again, and the infected will return to normal.", npc_id=NpcID.DOCTOR),
-                    NpcDialog("Where is the pheromone coming from?", npc_id=NpcID.MARY_SKELLY),
-                    NpcDialog("The Undergrowth. Where the city's rot is kept. Destroy the source, and the hivemind will fall.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("If we destroy the source, the parasite will become dormant again, and the infected will return to normal.", npc_id=NpcID.DOCTOR),
+                    NpcDialog("Where is the signal coming from?", npc_id=NpcID.MARY_SKELLY),
+                    NpcDialog("It's coming from the Undergrowth. Where the city's rot is kept. Destroy that source, and the hivemind will fall.", npc_id=NpcID.DOCTOR),
                     NpcDialog("It sounds like a plan.", npc_id=NpcID.MARY_SKELLY)
                 ]
             else:
@@ -653,6 +656,7 @@ class ConversationFactory:
                     NpcDialog("I believe you <3", npc_id=NpcID.MARY_SKELLY),
                 ]
 
+        # TODO - not used
         if conv == Conversations.MACHINE_INTRO:
             if interact_count == 0:
                 res_list = [
@@ -765,16 +769,23 @@ class NpcMirrorTradeProtocol(NpcTradeProtocol):
         return [item.mirror()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Care to make a trade?", npc_id=npc_id),
-             dialog.PlayerDialog("What's the trade?"),
-             dialog.NpcDialog("It's simple. You give me an Artifact, and I'll flip it for you.", npc_id=npc_id),
-             dialog.PlayerDialog("Flip it for me?"),
-             dialog.NpcDialog("You'll see. Interested?", npc_id=npc_id)]
+        d = [dialog.NpcDialog("Need some help? If you give me an Artifact, I'll flip it for you.", npc_id=npc_id),
+             dialog.NpcDialog("Interested? It's probably easier to just show you.", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
         return dialog.NpcDialog("No, no. Not that kind of item. It needs to be more... " +
-                                "how do I describe it... cubelike?", npc_id=npc_id)
+                                "how do I describe it... cubelike? An Artifact.", npc_id=npc_id)
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Mirror service complete! Hope this helps.", npc_id=npc_id)
+
+    def get_no_more_trades_dialog(self, npc_id):
+        d = [dialog.NpcDialog("Sorry! I can't do any more right now.", npc_id=npc_id),
+             dialog.NpcDialog("It's hard work, you know, rotating things out of this 2D plane. You have to push REALLY hard.", npc_id=npc_id),
+             dialog.NpcDialog("And sometimes it doesn't quite work, and things get... weird...", npc_id=npc_id),
+             dialog.NpcDialog("Anyways, I'm glad that didn't happen this time!", npc_id=npc_id)]
+        return dialog.Dialog.link_em_up(d)
 
 
 class NpcPotionProtocol(NpcTradeProtocol):
@@ -809,9 +820,11 @@ class NpcPotionProtocol(NpcTradeProtocol):
 
     def get_explain_dialog(self, npc_id):
         d = [dialog.NpcDialog("Here's the deal. You give me a potion, and I'll give you a new one back.", npc_id=npc_id),
-             dialog.PlayerDialog("What's the catch?"),
-             dialog.NpcDialog("No catch. Just an honest deal. How about it?", npc_id=npc_id)]
+             dialog.NpcDialog("How about it?", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
+
+    def get_success_dialog(self, npc_id, item):
+        return dialog.NpcDialog("Here you go.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
         return dialog.NpcDialog("Oh, by the way... don't operate any heavy machinery after drinking that.", npc_id=npc_id)
@@ -830,9 +843,8 @@ class NpcRerollCubesProtocol(NpcTradeProtocol):
         return [item.reroll_cubes()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. I'll show you.", npc_id=npc_id),
-             dialog.PlayerDialog("What kind of things?"),
-             dialog.NpcDialog("Artifacts! What else? Come on. Give me one. Quickly.", npc_id=npc_id)]
+        d = [dialog.NpcDialog("Shh! Listen closely. I can... reshape things. Artifacts. I'll show you.", npc_id=npc_id),
+             dialog.NpcDialog("Come on. Give me one. Quickly.", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
@@ -842,11 +854,10 @@ class NpcRerollCubesProtocol(NpcTradeProtocol):
         return dialog.NpcDialog("Look at that! Completely reforged. Does it fit better now?", npc_id=npc_id)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("Sorry kid. I'm spent. Come back another time.", npc_id=npc_id)
+        return dialog.NpcDialog("Sorry. I'm spent. Come back another time.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
         d = [dialog.NpcDialog("Enjoying that item I gave you?"),
-             dialog.PlayerDialog("Yeah, it's pretty nice."),
              dialog.NpcDialog("No need to thank me. I do accept tips though. And positive reviews are appreciated. " +
                               "And have you seen my twitter?", npc_id=npc_id),
              dialog.PlayerDialog("Yeah! yeah. I'll check it out. I gotta... get going, though, ya know."),
@@ -866,24 +877,28 @@ class NpcRerollStatsProtocol(NpcTradeProtocol):
         return [item.reroll_stats()]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Need some help? Give me an Artifact, and I'll re-roll the stats for you.",
-                              npc_id=npc_id),
-             dialog.PlayerDialog("That does sound helpful."),
-             dialog.NpcDialog("I'll do my best! But it's unpredictable. " +
-                              "No guarantees it'll improve, I'm afraid.", npc_id=npc_id),
+        d = [dialog.NpcDialog("Need some help? Give me an Artifact, and I'll re-roll the stats for you.", npc_id=npc_id),
+             dialog.NpcDialog("It's a bit unpredictable, I'm afraid! But I promise to do my best!", npc_id=npc_id),
              dialog.NpcDialog("Care to give it a shot?", npc_id=npc_id)
             ]
         return dialog.Dialog.link_em_up(d)
 
     def get_wrong_item_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Oh, I've confused you. The item needs to be an Artifact.", npc_id=npc_id)
+        return dialog.NpcDialog("Oh no, I've confused you. The item needs to be an Artifact.", npc_id=npc_id)
 
     def get_success_dialog(self, npc_id, item):
         return dialog.NpcDialog("Here you go! I hope you like it.", npc_id=npc_id)
 
+    def get_post_success_dialog(self, npc_id):
+        d = [dialog.NpcDialog("This process is a lot like growing tomatoes, you know. You never know what to expect.", npc_id=npc_id),
+             dialog.NpcDialog("Well... unless you're expecting a tomato. You always get a tomato when you plant tomatoes.", npc_id=npc_id),
+             dialog.NpcDialog("But actually, this ONE time, I planted what I thought were tomato seeds, but then when it came time to harvest, it turned out they were RADISHES!", npc_id=npc_id),
+             dialog.NpcDialog("That was some of the worst spaghetti sauce I've ever had, let me tell you.", npc_id=npc_id)
+             ]
+        return dialog.Dialog.link_em_up(d)
+
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("I can't do any more right now I'm afraid. " +
-                                "But if you see me around, don't hesitate to say hello!", npc_id=npc_id)
+        return dialog.NpcDialog("I can't do any more right now I'm afraid. But if you see me around, don't hesitate to say hello!", npc_id=npc_id)
 
 
 class NpcRerollArtProtocol(NpcTradeProtocol):
@@ -897,13 +912,8 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
 
     def get_explain_dialog(self, npc_id):
         d = [dialog.NpcDialog("Hey, you there! Hey! You! I've got something for you.", npc_id=npc_id),
-             dialog.PlayerDialog("I'm standing right here... no need to yell..."),
-             dialog.NpcDialog("I can do something quite special. Something no one else can do. " +
-                              "Something few can even wrap their minds around.", npc_id=npc_id),
-             dialog.PlayerDialog("What are you going to do?"),
+             dialog.NpcDialog("I can do something quite special. Something no one else can do. Something few can even wrap their minds around.", npc_id=npc_id),
              dialog.NpcDialog("Just give me your best, favorite, Artifact, and then you'll see.", npc_id=npc_id),
-             dialog.PlayerDialog("You can't just tell me?"),
-             dialog.NpcDialog("And spoil the surprise? No way! What do you say?", npc_id=npc_id)
              ]
         return dialog.Dialog.link_em_up(d)
 
@@ -1096,12 +1106,11 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         return [new_item]
 
     def get_explain_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. How can I help you?", npc_id=npc_id),
-             dialog.PlayerDialog("How does this work?"),
-             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then I'll re-print it so it fits in your grid.", npc_id=npc_id),
-             dialog.PlayerDialog("Will the item's stats change?"),
-             dialog.NpcDialog("Sometimes. That's part of the fun!", npc_id=npc_id),
-             dialog.NpcDialog("Just make sure there is enough space for the new item. Otherwise it definitely won't work.", npc_id=npc_id),
+        pct_keep_stats = "{:.1%}".format(1 - self._chance_to_shrink_item)
+        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. Here's how it works:", npc_id=npc_id),
+             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then, I'll re-print the artifact so it fits in your grid.", npc_id=npc_id),
+             dialog.NpcDialog("There's a {} chance that all of the artifact's stats will be kept intact.".format(pct_keep_stats), npc_id=npc_id),
+             dialog.NpcDialog("Just make sure there is enough space in your equipment grid for the new item. Insert an artifact to get started.", npc_id=npc_id),
         ]
         return dialog.Dialog.link_em_up(d)
 
@@ -1119,7 +1128,7 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
     def get_post_success_dialog(self, npc_id):
         d = [dialog.NpcDialog("Please rate the service you received from [1] to [5] stars.", npc_id=npc_id),
-             dialog.PlayerDialog("I..."),
+             dialog.PlayerDialog("..."),
              dialog.NpcDialog("Confirming [5] star rating. Thank you!", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
