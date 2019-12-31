@@ -9,6 +9,7 @@ import src.game.dialog as dialog
 import src.utils.colors as colors
 from src.utils.util import Utils
 import src.game.balance as balance
+import src.items.cubeutils as cubeutils
 
 
 class NpcID(Enum):
@@ -931,6 +932,10 @@ class NpcRerollArtProtocol(NpcTradeProtocol):
 
 class NpcItemThatFitsProtocol(NpcTradeProtocol):
 
+    def __init__(self):
+        NpcTradeProtocol.__init__(self)
+        self._chance_to_shrink_item = 0.25
+
     def accepts_trade(self, item):
         return self._is_valid_item_type(item) and self._is_enough_space_for_new_item(item)
 
@@ -981,19 +986,15 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         return [cluster for cluster in clusters if len(cluster) >= min_size]
 
     def _gen_rand_n_cubes(self, max_n_cubes=7):
-        # mirroring the actual drop rates is pretty brutal...
-        #
-        # choices = [5] * balance.STAT_CUBE_5_DROP_RATE
-        # if max_n_cubes >= 6:
-        #    choices.extend([6] * balance.STAT_CUBE_6_DROP_RATE)
-        # if max_n_cubes >= 7:
-        #    choices.extend([7] * balance.STAT_CUBE_7_DROP_RATE)
-
-        choices = [x for x in range(5, max_n_cubes + 1)]
-        if len(choices) > 0:
-            return random.choice(choices)
-        else:
+        if max_n_cubes < 5 or max_n_cubes > 7:
             raise ValueError("illegal argument max_n_cubes: {}".format(max_n_cubes))
+
+        if max_n_cubes == 5 or random.random() > self._chance_to_shrink_item:
+            # leave the number of cubes unmodified
+            return max_n_cubes
+        else:
+            choices = [x for x in range(5, max_n_cubes)]
+            return random.choice(choices)
 
     def do_trade(self, item):
         item_n_cubes = min(len(item.cubes), 7)
@@ -1014,17 +1015,17 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         random.shuffle(cluster)
 
         # now we just need to generate an n-cube item that fits in our cluster
-        res_cubes = [cluster.pop()]
+        new_cubes = [cluster.pop()]
 
-        while len(res_cubes) < n_cubes:
+        while len(new_cubes) < n_cubes:
             did_expand = False
-            for c in res_cubes:
+            for c in new_cubes:
                 # trying to 'expand' off of c to fill the region.
                 c_n = [n for n in Utils.neighbors(c[0], c[1])]
                 random.shuffle(c_n)
                 for n in c_n:
                     if n in cluster:
-                        res_cubes.insert(0, n)  # want to keep growing off this one if possible
+                        new_cubes.insert(0, n)  # want to keep growing off this one if possible
                         cluster.remove(n)       # makes the result more "snaky"
                         did_expand = True
                         break
@@ -1035,39 +1036,62 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
             if not did_expand:
                 raise ValueError("failed to expand to fill cluster...?")
 
-        if len(res_cubes) != n_cubes:
-            raise ValueError("res_cubes has incorrect size={}, expected={}".format(len(res_cubes), n_cubes))
+        if len(new_cubes) != n_cubes:
+            raise ValueError("res_cubes has incorrect size={}, expected={}".format(len(new_cubes), n_cubes))
+
+        new_cubes = cubeutils.CubeUtils.clean_cubes(new_cubes)
 
         import src.items.itemgen as itemgen
 
-        stat_types = []
+        new_stats = {}  # stat_type -> value
         for applied_stat in item.all_applied_stats():
-            if applied_stat.get_type() not in stat_types:  # there shouldn't be dupes, but nuke them just in case.
-                stat_types.append(applied_stat.get_type())
+            if applied_stat.get_type() not in new_stats:  # there shouldn't be dupes, but nuke them just in case.
+                new_stats[applied_stat.get_type()] = applied_stat.get_value()
 
         # might need to delete stats if we lost cubes.
-        n_stats_to_remove = len(stat_types) - balance.max_stats_for_n_cubes(len(res_cubes))
+        deleted_some_stats = False
+        n_stats_to_remove = len(new_stats) - balance.max_stats_for_n_cubes(len(new_cubes))
+
         if n_stats_to_remove > 0:
-            core_stats = [s for s in stat_types if s in itemgen.CORE_STATS]
+            core_stats = [s for s in new_stats if s in itemgen.CORE_STATS]
             if len(core_stats) > 0:
                 protected_core_stat = random.choice(core_stats)
             else:
                 protected_core_stat = None  # weird but ok...
 
-            deletable_stat_types = [s for s in stat_types if s != protected_core_stat]
+            deletable_stat_types = [s for s in new_stats if s != protected_core_stat]
 
             while n_stats_to_remove > 0 and len(deletable_stat_types) > 0:
                 to_del = random.choice(deletable_stat_types)
                 deletable_stat_types.remove(to_del)
-                stat_types.remove(to_del)
-
+                del new_stats[to_del]
                 n_stats_to_remove -= 1
+                deleted_some_stats = True
 
-        new_applied_stats = itemgen.StatCubesItemFactory.gen_applied_stats_for_cubes_and_stat_types(
-            item.get_level(), res_cubes, stat_types)
+        # XXX special case-y stuff to deal with holy artifact stat doubling / un-doubling
+        was_holy = cubeutils.CubeUtils.is_holy(item.cubes)
+        is_holy = cubeutils.CubeUtils.is_holy(new_cubes)
+        if was_holy != is_holy:
+            for stat_type in new_stats:
+                new_stats[stat_type] = itemgen.StatCubesItemFactory.modify_stat_for_holy_item(stat_type,
+                                                                                              new_stats[stat_type],
+                                                                                              unmodify=not is_holy)
 
-        new_item = itemgen.StatCubesItemFactory.gen_item_for_cubes_and_stats(
-            item.get_level(), res_cubes, new_applied_stats)
+        new_applied_stats = []
+        for stat_type in new_stats:
+            # we're relying on the fact that python uses an ordered dict by default to ensure
+            # that these stats end up in the same order as they appear on the original item.
+            new_applied_stat = itemgen.AppliedStat(stat_type, new_stats[stat_type])
+            new_applied_stats.append(new_applied_stat)
+
+        new_name = itemgen.StatCubesItemFactory.gen_name_for_stats_and_cubes(new_applied_stats, new_cubes)
+        new_color = item.color if not deleted_some_stats else itemgen.StatCubesItemFactory.gen_color_for_stats(new_applied_stats)
+
+        orig_art_types = [item.cube_art[c] for c in item.cubes if (c in item.cube_art and item.cube_art[c] != 0)]
+        new_cube_art = itemgen.StatCubesItemFactory.gen_cube_art_for_stats_and_cubes(new_applied_stats, new_cubes,
+                                                                                     art_types=orig_art_types)
+
+        new_item = itemgen.StatCubesItem(new_name, item.get_level(), new_applied_stats, new_cubes, new_color, cube_art=new_cube_art)
 
         return [new_item]
 

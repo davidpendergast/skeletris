@@ -347,14 +347,18 @@ class StatCubesItemFactory:
         return color
 
     @staticmethod
-    def gen_cube_art_for_stats_and_cubes(stats, cubes):
+    def gen_cube_art_for_stats_and_cubes(stats, cubes, art_types=()):
+        """:param art_types: int from 1 to 5"""
         cube_art = {}
         cubes_copy = [c for c in cubes]
         random.shuffle(cubes_copy)
 
         for i in range(0, len(stats)):
             if i < len(cubes_copy):
-                cube_art[cubes_copy[i]] = 1 + int(5 * random.random())
+                if i < len(art_types):
+                    cube_art[cubes_copy[i]] = art_types[i]
+                else:
+                    cube_art[cubes_copy[i]] = 1 + int(5 * random.random())
 
         return cube_art
 
@@ -385,10 +389,19 @@ class StatCubesItemFactory:
 
         if CubeUtils.is_holy(cubes):
             for stat in res:
-                if stat.get_type() in CORE_STATS:
-                    stat.value = stat.value * 2
+                stat.value = StatCubesItemFactory.modify_stat_for_holy_item(stat.get_type(), stat.get_value())
 
         return res
+
+    @staticmethod
+    def modify_stat_for_holy_item(stat_type, base_value, unmodify=False):
+        if stat_type in CORE_STATS:
+            if not unmodify:
+                return base_value * 2
+            else:
+                return base_value // 2
+        else:
+            return base_value
 
     @staticmethod
     def gen_name_for_stats_and_cubes(stats, cubes):

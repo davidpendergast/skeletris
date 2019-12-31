@@ -14,6 +14,15 @@
  
  
 [story bugs]
+ - it's never explained what you are exactly
+    - a skeleton? why don't you look like the others
+    - an undead? why aren't you affected by the parasite?
+        - you don't have a brain?
+    - something else?
+        - some kind of husk?
+ - what is grok?
+    - a disembodied skeleton, joined to a "husk" which replaces his body
+ - it's never explained why you (and grok) aren't affected by the parasite
 
 
 [story planning]
@@ -22,6 +31,7 @@
 [testing]
  - make sure that statuses 'apply' the correct number of times
  - test anything on mac (where can i find a mac?)
+ - test holy artifacts, haven't seen one in a while lol
 
 
 [balance issues]    
@@ -33,15 +43,10 @@
  
  - robo boss should do something
     - he big. he tuff. maybe that's enough
+    - maybe just add a 2nd phase?
  
  
-[current features]
-
- - finalize nameless boss fight
-    - it would be so cool if there was some kind of "preview" for this fight 
-      earlier in the game... even just a line of dialog or something
-    - also please just come up with a name... this is stupid
- 
+[current features] 
  - figure out how to make 32-bit windows builds
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?

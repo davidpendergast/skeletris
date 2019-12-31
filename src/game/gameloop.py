@@ -304,7 +304,7 @@ def run():
             if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
                 gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
-        if input_state.was_pressed(pygame.K_F7):
+        if input_state.was_pressed(pygame.K_F5):
             current_scale = gs.get_instance().settings().pixel_scale()
             options = gs.get_instance().settings().pixel_scale_options()
             if current_scale in options:
