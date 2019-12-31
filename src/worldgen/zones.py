@@ -1554,7 +1554,7 @@ class CaveHorrorZone(Zone):
     ZONE_ID = "cave_horror_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Cave Horror's Lair", 15, filename="cave_horror.png")
+        Zone.__init__(self, "The Vault", 15, filename="cave_horror.png")
         self._tree_color = (255, 170, 170)
         self._husk_color = (255, 194, 194)
         self._bounds_color = (255, 190, 0)

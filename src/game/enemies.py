@@ -1045,7 +1045,7 @@ class NamelessTemplate(EnemyTemplate):
 class CaveHorrorTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Cave Horror")
+        EnemyTemplate.__init__(self, "Exorbitant Horror")
 
     def get_sprites(self):
         return spriteref.CaveHorror.cave_horror_idle
