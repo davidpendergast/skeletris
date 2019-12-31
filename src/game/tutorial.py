@@ -21,6 +21,7 @@ def _make_tut_id(tut_id):
 class TutorialID:
     HOW_TO_MOVE = _make_tut_id("how_to_move")
     HOW_TO_EQUIP = _make_tut_id("how_to_equip")
+    HOW_TO_SKIP = _make_tut_id("how_to_skip_turn")
     HOW_TO_OPEN_INVENTORY = _make_tut_id("how_to_open_inv")
     HOW_TO_USE_POTIONS = _make_tut_id("how_to_use_potions")
     HOW_TO_THROW_ITEMS = None  # _make_tut_id("how_to_throw_items")
@@ -468,13 +469,7 @@ class HowToSkipTurnStage(EntityNotificationTutorialStage):
         return p
 
     def test_completed(self):
-        w, p = gs.get_instance().get_world_and_player()
-        if p is None:
-            return False
-
-        cond = make_action_predicate(gameengine.ActionType.SKIP_TURN, p.get_uid())
-        return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_STARTED,
-                                                         predicate=cond)
+        return gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURNS_SKIPPED_COUNT) > 0
 
     def get_message(self):
         skip_keys = gs.get_instance().settings().skip_turn_key()
@@ -681,6 +676,10 @@ class TutorialFactory:
         elif tut_id == TutorialID.HOW_TO_OPEN_MAP:
             return TutorialPlugin(tut_id, 5, [
                 HowToOpenMapPanelStage(delay=120)
+            ])
+        elif tut_id == TutorialID.HOW_TO_SKIP:
+            return TutorialPlugin(tut_id, 2, [
+                HowToSkipTurnStage(delay=360)
             ])
 
         return None

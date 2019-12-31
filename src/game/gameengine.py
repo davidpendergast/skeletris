@@ -237,11 +237,11 @@ class ActorController:
         import src.game.stats as stats
 
         if a_state.is_flinched() and not next_action.is_skip_turn_action():
-            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.FLINCHED.get_color())
+            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.FLINCHED.get_color(), intentional=False)
 
         # intentionally still letting you do things like lunge-attack while grasped, for flavor...
         if a_state.is_grasped() and next_action.is_move_action():
-            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.GRASPED.get_color())
+            return SkipTurnAction(actor, a_pos, perturb_color=stats.StatTypes.GRASPED.get_color(), intentional=False)
 
         if a_state.is_confused() and next_action.is_move_action():
             if random.random() < balance.CONFUSION_CHANCE:
@@ -1491,13 +1491,17 @@ class ThrowItemAction(Action):
 
 class SkipTurnAction(Action):
 
-    def __init__(self, actor, position, perturb_color=None):
+    def __init__(self, actor, position, perturb_color=None, intentional=True):
         Action.__init__(self, ActionType.SKIP_TURN, 25, actor, position=position)
         self._did_enemy_jump = False
         self._did_sound = False
         self._did_color_perturb = False
 
+        self._intentional = intentional
         self._perturb_color = perturb_color
+
+    def is_intentional(self):
+        return self._intentional
 
     def animate_in_world(self, progress, world):
         actor = self.get_actor()
@@ -1539,6 +1543,9 @@ class SilentSkipTurnAction(Action):
 
     def __init__(self, actor):
         Action.__init__(self, ActionType.SKIP_TURN, 0, actor)
+
+    def is_intentional(self):
+        return True
 
     def is_possible(self, world):
         return True

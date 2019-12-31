@@ -676,6 +676,9 @@ class World:
                 if actor.is_player():
                     gs.get_instance().set_player_turn_to_act(True)
 
+                if actor.is_player() and action.is_skip_turn_action() and action.is_intentional():
+                    gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.TURNS_SKIPPED_COUNT)
+
                 if action.is_free():
                     action.pre_start(self)
                     action.start(self)
