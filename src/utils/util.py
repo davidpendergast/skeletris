@@ -6,8 +6,6 @@ import numbers
 import pathlib
 import sys
 
-import pygame
-
 
 class Utils:
 
@@ -246,6 +244,7 @@ class Utils:
 
     @staticmethod
     def stringify_key(keycode):
+        import pygame
         if keycode == pygame.K_LEFT:
             return "←"
         elif keycode == pygame.K_UP:

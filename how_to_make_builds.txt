@@ -1,3 +1,11 @@
-Just run:
 
-    pyinstaller cube.spec
+1. install pyinstaller (probably via "pip install pyinstaller").
+
+2. run make_exe.py (via "python make_exe.py")
+
+3. follow prompts.
+
+4. the build will be dropped into the dist folder with a name 
+   like "skeletris_windows_64bit_v1_0_0".
+
+5. zip it and ship it (optional).
