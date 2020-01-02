@@ -139,7 +139,7 @@ if __name__ == "__main__":
         ans = _ask_yes_or_no_question("Overwrite {}?".format(dist_dir))
         if ans:
             print("INFO: deleting pre-existing build {}".format(dist_dir))
-            shutil.rmtree(str(dist_dir))
+            shutil.rmtree(str(dist_dir), ignore_errors=True)
         else:
             print("INFO: user opted to not overwrite pre-existing build, exiting")
             sys.exit(0)
