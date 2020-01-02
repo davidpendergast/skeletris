@@ -1,5 +1,3 @@
-
-import src.game.debug as debug
 import src.utils.util as util
 import traceback
 
@@ -8,7 +6,7 @@ _VERSION_PATH = "info/version.json"
 _VERSION = (-1, -1, -1, "")
 
 
-def load_version_info():
+def load_version_info(force_nodev=False):
     try:
         resource_path = util.Utils.resource_path(_VERSION_PATH)
         version_info = util.Utils.load_json_from_path(resource_path)
@@ -17,8 +15,10 @@ def load_version_info():
         bugfix = int(version_info["bugfix"])
         desc = str(version_info["desc"])
 
-        if debug.is_dev():
-            desc = "DEV"
+        if not force_nodev:
+            import src.game.debug as debug
+            if debug.is_dev():
+                desc = "DEV"
 
         global _VERSION
         _VERSION = (major, minor, bugfix, desc)
