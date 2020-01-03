@@ -104,10 +104,11 @@ def init_zones():
 
     swamp_song = music.Songs.get_basic_swamp_song()
     green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
-    swamp_conv_1 = [npc.Conversations.MARY_SKELLY_SWAMPS_1.get_id()]
+    swamp_bonus_decs_1 = [(decoration.DecorationTypes.PLANT, 0.05)]  # presumably these belong to beanskull
+    mary_swamp_conv = [npc.Conversations.MARY_SKELLY_SWAMPS.get_id()]
 
-    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song, dims=(3, 2), conversation_ids=swamp_conv_1))
-    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song, dims=(3, 2)))
+    story_zones.append(ZoneBuilder.make_generated_zone(4, "Swamps I", "swamps_1", geo_color=green_color, music_id=swamp_song, dims=(3, 2), bonus_decorations=swamp_bonus_decs_1))
+    story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song, dims=(3, 2), conversation_ids=mary_swamp_conv))
     story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song, dims=(4, 2)))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
     story_zones.append(get_zone(CityGateZone.ZONE_ID))
@@ -1776,21 +1777,21 @@ class TombTownZone(Zone):
     ZONE_ID = "tomb_town"
 
     def __init__(self):
-        Zone.__init__(self, "Tomb Town", 3, filename="town.png", bg_color=colors.BLACK)
+        Zone.__init__(self, "Tombtown", 3, filename="town.png", bg_color=colors.BLACK)
 
         self.music_id = music.Songs.SILENCE
         self.fight_music_id = music.Songs.ARACHNID
         self.post_fight_music_id = music.Songs.get_basic_caves_song()
 
     WALL_SIGNS = {
-        (255, 172, 150): [" - Outpost 53 - \nWelcome to Tomb Town!"],
+        (255, 172, 150): [" - Outpost 53 - \nWelcome to Tombtown!"],
         (255, 173, 150): ["Mary's Adventure Tours"],
         (255, 174, 150): ["Beanskull's Tomato Grove"],
-        (255, 179, 150): ["Mathilda's Blades and Swords"],
+        (255, 179, 150): ["Mathilda's Blade and Sword"],
         (255, 175, 150): ["Notice Board:\n"
                           "Tax season is coming up! Late fees WILL be enforced."],
-        (255, 176, 150): ["Tomb Town City Hall"],
-        (205, 177, 150): ["Tomb Town Treasury\n" +
+        (255, 176, 150): ["Tombtown City Hall"],
+        (205, 177, 150): ["Tombtown Treasury\n" +
                           "Absolutely NO Unauthorized Access"],
         (255, 178, 150): ["P. Patches:         20,354.76m\n" +
                           "Ms. & Ms. Skelly:      702.10m\n" +

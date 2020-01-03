@@ -15,12 +15,10 @@
  - you can be chilled and nullified at the same time
     - although the chilled effect doesn't seem to actually affect you
 
-[distribution Bugs]
+[distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
     - it seems like the only way around this is to get a digital certificate,
       which costs hundreds of dollars and requires me to be a legitimate company?
- - should distribute as a zipped directory maybe?
-    - that already has save_data, logs folders?
  
 [story bugs]
  - it's never explained what you are exactly
@@ -32,14 +30,9 @@
  - what is grok?
     - a disembodied skeleton, joined to a "husk" which replaces his body
  - it's never explained why you (and grok) aren't affected by the parasite
- - "Tomb Town" and "Tombtown" are both used
- - mary should say "half-cycle" instead of "quarter-cycle" in the waiting-for-spider dialog
- - there are "well-maintained" plant decorations placed randomly throughout all zones
- - should say "Blade and Sword", not "Blades and Swords"
- - mary should appear in Swamps II I think, not Swamps I
- - weapon names don't make sense anymore
- - mary shouldn't say "this is the gate to the city"
+ 
  - mary doesn't have repeat dialog at the frog gate
+    - this is a reoccurring problem
 
 
 [testing]

@@ -296,7 +296,7 @@ class Conversations:
 
     MARY_SKELLY_POST_FROG_FIGHT = Conversation("MARY_SKELLY_POST_FROG_FIGHT", NpcID.MARY_SKELLY)
 
-    MARY_SKELLY_SWAMPS_1 = Conversation("MARY_SKELLY_SWAMPS_1", NpcID.MARY_SKELLY)
+    MARY_SKELLY_SWAMPS = Conversation("MARY_SKELLY_SWAMPS", NpcID.MARY_SKELLY)
 
     MARY_AND_HEAD_AT_GATE = Conversation("MARY_AND_HEAD_AT_GATE", NpcID.HEAD)
 
@@ -347,7 +347,7 @@ class ConversationFactory:
                     PlayerDialog("I... don't know."),
                     NpcDialog("Are there more of you? We thought your kind was... lost during, ya know..."),
                     PlayerDialog("I... don't think so. What is this place?"),
-                    NpcDialog("This used to be an outpost between the Swamps the Caves, but we call it Tomb Town now."),
+                    NpcDialog("This used to be an outpost between the Swamps the Caves, but we call it Tombtown now."),
                     NpcDialog("We've been... surviving here since Skeletris fell."),
                     PlayerDialog("..."),
                     NpcDialog("You don't remember the war?"),
@@ -368,7 +368,7 @@ class ConversationFactory:
                     NpcDialog("Well maybe not that little. Sort of medium. Maybe medium-big. Anyway..."),
                     NpcDialog("A huge spider found its way in and none of us can safely fight it."),
                     NpcDialog("We've trapped it in the central chamber, waiting for it to get weak from hunger."),
-                    NpcDialog("But that could take a quarter-cycle or longer depending on when it last fed..."),
+                    NpcDialog("But that could take a half-cycle or longer depending on when it last fed..."),
                     NpcDialog("And meanwhile I'm stuck out here, hoping nothing worse comes out of the caves and dismantles me."),
                     NpcDialog("Do you... think you could help? You must be tough as nails, coming all the way here by yourself."),
                     NpcDialog("It's strong, but not very fast. The best way to fight it is to hit and step away."),
@@ -402,7 +402,7 @@ class ConversationFactory:
                     NpcDialog("You're our only hope, survivor.")
                 ]
 
-        if conv == Conversations.MARY_SKELLY_SWAMPS_1:
+        if conv == Conversations.MARY_SKELLY_SWAMPS:
             res_list = [
                 NpcDialog("You wouldn't be able to tell now, but these swamps used to be a popular place for picnics and hikes."),
                 NpcDialog("City skeletons would come through here all the time, and it was our job at the outpost to make sure none of them accidentally wandered into the caves."),
@@ -411,7 +411,7 @@ class ConversationFactory:
 
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
             res_list = [
-                NpcDialog("This is the gate to the city."),
+                NpcDialog("The gate to the city is behind this chamber."),
                 NpcDialog("The monster behind this door... it dismantled... someone important to me."),
                 NpcDialog("If you see any stray bones in there... well just be careful with them, ok?"),
                 NpcDialog("Good luck, survivor.")
@@ -690,7 +690,7 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("Hello there! Thank you for taking care of that spider!"),
                     NpcDialog("We haven't met before, have we? I'm Beanskull. What's your name?"),
-                    NpcDialog("Well... no matter. Welcome to Tomb Town! The final outpost before Skeletris."),
+                    NpcDialog("Well... no matter. Welcome to Tombtown! The final outpost before Skeletris."),
                     NpcDialog("Although... I don't believe we've heard from them in a while."),
                     NpcDialog("It's no matter though. I don't need their hi-tech gadgets or artificial what-cha-ma-call-it to grow my tomatoes."),
                     NpcDialog("The real problem is the wildlife. Very dangerous now. Makes it risky to gather seeds."),

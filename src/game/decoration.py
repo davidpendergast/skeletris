@@ -20,7 +20,7 @@ def _add_dec_type(val, rand_spawn=True):
 class DecorationTypes:
 
     BUCKET = _add_dec_type("BUCKET")
-    PLANT = _add_dec_type("PLANT")
+    PLANT = _add_dec_type("PLANT", rand_spawn=False)
     RAKE = _add_dec_type("RAKE")
     BONES = _add_dec_type("BONES")
     MUSHROOM = _add_dec_type("MUSHROOM")

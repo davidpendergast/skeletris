@@ -84,7 +84,7 @@ class WeaponItemFactory:
         elif item_type == ItemTypes.WHIP_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.WHIP_ATTACK]
-            return SpriteItem("Whip of Quickness", item_type, level, cubes,
+            return SpriteItem("Whip of Agony", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 3, local=True),
                                AppliedStat(StatTypes.FLINCH_ON_HIT, 1, local=True)],
                               spriteref.Items.whip_small, spriteref.Items.whip_big, actions=actions)
@@ -99,7 +99,7 @@ class WeaponItemFactory:
         elif item_type == ItemTypes.SHIELD_WEAPON:
             cubes = [(0, 0), (0, 1), (1, 0), (1, 1)]
             actions = [ItemActions.SHIELD_ATTACK]
-            return SpriteItem("Shield of Mending", item_type, level, cubes,
+            return SpriteItem("Shield of Security", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 4, local=True),
                                AppliedStat(StatTypes.PLUS_DEFENSE_ON_HIT, 4, local=True)],
                               spriteref.Items.shield_small, spriteref.Items.shield_big, actions=actions)
@@ -124,7 +124,7 @@ class WeaponItemFactory:
         elif item_type == ItemTypes.BOW_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2)]
             actions = [ItemActions.BOW_ATTACK]
-            return SpriteItem("Bow of Speed", item_type, level, cubes,
+            return SpriteItem("Bow of Power", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 4, local=True)],
                               spriteref.Items.bow_small, spriteref.Items.bow_big, actions=actions,
                               projectile_sprite=spriteref.Items.arrow_projectile_small)
@@ -140,7 +140,7 @@ class WeaponItemFactory:
         elif item_type == ItemTypes.FISHING_ROD_WEAPON:
             cubes = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)]
             actions = [ItemActions.FISHING_ROD_ATTACK]
-            return SpriteItem("Fishing Rod of Glory", item_type, level, cubes,
+            return SpriteItem("Rod of Glory", item_type, level, cubes,
                               [AppliedStat(StatTypes.ATT, 2, local=True),
                                AppliedStat(StatTypes.GRASP_ON_MELEE_HIT, 2, local=True)],
                               spriteref.Items.fishing_rod_small, spriteref.Items.fishing_rod_big, actions=actions)
