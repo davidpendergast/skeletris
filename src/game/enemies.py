@@ -80,7 +80,10 @@ class EnemyTemplate:
         return range(0, 64)
 
     def show_zees(self):
-        return EnemyTypes.INANIMATE not in self.get_types()
+        return not self.is_inanimate()
+
+    def is_inanimate(self):
+        return EnemyTypes.INANIMATE in self.get_types()
 
     def get_stats(self):
         base_stats = {
@@ -147,30 +150,6 @@ class WebTemplate(EnemyTemplate):
     def get_controller(self):
         import src.game.gameengine as gameengine
         return gameengine.NullController(silent=True)
-
-
-class SkeleSpawn(EnemyTemplate):
-    # TODO not used, delete?
-
-    def __init__(self):
-        EnemyTemplate.__init__(self, "Skele-Spawn")
-
-    def get_sprites(self):
-        return spriteref.skelekid_all
-
-    def get_types(self):
-        return [EnemyTypes.UNDEAD]
-
-    def get_stat_overrides(self):
-        return {
-            StatTypes.VIT: 10,
-            StatTypes.DEF: 2,
-            StatTypes.UNARMED_ATT: 2,
-            StatTypes.SPEED: 2,
-            StatTypes.INTELLIGENCE: 3,
-            StatTypes.WEALTH: 0
-        }
-
 
 class CaveCrawlerTemplate(EnemyTemplate):
 
@@ -1117,7 +1096,6 @@ TEMPLATE_CRAB = CrabTemplate()
 TEMPLATE_WITCH = WitchTemplate()
 TEMPLATE_OYSTER = OysterTemplate()
 TEMPLATE_HUSK = HuskTemplate()
-TEMPLATE_SKELEKID = SkeleSpawn()
 TEMPLATE_SKULKER = SkulkerTemplate()
 TEMPLATE_LEPIOTA = CrawlingLepiotaTemplate()
 TEMPLATE_INFECTED_HUSK = InfectedHuskTemplate()
