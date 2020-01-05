@@ -869,7 +869,7 @@ class FadingInFlavorMenu(OptionsMenu):
     def __init__(self, menu_type, flavor_text, next_menu, auto_next=False):
         OptionsMenu.__init__(self, menu_type, flavor_text, ["~hidden~"], title_size=1.5)
         self._flavor_full_brightness_duration = 100
-        self._total_duration = 120
+        self._total_duration = 160
         self._flavor_tick = 0
         self._auto_next = auto_next
 

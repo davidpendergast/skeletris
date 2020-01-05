@@ -331,9 +331,10 @@ class AnimationEntity(Entity):
         FREEZE_ON_FINISH = 2
         DELETE_ON_FINISH = 3
 
-        def __init__(self, cx, cy, sprites, duration, layer_id, scale=1):
+        def __init__(self, cx, cy, sprites, duration, layer_id, scale=1, anim_rate=-1):
             Entity.__init__(self, cx - 2, cy - 2, 4, 4)
             self.duration = duration
+            self.anim_rate = anim_rate
             self.tick_count = 0
             self.sprites = sprites
             self.layer_id = layer_id
@@ -346,6 +347,7 @@ class AnimationEntity(Entity):
             self.shadow_sprite = None
             self.rotation = 0
             self.standing_up = True
+            self._vis_in_darkness = False
 
             self.vel = (0, 0)
             self.fric = 0.90
@@ -381,11 +383,19 @@ class AnimationEntity(Entity):
             self.sprites = new_sprites
 
         def get_current_sprite(self):
-            idx = int(self.get_progress() * len(self.sprites))
+            if self.anim_rate > 0:
+                anim_tick = gs.get_instance().anim_tick
+                idx = anim_tick // self.anim_rate % len(self.sprites)
+            else:
+                idx = int(self.get_progress() * len(self.sprites))
+
             return self.sprites[idx]
 
         def visible_in_darkness(self):
-            return False
+            return self._vis_in_darkness
+
+        def set_visible_in_darkness(self, val):
+            self._vis_in_darkness = val
 
         def update_attributes(self):
             pass
@@ -482,6 +492,51 @@ class PlayerCorpseAnimation(AnimationEntity):
 
     def visible_in_darkness(self):
         return False
+
+
+class PlayerAbsorbAnimation(AnimationEntity):
+
+    def __init__(self, cx, cy,
+                 get_down_duration=60,
+                 lay_duration=60,
+                 grab_duration=60,
+                 absorb_duration=60):
+
+        total_dur = get_down_duration + lay_duration + grab_duration + absorb_duration
+
+        AnimationEntity.__init__(self, cx, cy, spriteref.Animations.player_absorb_all,
+                                 total_dur, spriteref.ENTITY_LAYER)
+
+        if len(self.sprites) != 24:
+            # get_current_sprite makes this assumption, so might as well break out here
+            raise ValueError("expected number of sprites to be 24, instead got: {}".format(len(self.sprites)))
+
+        self.get_down_duration = get_down_duration
+        self.lay_duration = lay_duration
+        self.grab_duration = grab_duration
+        self.absorb_duration = absorb_duration
+
+        self.standing_up = False
+        self.set_finish_behavior(AnimationEntity.FREEZE_ON_FINISH)
+
+    def get_current_sprite(self):
+        all_sprites = self.sprites
+
+        if self.tick_count < self.get_down_duration:
+            sub_prog = self.tick_count / self.get_down_duration
+            sub_sprites = all_sprites[0:7]
+        elif self.tick_count < self.get_down_duration + self.lay_duration:
+            sub_prog = (self.tick_count - self.get_down_duration) / self.lay_duration
+            sub_sprites = all_sprites[7:8]
+        elif self.tick_count < self.get_down_duration + self.lay_duration + self.grab_duration:
+            sub_prog = (self.tick_count - self.get_down_duration - self.lay_duration) / self.grab_duration
+            sub_sprites = all_sprites[8:20]
+        else:
+            sub_prog = (self.tick_count - self.get_down_duration - self.lay_duration - self.grab_duration) / self.absorb_duration
+            sub_sprites = all_sprites[20:24]
+
+        sub_prog = Utils.bound(sub_prog, 0, 0.999)
+        return sub_sprites[int(len(sub_sprites) * sub_prog)]
 
 
 class LightEmitterAnimation(AnimationEntity):
@@ -1491,6 +1546,9 @@ class DoorEntity(Entity):
         # list of pairs (str: name, lambda world: -> None)
         self._special_on_open_hooks = []
 
+        self.custom_locked = False
+        self.custom_locked_message = None
+
     def visible_in_darkness(self):
         return True
 
@@ -1572,7 +1630,15 @@ class DoorEntity(Entity):
         return True
 
     def can_open(self, world):
-        return True
+        return not self.custom_locked
+
+    def set_locked(self, val, message=None):
+        self.custom_locked = val
+
+        if val:
+            self.custom_locked_message = message
+        else:
+            self.custom_locked_message = None
 
     def is_interactable(self, world):
         return not self.can_open(world) and self.get_locked_message(world) is not None
@@ -1585,7 +1651,10 @@ class DoorEntity(Entity):
             print("WARN: interacted with non-interactable door..?")
 
     def get_locked_message(self, world):
-        return "It's locked."
+        if self.custom_locked_message is not None:
+            return self.custom_locked_message
+        else:
+            return "It's locked."
 
 
 class SensorDoorEntity(DoorEntity):
@@ -2195,7 +2264,7 @@ class TriggerBox(Entity):
             self._player_currently_inside = inside
             self._player_in_range_count = 0
 
-        if self._player_currently_inside:
+        if self._player_currently_inside and not p.is_performing_action():
             if not self._no_more_action_firings and self._player_in_range_count == self._fire_action_delay:
                 gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self._box_id))
                 self.fire_action(p, world)
@@ -2315,6 +2384,72 @@ class PlayerSleepAnimationBox(TriggerBox):
 
     def player_exited(self, player, world):
         self._deactivate(player, world)
+
+
+class PlayerPeacefulAbsorptionBox(TriggerBox):
+
+    def __init__(self, grid_pos, dialog):
+        TriggerBox.__init__(self, grid_pos, grid_size=(1, 1), delay=0,
+                            ignore_updates_paused=True, box_id="player_absorb_animation")
+        self._dialog = dialog
+        self._sprite_override_id = "absorption_sprite_id"
+
+        self._tick_count = 0
+
+        self._has_shown_dialog = False
+
+    def player_entered(self, player, world):
+        self._has_shown_dialog = False
+
+    def player_exited(self, player, world):
+        # shouldn't happen, but just in case
+        self._set_sprites_gently(player, None)
+
+    def _calc_current_sprite(self):
+        sprites = spriteref.Animations.player_absorb_all
+
+        initial_delay = 45
+        first_frame_dur = 60
+        first_12_dur = 120
+        final_4_dur = 120
+
+        ticks = self._tick_count
+
+        if ticks < initial_delay:
+            return None
+        ticks -= initial_delay
+
+        if ticks < first_frame_dur:
+            return sprites[0]
+        ticks -= first_frame_dur
+
+        if ticks < first_12_dur:
+            prog = ticks / first_frame_dur
+            return sprites[min(int(12 * prog), len(sprites) - 1)]
+        ticks -= first_12_dur
+
+        prog = ticks / final_4_dur
+        return sprites[min(12 + int(4 * prog), len(sprites) - 1)]
+
+    def player_inside(self, player, world):
+
+        if not self._has_shown_dialog and not player.is_performing_action():
+            gs.get_instance().dialog_manager().set_dialog(self._dialog)
+            self._has_shown_dialog = True
+
+        sprite_to_set = self._calc_current_sprite()
+
+        if sprite_to_set is None:
+            self._set_sprites_gently(player, None)
+        else:
+            self._set_sprites_gently(player, [sprite_to_set])
+
+        self._tick_count += 1
+
+    def _set_sprites_gently(self, player, sprites):
+        # don't want to stamp out any other sprite overrides that may be occurring due to an action or something
+        if player.get_sprite_override_id() is None or player.get_sprite_override_id() == self._sprite_override_id:
+            player.set_sprite_override(sprites, override_id=self._sprite_override_id)
 
 
 class HoverTextEntity(Entity):

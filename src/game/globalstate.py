@@ -161,6 +161,9 @@ class GlobalState:
         else:
             return 0
 
+    def is_peaceful_so_far(self):
+        return self.get_run_statistic(RunStatisticTypes.KILL_COUNT) == 0
+
     def set_run_statistic(self, run_stat_type, val):
         self._run_statistics[run_stat_type] = val
 
@@ -190,12 +193,21 @@ class GlobalState:
         else:
             return None
 
-    def do_fade_sequence(self, start_alpha, end_alpha, duration, color=(0, 0, 0)):
+    def do_fade_sequence(self, start_alpha, end_alpha, duration, color=(0, 0, 0), start_delay=0, end_delay=0):
         self._fade_overlay_sequence.clear()
+
+        # it's a stack, so building it backwards
+        for _ in range(0, end_delay):
+            alpha = Utils.bound(end_alpha, 0, 1)
+            self._fade_overlay_sequence.append((color, alpha))
+
         for i in range(0, duration + 1):
-            # it's a stack, so building it backwards
             alpha = end_alpha * (1 - i / duration) + start_alpha * (i / duration)
             alpha = Utils.bound(alpha, 0, 1)
+            self._fade_overlay_sequence.append((color, alpha))
+
+        for _ in range(0, start_delay):
+            alpha = Utils.bound(start_alpha, 0, 1)
             self._fade_overlay_sequence.append((color, alpha))
 
     def menu_manager(self):

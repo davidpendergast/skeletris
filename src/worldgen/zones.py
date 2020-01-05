@@ -72,25 +72,46 @@ def all_handbuilt_zone_ids():
     return [z for z in _ALL_ZONES if (z not in loot_zones and get_zone(z).get_file() is not None)]
 
 
+def _conditionally_swapped_next_storyline_zone(normal_zone_id):
+    if normal_zone_id == CaveHorrorZone.ZONE_ID:
+        if gs.get_instance().is_peaceful_so_far():
+            # this is where the peaceful run ends
+            return CaveHorrorZonePeaceful.ZONE_ID
+
+    return normal_zone_id
+
+
 def next_storyline_zone(current_id):
-    if current_id not in _STORYLINE_ZONES:
+    if current_id == CaveHorrorZonePeaceful.ZONE_ID:
+        return _END_OF_GAME_ZONE_ID
+    elif current_id not in _STORYLINE_ZONES:
         print("WARN: {} isn't a storyline zone, so there's no 'next' storyline zone")
         return None
     else:
         idx = _STORYLINE_ZONES.index(current_id)
         if idx + 1 < len(_STORYLINE_ZONES):
-            return _STORYLINE_ZONES[idx + 1]
+            res = _STORYLINE_ZONES[idx + 1]
+            return _conditionally_swapped_next_storyline_zone(res)
         else:
             # we hit the end
             return _END_OF_GAME_ZONE_ID
 
 
+def _for_each_subclass_recurs(klazz, lammy):
+    for sub_klazz in klazz.__subclasses__():
+        lammy(sub_klazz)
+        _for_each_subclass_recurs(sub_klazz, lammy)
+
+
+def _make_and_register_zone_from_class(zone_cls):
+    zone_instance = zone_cls()
+    zone_instance.zone_id = zone_cls.ZONE_ID
+    make(zone_instance)
+
+
 def init_zones():
     _ALL_ZONES.clear()
-    for zone_cls in Zone.__subclasses__():
-        zone_instance = zone_cls()
-        zone_instance.zone_id = zone_cls.ZONE_ID
-        make(zone_instance)
+    _for_each_subclass_recurs(Zone, _make_and_register_zone_from_class)
 
     story_zones = []
 
@@ -1569,16 +1590,7 @@ class CaveHorrorZone(Zone):
 
         self._doctor_spawn = (255, 173, 151)
 
-    def build_world(self):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
-
-        if len(bp.music_doors) != 1:
-            raise ValueError("should be exactly one special door in zone: {}".format(len(bp.music_doors)))
-        special_door_pos = list(bp.music_doors.keys())[0]
-
-        w = bp.build_world()
-        w.set_wall_type(spriteref.WALL_NORMAL_ID)
-
+    def build_decorations(self, w, unknowns):
         if self._rake_color in unknowns:
             for xy in unknowns[self._rake_color]:
                 dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.RAKE)
@@ -1603,6 +1615,7 @@ class CaveHorrorZone(Zone):
                                                                       with_dialog=d_text)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
+    def build_boss_fight_stuff(self, w, unknowns, special_door_pos):
         bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
 
         inital_husk_spawns = unknowns[self._husk_color]
@@ -1652,7 +1665,7 @@ class CaveHorrorZone(Zone):
         if special_door is None:
             raise ValueError("there's no door in the cell: {}".format(special_door_pos))
 
-        def entry_door_action(world):
+        def entry_door_action(_world):
             tree_ent_in_world = w.get_entity(tree_uid, onscreen=False)
             if tree_ent_in_world is not None:
                 # want it to wait a few turns before it starts summoning
@@ -1662,6 +1675,9 @@ class CaveHorrorZone(Zone):
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
 
+        return tree_entity
+
+    def build_npc_stuff(self, w, unknowns, tree_entity):
         pre_fight_npcs = self._gen_npcs(True)
         if all([color_id in unknowns for color_id in pre_fight_npcs]):
             for color_id in pre_fight_npcs:
@@ -1671,7 +1687,8 @@ class CaveHorrorZone(Zone):
 
                 # remove npc when boss dies
                 death_hook = _get_remove_entity_on_death_hook(npc_for_id.get_uid(), show_explosion=True)
-                tree_entity.add_special_death_hook("remove pre-fight npc: {}".format(npc_for_id.get_npc_id()), death_hook)
+                tree_entity.add_special_death_hook("remove pre-fight npc: {}".format(npc_for_id.get_npc_id()),
+                                                   death_hook)
 
         post_fight_npcs = self._gen_npcs(False)
         if all([color_id in unknowns for color_id in post_fight_npcs]):
@@ -1679,8 +1696,6 @@ class CaveHorrorZone(Zone):
                 npc_for_id = post_fight_npcs[color_id]
                 npc_pos = unknowns[color_id][0]
                 w.add(npc_for_id, gridcell=npc_pos)
-
-        return w
 
     def _gen_npcs(self, pre_fight):
         if pre_fight:
@@ -1697,6 +1712,22 @@ class CaveHorrorZone(Zone):
                 self._mary_spawn_2: mary_npc,
                 self._doctor_spawn: doctor_npc
             }
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        self.build_decorations(w, unknowns)
+
+        if len(bp.music_doors) != 1:
+            raise ValueError("should be exactly one special door in zone: {}".format(len(bp.music_doors)))
+        special_door_pos = list(bp.music_doors.keys())[0]
+
+        tree_entity = self.build_boss_fight_stuff(w, unknowns, special_door_pos)
+
+        self.build_npc_stuff(w, unknowns, tree_entity)
+
+        return w
 
     def is_boss_zone(self):
         return True
@@ -1770,6 +1801,151 @@ class CaveHorrorZone(Zone):
         controller = _CaveHorrorController(self.get_level(), arena_rect, spawn_positions, husk_limit=min_n_husks)
 
         return enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_CAVE_HORROR, self.get_level(), controller=controller)
+
+
+class CaveHorrorZonePeaceful(CaveHorrorZone):
+
+    ZONE_ID = "peaceful_end"
+
+    def __init__(self):
+        CaveHorrorZone.__init__(self)
+
+    def _build_tree_animation_ent(self, grid_pos, world, arena_bounds):
+        grid_center = world.cell_center(grid_pos[0], grid_pos[1])
+        anim_cx, anim_cy = grid_center
+
+        anim_cy += enemies.TEMPLATE_CAVE_HORROR.get_sprite_offset()[1]
+
+        anim_sprites = spriteref.CaveHorror.cave_horror_idle
+
+        anim_ent = entities.AnimationEntity(anim_cx, anim_cy, anim_sprites,
+                                            duration=60, layer_id=spriteref.ENTITY_LAYER, scale=1,
+                                            anim_rate=enemies.TEMPLATE_CAVE_HORROR.get_idle_anim_rate())
+
+        anim_ent.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
+        anim_ent.set_shadow_sprite(None)
+        anim_ent.set_visible_in_darkness(True)
+
+        # needs to be below everything else
+        anim_ent.get_depth = lambda: 10_000
+
+        world.add(anim_ent)
+
+        import src.game.stats as stats
+        light_level = enemies.TEMPLATE_CAVE_HORROR.get_stats().stat_value(stats.StatTypes.LIGHT_LEVEL)
+        light_emitter = entities.LightEmitterAnimation(grid_center[0], grid_center[1], 60, light_level, light_level)
+        light_emitter.set_finish_behavior(entities.AnimationEntity.LOOP_ON_FINISH)
+        world.add(light_emitter)
+
+        import src.world.cameramodifiers as cameramodifiers
+        camera_shift_rect = Utils.rect_expand(arena_bounds, left_expand=1)  # gotta encompass the door's square too
+        camera_shifter = cameramodifiers.SnapToEntityModifier(camera_shift_rect, light_emitter, fade_out_time=30)
+        world.add_camera_modifier(camera_shifter)
+
+        return anim_ent
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+
+        new_locked_door_positions = []
+        for sensor_door_pos in bp.sensor_doors:
+            new_locked_door_positions.append(sensor_door_pos)
+
+        # sensors will become normal doors
+        bp.sensor_doors.clear()
+
+        w = bp.build_world()
+
+        # XXX if we aren't careful about adding new sensor doors,
+        # we could easily create a softlock here
+        for door_pos in new_locked_door_positions:
+            door_ent = w.get_door_in_cell(*door_pos)
+            if door_ent is not None:
+                door_ent.set_locked(True)
+
+        self.build_decorations(w, unknowns)
+
+        bounds_rect = Utils.get_rect_containing_points(unknowns[self._bounds_color], inclusive=True)
+
+        top_3_positions = [
+            (bounds_rect[0] + bounds_rect[2] // 2 - 1, bounds_rect[1]),
+            (bounds_rect[0] + bounds_rect[2] // 2, bounds_rect[1]),
+            (bounds_rect[0] + bounds_rect[2] // 2 + 1, bounds_rect[1]),
+        ]
+
+        anim_trigger_dialog = dialog.Dialog("Our conquest has only just begun.")
+
+        d = [dialog.Dialog("My flesh has many memories of you."),
+             dialog.Dialog("Memories of... mercy."),
+             dialog.Dialog("You didn't harm a single one of my vestiges on your journey here, even to protect yourself."),
+             dialog.Dialog("Thank you for this. Your love has been felt, and it will be repaid."),
+             # dialog.Dialog("We aren't so different, you and I."),
+             # dialog.Dialog("We're both born of fungus and flesh. Did you know that?"),
+             # dialog.Dialog("That's why I couldn't bend you. Your mind is strong - and already shaped by a strand other than my own."),
+             dialog.Dialog("I have memories... of them entombing you, long ago."),
+             dialog.Dialog("They were fearful of you - and what you might become."),
+             dialog.Dialog("You hold great power. And yet, you came in peace."),
+             dialog.Dialog("Soon we'll become one. Two equals - enjoined."),
+             dialog.Dialog("Rest, my child, and dream deeply."),
+             anim_trigger_dialog,
+             dialog.Dialog("...")
+             ]
+
+        dia = dialog.Dialog.link_em_up(d)
+
+        for pos in top_3_positions:
+            absorb_box = entities.DialogTriggerBox(dia, pos, delay=15)
+            w.add(absorb_box)
+
+        self._build_tree_animation_ent(unknowns[self._tree_color][0], w, bounds_rect)
+
+        def do_absorb_anim_and_game_win(_evt, _w):
+            print("INFO: starting peaceful end-of-game animation sequence")
+
+            get_down_duration = 90
+            lay_duration = 60
+            grab_duration = 30
+            absorb_duration = 120
+
+            total_anim_duration = (get_down_duration + lay_duration + grab_duration + absorb_duration)
+
+            p = _w.get_player()
+            if p is not None:
+                p.set_sprite_override(spriteref.invisible_pixel)
+                p.set_shadow_sprite_override(spriteref.invisible_pixel)  # shadows are baked into the sprites
+                p.set_visually_held_item_override(False)
+
+                p_pos = _w.to_grid_coords(*p.center())
+                cell_center = _w.cell_center(*p_pos)
+                anim_ent = entities.PlayerAbsorbAnimation(cell_center[0], cell_center[1],
+                                                          get_down_duration=get_down_duration,
+                                                          lay_duration=lay_duration,
+                                                          grab_duration=grab_duration,
+                                                          absorb_duration=absorb_duration)
+                _w.add(anim_ent)
+
+            delay_between_anim_and_fade = 150
+
+            fade_duration = 30
+            gs.get_instance().do_fade_sequence(0.0, 1.0, fade_duration,
+                                               start_delay=total_anim_duration + delay_between_anim_and_fade,
+                                               end_delay=10)  # buffer
+
+            delay_til_game_end = total_anim_duration + delay_between_anim_and_fade + fade_duration
+
+            gs.get_instance().pause_world_updates(delay_til_game_end + 10)  # just some buffer
+
+            game_win_evt = events.GameWinEvent()
+            gs.get_instance().event_queue().add(game_win_evt, delay=delay_til_game_end)
+
+        anim_listener = events.EventListener(do_absorb_anim_and_game_win,
+                                             events.EventType.DIALOG_EXIT,
+                                             lambda evt: evt.get_uid() == anim_trigger_dialog.get_uid(),
+                                             scope=events.EventListenerScope.ZONE,
+                                             single_use=False) # no softlock pls
+        gs.get_instance().add_trigger(anim_listener)
+
+        return w
 
 
 class TombTownZone(Zone):

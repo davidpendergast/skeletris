@@ -66,6 +66,7 @@ class EventType(Enum):
     ACTION_STARTED = "ACTION_STARTED"
     ACTION_FINISHED = "ACTION_FINISHED"
     DIALOG_EXIT = "DIALOG_EXIT"
+    DIALOG_START = "DIALOG_START"
     ENTERED_BOX = "ENTERED_BOX"
     EXITED_BOX = "EXITED_BOX"
     TRIGGERED_BOX = "TRIGGERED_BOX"
@@ -155,9 +156,18 @@ class TriggerBoxEvent(Event):
         return TriggerBoxEvent(box_id, EventType.TRIGGERED_BOX, "triggered box with id: {}".format(box_id))
 
 
+class DialogStartEvent(Event):
+
+    def __init__(self, uid):
+        Event.__init__(self, EventType.DIALOG_START, uid, description="started dialog with uid: {}".format(uid))
+
+    def get_uid(self):
+        return self.get_data()
+
+
 class DialogExitEvent(Event):
     def __init__(self, uid):
-        Event.__init__(self, EventType.DIALOG_EXIT, uid, description="exited dialog with uid: " + str(uid))
+        Event.__init__(self, EventType.DIALOG_EXIT, uid, description="exited dialog with uid: {}".format(uid))
 
     def get_uid(self):
         return self.get_data()

@@ -258,6 +258,7 @@ class Animations:
     floor_breaking = None
     floor_breaking_fragments = None
     floor_falling_big = None
+    player_absorb_all = None
 
 
 class Font:
@@ -347,6 +348,8 @@ player_move_all = [player_move_0, player_move_1, player_move_2, player_move_3]
 
 player_idle_arms_up_all = [make(160, 0, 16, 32), make(176, 0, 16, 32)]
 player_move_arms_up_all = [make(192 + 16*i, 0, 16, 32) for i in range(0, 4)]
+
+invisible_pixel = make(178, 35, 2, 2)  # sometimes useful to have
 
 
 def get_player_sprites(moving, holding_item):
@@ -934,6 +937,7 @@ def build_animations_sheet(start_pos, raw_animations_img, sheet):
     Animations.floor_breaking = [make(i * 16, 32, 16, 16, shift=start_pos) for i in range(0, 8)]
     Animations.floor_breaking_fragments = [make(i * 16, 48, 16, 16, shift=start_pos) for i in range(0, 8)]
     Animations.floor_falling_big = [make(i * 32, 64, 32, 64, shift=start_pos) for i in range(0, 8)]
+    Animations.player_absorb_all = [make((i % 8) * 32, 128 + (i // 8) * 32, 32, 32, shift=start_pos) for i in range(0, 24)]
 
 
 def build_font_sheet(start_pos, raw_font_img, sheet):

@@ -145,6 +145,7 @@ class DialogManager:
 
         if dialog is not None:
             dialog.reset()
+            gs.get_instance().event_queue().add(events.DialogStartEvent(dialog.get_uid()))
 
         self._active_dialog = dialog
 
