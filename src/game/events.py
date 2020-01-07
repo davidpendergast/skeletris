@@ -5,12 +5,19 @@ from src.utils.util import Utils
 
 class EventQueue:
 
-    def __init__(self):
-        self.events = []
-
+    def __init__(self, cond=None):
+        """
+        cond: lambda Event -> Bool, if given, the queue will only accept events that satisfy the predicate.
+        """
+        self.events = []       # list of Events
         self.next_events = {}  # int: delay -> list(Event)
 
+        self._cond = cond
+
     def add(self, event, delay=0):
+        if self._cond is not None and not self._cond(event):
+            raise ValueError("Illegal event for this queue: {}".format(event))
+
         if delay not in self.next_events:
             self.next_events[delay] = []
 
@@ -57,11 +64,17 @@ class EventQueue:
         return False
 
 
+class GlobalEventType(Enum):
+    # these are 'global' events that are processed all the time, even when the game is paused
+    GAME_EXIT = "GAME_EXIT"  # quitting the whole application
+    NEW_GAME = "NEW_GAME"
+    NEW_ZONE = "NEW_ZONE"
+
+
 class EventType(Enum):
-    # these are "something happened" events
+    # these are "something happened in the world" events
     ACTOR_KILLED = "ACTOR_KILLED"
     PLAYER_DIED = "PLAYER_DIED"
-    GAME_WIN = "GAME_WIN"
     DOOR_OPENED = "DOOR_OPENED"
     ACTION_STARTED = "ACTION_STARTED"
     ACTION_FINISHED = "ACTION_FINISHED"
@@ -73,14 +86,11 @@ class EventType(Enum):
     ITEM_DROPPED = "ITEM_DROPPED"
     TOGGLED_SIDEPANEL = "TOGGLED_SIDEPANEL"
     ROTATED_ITEM = "ROTATED_ITEM"
-
-    # these are "please do something" events
-    NEW_ZONE = "NEW_ZONE"
-    GAME_EXIT = "GAME_EXIT"
-    NEW_GAME = "NEW_GAME"
+    GAME_WIN = "GAME_WIN"
 
 
 class Event:
+
     def __init__(self, event_type, data, description=""):
         self._event_type = event_type
         self._data = data
@@ -91,6 +101,9 @@ class Event:
 
     def get_data(self):
         return self._data
+
+    def is_global(self):
+        return isinstance(self.get_type(), GlobalEventType)
 
     def get_msg(self):
         return self.description
@@ -114,6 +127,10 @@ class EventListener:
         EventListenerScope scope: scope of listener
         bool single_use: whether to auto-remove listener after one trigger
         """
+
+        if isinstance(event_type, GlobalEventType):
+            raise ValueError("Cannot make event listener for GlobalEventType: {}".format(event_type))
+
         self.event_type = event_type
         self.predicate = predicate if predicate is not None else lambda x: True
         self.action = action
@@ -178,7 +195,7 @@ class NewZoneEvent(Event):
     def __init__(self, next_zone, current_zone, show_zone_title_menu=True):
         data = (next_zone, current_zone, show_zone_title_menu)
         desc = "moved from zone {} to {} via {}".format(current_zone, next_zone, show_zone_title_menu)
-        Event.__init__(self, EventType.NEW_ZONE, data, description=desc)
+        Event.__init__(self, GlobalEventType.NEW_ZONE, data, description=desc)
 
     def get_next_zone(self):
         return self.get_data()[0]
@@ -193,14 +210,14 @@ class NewZoneEvent(Event):
 class GameExitEvent(Event):
 
     def __init__(self):
-        Event.__init__(self, EventType.GAME_EXIT, None, description="exit game")
+        Event.__init__(self, GlobalEventType.GAME_EXIT, None, description="exit game")
 
 
 class NewGameEvent(Event):
 
     def __init__(self, instant_start=True):
         my_data = tuple([instant_start])
-        Event.__init__(self, EventType.NEW_GAME, my_data, description="new game")
+        Event.__init__(self, GlobalEventType.NEW_GAME, my_data, description="new game")
 
     def get_instant_start(self):
         return self.get_data()[0]

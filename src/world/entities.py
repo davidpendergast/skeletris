@@ -1181,7 +1181,7 @@ class Player(ActorEntity):
 
         sound_effects.play_sound(self.get_death_sound())
 
-        gs.get_instance().event_queue().add(events.PlayerDiedEvent(), delay=240)
+        gs.get_instance().add_event(events.PlayerDiedEvent(), delay=240)
         world.remove(self)
 
     def should_xflip(self):
@@ -1761,7 +1761,7 @@ class ExitEntity(Entity):
 
             else:
                 new_zone_event = self.make_open_event()
-                gs.get_instance().event_queue().add(new_zone_event)
+                gs.get_instance().add_event(new_zone_event)
 
         self.update_images(world)
 
@@ -2233,6 +2233,7 @@ class NpcTradeEntity(NpcEntity):
 
 
 class TriggerBox(Entity):
+
     """performs an action when the player enters or leaves the box"""
     def __init__(self, grid_pos, grid_size=(1, 1), just_once=False, delay=0, ignore_updates_paused=False, box_id=None):
         cell_size = constants.CELLSIZE
@@ -2256,10 +2257,10 @@ class TriggerBox(Entity):
         inside = p is not None and Utils.rect_contains(self.rect, p.center())
         if self._player_currently_inside != inside:
             if inside:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_enter_event(self._box_id))
+                gs.get_instance().add_event(events.TriggerBoxEvent.new_enter_event(self._box_id))
                 self.player_entered(p, world)
             else:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_exit_event(self._box_id))
+                gs.get_instance().add_event(events.TriggerBoxEvent.new_exit_event(self._box_id))
                 self.player_exited(p, world)
             self._player_currently_inside = inside
             self._player_in_range_count = 0

@@ -1,7 +1,5 @@
 import traceback
 import math
-import random
-import os
 
 import src.game.events as events
 import src.game.settings as settings
@@ -82,14 +80,21 @@ class GlobalState:
 
         self._fade_overlay_sequence = []  # list of (color, alpha) tuples
 
-        self._event_queue = events.EventQueue()
+        self._event_queue = events.EventQueue(cond=lambda evt: not evt.is_global())
         self._event_triggers = {}  # EventType -> list(EventListener)
+
+        self._global_event_queue = events.EventQueue(cond=lambda evt: evt.is_global())
 
         self._mapped_actions = [None for _ in range(0, 6)]
         self._action_to_target = None
         self._waiting_for_player = False
 
         self._targetable_coords_in_world = {}  # (x, y) -> color
+
+    def increment_tick_counts(self):
+        self.tick_counter += 1
+        if self.tick_counter % self.ticks_per_anim_tick() == 0:
+            self.anim_tick += 1
 
     def set_world(self, world):
         self._active_world = world
@@ -116,6 +121,17 @@ class GlobalState:
 
     def event_queue(self):
         return self._event_queue
+
+    def global_event_queue(self):
+        return self._global_event_queue
+
+    def add_event(self, event, delay=0):
+        if not event.is_global():
+            self.event_queue().add(event, delay=delay)
+        else:
+            if delay > 0:
+                print("WARN: global events cannot have delay > 0: {}".format(event))
+            self.global_event_queue().add(event, delay=0)
 
     def add_trigger(self, trigger):
         """
@@ -178,10 +194,10 @@ class GlobalState:
     def toggle_sidepanel(self, panel_id, play_sound=True):
         if self.get_active_sidepanel() == panel_id:
             self.set_active_sidepanel(None, play_sound=play_sound)
-            self.event_queue().add(events.ToggledSidepanelEvent(panel_id, False))
+            self.add_event(events.ToggledSidepanelEvent(panel_id, False))
         else:
             self.set_active_sidepanel(panel_id, play_sound=play_sound)
-            self.event_queue().add(events.ToggledSidepanelEvent(panel_id, True))
+            self.add_event(events.ToggledSidepanelEvent(panel_id, True))
 
     def clear_triggers(self, scope):
         for e_type in self._event_triggers:
@@ -403,7 +419,7 @@ class GlobalState:
         cam = self.get_actual_camera_xy()
         return (cam[0] + point[0], cam[1] + point[1])
         
-    def update(self):
+    def update_world_stuff(self):
         world = self.get_world()
         if world is not None:
             for e in self.event_queue().all_events():
@@ -448,15 +464,11 @@ class GlobalState:
             if any_empty:
                 self._current_screenshakes = [sh for sh in self._current_screenshakes if len(sh) > 0]
 
-        if self._world_updates_pause_timer > 0 and not self.menu_manager().pause_world_updates():
+        if self._world_updates_pause_timer > 0:
             self._world_updates_pause_timer -= 1
 
         if len(self._fade_overlay_sequence) > 0:
             self._fade_overlay_sequence.pop(-1)
-
-        self.tick_counter += 1
-        if self.tick_counter % self.ticks_per_anim_tick() == 0:
-            self.anim_tick += 1
 
 
 def create_new(menu):

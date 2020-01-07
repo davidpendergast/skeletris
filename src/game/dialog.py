@@ -141,11 +141,11 @@ class DialogManager:
     def set_dialog(self, dialog):
         if self._active_dialog is not None:
             uid = self._active_dialog.get_uid()
-            gs.get_instance().event_queue().add(events.DialogExitEvent(uid))
+            gs.get_instance().add_event(events.DialogExitEvent(uid))
 
         if dialog is not None:
             dialog.reset()
-            gs.get_instance().event_queue().add(events.DialogStartEvent(dialog.get_uid()))
+            gs.get_instance().add_event(events.DialogStartEvent(dialog.get_uid()))
 
         self._active_dialog = dialog
 

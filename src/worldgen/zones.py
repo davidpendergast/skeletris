@@ -1936,13 +1936,13 @@ class CaveHorrorZonePeaceful(CaveHorrorZone):
             gs.get_instance().pause_world_updates(delay_til_game_end + 10)  # just some buffer
 
             game_win_evt = events.GameWinEvent()
-            gs.get_instance().event_queue().add(game_win_evt, delay=delay_til_game_end)
+            gs.get_instance().add_event(game_win_evt, delay=delay_til_game_end)
 
         anim_listener = events.EventListener(do_absorb_anim_and_game_win,
                                              events.EventType.DIALOG_EXIT,
                                              lambda evt: evt.get_uid() == anim_trigger_dialog.get_uid(),
                                              scope=events.EventListenerScope.ZONE,
-                                             single_use=False) # no softlock pls
+                                             single_use=False)  # no softlock pls
         gs.get_instance().add_trigger(anim_listener)
 
         return w

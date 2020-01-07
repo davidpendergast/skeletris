@@ -14,8 +14,7 @@
  - hovering over NPCs doesn't show a tooltip sometimes?
  - you can be chilled and nullified at the same time
     - although the chilled effect doesn't seem to actually affect you
- - if you quit or pause while a delayed GameWin event is enqueued, it'll still fire anyways
-    - the event queue should basically pause while the game is paused
+ - something weird seems to be happening with PlayerSleepAnimationBox...
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)

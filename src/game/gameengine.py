@@ -623,11 +623,11 @@ class Action:
 
     def start(self, world):
         evt = events.ActionStartedEvent(self)
-        gs.get_instance().event_queue().add(evt)
+        gs.get_instance().add_event(evt)
 
     def finalize(self, world):
         evt = events.ActionFinishedEvent(self)
-        gs.get_instance().event_queue().add(evt)
+        gs.get_instance().add_event(evt)
 
     def __str__(self):
         return "{}:[actor={}, item={}, position={}]".format(self.cmd_type, self.actor_entity, self.item, self.position)

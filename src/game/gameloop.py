@@ -142,60 +142,20 @@ def run():
     ignore_resize_events_next_tick = False
 
     while running:
-        gs.get_instance().event_queue().flip()
-        gs.get_instance().update()
 
-        for event in gs.get_instance().event_queue().all_events():
-            if event.get_type() == events.EventType.NEW_ZONE:
-                RenderEngine.get_instance().clear_all_sprites()
-
-                active_menu = gs.get_instance().menu_manager().get_active_menu()
-                if active_menu is not None:
-                    active_menu.cleanup()
-
-                zone_id = event.get_next_zone()
-
-                if event.get_show_zone_title():
-                    title = zones.get_zone(zone_id).get_name()
-                    title_menu = menus.TextOnlyMenu(title, menus.InGameUiState(), auto_advance_duration=60)
-                    gs.get_instance().menu_manager().set_active_menu(title_menu)
-                else:
-                    gs.get_instance().menu_manager().set_active_menu(menus.InGameUiState())
-
-                world = zones.build_world(zone_id)
-                world_view = WorldView(world)
-
-                gs.get_instance().set_world(world)
-
-            elif event.get_type() == events.EventType.GAME_EXIT:
-                print("INFO: quitting game")
+        # processing "global" events
+        gs.get_instance().global_event_queue().flip()
+        for global_event in gs.get_instance().global_event_queue().all_events():
+            if global_event.get_type() == events.GlobalEventType.GAME_EXIT:
+                print("INFO: quitting skeletris")
                 running = False
                 continue
 
-            elif event.get_type() == events.EventType.GAME_WIN:
-                print("INFO: won game!")
-                tick_count = gs.get_instance().tick_counter
-                kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
-                turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
-                win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)
-                gs.get_instance().menu_manager().set_active_menu(win_menu)
-
-            elif event.get_type() == events.EventType.ACTOR_KILLED:
-                killer_uid = event.get_killer_uid()
-                if killer_uid is not None:
-                    w, p = gs.get_instance().get_world_and_player()
-                    if p is not None and p.get_uid() == killer_uid:
-                        gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
-
-            elif event.get_type() == events.EventType.ROTATED_ITEM:
-                # used to auto-skip the rotate item tutorial
-                gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.ROTATED_ITEM_COUNT)
-
-            elif event.get_type() == events.EventType.NEW_GAME:
+            elif global_event.get_type() == events.GlobalEventType.NEW_GAME:
                 print("INFO: starting fresh game")
                 RenderEngine.get_instance().clear_all_sprites()
 
-                if event.get_instant_start():
+                if global_event.get_instant_start():
                     menu = menus.InGameUiState()
                 else:
                     menu = menus.StartMenu()
@@ -209,36 +169,82 @@ def run():
                 gs.create_new(menu)
                 world_view = None
 
-            elif event.get_type() == events.EventType.PLAYER_DIED:
-                gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
+            elif global_event.get_type() == events.GlobalEventType.NEW_ZONE:
+                RenderEngine.get_instance().clear_all_sprites()
 
+                active_menu = gs.get_instance().menu_manager().get_active_menu()
+                if active_menu is not None:
+                    active_menu.cleanup()
+
+                zone_id = global_event.get_next_zone()
+
+                if global_event.get_show_zone_title():
+                    title = zones.get_zone(zone_id).get_name()
+                    title_menu = menus.TextOnlyMenu(title, menus.InGameUiState(), auto_advance_duration=60)
+                    gs.get_instance().menu_manager().set_active_menu(title_menu)
+                else:
+                    gs.get_instance().menu_manager().set_active_menu(menus.InGameUiState())
+
+                world = zones.build_world(zone_id)
+                world_view = WorldView(world)
+
+                gs.get_instance().set_world(world)
+
+        # processing in-world events
+        if not gs.get_instance().menu_manager().pause_world_updates():
+            gs.get_instance().event_queue().flip()
+            gs.get_instance().update_world_stuff()
+
+            for zone_event in gs.get_instance().event_queue().all_events():
+                if zone_event.get_type() == events.EventType.ACTOR_KILLED:
+                    killer_uid = zone_event.get_killer_uid()
+                    if killer_uid is not None:
+                        w, p = gs.get_instance().get_world_and_player()
+                        if p is not None and p.get_uid() == killer_uid:
+                            gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
+
+                elif zone_event.get_type() == events.EventType.ROTATED_ITEM:
+                    gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.ROTATED_ITEM_COUNT)
+
+                elif zone_event.get_type() == events.EventType.GAME_WIN:
+                    print("INFO: won game!")
+                    tick_count = gs.get_instance().tick_counter
+                    kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
+                    turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
+                    win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)
+                    gs.get_instance().menu_manager().set_active_menu(win_menu)
+
+                elif zone_event.get_type() == events.EventType.PLAYER_DIED:
+                    gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
+
+        # processing user input events
         all_resize_events = []
         toggled_fullscreen = False
 
         input_state = InputState.get_instance()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        for py_event in pygame.event.get():
+            if py_event.type == pygame.QUIT:
                 running = False
                 continue
-            elif event.type == pygame.KEYDOWN:
-                input_state.set_key(event.key, True)
-            elif event.type == pygame.KEYUP:
-                input_state.set_key(event.key, False)
+            elif py_event.type == pygame.KEYDOWN:
+                input_state.set_key(py_event.key, True)
+            elif py_event.type == pygame.KEYUP:
+                input_state.set_key(py_event.key, False)
 
-            elif event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
-                scr_pos = WindowState.get_instance().window_to_screen_pos(event.pos)
+            elif py_event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                scr_pos = WindowState.get_instance().window_to_screen_pos(py_event.pos)
                 game_pos = Utils.round(Utils.mult(scr_pos, 1 / RenderEngine.get_instance().get_pixel_scale()))
                 input_state.set_mouse_pos(game_pos)
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    input_state.set_mouse_down(True, button=event.button)
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    input_state.set_mouse_down(False, button=event.button)
+                if py_event.type == pygame.MOUSEBUTTONDOWN:
+                    input_state.set_mouse_down(True, button=py_event.button)
+                elif py_event.type == pygame.MOUSEBUTTONUP:
+                    input_state.set_mouse_down(False, button=py_event.button)
 
-            elif event.type == pygame.VIDEORESIZE:
-                all_resize_events.append(event)
+            elif py_event.type == pygame.VIDEORESIZE:
+                all_resize_events.append(py_event)
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_F4:
+            if py_event.type == pygame.KEYDOWN and py_event.key == pygame.K_F4:
                 toggled_fullscreen = True
 
             if not pygame.mouse.get_focused():
@@ -342,14 +348,16 @@ def run():
 
         pygame.display.flip()
 
-        if debug.is_dev() and input_state.is_held(pygame.K_TAB):
-            # activate slo-mo
+        slo_mo_mode = debug.is_dev() and input_state.is_held(pygame.K_TAB)
+        if slo_mo_mode:
             clock.tick(15)
         else:
             clock.tick(60)
 
+        gs.get_instance().increment_tick_counts()
+
         if gs.get_instance().tick_counter % 60 == 0:
-            if clock.get_fps() < 55:
+            if clock.get_fps() < 55 and debug.is_dev() and not slo_mo_mode:
                 print("WARN: fps drop: {} ({} sprites)".format(round(clock.get_fps() * 10) / 10.0,
                                                                RenderEngine.get_instance().count_sprites()))
 

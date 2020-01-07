@@ -481,10 +481,10 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
 
     def option_activated(self, idx):
         if idx == StartMenu.START_OPT:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
+            gs.get_instance().add_event(events.NewGameEvent(instant_start=True))
             sound_effects.play_sound(soundref.newgame_start)
         elif idx == StartMenu.EXIT_OPT:
-            gs.get_instance().event_queue().add(events.GameExitEvent())
+            gs.get_instance().add_event(events.GameExitEvent())
         elif idx == StartMenu.OPTIONS_OPT:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
             sound_effects.play_sound(soundref.menu_select)
@@ -945,10 +945,10 @@ class DeathOptionMenu(OptionsMenu):
 
     def option_activated(self, idx):
         if idx == DeathOptionMenu.EXIT_OPT:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=False))
+            gs.get_instance().add_event(events.NewGameEvent(instant_start=False))
             sound_effects.play_sound(soundref.game_quit)
         elif idx == DeathOptionMenu.RETRY:
-            gs.get_instance().event_queue().add(events.NewGameEvent(instant_start=True))
+            gs.get_instance().add_event(events.NewGameEvent(instant_start=True))
             sound_effects.play_sound(soundref.newgame_start)
 
 
@@ -1285,7 +1285,7 @@ class DebugZoneSelectMenu(OptionsMenu):
             selected_opt = self.opts[idx]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
-            gs.get_instance().event_queue().add(new_zone_evt)
+            gs.get_instance().global_event_queue().add(new_zone_evt)
             sound_effects.play_sound(soundref.menu_select)
 
 
@@ -1666,7 +1666,7 @@ class InGameUiState(Menu):
                     create_image = True
                 destroy_image = True
 
-                gs.get_instance().event_queue().add(events.RotatedItemEvent(new_held_item))
+                gs.get_instance().add_event(events.RotatedItemEvent(new_held_item))
                 sound_effects.play_sound(soundref.item_rotate)
 
         if destroy_image and self.item_on_cursor_info is not None:

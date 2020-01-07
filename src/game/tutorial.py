@@ -337,7 +337,7 @@ class HowToPickUpItemStage(EntityNotificationTutorialStage):
             return False
 
         return gs.get_instance().event_queue().has_event(types=events.EventType.ACTION_FINISHED,
-                                                     predicate=is_item_pickup_action)
+                                                         predicate=is_item_pickup_action)
 
     def get_message(self):
         return self._message
