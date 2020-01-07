@@ -876,7 +876,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
             if not defender_entity.is_enemy() or not defender_entity.is_inanimate():
                 killer_uid = responsible_entity.get_uid() if responsible_entity is not None else None
                 kill_event = events.ActorKilledEvent(defender_entity.get_uid(), killer_uid)
-                gs.get_instance().event_queue().add(kill_event)
+                gs.get_instance().add_event(kill_event)
 
             hp_on_kill = attacker.stat_value_with_item(StatTypes.HP_ON_KILL, item_used)
             if hp_on_kill > 0:

@@ -1181,7 +1181,13 @@ class Player(ActorEntity):
 
         sound_effects.play_sound(self.get_death_sound())
 
-        gs.get_instance().add_event(events.PlayerDiedEvent(), delay=240)
+        total_delay = 240
+        fade_duration = 30
+
+        gs.get_instance().add_event(events.PlayerDiedEvent(), delay=total_delay)
+        gs.get_instance().do_fade_sequence(0.0, 1.0, fade_duration,
+                                           start_delay=total_delay-fade_duration, end_delay=5)
+
         world.remove(self)
 
     def should_xflip(self):
@@ -1596,7 +1602,7 @@ class DoorEntity(Entity):
         world.set_geo(*grid_xy, World.FLOOR)
         world.door_opened(*grid_xy)
         world.remove(self)
-        gs.get_instance().event_queue().add(events.DoorOpenEvent(self.get_uid(), *grid_xy))
+        gs.get_instance().add_event(events.DoorOpenEvent(self.get_uid(), *grid_xy))
 
     def _calc_is_horz(self, world):
         solid_up = world.is_solid_at(*Utils.sub(self.center(), (0, self.h())))
@@ -2265,18 +2271,20 @@ class TriggerBox(Entity):
             self._player_currently_inside = inside
             self._player_in_range_count = 0
 
-        if self._player_currently_inside and not p.is_performing_action():
-            if not self._no_more_action_firings and self._player_in_range_count == self._fire_action_delay:
-                gs.get_instance().event_queue().add(events.TriggerBoxEvent.new_trigger_event(self._box_id))
-                self.fire_action(p, world)
-                if self._fire_action_just_once:
-                    self._no_more_action_firings = True
-
+        if self._player_currently_inside:
             self.player_inside(p, world)
-            self._player_in_range_count += 1
+
+            if not p.is_performing_action():
+                if self._player_in_range_count == self._fire_action_delay and not self._no_more_action_firings:
+                    gs.get_instance().add_event(events.TriggerBoxEvent.new_trigger_event(self._box_id))
+                    self.fire_action(p, world)
+                    if self._fire_action_just_once:
+                        self._no_more_action_firings = True
+
+                self._player_in_range_count += 1
 
     def fire_action(self, player, world):
-        """called when the player has been inside the box for the proper delay and the box is otherwise ready to act."""
+        """called when the player has been inside the box (without acting) for the proper delay and the box is otherwise ready to act."""
         pass
 
     def player_entered(self, player, world):
@@ -2382,6 +2390,7 @@ class PlayerSleepAnimationBox(TriggerBox):
             self._deactivate(player, world)
 
         self._tick_count += 1
+        print("inside sleep box for {} ticks".format(self._tick_count))
 
     def player_exited(self, player, world):
         self._deactivate(player, world)

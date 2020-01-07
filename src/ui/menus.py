@@ -869,7 +869,7 @@ class FadingInFlavorMenu(OptionsMenu):
     def __init__(self, menu_type, flavor_text, next_menu, auto_next=False):
         OptionsMenu.__init__(self, menu_type, flavor_text, ["~hidden~"], title_size=1.5)
         self._flavor_full_brightness_duration = 100
-        self._total_duration = 160
+        self._total_duration = 190
         self._flavor_tick = 0
         self._auto_next = auto_next
 
@@ -1110,7 +1110,7 @@ class CreditsMenu(Menu):
     SLIDE_TEXT = [
         ("created by", SMALL),
         "David Pendergast",
-        ("2019", SMALL),
+        ("2020", SMALL),
         "",
         ("art, coding, design, and music by", SMALL),
         "David Pendergast",
@@ -1285,7 +1285,7 @@ class DebugZoneSelectMenu(OptionsMenu):
             selected_opt = self.opts[idx]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
-            gs.get_instance().global_event_queue().add(new_zone_evt)
+            gs.get_instance().add_event(new_zone_evt)
             sound_effects.play_sound(soundref.menu_select)
 
 
