@@ -194,7 +194,7 @@ SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
                                                                     unique_key="speed_potion"))
 
 SLOW_POTION = PotionTemplate("Potion of the Sloth", "I... feel... slow.",
-                             min_level=1, drop_rate=4,
+                             min_level=5, drop_rate=4,
                              status=statuseffects.new_slow_effect(balance.POTION_SLOW_VAL,
                                                                   balance.POTION_SLOW_DUR,
                                                                   unique_key="slow_potion"))

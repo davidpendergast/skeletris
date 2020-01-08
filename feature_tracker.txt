@@ -13,6 +13,7 @@
     - although the chilled effect doesn't seem to actually affect you
  - when you pop a dialog, player keeps current animation (most noticeable if walking)
     - could easily just have the player use the walking animation while dialog is active...?
+ - mushrooms shouldn't be interactable in the vault
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
