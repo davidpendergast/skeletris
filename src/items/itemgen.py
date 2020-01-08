@@ -172,7 +172,7 @@ class PotionTemplate:
 
 
 HEALING = PotionTemplate("Potion of Healing", "That was refreshing.",
-                         min_level=1, drop_rate=8,
+                         min_level=1, drop_rate=7,
                          status=statuseffects.new_regen_effect(balance.POTION_SMALL_HEAL_VAL,
                                                                balance.POTION_SMALL_HEAL_DURATION))
 
@@ -183,12 +183,12 @@ MAJOR_HEALING = PotionTemplate("Potion of Healing II", "That was refreshing!",
                                                                      balance.POTION_MED_HEAL_DURATION))
 
 HARMING = PotionTemplate("Potion of Harming", "Ow, ok oww... ouch, why did I drink that?",
-                         min_level=4, drop_rate=4,
+                         min_level=4, drop_rate=5,
                          status=statuseffects.new_poison_effect(balance.POTION_POIS_VAL,
                                                                 balance.POTION_POIS_DURATION))
 
 SPEED_POTION = PotionTemplate("Potion of Quickness", "I feel... fast.",
-                              min_level=2, drop_rate=7,
+                              min_level=2, drop_rate=5,
                               status=statuseffects.new_speed_effect(balance.POTION_SPEED_VAL,
                                                                     balance.POTION_SPEED_DUR,
                                                                     unique_key="speed_potion"))
@@ -206,7 +206,7 @@ NULL_POTION = PotionTemplate("Null Potion", "I feel a little better... I think?"
                                                                            unique_key="null_potion"))
 
 NIGHT_VISION = PotionTemplate("Potion of Light", "Wow, I should have updated my prescription years ago.",
-                              min_level=3, drop_rate=1,
+                              min_level=3, drop_rate=2,
                               status=statuseffects.new_night_vision_effect(balance.POTION_NIGHT_VISION_VAL,
                                                                            balance.POTION_NIGHT_VISION_DURATION,
                                                                            unique_key="light_potion"))
