@@ -44,7 +44,7 @@ class Songs:
     AMPHIBIAN = Song("Amphibian", "amphibian.ogg")
     TREE_THEME = Song("Horror", "horde.ogg", volume=0.9)
     DEAD_CITY = Song("Robot", "robot.ogg")
-    NAMELESS_THEME = Song("Medusae", "medusae.ogg")
+    MEDUSA_THEME = Song("Medusa", "medusa.ogg")
     ARACHNID = Song("Arachnid", "arachnid.ogg")
 
     # Regular Zone Themes

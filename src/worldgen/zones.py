@@ -154,8 +154,8 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs III", "core_3", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
 
-    story_zones.append(get_zone(NamelessZone.ZONE_ID))
-    story_zones.append(get_zone(NamelessLairZone.ZONE_ID))
+    story_zones.append(get_zone(UndergrowthZone.ZONE_ID))
+    story_zones.append(get_zone(MedusaLairZone.ZONE_ID))
 
     story_zones.append(get_zone(EpilogueZone.ZONE_ID))
 
@@ -1414,12 +1414,12 @@ def _mushroomify_blueprint(bp, focus_pos, close_chance=0.5, far_chance=0.25):
     return mushroom_positions
 
 
-class NamelessZone(Zone):
+class UndergrowthZone(Zone):
 
-    ZONE_ID = "???_zone"
+    ZONE_ID = "undergrowth"
 
     def __init__(self):
-        Zone.__init__(self, "Undergrowth", 15, filename="nameless_zone.png")
+        Zone.__init__(self, "Undergrowth", 15, filename="undergrowth_zone.png")
         self._exit_doors = (255, 175, 80)
         self._skull_rack_color = (255, 200, 100)
 
@@ -1481,29 +1481,29 @@ class NamelessZone(Zone):
         return music.Songs.UNEARTHED
 
 
-class NamelessLairZone(Zone):
+class MedusaLairZone(Zone):
 
-    ZONE_ID = "???_lair"
+    ZONE_ID = "medusa_lair"
 
     def __init__(self):
-        Zone.__init__(self, "Undergrowth Lair", 15, filename="nameless_lair.png")
-        self._nameless_color = (255, 170, 170)
+        Zone.__init__(self, "The Abyss", 15, filename="medusa_lair.png")
+        self._medusa_color = (255, 170, 170)
         self._doctor_npc_color = (255, 170, 150)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
 
-        nameless_pos = unknowns[self._nameless_color][0]
+        medusa_pos = unknowns[self._medusa_color][0]
 
-        mushroom_positions = _mushroomify_blueprint(bp, nameless_pos)
+        mushroom_positions = _mushroomify_blueprint(bp, medusa_pos)
 
         w = bp.build_world()
 
-        nameless_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_NAMELESS, self.get_level())
-        w.add(nameless_entity, gridcell=nameless_pos)
+        medusa_entity = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_MEDUSA, self.get_level())
+        w.add(medusa_entity, gridcell=medusa_pos)
 
         doctor_position = unknowns[self._doctor_npc_color][0]
-        doctor_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.DOCTOR, npc.Conversations.DOCTOR_PRE_NAMELESS)
+        doctor_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.DOCTOR, npc.Conversations.DOCTOR_PRE_MEDUSA)
         w.add(doctor_npc, gridcell=doctor_position)
 
         for xy in mushroom_positions:
@@ -1524,7 +1524,7 @@ class NamelessLairZone(Zone):
         return music.Songs.SILENCE
 
     def get_special_door_music_id(self):
-        return music.Songs.NAMELESS_THEME
+        return music.Songs.MEDUSA_THEME
 
 
 class EpilogueZone(Zone):
@@ -1568,7 +1568,7 @@ class EpilogueZone(Zone):
         return colors.LIGHT_PURPLE
 
     def get_music_id(self):
-        return music.Songs.NAMELESS_THEME
+        return music.Songs.MEDUSA_THEME
 
 
 class CaveHorrorZone(Zone):
@@ -1879,7 +1879,7 @@ class CaveHorrorZonePeaceful(CaveHorrorZone):
              dialog.Dialog("Memories of... mercy."),
              dialog.Dialog("You didn't harm a single one of my vestiges on your journey here, even to protect yourself."),
              dialog.Dialog("Thank you for this. Your love has been felt, and it will be repaid."),
-             # dialog.Dialog("We aren't so different, you and I."),
+             # dialog.Dialog("We aren't so different, you and I."),  # TODO - this is a bit on-the-nose
              # dialog.Dialog("We're both born of fungus and flesh. Did you know that?"),
              # dialog.Dialog("That's why I couldn't bend you. Your mind is strong - and already shaped by a strand other than my own."),
              dialog.Dialog("I have memories... of them entombing you, long ago."),

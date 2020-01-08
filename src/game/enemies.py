@@ -983,13 +983,13 @@ class SpiderBossTemplate(EnemyTemplate):
         }
 
 
-class NamelessTemplate(EnemyTemplate):
+class MedusaTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "???")
+        EnemyTemplate.__init__(self, "Medusa")
 
     def get_sprites(self):
-        return spriteref.Bosses.nameless_idle
+        return spriteref.Bosses.medusa_idle
 
     def get_types(self):
         return [EnemyTypes.FUNGUS, EnemyTypes.BOSS]
@@ -1106,7 +1106,7 @@ TEMPLATE_SPIDER = SpiderBossTemplate()
 TEMPLATE_FROG = FrogBossTemplate()
 TEMPLATE_ROBO = RoboTemplate()
 TEMPLATE_CAVE_HORROR = CaveHorrorTemplate()
-TEMPLATE_NAMELESS = NamelessTemplate()
+TEMPLATE_MEDUSA = MedusaTemplate()
 
 RAND_SPAWN_TEMPLATES = [TEMPLATE_MUNCHER_SMALL,
                         TEMPLATE_MUNCHER,

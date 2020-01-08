@@ -239,7 +239,7 @@ class Bosses:
 
     robo_idle = []
 
-    nameless_idle = []
+    medusa_idle = []
 
     spider_big_idle = []
     spider_idle = []
@@ -907,7 +907,7 @@ def build_boss_sheet(start_pos, raw_boss_img, sheet):
 
     Bosses.robo_idle = [make(i * 64, 320, 64, 80, shift=start_pos) for i in range(0, 2)]
 
-    Bosses.nameless_idle = [make(i * 48, 400, 48, 64, shift=start_pos) for i in range(0, 7)]
+    Bosses.medusa_idle = [make(i * 48, 400, 48, 64, shift=start_pos) for i in range(0, 7)]
 
     Bosses.spider_big_idle = [make(i * 48, 528, 48, 48, shift=start_pos) for i in range(0, 2)]
     Bosses.spider_idle = [make(96 + i * 32, 544, 32, 32, shift=start_pos) for i in range(0, 2)]

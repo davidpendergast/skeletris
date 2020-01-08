@@ -314,7 +314,7 @@ class Conversations:
 
     MARY_DOCTOR_POST_CAVE_HORROR = Conversation("MARY_DOCTOR_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
 
-    DOCTOR_PRE_NAMELESS = Conversation("DOCTOR_PRE_NAMELESS", NpcID.DOCTOR)
+    DOCTOR_PRE_MEDUSA = Conversation("DOCTOR_PRE_MEDUSA", NpcID.DOCTOR)
 
     DOCTOR_SCORP_EPILOGUE = Conversation("DOCTOR_SCORP_EPILOGUE", NpcID.DOCTOR)
 
@@ -602,7 +602,7 @@ class ConversationFactory:
                     NpcDialog("You must destroy the source of the pheromone. It's our only hope.", npc_id=NpcID.DOCTOR)
                 ]
 
-        if conv == Conversations.DOCTOR_PRE_NAMELESS:
+        if conv == Conversations.DOCTOR_PRE_MEDUSA:
             if interact_count == 0:
                 res_list = [
                     NpcDialog("I've traced the signal to this room. Whatever's in there, it's controlling the rest of them."),
