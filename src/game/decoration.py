@@ -40,12 +40,12 @@ class DecorationTypes:
 class DecorationFactory:
 
     @staticmethod
-    def get_decoration(level, dec_type=None, with_dialog=None):
+    def get_decoration(level, dec_type=None, with_dialog="~default~"):
         """
         :param level: level of the zone in which the decoration will appear.
         :param dec_type: the type of the decoration. If None, a random one will be used.
-        :param with_dialog: A string. The dialog text. If empty, the decoration will have no dialog and
-            will not be interactable. If None, the decoration type's default dialog text will be used.
+        :param with_dialog: A string. The dialog text. If None or empty, the decoration will have no dialog and
+            will not be interactable. If not supplied, the decoration's default dialog text will be used.
         """
         if dec_type is None:
             dec_type = random.choice(_ALL_RAND_SPAWN_DEC_TYPES)
@@ -55,9 +55,9 @@ class DecorationFactory:
         import src.world.entities as entities
         dec_ent = entities.DecorationEntity.wall_decoration(dec_type, dec_sprites, 0, 0)
 
-        if with_dialog is None:
+        if with_dialog == "~default~":
             dec_dialog = DecorationFactory.get_dialog(dec_type, level)
-        elif with_dialog is not None:
+        elif with_dialog is not None and len(with_dialog) > 0:
             dec_dialog = dialog.Dialog(with_dialog)
         else:
             dec_dialog = None

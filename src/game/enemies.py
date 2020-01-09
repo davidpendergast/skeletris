@@ -1024,7 +1024,7 @@ class MedusaTemplate(EnemyTemplate):
 class CaveHorrorTemplate(EnemyTemplate):
 
     def __init__(self):
-        EnemyTemplate.__init__(self, "Exorbitant Horror")
+        EnemyTemplate.__init__(self, "Colossal Horror")
 
     def get_sprites(self):
         return spriteref.CaveHorror.cave_horror_idle

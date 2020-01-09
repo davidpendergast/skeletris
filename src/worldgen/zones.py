@@ -408,47 +408,6 @@ class Zone:
         return self.max_n_trades
 
 
-class TestZone(Zone):
-
-    ZONE_ID = "test_zone"
-
-    def __init__(self):
-        Zone.__init__(self, "Test Zone", 5)
-
-    def build_world(self):
-        w = WorldFactory.gen_world_from_rooms(self.get_level(), num_rooms=5).build_world()
-
-        decs = [
-            (spriteref.wall_decoration_mushrooms[0], ["it's a large cluster of mushrooms.",
-                                                      "normally this species would be edible, but these ones have overgrown."]),
-            (spriteref.wall_decoration_mushrooms[1], ["it's a large cluster of mushrooms.",
-                                                      "normally this species would be edible, but these ones have overgrown."]),
-            (spriteref.wall_decoration_mushrooms[2], ["it's a large cluster of mushrooms.",
-                                                      "normally this species would be edible, but these ones have overgrown."]),
-            (spriteref.wall_decoration_bucket, "it's a bucket. there are small pieces of mushrooms inside."),
-            (spriteref.wall_decoration_plant_1, "it's a small fern inside a pot."),
-            (spriteref.wall_decoration_rake, "it's a rake."),
-            (spriteref.wall_decoration_sign, "the sign says:\n\"Mary Skelly's Mushroom's -- DON'T TOUCH\"")
-        ]
-
-        for grid_x in range(0, w.size()[0]):
-            for grid_y in range(0, w.size()[1]):
-                geo = w.get_geo(grid_x, grid_y)
-                geo_above = w.get_geo(grid_x, grid_y - 1)
-                if geo_above == World.WALL and geo == World.FLOOR and random.random() < 0.6:
-                    sprite_to_use, text_to_use = random.choice(decs)
-
-                    decor = entities.DecorationEntity.wall_decoration(None, sprite_to_use, grid_x, grid_y,
-                                                                      interact_dialog=dialog.PlayerDialog(text_to_use))
-                    w.add(decor)
-
-        # just for debugging
-
-        p = w.get_player()
-
-        return w
-
-
 class ZoneBuilder:
 
     @staticmethod
@@ -1604,13 +1563,14 @@ class CaveHorrorZone(Zone):
         for mushroom_color in self._mushroom_colors:
             if mushroom_color in unknowns:
                 for xy in unknowns[mushroom_color]:
-                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM)
+                    dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM,
+                                                                      with_dialog=None)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
 
         for skull_rack_color in self._skull_rack_colors:
             if skull_rack_color in unknowns:
                 for xy in unknowns[skull_rack_color]:
-                    d_text = "Their collective screams overwhelm you. You can't make out a word."
+                    d_text = "Their collective groan overwhelm you. You can't make out a word."
                     dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKULL_RACK,
                                                                       with_dialog=d_text)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))
@@ -2014,8 +1974,12 @@ class TombTownZone(Zone):
             elif key in dec_type_lookup:
                 for pos in unknowns[key]:
                     dec_type, dec_desc = dec_type_lookup[key]
-                    dec_entity = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type, with_dialog=dec_desc)
+                    if dec_desc is None:
+                        dec_entity = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type)  # default description
+                    else:
+                        dec_entity = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type, with_dialog=dec_desc)
                     w.add(dec_entity, gridcell=(pos[0], pos[1] - 1))
+
             elif key == TombTownZone.BEANSKULL:
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.BEANSKULL, npc.Conversations.BEANSKULL_INTRO)
                 w.add(e, gridcell=unknowns[key][0])
