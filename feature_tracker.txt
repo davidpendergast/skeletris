@@ -11,8 +11,6 @@
  - hovering over NPCs doesn't show a tooltip sometimes?
  - you can be chilled and nullified at the same time
     - although the chilled effect doesn't seem to actually affect you
- - when you pop a dialog, player keeps current animation (most noticeable if walking)
-    - could easily just have the player use the walking animation while dialog is active...?
  - mushrooms shouldn't be interactable in the vault
 
 [distribution bugs]

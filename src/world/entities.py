@@ -921,10 +921,10 @@ class ActorEntity(Entity):
             elif self.get_vel()[0] > 0.75:
                 self.set_facing_right(True)
 
-            if self.is_moving():
-                self._was_moving = 0
-            else:
-                self._was_moving = Utils.bound(self._was_moving + 1, 0, 60)
+        if self.is_moving() and not gs.get_instance().world_updates_paused():
+            self._was_moving = 0
+        else:
+            self._was_moving = Utils.bound(self._was_moving + 1, 0, 60)
 
         self.update_perturbations()
         self.update_images()
@@ -934,8 +934,10 @@ class ActorEntity(Entity):
 
         if self._sprites_override is not None and len(self._sprites_override) > 0:
             sprites = self._sprites_override
+        elif self.was_moving_recently():
+            sprites = self.moving_sprites
         else:
-            sprites = self.idle_sprites if not self.was_moving_recently() else self.moving_sprites
+            sprites = self.idle_sprites
 
         # fudge the math a bit for unusual animation cycle lengths
         frames_per_cycle = Utils.next_power_of_2(len(sprites))
