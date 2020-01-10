@@ -1,0 +1,24 @@
+
+
+act 0 = drink healing potion (2 turns)
+    + healing status
+    + do heal
+    
+ * everyone else acts *
+    + poison effect (2 turns)
+    + do poison
+    
+    + slow effect (3 turns)
+
+act 1 (have healing effect)
+
+    + do heal
+    
+    - remove healing status
+
+act 2
+
+
+act 3
+
+fuck it, whatver

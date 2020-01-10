@@ -858,7 +858,7 @@ class MappedActionImage(InteractableImage):
 class StatusEffectImage(InteractableImage):
 
     def __init__(self, status_effect, rect):
-        self.status_effect = status_effect
+        self.effect = status_effect
         self.rect = rect
 
         self._icon_img = None
@@ -874,18 +874,18 @@ class StatusEffectImage(InteractableImage):
         return False
 
     def get_tooltip_target_at(self, x, y):
-        return self.status_effect
+        return self.effect
 
     def is_dirty(self):
         return True
 
     def update_images(self):
-        color = self.status_effect.get_color()
+        color = self.effect.get_color()
         color = gs.get_instance().get_pulsing_color(color)
 
         if self._icon_img is None:
             self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=self.sc, depth=FG_DEPTH)
-        self._icon_img = self._icon_img.update(new_model=self.status_effect.get_icon(), new_color=color,
+        self._icon_img = self._icon_img.update(new_model=self.effect.get_icon(), new_color=color,
                                                new_x=self.rect[0], new_y=self.rect[1])
 
     def all_bundles(self):
@@ -1327,7 +1327,7 @@ class HealthBarPanel(InteractableImage):
                 self._status_imgs.append(StatusEffectImage(effects[i], r))
             else:
                 cur_img = self._status_imgs[i]
-                cur_img.status_effect = effects[i]
+                cur_img.effect = effects[i]
                 cur_img.rect = r
                 cur_img.update_images()
 

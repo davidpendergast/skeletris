@@ -58,7 +58,7 @@ class TooltipFactory:
             if consume_effect is not None:
                 text_builder.add("Gives ")
                 text_builder.add(consume_effect.get_name(), color=consume_effect.get_color())
-                text_builder.add_line(" when consumed ({} turns).".format(consume_effect.get_duration()))
+                text_builder.add_line(" when consumed ({} turns).".format(target_item.get_consume_duration()))
 
         if p is not None:
             right_click_action = gameengine.get_right_click_action_for_item(target_item)
@@ -175,6 +175,7 @@ class TooltipFactory:
     @staticmethod
     def get_status_effect_tooltip_text(effect):
         text_builder = TextBuilder()
+
         text_builder.add_line(effect.get_name())
 
         # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
@@ -204,7 +205,7 @@ class TooltipFactory:
             return TooltipFactory.get_chest_tooltip_text(obj)
         elif isinstance(obj, gameengine.ActionProvider):
             return TooltipFactory.get_action_provider_tooltip_text(obj)
-        elif isinstance(obj, statuseffects.StatusEffect):
+        elif isinstance(obj, statuseffects.StatusEffectType):
             return TooltipFactory.get_status_effect_tooltip_text(obj)
         elif isinstance(obj, TextBuilder):
             return obj

@@ -5,11 +5,11 @@
                       
 [P1 bugs]
  - there are probably issues with fullscreening if you have multiple monitors w/ different sizes
+    - maybe fixed, need to test
 
 [P2 bugs]
  - tutorial text renders awkwardly when it overlaps very large enemies
- - you can be chilled and nullified at the same time
-    - although the chilled effect doesn't seem to actually affect you
+ - enemies w/ regen do the graphical effect in darkness (giants)
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -29,6 +29,10 @@
  
  - mary doesn't have repeat dialog at the frog gate
     - this is a reoccurring problem
+    
+ - should say "no living past this point", not "no organic" at vents
+ - it's pretty natural to block the computer screen with your body in the post-robo fight convo
+ - should be "overwhelms" you
 
 
 [testing]
@@ -50,8 +54,8 @@
     - he big. he tuff. maybe that's enough
     - maybe just add a 2nd phase?
  
- - if your first-ever potion drop is something negative, the tutorial tells you
-   to use it on yourself (lol)
+ - cave horror should have like 2x as much health
+ - medusa is quite... strong...
  
  
 [current features] 
@@ -59,6 +63,11 @@
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
+        
+ - should have dmg and kills stats in inventory
+ - [WASD to move] tutorial doesn't look good
+ - frog lair's entry is screwed up
+ - light potion should cure blindness
     
 
 [maintanence]
@@ -354,4 +363,5 @@
         - cons:
             - identical to "Crypt of the Fungal Lord", which exists
             - similar to "Curse of the Mushroom King", which exists
+
             

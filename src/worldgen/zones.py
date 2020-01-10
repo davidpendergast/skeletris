@@ -1630,8 +1630,7 @@ class CaveHorrorZone(Zone):
             if tree_ent_in_world is not None:
                 # want it to wait a few turns before it starts summoning
                 import src.game.statuseffects as statuseffects
-                no_summon_effect = statuseffects.new_summoning_sickness_effect(2)
-                tree_ent_in_world.get_actor_state().add_status_effect(no_summon_effect)
+                tree_ent_in_world.get_actor_state().add_status_effect(statuseffects.StatusEffectTypes.SUMMON_SICKNESS, 2)
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
 

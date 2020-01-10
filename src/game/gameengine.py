@@ -28,7 +28,7 @@ class ActorState(StatProvider):
 
         self.inventory_ = inventory
 
-        self.status_effects = {}  # StatusEffect -> turns remaining
+        self.status_effects = {}  # StatusEffectType -> turns remaining
 
         self.current_hp = self.max_hp()
         self.current_energy = 0
@@ -54,12 +54,8 @@ class ActorState(StatProvider):
         for item in self.inventory().all_equipped_items():
             res += item.stat_value(stat_type, local=local)
 
-        # note that this will call back into this same method, gotta be careful not to blow the stack
-        nullified = self.is_nullified() if stat_type != StatTypes.NULLIFICATION else False
-
         for status_effect in self.status_effects:
-            if not nullified or status_effect.ignores_nullification():
-                res += status_effect.stat_value(stat_type, local=local)
+            res += status_effect.stat_value(stat_type, local=local)
 
         if self.is_player() and debug.insta_kill() and stat_type == StatTypes.ATT:
             res += 99
@@ -179,13 +175,40 @@ class ActorState(StatProvider):
     def name(self):
         return self.name_
 
-    def add_status_effect(self, status_effect):
-        self.status_effects[status_effect] = status_effect.get_duration()
+    def try_to_add_status_effect(self, effect, duration):
+        """
+        effect: the StatusEffectType to add
+        duration: the new effect's duration.
+        return: bool indicating whether the addition was successful
+        """
+        if duration < 0:
+            return False
 
-        # TODO either delete or actually implement
-        #if self.is_player() and status_effect.get_player_text() is not None:
-        #    dia = dialog.PlayerDialog(status_effect.get_player_text())
-        #    gs.get_instance().dialog_manager().set_dialog(dia)
+        if effect in self.status_effects:
+            self.status_effects[effect] = max(duration, self.status_effects[effect])
+            return True
+        else:
+            for cur_effect in self.status_effects:
+                if effect.is_blocked_by(cur_effect):
+                    return False
+
+            if self.is_unflinching() and effect.is_blocked_by(statuseffects.StatusEffectTypes.FLINCH_RESIST):
+                return False
+
+            if self.is_nullified() and effect.is_blocked_by(statuseffects.StatusEffectTypes.NULLIFICATION):
+                return False
+
+            blocked = []
+
+            for cur_effect in self.status_effects:
+                if cur_effect.is_blocked_by(effect):
+                    blocked.append(cur_effect)
+
+            for eff in blocked:
+                del self.status_effects[eff]
+
+            self.status_effects[effect] = duration
+            return True
 
     def get_turns_remaining(self, status_effect):
         if status_effect not in self.status_effects:
@@ -205,13 +228,11 @@ class ActorState(StatProvider):
 
         for e in all_effects:
             expired = self.status_effects[e] <= 1
-            nullified = self.is_nullified() and not e.ignores_nullification()
-            unflinched = e.stat_value(StatTypes.FLINCHED) > 0 and self.is_unflinching()
 
-            if expired or nullified or unflinched:
+            if expired:
                 del self.status_effects[e]
 
-                if e.stat_value(StatTypes.FLINCHED) > 0 and expired and not unflinched:
+                if e == statuseffects.StatusEffectTypes.FLINCHED:
                     add_flinch_recovery = True
             else:
                 self.status_effects[e] = self.status_effects[e] - 1
@@ -219,7 +240,7 @@ class ActorState(StatProvider):
         if add_flinch_recovery:
             flinch_recovery_dur = self.stat_value(StatTypes.FLINCH_RESIST)
             if flinch_recovery_dur > 0:
-                self.add_status_effect(statuseffects.new_flinch_recovery_effect(flinch_recovery_dur))
+                self.try_to_add_status_effect(statuseffects.StatusEffectTypes.FLINCH_RESIST, flinch_recovery_dur)
 
 
 class ActorController:
@@ -723,7 +744,7 @@ class ConsumeItemAction(Action):
         print("INFO: {} consumed item {}".format(self.actor_entity, self.item))
         consume_effect = self.item.get_consume_effect()
         if consume_effect is not None:
-            self.actor_entity.get_actor_state().add_status_effect(consume_effect)
+            self.actor_entity.get_actor_state().try_to_add_status_effect(consume_effect, self.item.get_consume_duration())
         self.actor_entity.set_visually_held_item_override(None)
 
 
@@ -858,19 +879,12 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
             if defender.hp() > 0:
                 defender_entity.animate_damage_taken(world)
 
-        new_status_effects_for_attacker = []
-
-        # TODO - i'm not crazy about this effect
-        #plus_spd_duration = attacker.stat_value_with_item(StatTypes.PLUS_SPEED_ON_HIT, item_used)
-        #if plus_spd_duration > 0:
-        #    new_status_effects_for_attacker.append(statuseffects.new_speed_effect(balance.STATUS_EFFECT_PLUS_SPEED_VAL,
-        #                                                                          plus_spd_duration,
-        #                                                                          unique_key="plus_speed_from_item"))
+        new_status_effects_for_attacker = []  # (StatusEffectType, duration)
 
         plus_def_duration = attacker.stat_value_with_item(StatTypes.PLUS_DEFENSE_ON_HIT, item_used)
         if plus_def_duration > 0:
-            new_status_effects_for_attacker.append(statuseffects.new_plus_defenses_effect(plus_def_duration,
-                                                                                          unique_key="plus_defense_from_item"))
+            new_status_effects_for_attacker.append((statuseffects.StatusEffectTypes.PLUS_DEFENSES, plus_def_duration + 1))
+
         if was_alive and not defender.is_alive():
 
             if not defender_entity.is_enemy() or not defender_entity.is_inanimate():
@@ -880,69 +894,66 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
 
             hp_on_kill = attacker.stat_value_with_item(StatTypes.HP_ON_KILL, item_used)
             if hp_on_kill > 0:
-                new_status_effects_for_attacker.append(statuseffects.new_regen_effect(hp_on_kill, 1, unique_key="hp_on_kill"))
+                new_status_effects_for_attacker.append((statuseffects.new_instant_heal_effect(hp_on_kill, name="HP on Kill"), 0))
 
         if attacker_entity is not None:
             for s in new_status_effects_for_attacker:
-                attacker_entity.get_actor_state().add_status_effect(s)
+                effect, duration = s
+                success = attacker_entity.get_actor_state().try_to_add_status_effect(effect, duration)
 
-                # TODO - would probably be cool to pulse multiple colors if you get >1 effects
-                if s.get_color() is not None:
-                    attacker_entity.perturb_color(s.get_color(), 30)
+                if success:
+                    if effect.get_color() is not None:
+                        attacker_entity.perturb_color(effect.get_color(), 30)
 
-                # TODO - these all get drawn on top of each other...
-                if s.get_effect_circle_art_type() is not None:
-                    cx, cy = attacker_entity.get_render_center(ignore_perturbs=True)
-                    world.show_effect_circle(cx, cy, s.get_effect_circle_art_type(),
-                                             color=s.get_color(), duration=45)
+                    # TODO - these all get drawn on top of each other...
+                    if effect.get_effect_circle_art_type() is not None:
+                        cx, cy = attacker_entity.get_render_center(ignore_perturbs=True)
+                        world.show_effect_circle(cx, cy, effect.get_effect_circle_art_type(),
+                                                 color=effect.get_color(), duration=45)
 
-        new_status_effects_for_defender = []
+        new_status_effects_for_defender = [] # (StatusEffectType, duration)
 
         pois_duration = attacker.stat_value_with_item(StatTypes.POISON_ON_HIT, item_used)
-        pois_dmg = balance.POTION_POIS_VAL
-        if pois_duration > 0 and pois_dmg > 0:
-            new_status_effects_for_defender.append(statuseffects.new_poison_effect(pois_dmg, pois_duration))
+        if pois_duration > 0:
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.POISON, pois_duration))
 
         confuse_duration = attacker.stat_value_with_item(StatTypes.CONFUSION_ON_HIT, item_used)
         if confuse_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_confusion_effect(confuse_duration))
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.CONFUSION, confuse_duration))
 
         blindness_duration = attacker.stat_value_with_item(StatTypes.BLINDNESS_ON_HIT, item_used)
         if blindness_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_blindness_effect(blindness_duration))
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.BLINDNESS, blindness_duration))
 
         flinches = attacker.stat_value_with_item(StatTypes.FLINCH_ON_HIT, item_used) > 0
-        is_unflinching = defender.stat_value(StatTypes.UNFLINCHING) > 0
-        if flinches and not is_unflinching:
-            new_status_effects_for_defender.append(statuseffects.new_flinch_effect())
+        if flinches:
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.FLINCHED, 1))
 
         slow_duration = attacker.stat_value_with_item(StatTypes.SLOW_ON_HIT, item_used)
-        slow_val = balance.STATUS_EFFECT_SLOW_ON_HIT_VAL
         if slow_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_slow_effect(slow_val, slow_duration,
-                                                                                 unique_key="slow_on_hit"))
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.SLOWNESS, slow_duration))
 
         chill_duration = attacker.stat_value_with_item(StatTypes.CHILL_ON_HIT, item_used)
-        chill_val = balance.STATUS_EFFECT_CHILL_ON_HIT_VAL
         if chill_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_chilled_effect(chill_duration, chill_val))
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.CHILLED, chill_duration))
 
         # TODO - the 'on melee hit' thing is not enforced right now
         grasped_duration = attacker.stat_value_with_item(StatTypes.GRASP_ON_MELEE_HIT, item_used)
         if grasped_duration > 0:
-            new_status_effects_for_defender.append(statuseffects.new_grasped_effect(grasped_duration))
+            new_status_effects_for_defender.append((statuseffects.StatusEffectTypes.GRASPED, grasped_duration))
 
         if defender_entity is not None:
             for s in new_status_effects_for_defender:
-                defender_entity.get_actor_state().add_status_effect(s)
+                effect, duration = s
+                success = defender_entity.get_actor_state().try_to_add_status_effect(effect, duration)
+                if success:
+                    if effect.get_color() is not None:
+                        defender_entity.perturb_color(effect.get_color(), 30)
 
-                if s.get_color() is not None:
-                    defender_entity.perturb_color(s.get_color(), 30)
-
-                if s.get_effect_circle_art_type() is not None:
-                    cx, cy = defender_entity.get_render_center(ignore_perturbs=True)
-                    world.show_effect_circle(cx, cy, s.get_effect_circle_art_type(),
-                                             color=s.get_color(), duration=45)
+                    if effect.get_effect_circle_art_type() is not None:
+                        cx, cy = defender_entity.get_render_center(ignore_perturbs=True)
+                        world.show_effect_circle(cx, cy, effect.get_effect_circle_art_type(),
+                                                 color=effect.get_color(), duration=45)
 
     return res
 
@@ -1426,12 +1437,12 @@ class ThrowItemAction(Action):
 
             consume_effect = self.item.get_consume_effect()
             if damage >= 0 and consume_effect is not None:
-                target.perturb_color(consume_effect.get_color(), 30)
-                target.get_actor_state().add_status_effect(consume_effect)
-
-                cx, cy = target.get_render_center(ignore_perturbs=True)
-                world.show_effect_circle(cx, cy, consume_effect.get_effect_circle_art_type(),
-                                         color=consume_effect.get_color(), duration=45)
+                success = target.get_actor_state().try_to_add_status_effect(consume_effect, self.item.get_consume_duration())
+                if success:
+                    target.perturb_color(consume_effect.get_color(), 30)
+                    cx, cy = target.get_render_center(ignore_perturbs=True)
+                    world.show_effect_circle(cx, cy, consume_effect.get_effect_circle_art_type(),
+                                             color=consume_effect.get_color(), duration=45)
 
     def start(self, world):
         super().start(world)
@@ -2045,8 +2056,7 @@ class SpawnActorAction(Action):
         if self._apply_summoning_sickness:
             duration = self.get_actor().get_actor_state().stat_value(StatTypes.SUMMONING_SICKNESS_ON_SUMMON)
             if duration > 0:
-                sickness = statuseffects.new_summoning_sickness_effect(duration)
-                self.get_actor().get_actor_state().add_status_effect(sickness)
+                self.get_actor().get_actor_state().try_to_add_status_effect(statuseffects.StatusEffectTypes.SUMMON_SICKNESS, duration)
 
 
 class ActionProvider:

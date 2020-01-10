@@ -2392,7 +2392,6 @@ class PlayerSleepAnimationBox(TriggerBox):
             self._deactivate(player, world)
 
         self._tick_count += 1
-        print("inside sleep box for {} ticks".format(self._tick_count))
 
     def player_exited(self, player, world):
         self._deactivate(player, world)
