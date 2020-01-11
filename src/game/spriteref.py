@@ -372,7 +372,9 @@ player_sleep_idle = [make(240, 208 + 32 * i, 32, 32) for i in range(0, 2)]
 
 player_attacks = [make(i*16, 208, 16, 64) for i in range(0, 5)]
 player_squat = make(80, 240, 16, 32)
-player_little_jump_down = [make(128 + i*16, 272, 16, 48) for i in range(0, 6)]
+player_little_jump_down = [make(128 + i * 16, 272, 16, 48) for i in range(0, 6)]
+
+player_floating = [make(192 + i * 16, 32, 16, 32) for i in range(0, 2)]
 
 player_faces = [make(96 + i * 32, 0, 32, 32) for i in range(0, 2)]
 
@@ -577,8 +579,8 @@ spinny_cubes_fat = [make(0 + i*16, 368, 16, 16) for i in range(0, 6)]
 doctor_all = [make(480 + i * 16, 176, 16, 32) for i in range(0, 2)]
 doctor_faces = [make(336, 272 + i * 32, 32, 32) for i in range(0, 2)]
 
-save_stations = [make(0 + 16 * i, 312, 16, 24) for i in range(0, 8)]
-save_station_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
+print_bot_all = [make(0 + 16 * i, 312, 16, 24) for i in range(0, 8)]
+print_bot_faces = [make(272, 272 + i*32, 32, 32) for i in range(0, 2)]
 
 sign_faces = [make(400, 272 + i * 32, 32, 32) for i in range(0, 2)]
 cave_horror_faces = [make(368, 336 + i * 32, 32, 32) for i in range(0, 2)]
@@ -611,6 +613,9 @@ def get_floor_lighting(val):
 
 end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
+
+save_station_idle = [make(128 + i * 32, 464, 32, 64) for i in range(0, 3)]
+save_station_running = [make(128 + i * 32, 464, 32, 64) for i in range(3, 6)]
 
 
 """Lookup table for wall sprites:   

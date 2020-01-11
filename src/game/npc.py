@@ -106,7 +106,7 @@ class GrokTemplate(NpcTemplate):
 class MachineTemplate(NpcTemplate):
 
     def __init__(self):
-        NpcTemplate.__init__(self, NpcID.MACHINE, "PrintBot", sr.save_stations, sr.save_station_faces, ("P", colors.YELLOW))
+        NpcTemplate.__init__(self, NpcID.MACHINE, "PrintBot", sr.print_bot_all, sr.print_bot_faces, ("P", colors.YELLOW))
 
     def get_trade_protocol(self, level):
         if level >= 8:  # city only

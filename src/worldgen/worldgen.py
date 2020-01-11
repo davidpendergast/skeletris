@@ -2,8 +2,9 @@ import random
 
 from src.world.worldstate import World
 from src.game.enemies import EnemyFactory
-from src.world.entities import Player, ExitEntity, SensorDoorEntity, \
-    BossExitEntity, DoorEntity, ChestEntity, ReturnExitEntity, EndGameExitEnitity
+
+import src.world.entities as entities
+import src.utils.colors as colors
 import src.game.music as music
 
 
@@ -181,6 +182,7 @@ class WorldBlueprint:
         for i in range(0, size[0]):
             self.geo.append([World.EMPTY] * size[1])
             self.geo_alt_art.append([None] * size[1])
+        self.geo_color = colors.WHITE
         self.player_spawn = (1, 1)
         self.enemy_spawns = []
         self.chest_spawns = []
@@ -321,9 +323,9 @@ class WorldBlueprint:
 
                 if self.geo[x][y] == World.DOOR:
                     if (x, y) in self.sensor_doors:
-                        door_ent = SensorDoorEntity(x, y)
+                        door_ent = entities.SensorDoorEntity(x, y)
                     else:
-                        door_ent = DoorEntity(x, y)
+                        door_ent = entities.DoorEntity(x, y)
 
                     if (x, y) in self.music_doors:
                         door_music_id = self.music_doors[(x, y)]
@@ -341,28 +343,28 @@ class WorldBlueprint:
                 w.add(enemy, gridcell=spawn_pos)
 
         if self.save_station is not None:
-            pass  # this doesn't work anymore
+            w.add(entities.SaveStation(self.save_station, color=self.geo_color))
 
         for chest_pos in self.chest_spawns:
-            w.add(ChestEntity(chest_pos[0], chest_pos[1]))
+            w.add(entities.ChestEntity(chest_pos[0], chest_pos[1]))
 
-        w.add(Player(0, 0), gridcell=self.player_spawn)
+        w.add(entities.Player(0, 0), gridcell=self.player_spawn)
 
         if len(self.exit_spawns) > 0:
             for xy in self.exit_spawns:
-                w.add(ExitEntity(*xy, self.exit_spawns[xy]))
+                w.add(entities.ExitEntity(*xy, self.exit_spawns[xy]))
 
         if len(self.boss_exit_spawns) > 0:
             for xy in self.boss_exit_spawns:
-                w.add(BossExitEntity(*xy, self.boss_exit_spawns[xy]))
+                w.add(entities.BossExitEntity(*xy, self.boss_exit_spawns[xy]))
 
         if len(self.return_exit_spawns) > 0:
             for return_pos in self.return_exit_spawns:
-                w.add(ReturnExitEntity(return_pos[0], return_pos[1], None))
+                w.add(entities.ReturnExitEntity(return_pos[0], return_pos[1], None))
 
         if len(self.end_of_game_spawns) > 0:
             for pos in self.end_of_game_spawns:
-                w.add(EndGameExitEnitity(pos[0], pos[1]))
+                w.add(entities.EndGameExitEnitity(pos[0], pos[1]))
 
         w.flush_new_entity_additions()
         return w

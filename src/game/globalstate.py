@@ -119,6 +119,10 @@ class GlobalState:
     def save_settings_to_disk(self):
         self._settings.save_to_disk()
 
+    def save_current_game_to_disk(self):
+        print("INFO: saving game...")
+        return True
+
     def event_queue(self):
         return self._event_queue
 

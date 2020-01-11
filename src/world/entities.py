@@ -2240,6 +2240,127 @@ class NpcTradeEntity(NpcEntity):
             return res_items
 
 
+class SaveStation(Entity):
+
+    def __init__(self, grid_pos, already_used=False, color=None):
+        cell_size = constants.CELLSIZE
+        Entity.__init__(self, grid_pos[0] * cell_size, (grid_pos[1] - 1) * cell_size, cell_size, cell_size)
+        self._color = color if color is not None else colors.WHITE
+
+        self.player_inside = False
+        self.already_used = already_used
+
+        self._sprite_override_key = "save_station"
+
+    def get_map_identifier(self):
+        return ("S", colors.GREEN)
+
+    def update(self, world):
+        self.update_images()
+
+    def set_player_inside(self, val):
+        self.player_inside = val
+
+    def _is_player_inside(self):
+        return False
+
+    def get_player_sprite_override(self):
+        anim_tick = gs.get_instance().anim_tick
+        if self._is_player_inside():
+            idx = anim_tick // 8
+            return spriteref.player_floating[idx % len(spriteref.player_floating)]
+        else:
+            return None
+
+    def _is_idle(self):
+        return True
+
+    def _start_animating_player_entering(self):
+        pass
+
+    def is_interactable(self, world):
+        if self.already_used:
+            return False
+
+        p = world.get_player()
+        if p is None:
+            return False
+
+        # need to be directly below the station to interact
+        p_xy = world.to_grid_coords(*p.center())
+        my_xy = world.to_grid_coords(*self.center())
+
+        return p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
+
+    def interact(self, world):
+        if self.already_used:
+            print("WARN: this save station was already used, skipping")
+            return
+
+        self._start_animating_player_entering()
+
+        res = gs.get_instance().save_current_game_to_disk()
+
+        self.set_player_inside(True)
+
+        import src.game.dialog as dialog
+        if res:
+            self.already_used = True
+            num = 23 + random.randint(0, 4)
+            num2 = random.randint(1, 3)
+
+            d = [dialog.Dialog(">> Welcome to CloneBot!\n"),
+
+                 dialog.Dialog(">> Scanning... done.\n" +
+                               ">> Detected: HUSK (97.{})%\n".format(num2) +
+                               ">> Cell count: 3.{}E13.\n".format(num)),
+
+                 dialog.Dialog(">> Using compression rate: VERY_HIGH\n" +
+                               ">> Compressing... done.\n"),
+
+                 dialog.Dialog(">> Uploading to OmniEmbryo... done.\n" +
+                               ">> Queueing for incubation... done."),
+
+                 dialog.Dialog(">> Clone Successful!\n"),
+
+                 dialog.Dialog("Game Saved.")]
+
+        else:
+            self.already_used = False
+            d = [dialog.Dialog("Failed to Save.")]
+
+        gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(d))
+
+    def visible_in_darkness(self):
+        return True
+
+    def get_sprite(self):
+        if self._is_idle():
+            idx = gs.get_instance().anim_tick // 8
+            return spriteref.save_station_idle[idx % len(spriteref.save_station_idle)]
+
+        idx = gs.get_instance().anim_tick
+        return spriteref.save_station_running[idx % len(spriteref.save_station_running)]
+
+    def get_render_center(self):
+        x, y = super().get_render_center()
+        return (x, y + constants.CELLSIZE)
+
+    def update_images(self):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1)
+
+        sprite = self.get_sprite()
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
+        depth = self.get_depth()
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_color=self._color)
+
+        self.update_shadow_image()
+
+
+
 class TriggerBox(Entity):
 
     """performs an action when the player enters or leaves the box"""

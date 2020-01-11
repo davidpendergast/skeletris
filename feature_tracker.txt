@@ -33,6 +33,7 @@
  - should say "no living past this point", not "no organic" at vents
  - it's pretty natural to block the computer screen with your body in the post-robo fight convo
  - should be "overwhelms" you
+ - inconsistent use of ">>" in computer dialog
 
 
 [testing]

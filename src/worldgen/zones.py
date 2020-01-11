@@ -219,6 +219,8 @@ class ZoneLoader:
 
             exit_id = next_storyline_zone(zone_id)  # will be None if this isn't a storyline zone
 
+            bp.geo_color = get_zone(zone_id).get_color()
+
             unknowns = {}
 
             for x in range(0, img_size[0]):
