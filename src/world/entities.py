@@ -2242,15 +2242,27 @@ class NpcTradeEntity(NpcEntity):
 
 class SaveStation(Entity):
 
+    STANDING = 1
+    GETTING_IN = 2
+    GETTING_OUT = 3
+    FLOATING = 4
+
     def __init__(self, grid_pos, already_used=False, color=None):
         cell_size = constants.CELLSIZE
         Entity.__init__(self, grid_pos[0] * cell_size, (grid_pos[1] - 1) * cell_size, cell_size, cell_size)
         self._color = color if color is not None else colors.WHITE
 
-        self.player_inside = False
         self.already_used = already_used
 
         self._sprite_override_key = "save_station"
+
+        self.player_in_range = False
+
+        self.p_state = SaveStation.STANDING
+        self.anim_tick_count = 0
+
+        self.getting_in_duration = 20
+        self.getting_out_duration = 20
 
     def get_map_identifier(self):
         return ("S", colors.GREEN)
@@ -2258,24 +2270,83 @@ class SaveStation(Entity):
     def update(self, world):
         self.update_images()
 
-    def set_player_inside(self, val):
-        self.player_inside = val
+        p = world.get_player()
+        if p is None:
+            self.player_in_range = False
+            self.p_state = SaveStation.STANDING
+            self.anim_tick_count = 0
 
-    def _is_player_inside(self):
-        return False
+        p_xy = world.to_grid_coords(*p.center())
+        my_xy = world.to_grid_coords(*self.center())
+
+        player_in_range = p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
+
+        if not player_in_range and self.player_in_range:
+            if p.get_sprite_override_id() == self._sprite_override_key:
+                p.set_sprite_override(None)
+                p.set_held_item_override(None)
+
+            # the player left, better clean up
+            self.player_in_range = False
+            self.p_state = SaveStation.STANDING
+            self.anim_tick_count = 0
+        else:
+            self.player_in_range = player_in_range
+
+        if self.player_in_range and p.is_performing_action():
+            pass
+            #if self.p_state in (SaveStation.FLOATING, SaveStation.GETTING_IN):
+            #    self.p_state = SaveStation.GETTING_OUT
+            #    self.anim_tick_count = 0
+
+        if self.player_in_range:
+            self.update_player_sprites(p)
+
+            if self.p_state in (SaveStation.GETTING_IN, SaveStation.GETTING_OUT):
+                self.anim_tick_count += 1
+
+                if self.p_state == SaveStation.GETTING_OUT and self.anim_tick_count >= self.getting_out_duration:
+                    self.p_state = SaveStation.STANDING
+                    self.anim_tick_count = 0
+                elif self.p_state == SaveStation.GETTING_IN and self.anim_tick_count >= self.getting_in_duration:
+                    self.p_state = SaveStation.FLOATING
+                    self.anim_tick_count = 0
+
+    def update_player_sprites(self, player):
+
+        if player.get_sprite_override_id() is not None and player.get_sprite_override_id() != self._sprite_override_key:
+            return  # something else is already modifying the sprite, just forget it
+
+        if self.p_state == SaveStation.FLOATING:
+            sprites = spriteref.player_floating
+            z_offs = 64
+            player.set_sprite_override(sprites, override_id=self._sprite_override_key)
+            player.set_visually_held_item_override(False)
+
+        elif self.p_state == SaveStation.STANDING:
+            if player.get_sprite_override_id() == self._sprite_override_key:
+                player.set_sprite_override(None)
+                player.set_held_item_override(None)
+
+    def set_player_inside(self, val):
+        if val:
+            self.p_state = SaveStation.FLOATING
+        else:
+            self.p_state = SaveStation.STANDING
+        self.anim_tick_count = 0
 
     def get_player_sprite_override(self):
         anim_tick = gs.get_instance().anim_tick
-        if self._is_player_inside():
+        if self.p_state == SaveStation.FLOATING:
             idx = anim_tick // 8
             return spriteref.player_floating[idx % len(spriteref.player_floating)]
-        else:
+        elif self.p_state == SaveStation.GETTING_IN:
             return None
 
     def _is_idle(self):
         return True
 
-    def _start_animating_player_entering(self):
+    def _start_animating(self, getting_in):
         pass
 
     def is_interactable(self, world):
@@ -2296,8 +2367,6 @@ class SaveStation(Entity):
         if self.already_used:
             print("WARN: this save station was already used, skipping")
             return
-
-        self._start_animating_player_entering()
 
         res = gs.get_instance().save_current_game_to_disk()
 
