@@ -25,15 +25,8 @@
         - some kind of husk?
  - what is grok?
     - a disembodied skeleton, joined to a "husk" which replaces his body
- - it's never explained why you (and grok) aren't affected by the parasite
- 
  - mary doesn't have repeat dialog at the frog gate
     - this is a reoccurring problem
-    
- - should say "no living past this point", not "no organic" at vents
- - it's pretty natural to block the computer screen with your body in the post-robo fight convo
- - should be "overwhelms" you
- - inconsistent use of ">>" in computer dialog
 
 
 [testing]

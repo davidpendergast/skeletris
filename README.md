@@ -3,7 +3,7 @@ babby's first roguelike
 
 here are the five most recent gifs committed:
 
-![230_cloning-machine.gif](gifs/230_cloning-machine.gif?raw=true "230_cloning-machine")
+![230-cloning-machine.gif](gifs/230-cloning-machine.gif?raw=true "230-cloning-machine")
 
 ![229_cloning_machine_text.gif](gifs/229_cloning_machine_text.gif?raw=true "229_cloning_machine_text")
 

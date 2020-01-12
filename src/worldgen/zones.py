@@ -1209,7 +1209,7 @@ class VentilationZone(Zone):
 
         if self.sign_pos in unknowns:
             text = "WARNING: Dangerous Fumes!\n" + \
-                   "NO organic material past this point."
+                   "NO living entities past this point."
 
             sign_ent = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=text)
             pos = unknowns[self.sign_pos][0]
@@ -1572,7 +1572,7 @@ class CaveHorrorZone(Zone):
         for skull_rack_color in self._skull_rack_colors:
             if skull_rack_color in unknowns:
                 for xy in unknowns[skull_rack_color]:
-                    d_text = "Their collective groan overwhelm you. You can't make out a word."
+                    d_text = "Their collective groans overwhelm you. You can't make out a word."
                     dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.SKULL_RACK,
                                                                       with_dialog=d_text)
                     w.add(dec, gridcell=(xy[0], xy[1] - 1))

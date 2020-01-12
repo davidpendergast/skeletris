@@ -1106,35 +1106,43 @@ class NpcItemThatFitsProtocol(NpcTradeProtocol):
         return [new_item]
 
     def get_explain_dialog(self, npc_id):
-        pct_keep_stats = "{:.1%}".format(1 - self._chance_to_shrink_item)
-        d = [dialog.NpcDialog("Welcome to PrintBot. I perform an item re-printing service. Here's how it works:", npc_id=npc_id),
-             dialog.NpcDialog("Clear some space in your equipment grid and give me an artifact. Then, I'll re-print the artifact so it fits in your grid.", npc_id=npc_id),
-             dialog.NpcDialog("There's a {} chance that all of the artifact's stats will be kept intact.".format(pct_keep_stats), npc_id=npc_id),
-             dialog.NpcDialog("Just make sure there is enough space in your equipment grid for the new item. Insert an artifact to get started.", npc_id=npc_id),
-        ]
+        pct_modify_stats = "{:.1%}".format(self._chance_to_shrink_item)
+        d = [dialog.NpcDialog(">> Welcome to PrintBot!\n" +
+                              ">> Insert an artifact to get started.", npc_id=npc_id),
+
+             dialog.NpcDialog(">> Instructions:\n" +
+                              ">> 1. Make space in your equipment grid.\n" +
+                              ">> 2. Insert an artifact.", npc_id=npc_id),
+
+             dialog.NpcDialog(">> Result: The artifact will be re-printed so that it fits inside your grid.", npc_id=npc_id),
+
+             dialog.NpcDialog(">> Warning: There is a {} chance that the artifact's stats will be modified by the procedure.".format(pct_modify_stats),
+                              npc_id=npc_id)
+            ]
         return dialog.Dialog.link_em_up(d)
 
     def get_success_dialog(self, npc_id, item):
-        return dialog.NpcDialog("Print completed successfully. Enjoy!", npc_id=npc_id)
+        return dialog.NpcDialog(">> Print completed successfully.", npc_id=npc_id)
 
     def get_wrong_item_dialog(self, npc_id, item):
         if not self._is_valid_item_type(item):
-            return dialog.NpcDialog("ERROR: PrintBot is not compatible with this item. Only artifacts are supported.",
+            return dialog.NpcDialog(">> ERROR: PrintBot is not compatible with this item. Only artifacts are supported.",
                                     npc_id=npc_id)
         elif not self._is_enough_space_for_new_item(item):
-            return dialog.NpcDialog("ERROR: Not enough space in equipment grid.", npc_id=npc_id)
+            return dialog.NpcDialog(">> ERROR: Not enough space. Clear some room in your equipment grid to proceed.", npc_id=npc_id)
         else:
-            return dialog.NpcDialog("ERROR: Unexpected error.", npc_id=npc_id)
+            return dialog.NpcDialog(">> ERROR: Unexpected error.", npc_id=npc_id)
 
     def get_post_success_dialog(self, npc_id):
-        d = [dialog.NpcDialog("Please rate the service you received from [1] to [5] stars.", npc_id=npc_id),
+        d = [dialog.NpcDialog(">> Please rate the service you received:\n" +
+                              ">>   [1] [2] [3] [4] [5] Star(s)", npc_id=npc_id),
              dialog.PlayerDialog("..."),
-             dialog.NpcDialog("Confirming [5] star rating. Thank you!", npc_id=npc_id)]
+             dialog.NpcDialog(">> Confirming [5] star rating.\n" +
+                              ">> Thank you!", npc_id=npc_id)]
         return dialog.Dialog.link_em_up(d)
 
     def get_no_more_trades_dialog(self, npc_id):
-        return dialog.NpcDialog("ERROR: Toner cartridge is not genuine. Please install a genuine PrintBot toner cartridge and try again.",
-                                npc_id=npc_id)
+        return dialog.NpcDialog(">> ERROR: Toner cartridge is not genuine. Please install a genuine PrintBot toner cartridge to proceed.", npc_id=npc_id)
 
 
 class NpcTradeProtocols:
