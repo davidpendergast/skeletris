@@ -383,6 +383,9 @@ class AnimationEntity(Entity):
             self.sprites = new_sprites
 
         def get_current_sprite(self):
+            if self.sprites is None:
+                return None
+
             if self.anim_rate > 0:
                 anim_tick = gs.get_instance().anim_tick
                 idx = anim_tick // self.anim_rate % len(self.sprites)
@@ -802,6 +805,9 @@ class ActorEntity(Entity):
 
     def is_performing_action(self):
         return self.executing_action is not None
+
+    def get_current_action(self):
+        return self.executing_action
 
     def update_perturbations(self):
         if len(self._perturb_points) > 0:
@@ -2242,11 +2248,6 @@ class NpcTradeEntity(NpcEntity):
 
 class SaveStation(Entity):
 
-    STANDING = 1
-    GETTING_IN = 2
-    GETTING_OUT = 3
-    FLOATING = 4
-
     def __init__(self, grid_pos, already_used=False, color=None):
         cell_size = constants.CELLSIZE
         Entity.__init__(self, grid_pos[0] * cell_size, (grid_pos[1] - 1) * cell_size, cell_size, cell_size)
@@ -2256,98 +2257,172 @@ class SaveStation(Entity):
 
         self._sprite_override_key = "save_station"
 
-        self.player_in_range = False
+        self._is_animating = False
+        self._anim_tick_count = 0
+        self._float_tick_offset = 0
 
-        self.p_state = SaveStation.STANDING
-        self.anim_tick_count = 0
+        self._start_delay = 30
 
-        self.getting_in_duration = 20
-        self.getting_out_duration = 20
+        self._getting_in_duration = 20
+        self._float_duration = 30  # note that this also waits for dialog to end
+        self._getting_out_duration = 20
+
+        self._end_delay = 20
+
+        self._anim_puppet_start_xy = (0, 0)
+        self._anim_puppet_uid = None
+
+        self._hop_in_dialog_uid = None
 
     def get_map_identifier(self):
         return ("S", colors.GREEN)
 
+    def get_depth(self):
+        return super().get_depth() + constants.CELLSIZE // 4
+
     def update(self, world):
         self.update_images()
 
-        p = world.get_player()
-        if p is None:
-            self.player_in_range = False
-            self.p_state = SaveStation.STANDING
-            self.anim_tick_count = 0
+        if self._is_animating:
+            end_getting_in = self._start_delay + self._getting_in_duration
+            end_float = end_getting_in + self._float_duration
+            end_getting_out = end_float + self._getting_out_duration
+            end_total = end_getting_out + self._end_delay
 
-        p_xy = world.to_grid_coords(*p.center())
-        my_xy = world.to_grid_coords(*self.center())
+            # pause updates while animating
+            gs.get_instance().pause_world_updates(2)
 
-        player_in_range = p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
+            p = world.get_player()
 
-        if not player_in_range and self.player_in_range:
-            if p.get_sprite_override_id() == self._sprite_override_key:
-                p.set_sprite_override(None)
-                p.set_held_item_override(None)
+            if self._anim_tick_count < self._start_delay:
+                self._set_player_visible(p, True, no_item=True)
 
-            # the player left, better clean up
-            self.player_in_range = False
-            self.p_state = SaveStation.STANDING
-            self.anim_tick_count = 0
-        else:
-            self.player_in_range = player_in_range
+                if self._anim_puppet_uid is None and p is not None:
+                    self._initialize_puppet(world, p.get_render_center(ignore_perturbs=True), p.should_xflip())
 
-        if self.player_in_range and p.is_performing_action():
-            pass
-            #if self.p_state in (SaveStation.FLOATING, SaveStation.GETTING_IN):
-            #    self.p_state = SaveStation.GETTING_OUT
-            #    self.anim_tick_count = 0
+                # pause at this section until you get past the first line of dialog
+                if gs.get_instance().dialog_manager().is_active():
+                    if gs.get_instance().dialog_manager().get_dialog().get_uid() == self._hop_in_dialog_uid:
+                        self._anim_tick_count = 0
 
-        if self.player_in_range:
-            self.update_player_sprites(p)
+            elif self._anim_tick_count < end_getting_in:
+                self._set_player_visible(p, False, no_item=True)
 
-            if self.p_state in (SaveStation.GETTING_IN, SaveStation.GETTING_OUT):
-                self.anim_tick_count += 1
+                prog = Utils.bound((self._anim_tick_count - self._start_delay) / self._getting_in_duration, 0, 0.999)
+                sprites = spriteref.player_attacks[0:3]
+                cur_sprite = sprites[int(prog * len(sprites))]
+                xy = Utils.linear_interp(self._anim_puppet_start_xy, self._anim_puppet_end_xy(), prog)
 
-                if self.p_state == SaveStation.GETTING_OUT and self.anim_tick_count >= self.getting_out_duration:
-                    self.p_state = SaveStation.STANDING
-                    self.anim_tick_count = 0
-                elif self.p_state == SaveStation.GETTING_IN and self.anim_tick_count >= self.getting_in_duration:
-                    self.p_state = SaveStation.FLOATING
-                    self.anim_tick_count = 0
+                if prog < 0.333:
+                    shadow_sprite = spriteref.medium_shadow
+                elif prog < 0.666:
+                    shadow_sprite = spriteref.small_shadow
+                else:
+                    shadow_sprite = None
 
-    def update_player_sprites(self, player):
+                self._update_puppet(world, cur_sprite, xy, 0, shadow_sprite)
 
-        if player.get_sprite_override_id() is not None and player.get_sprite_override_id() != self._sprite_override_key:
-            return  # something else is already modifying the sprite, just forget it
+            elif self._anim_tick_count < end_float:
+                self._set_player_visible(p, False, no_item=True)
 
-        if self.p_state == SaveStation.FLOATING:
-            sprites = spriteref.player_floating
-            z_offs = 64
-            player.set_sprite_override(sprites, override_id=self._sprite_override_key)
-            player.set_visually_held_item_override(False)
+                if self._float_tick_offset == 0:
+                    # force it to start at the highest point of the bobbing animation
+                    self._float_tick_offset = gs.get_instance().tick_counter
 
-        elif self.p_state == SaveStation.STANDING:
-            if player.get_sprite_override_id() == self._sprite_override_key:
+                t = gs.get_instance().tick_counter - self._float_tick_offset
+
+                z_range = constants.CELLSIZE // 16
+                z_center = constants.CELLSIZE // 2
+                period = 90
+
+                z = -z_center - round(z_range * math.cos((t / period) * 2 * 3.14152))
+
+                # sprite depends on whether we're moving up or down
+                if -math.sin((t / period) * 2 * 3.14152) > 0:
+                    sprite = spriteref.player_floating[1]
+                else:
+                    sprite = spriteref.player_floating[0]
+
+                self._update_puppet(world, sprite, self._anim_puppet_end_xy(), z, None)
+
+                # pause at the float section until the dialog is done
+                if gs.get_instance().dialog_manager().is_active():
+                    self._anim_tick_count = end_getting_in
+
+            elif self._anim_tick_count < end_getting_out:
+                self._set_player_visible(p, False, no_item=True)
+
+                prog = Utils.bound((self._anim_tick_count - end_float) / self._getting_out_duration, 0, 0.999)
+                sprites = spriteref.player_attacks[0:3]
+                sprites.reverse()
+                cur_sprite = sprites[int(prog * len(sprites))]
+                xy = Utils.linear_interp(self._anim_puppet_end_xy(), self._anim_puppet_start_xy, prog)
+
+                if prog < 0.333:
+                    shadow_sprite = None
+                elif prog < 0.666:
+                    shadow_sprite = spriteref.small_shadow
+                else:
+                    shadow_sprite = spriteref.medium_shadow
+
+                self._update_puppet(world, cur_sprite, xy, 0, shadow_sprite)
+
+            elif self._anim_tick_count < end_total:
+                self._set_player_visible(p, True, no_item=True)
+                self._destroy_puppet(world)
+
+            self._anim_tick_count += 1
+
+            if self._anim_tick_count >= end_total:
+                self._set_player_visible(p, True)
+                self._is_animating = False
+                self._destroy_puppet(world)
+
+                import src.game.dialog as dialog
+                gs.get_instance().dialog_manager().set_dialog(dialog.Dialog("Game Saved."))
+
+                # TODO sound effect
+
+    def _update_puppet(self, world, sprite, xy, z, shadow_sprite):
+        puppet_ent = world.get_entity(self._anim_puppet_uid)
+        if puppet_ent is not None:
+            puppet_ent.set_sprites(None if sprite is None else [sprite])
+            puppet_ent.set_center(*xy)
+            puppet_ent.set_sprite_offset((0, z))
+            puppet_ent.set_shadow_sprite(shadow_sprite)
+
+    def _anim_puppet_end_xy(self):
+        return (self.center()[0], self.center()[1] + (constants.CELLSIZE * 3) // 4)
+
+    def _initialize_puppet(self, world, xy, xflip):
+        anim_ent = AnimationEntity(xy[0], xy[1], None, 20, spriteref.ENTITY_LAYER)
+        anim_ent.set_finish_behavior(AnimationEntity.LOOP_ON_FINISH)
+        anim_ent.set_xflipped(xflip)
+
+        world.add(anim_ent)
+
+        self._anim_puppet_uid = anim_ent.get_uid()
+        self._anim_puppet_start_xy = xy
+
+    def _destroy_puppet(self, world):
+        if self._anim_puppet_uid is not None:
+            puppet_ent = world.get_entity(self._anim_puppet_uid, onscreen=False)
+            if puppet_ent is not None:
+                world.remove(puppet_ent)
+            else:
+                print("WARN: couldn't find SaveStation animation puppet with UID to destroy: " + self._anim_puppet_uid)
+            self._anim_puppet_uid = None
+
+    def _set_player_visible(self, player, val, no_item=False):
+        if player is not None:
+            if val:
                 player.set_sprite_override(None)
-                player.set_held_item_override(None)
-
-    def set_player_inside(self, val):
-        if val:
-            self.p_state = SaveStation.FLOATING
-        else:
-            self.p_state = SaveStation.STANDING
-        self.anim_tick_count = 0
-
-    def get_player_sprite_override(self):
-        anim_tick = gs.get_instance().anim_tick
-        if self.p_state == SaveStation.FLOATING:
-            idx = anim_tick // 8
-            return spriteref.player_floating[idx % len(spriteref.player_floating)]
-        elif self.p_state == SaveStation.GETTING_IN:
-            return None
-
-    def _is_idle(self):
-        return True
-
-    def _start_animating(self, getting_in):
-        pass
+                player.set_shadow_sprite_override(None)
+                player.set_visually_held_item_override(False if no_item else None)
+            else:
+                player.set_sprite_override(spriteref.invisible_pixel, override_id=self._sprite_override_key)
+                player.set_shadow_sprite_override(spriteref.invisible_pixel)
+                player.set_visually_held_item_override(False)
 
     def is_interactable(self, world):
         if self.already_used:
@@ -2370,45 +2445,52 @@ class SaveStation(Entity):
 
         res = gs.get_instance().save_current_game_to_disk()
 
-        self.set_player_inside(True)
-
         import src.game.dialog as dialog
         if res:
             self.already_used = True
-            num = 23 + random.randint(0, 4)
-            num2 = random.randint(1, 3)
+            hop_in_dialog = dialog.Dialog(">> Welcome to CloneBot!\n" +
+                                          ">> Please step into the chamber.")
+            d = [hop_in_dialog,
+                 dialog.Dialog("..."),
 
-            d = [dialog.Dialog(">> Welcome to CloneBot!\n"),
+                 dialog.Dialog(">> Scanning...\n" +
+                               ">> Processing...\n" +
+                               ">> Gathering materials..."),
 
-                 dialog.Dialog(">> Scanning... done.\n" +
-                               ">> Detected: HUSK (97.{})%\n".format(num2) +
-                               ">> Cell count: 3.{}E13.\n".format(num)),
+                 dialog.Dialog(">> Building cloning template...\n" +
+                               ">> Finalizing...\n" +
+                               ">> Success!"),
 
-                 dialog.Dialog(">> Using compression rate: VERY_HIGH\n" +
-                               ">> Compressing... done.\n"),
+                 dialog.Dialog(">> In accordance with city policy,\n" +
+                               ">> clones may ONLY be produced after\n" +
+                               ">> the original organism is destroyed."),
 
-                 dialog.Dialog(">> Uploading to OmniEmbryo... done.\n" +
-                               ">> Queueing for incubation... done."),
+                 dialog.Dialog(">> AUTO_CLONE is set to <True>"),
 
-                 dialog.Dialog(">> Clone Successful!\n"),
+                 dialog.Dialog(">> Please exit the chamber.")]
 
-                 dialog.Dialog("Game Saved.")]
+            gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(d))
+
+            self._hop_in_dialog_uid = hop_in_dialog.get_uid()
 
         else:
             self.already_used = False
-            d = [dialog.Dialog("Failed to Save.")]
+            gs.get_instance().dialog_manager().set_dialog(dialog.Dialog("Failed to Save."))
+            return
 
-        gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(d))
+        # start the animation stuff
+        self._is_animating = True
+        self._anim_tick_count = 0
 
     def visible_in_darkness(self):
         return True
 
     def get_sprite(self):
-        if self._is_idle():
+        if not self._is_animating:
             idx = gs.get_instance().anim_tick // 8
             return spriteref.save_station_idle[idx % len(spriteref.save_station_idle)]
 
-        idx = gs.get_instance().anim_tick
+        idx = gs.get_instance().anim_tick // 4
         return spriteref.save_station_running[idx % len(spriteref.save_station_running)]
 
     def get_render_center(self):
@@ -2425,8 +2507,6 @@ class SaveStation(Entity):
         depth = self.get_depth()
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_color=self._color)
-
-        self.update_shadow_image()
 
 
 

@@ -615,7 +615,7 @@ end_level_consoles = [make(i*16, 272, 16, 32) for i in range(0, 8)]
 progress_spinner = [make((i // 4) * 16, (i % 4) * 4 + 336, 16, 4) for i in range(0, 16)]
 
 save_station_idle = [make(128 + i * 32, 464, 32, 64) for i in range(0, 3)]
-save_station_running = [make(128 + i * 32, 464, 32, 64) for i in range(3, 6)]
+save_station_running = [make(128 + i * 32, 464, 32, 64) for i in range(3, 7)]
 
 
 """Lookup table for wall sprites:   

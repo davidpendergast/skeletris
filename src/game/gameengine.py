@@ -576,8 +576,6 @@ class ActionType:
     SPAWN_ACTOR = "SPAWN_ACTOR"
     FROG_LEAP = "FROG_LEAP"
 
-    OPEN_DOOR = "OPEN_DOOR"
-
 
 class Action:
 

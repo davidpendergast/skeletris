@@ -1,0 +1,204 @@
+class SaveStation(Entity):
+
+    STANDING = 1
+    GETTING_IN = 2
+    GETTING_OUT = 3
+    FLOATING = 4
+
+    def __init__(self, grid_pos, already_used=False, color=None):
+        cell_size = constants.CELLSIZE
+        Entity.__init__(self, grid_pos[0] * cell_size, (grid_pos[1] - 1) * cell_size, cell_size, cell_size)
+        self._color = color if color is not None else colors.WHITE
+
+        self.already_used = already_used
+
+        self._sprite_override_key = "save_station"
+
+        self.player_in_range = False
+
+        self.p_state = SaveStation.STANDING
+        self.anim_tick_count = 0
+
+        self.getting_in_duration = 20
+
+    def get_map_identifier(self):
+        return ("S", colors.GREEN)
+
+    def update(self, world):
+        self.update_images()
+
+        p = world.get_player()
+        if p is None:
+            self.player_in_range = False
+            self.p_state = SaveStation.STANDING
+            self.anim_tick_count = 0
+
+        p_xy = world.to_grid_coords(*p.center())
+        my_xy = world.to_grid_coords(*self.center())
+
+        player_in_range = p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
+
+        if not player_in_range and self.player_in_range:
+            self._cleanup_player(p)
+
+            # the player left, better clean up
+            self.player_in_range = False
+            self.set_player_inside(False)
+        else:
+            self.player_in_range = player_in_range
+
+        if self.player_in_range and p.is_performing_action() and p.get_current_action().is_move_action():
+            if self.p_state in (SaveStation.FLOATING, SaveStation.GETTING_IN):
+                self._set_new_p_state(SaveStation.GETTING_OUT)
+
+        if self.player_in_range:
+            self.update_player_sprites(p)
+
+            if self.p_state in (SaveStation.GETTING_IN, SaveStation.GETTING_OUT):
+                self.anim_tick_count += 1
+
+                if self.p_state == SaveStation.GETTING_OUT and self.anim_tick_count >= self.getting_in_duration:
+                    self._set_new_p_state(SaveStation.STANDING)
+
+                elif self.p_state == SaveStation.GETTING_IN and self.anim_tick_count >= self.getting_in_duration:
+                    self._set_new_p_state(SaveStation.FLOATING)
+
+    def update_player_sprites(self, player):
+        if player.get_sprite_override_id() is not None and player.get_sprite_override_id() != self._sprite_override_key:
+            return  # something else is already modifying the sprite, just forget it
+
+        if self.p_state == SaveStation.FLOATING:
+            sprites = spriteref.player_floating
+            z_offs = 32
+            player.set_sprite_override(sprites, override_id=self._sprite_override_key)
+            player.set_visually_held_item_override(False)
+            player.set_shadow_sprite_override(spriteref.invisible_pixel)
+            player.set_z_draw_offset(-z_offs)
+
+        elif self.p_state == SaveStation.STANDING:
+            if player.get_sprite_override_id() == self._sprite_override_key:
+                self._cleanup_player(player)
+
+        elif self.p_state in (SaveStation.GETTING_OUT, SaveStation.GETTING_IN):
+            sprites = list(spriteref.player_attacks[0:4])
+            if self.p_state == SaveStation.GETTING_OUT:
+                sprites.reverse()
+
+            prog = Utils.bound(self.anim_tick_count / self.getting_in_duration, 0, 0.999)
+            sprite = sprites[int(prog * len(sprites))]
+
+            player.set_sprite_override([sprite], override_id=self._sprite_override_key)
+            player.set_visually_held_item_override(False)
+            player.set_shadow_sprite_override(spriteref.invisible_pixel)  # TODO bleh
+            player.set_z_draw_offset(0)
+
+    def _cleanup_player(self, p):
+        p.set_z_draw_offset(0)
+        p.set_shadow_sprite_override(None)
+
+        if p.get_sprite_override_id() == self._sprite_override_key:
+            p.set_sprite_override(None)
+            p.set_visually_held_item_override(None)
+
+    def _set_new_p_state(self, state):
+        self.p_state = state
+        self.anim_tick_count = 0
+
+    def set_player_inside(self, val):
+        if val:
+            self._set_new_p_state(SaveStation.FLOATING)
+        else:
+            self._set_new_p_state(SaveStation.STANDING)
+
+    def get_player_sprite_override(self):
+        anim_tick = gs.get_instance().anim_tick
+        if self.p_state == SaveStation.FLOATING:
+            idx = anim_tick // 8
+            return spriteref.player_floating[idx % len(spriteref.player_floating)]
+        elif self.p_state == SaveStation.GETTING_IN:
+            return None
+
+    def _is_idle(self):
+        return True
+
+    def _start_animating(self, getting_in):
+        pass
+
+    def is_interactable(self, world):
+        if self.already_used or self.p_state != SaveStation.STANDING
+            return False
+
+        p = world.get_player()
+        if p is None:
+            return False
+
+        # need to be directly below the station to interact
+        p_xy = world.to_grid_coords(*p.center())
+        my_xy = world.to_grid_coords(*self.center())
+
+        return p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
+
+    def interact(self, world):
+        if self.already_used:
+            print("WARN: this save station was already used, skipping")
+            return
+
+        res = gs.get_instance().save_current_game_to_disk()
+
+        self.set_player_inside(True)
+
+        import src.game.dialog as dialog
+        if res:
+            self.already_used = True
+            num = 23 + random.randint(0, 4)
+            num2 = random.randint(1, 3)
+
+            d = [dialog.Dialog(">> Welcome to CloneBot!\n"),
+
+                 dialog.Dialog(">> Scanning... done.\n" +
+                               ">> Detected: HUSK (97.{})%\n".format(num2) +
+                               ">> Cell count: 3.{}E13.\n".format(num)),
+
+                 dialog.Dialog(">> Using compression rate: VERY_HIGH\n" +
+                               ">> Compressing... done.\n"),
+
+                 dialog.Dialog(">> Uploading to OmniEmbryo... done.\n" +
+                               ">> Queueing for incubation... done."),
+
+                 dialog.Dialog(">> Clone Successful!\n"),
+
+                 dialog.Dialog("Game Saved.")]
+
+        else:
+            self.already_used = False
+            d = [dialog.Dialog("Failed to Save.")]
+
+        gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(d))
+
+    def visible_in_darkness(self):
+        return True
+
+    def get_sprite(self):
+        if self._is_idle():
+            idx = gs.get_instance().anim_tick // 8
+            return spriteref.save_station_idle[idx % len(spriteref.save_station_idle)]
+
+        idx = gs.get_instance().anim_tick
+        return spriteref.save_station_running[idx % len(spriteref.save_station_running)]
+
+    def get_render_center(self):
+        x, y = super().get_render_center()
+        return (x, y + constants.CELLSIZE)
+
+    def update_images(self):
+        if self._img is None:
+            self._img = img.ImageBundle.new_bundle(spriteref.ENTITY_LAYER, scale=1)
+
+        sprite = self.get_sprite()
+        x = self.get_render_center()[0] - (sprite.width() * self._img.scale()) // 2
+        y = self.get_render_center()[1] - (sprite.height() * self._img.scale())
+        depth = self.get_depth()
+        self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
+                                     new_depth=depth, new_color=self._color)
+
+        self.update_shadow_image()
