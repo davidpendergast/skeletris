@@ -19,6 +19,7 @@ from src.game.inputs import InputState
 import src.utils.colors as colors
 import src.game.gameengine as gameengine
 import src.game.version as version
+import src.game.savedata as savedata
 
 
 class MenuManager:
@@ -27,6 +28,7 @@ class MenuManager:
     DEATH_OPTION_MENU = 0.5
     IN_GAME_MENU = 1
     START_MENU = 2
+    LOAD_MENU = 2.5
     CINEMATIC_MENU = 3
     PAUSE_MENU = 4
     CONTROLS_MENU = 5
@@ -450,16 +452,27 @@ class MenuWithVersionDisplay:
 
 class StartMenu(OptionsMenu, MenuWithVersionDisplay):
 
-    START_OPT = 0
-    OPTIONS_OPT = 1
-    SOUND_OPT = 2
-    EXIT_OPT = 3
-
     def __init__(self):
+        has_save_data = savedata.has_files_on_disk()
+        if not has_save_data:
+            opts = ["start", "controls", "sound", "exit"]
+            self._start_idx = 0
+            self._load_idx = -1
+            self._options_idx = 1
+            self._sound_idx = 2
+            self._exit_idx = 3
+        else:
+            opts = ["start", "load game", "controls", "sound", "exit"]
+            self._start_idx = 0
+            self._load_idx = 1
+            self._options_idx = 2
+            self._sound_idx = 3
+            self._exit_idx = 4
+
         OptionsMenu.__init__(self,
                              MenuManager.START_MENU,
                              spriteref.title_img,
-                             ["start", "controls", "sound", "exit"],
+                             opts,
                              title_size=3)
 
         MenuWithVersionDisplay.__init__(self)
@@ -480,16 +493,19 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
         return music.Songs.MENU_THEME
 
     def option_activated(self, idx):
-        if idx == StartMenu.START_OPT:
+        if idx == self._start_idx:
             gs.get_instance().add_event(events.NewGameEvent(instant_start=True))
             sound_effects.play_sound(soundref.newgame_start)
-        elif idx == StartMenu.EXIT_OPT:
+        elif idx == self._exit_idx:
             gs.get_instance().add_event(events.GameExitEvent())
-        elif idx == StartMenu.OPTIONS_OPT:
+        elif idx == self._options_idx:
             gs.get_instance().menu_manager().set_active_menu(ControlsMenu(MenuManager.START_MENU))
             sound_effects.play_sound(soundref.menu_select)
-        elif idx == StartMenu.SOUND_OPT:
+        elif idx == self._sound_idx:
             gs.get_instance().menu_manager().set_active_menu(SoundSettingsMenu(MenuManager.START_MENU))
+            sound_effects.play_sound(soundref.menu_select)
+        elif idx == self._load_idx:
+            gs.get_instance().menu_manager().set_active_menu(LoadMenu(reload_data=True))
             sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
@@ -501,6 +517,81 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
             yield bun
         for bun in MenuWithVersionDisplay.all_bundles(self):
             yield bun
+
+
+class LoadMenu(OptionsMenu):
+
+    FILES_PER_PAGE = 6
+
+    def __init__(self, page=0, reload_data=True):
+
+        self.page = page
+
+        if reload_data:
+            savedata.reload_all_save_data_from_disk()
+
+        all_saves = savedata.get_all_save_data(load_if_needed=False)
+
+        start_idx = LoadMenu.FILES_PER_PAGE * page
+
+        self.first_page = (page == 0)
+
+        if start_idx >= len(all_saves):
+            # this shouldn't happen...
+            self.data_for_opts = []
+            self.last_page = True
+        elif start_idx + LoadMenu.FILES_PER_PAGE < len(all_saves):
+            self.data_for_opts = all_saves[start_idx:start_idx + LoadMenu.FILES_PER_PAGE]
+            self.last_page = False
+        else:
+            self.data_for_opts = all_saves[start_idx:]
+            self.last_page = True
+
+        self.opts = []
+        for d in self.data_for_opts:
+            self.opts.append(d.get_pretty_string(max_length=40))
+
+        if len(all_saves) > LoadMenu.FILES_PER_PAGE:
+            self.opts.append("next page")
+            self.next_page_idx = len(self.opts) - 1
+
+            self.opts.append("prev page")
+            self.prev_page_idx = len(self.opts) - 1
+        else:
+            self.next_page_idx = -1
+            self.prev_page_idx = -1
+
+        self.opts.append("back")
+        self.back_idx = len(self.opts) - 1
+
+        OptionsMenu.__init__(self, MenuManager.LOAD_MENU, "load game", self.opts)
+
+    def get_enabled(self, idx):
+        if idx == self.prev_page_idx and self.first_page:
+            return False
+        elif idx == self.next_page_idx and self.last_page:
+            return False
+        else:
+            return True
+
+    def esc_pressed(self):
+        self.option_activated(self.back_idx)
+
+    def option_activated(self, idx):
+        if idx == self.back_idx:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            sound_effects.play_sound(soundref.menu_back)
+        elif idx == self.next_page_idx:
+            gs.get_instance().menu_manager().set_active_menu(LoadMenu(self.page + 1, reload_data=False))
+            sound_effects.play_sound(soundref.menu_select)
+        elif idx == self.prev_page_idx:
+            gs.get_instance().menu_manager().set_active_menu(LoadMenu(self.page - 1, reload_data=False))
+            sound_effects.play_sound(soundref.menu_select)
+        elif 0 <= idx < len(self.data_for_opts):
+            selected_data = self.data_for_opts[idx]
+            new_game_event = events.NewGameEvent(instant_start=True, from_save_data=selected_data)
+            gs.get_instance().add_event(new_game_event)
+            sound_effects.play_sound(soundref.newgame_start)
 
 
 class PauseMenu(OptionsMenu):
@@ -1069,7 +1160,7 @@ class YouWinMenu(FadingInFlavorMenu):
 class YouWinStats(FadingInFlavorMenu, MenuWithVersionDisplay):
 
     def __init__(self, total_time, turn_count, kill_count):
-        text = ["Time:  {}".format(Utils.ticks_to_time_string(total_time, 60)),
+        text = ["Time:  {}".format(Utils.ticks_to_time_string(total_time, fps=60)),
                 "Turns: {}".format(turn_count),
                 "Kills: {}".format(kill_count)]
 

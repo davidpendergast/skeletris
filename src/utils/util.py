@@ -372,7 +372,7 @@ class Utils:
             yield (x - dist, y - dist)
 
     @staticmethod
-    def ticks_to_time_string(n_ticks, fps):
+    def ticks_to_time_string(n_ticks, fps=60, show_hours_if_zero=False):
         seconds = max(0, n_ticks // fps)
         hours = seconds // 3600
         seconds = seconds % 3600
@@ -387,7 +387,7 @@ class Utils:
 
         res = str(minutes) + res
         if hours == 0:
-            return res
+            return "0:" + res if show_hours_if_zero else res
         elif minutes < 10:
             return str(hours) + ":0" + res
         else:

@@ -1,7 +1,9 @@
-import src.utils.util as util
 import pathlib
 import os
 import traceback
+import datetime
+
+import src.utils.util as util
 
 _all_tags = []
 
@@ -13,36 +15,50 @@ def get_path_to_saves():
     return str(pathlib.Path("save_data/saves/"))
 
 
-def get_all_files(load_if_needed=True):
-    if len(_LOADED_FILES) == 0 and load_if_needed:
-        reload_all_files_from_disk()
+def has_files_on_disk():
+    for _ in all_files_on_disk():
+        return True
+    return False
 
-    return list(_LOADED_FILES)
 
-
-def reload_all_files_from_disk():
-    _LOADED_FILES.clear()
-
+def all_files_on_disk():
     dir_path = get_path_to_saves()
     if not os.path.isdir(dir_path):
         return
 
-    for fpath in os.listdir(dir_path):
+    for filename in os.listdir(dir_path):
+        fpath = str(pathlib.Path(dir_path, filename))
         if os.path.isfile(fpath):
-            try:
-                save_blob = load_file(fpath)
-                if save_blob is not None:
-                    _LOADED_FILES.append(save_blob)
-            except:
-                print("ERROR: failed to read save data from: {}".format(fpath))
-                traceback.print_exc()
+            name, ext = os.path.splitext(fpath)
+            if ext != ".txt":
+                continue  # some random file? whatever
+            else:
+                yield fpath
+
+
+def reload_all_save_data_from_disk():
+    _LOADED_FILES.clear()
+
+    for fpath in all_files_on_disk():
+        try:
+            save_blob = load_file(fpath)
+            if save_blob is not None:
+                _LOADED_FILES.append(save_blob)
+        except:
+            print("ERROR: failed to read save data from: {}".format(fpath))
+            traceback.print_exc()
+
+    _LOADED_FILES.sort(key=lambda data: data.get_last_modified_time_for_sorting(), reverse=True)
+
+
+def get_all_save_data(load_if_needed=True):
+    if len(_LOADED_FILES) == 0 and load_if_needed:
+        reload_all_save_data_from_disk()
+
+    return list(_LOADED_FILES)
 
 
 def load_file(path_to_file):
-    name, ext = os.path.splitext(path_to_file)
-    if ext != "txt":
-        return None  # some random file? whatever
-
     json_blob = util.Utils.load_json_from_path(path_to_file)
 
     ret = SaveDataBlob()
@@ -118,17 +134,59 @@ class SaveDataBlob:
 
     def get(self, tag):
         if SaveDataTags.is_item_tag(tag):
-            raise ValueError("cannot set item-type tag \"{}\" using basic set method".format(tag))
+            raise ValueError("cannot get item-type tag \"{}\" using basic set method".format(tag))
         return self.tags[tag]
 
     def set(self, tag, value):
         if SaveDataTags.is_item_tag(tag):
-            raise ValueError("cannot get item-type tag \"{}\" using basic get method".format(tag))
+            raise ValueError("cannot set item-type tag \"{}\" using basic get method".format(tag))
 
-        if not isinstance(value, int) and not isinstance(value, str):
+        if value is None or isinstance(value, int) or isinstance(value, str):
+            self.tags[tag] = value
+        else:
             raise ValueError("unexpected data type for tag \"{}\": {}".format(tag, value))
 
-        self.tags[tag] = value
+    def get_pretty_string(self, max_length=-1):
+        save_id = self.get(SaveDataTags.SPAWN_ID)
+        zone_name = None
+        if save_id is not None:
+            import src.worldgen.zones as zones
+            zone_id = zones.get_zone_id_for_save_id(save_id)
+            if zone_id is not None:
+                zone_name = zones.get_zone(zone_id).get_name()
+        if zone_name is None:
+            return "UNKNOWN[{}={}]".format(SaveDataTags.SPAWN_ID, save_id)
+
+        elapsed_time = self.get(SaveDataTags.ELAPSED_TIME)
+        if elapsed_time is None:
+            elapsed_time_str = "???"
+        elif elapsed_time >= 216000000:  # you will NOT break my UI
+            elapsed_time_str = "999:59:59"
+        else:
+            elapsed_time_str = util.Utils.ticks_to_time_string(elapsed_time, fps=60)
+
+        save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
+        if save_time is None:
+            save_time_str = "?-?-20??"
+        else:
+            save_time_str = datetime.datetime.fromtimestamp(save_time).strftime("%m-%d-%Y")
+            if len(save_time_str) > 10:  # protect the UI
+                save_time_str = save_time_str[0:7] + "..."
+
+        date_part = " ({}) {}".format(elapsed_time_str, save_time_str)
+
+        if 0 < max_length <= 3:
+            max_length = 4
+
+        if len(zone_name) > 0 and 0 < max_length < len(zone_name) + len(date_part):
+            new_zone_name_length = max(1, max_length - len(date_part) - 3)
+            zone_name = zone_name[0:new_zone_name_length] + "..."
+
+        res = zone_name + date_part
+        if 0 < max_length < len(res):
+            return res[0:max_length - 3] + "..."
+
+        return res
 
     def get_invalid_tags(self):
         """returns: tag_id -> error message"""
@@ -155,6 +213,12 @@ class SaveDataBlob:
             if l1 != l2:
                 res[t2] = "{} has incorrect length: {} (expected {})".format(t2, l2, l1)
 
+        import src.worldgen.zones as zones
+        t = SaveDataTags.SPAWN_ID
+        save_zone = zones.get_zone_id_for_save_id(self.tags[t])
+        if save_zone is None:
+            res[t] = "{} isn't recognized: {}".format(t, self.tags[t])
+
         return res
 
     def add_item(self, item, pos, location):
@@ -163,4 +227,11 @@ class SaveDataBlob:
     def get_all_items_and_positions(self, location):
         """returns: list of (item, (int x, int y))"""
         return []
+
+    def get_last_modified_time_for_sorting(self):
+        res = self.get(SaveDataTags.LAST_MODIFIED_TIME)
+        if res is None or not isinstance(res, int):
+            return 0
+        else:
+            return res
 

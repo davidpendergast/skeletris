@@ -52,6 +52,17 @@ def get_zone(zone_id, or_else="~fail~"):
         return _ALL_ZONES[zone_id]
 
 
+def get_zone_id_for_save_id(save_id):
+    for z_id in _STORYLINE_ZONES:
+        if get_zone(z_id).get_save_id() == save_id:
+            return z_id
+
+    for z_id in all_zone_ids():
+        if get_zone(z_id).get_save_id() == save_id:
+            return z_id
+    return None
+
+
 def is_end_of_game(zone_id):
     return zone_id == _END_OF_GAME_ZONE_ID
 
@@ -1177,6 +1188,9 @@ class CityGateZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_GREEN
+
+    def get_save_id(self):
+        return "post_frog_fight"
 
 
 class VentilationZone(Zone):

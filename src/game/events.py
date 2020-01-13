@@ -215,12 +215,15 @@ class GameExitEvent(Event):
 
 class NewGameEvent(Event):
 
-    def __init__(self, instant_start=True):
-        my_data = tuple([instant_start])
+    def __init__(self, instant_start=True, from_save_data=None):
+        my_data = (instant_start, from_save_data)
         Event.__init__(self, GlobalEventType.NEW_GAME, my_data, description="new game")
 
     def get_instant_start(self):
         return self.get_data()[0]
+
+    def get_save_data(self):
+        return self.get_data()[1]
 
 
 class ActionFinishedEvent(Event):
