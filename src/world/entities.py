@@ -2248,9 +2248,14 @@ class NpcTradeEntity(NpcEntity):
 
 class SaveStation(Entity):
 
-    def __init__(self, grid_pos, already_used=False, color=None):
+    def __init__(self, grid_pos, save_id, already_used=False, color=None):
         cell_size = constants.CELLSIZE
         Entity.__init__(self, grid_pos[0] * cell_size, (grid_pos[1] - 1) * cell_size, cell_size, cell_size)
+
+        if save_id is None:
+            raise ValueError("save_id cannot be None")
+        self._save_id = save_id  # gets baked into the save file
+
         self._color = color if color is not None else colors.WHITE
 
         self.already_used = already_used
@@ -2261,18 +2266,24 @@ class SaveStation(Entity):
         self._anim_tick_count = 0
         self._float_tick_offset = 0
 
-        self._start_delay = 30
+        self._start_delay = 30  # this waits for the first line of dialog to end
 
         self._getting_in_duration = 20
-        self._float_duration = 30  # note that this also waits for dialog to end
+        self._float_duration = 30  # this waits for the last dialog to end
         self._getting_out_duration = 20
 
         self._end_delay = 20
+
+        self._total_delay = sum([self._start_delay, self._getting_in_duration, self._float_duration,
+                                 self._getting_out_duration, self._end_delay])
 
         self._anim_puppet_start_xy = (0, 0)
         self._anim_puppet_uid = None
 
         self._hop_in_dialog_uid = None
+
+    def get_save_id(self):
+        return self._save_id
 
     def get_map_identifier(self):
         return ("S", colors.GREEN)
@@ -2443,7 +2454,7 @@ class SaveStation(Entity):
             print("WARN: this save station was already used, skipping")
             return
 
-        res = gs.get_instance().save_current_game_to_disk()
+        res = gs.get_instance().save_current_game_to_disk(self.get_save_id())
 
         import src.game.dialog as dialog
         if res:
@@ -2507,7 +2518,6 @@ class SaveStation(Entity):
         depth = self.get_depth()
         self._img = self._img.update(new_model=sprite, new_x=x, new_y=y,
                                      new_depth=depth, new_color=self._color)
-
 
 
 class TriggerBox(Entity):

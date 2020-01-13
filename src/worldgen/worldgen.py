@@ -190,7 +190,7 @@ class WorldBlueprint:
         self.boss_exit_spawns = {}    # (x, y) -> zone_id
         self.end_of_game_spawns = []  # list of (x, y)
         self.return_exit_spawns = []  # list of (x, y)
-        self.save_station = None
+        self.save_station = None      # (x, y, save_id)
         self.sensor_doors = []
         self.music_doors = {}         # (x, y) -> music_id
         self.global_floor_alt_art = None
@@ -343,7 +343,8 @@ class WorldBlueprint:
                 w.add(enemy, gridcell=spawn_pos)
 
         if self.save_station is not None:
-            w.add(entities.SaveStation(self.save_station, color=self.geo_color))
+            pos = (self.save_station[0], self.save_station[1])
+            w.add(entities.SaveStation(pos, self.save_station[2], color=self.geo_color))
 
         for chest_pos in self.chest_spawns:
             w.add(entities.ChestEntity(chest_pos[0], chest_pos[1]))

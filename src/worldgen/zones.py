@@ -270,7 +270,7 @@ class ZoneLoader:
                         bp.player_spawn = (x, y)
                     elif color == ZoneLoader.SAVE_STATION:
                         bp.set(x, y, World.FLOOR)
-                        bp.save_station = (x, y)
+                        bp.save_station = (x, y, get_zone(zone_id).get_save_id())
                     else:
                         mock_color = (color[0], color[0], color[0])
                         if mock_color in ZoneLoader.FLOOR_ID_LOOKUP:
@@ -408,6 +408,9 @@ class Zone:
     def get_max_n_trades(self):
         """Max number of trade npcs that can randomly spawn here"""
         return self.max_n_trades
+
+    def get_save_id(self):
+        return self.get_id()
 
 
 class ZoneBuilder:
@@ -1227,6 +1230,9 @@ class VentilationZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_BLUE
+
+    def get_save_id(self):
+        return "pre_robo_fight"
 
 
 class RoboLairZone(Zone):

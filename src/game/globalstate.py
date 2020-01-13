@@ -119,7 +119,7 @@ class GlobalState:
     def save_settings_to_disk(self):
         self._settings.save_to_disk()
 
-    def save_current_game_to_disk(self):
+    def save_current_game_to_disk(self, save_id):
         print("INFO: saving game...")
         return True
 
