@@ -396,7 +396,6 @@ class Utils:
     @staticmethod
     def read_safely(json_blob, key, default, mapper=lambda x: x):
         if key not in json_blob or json_blob[key] is None:
-            print("returning default {} for key {}".format(default, key))
             return default
         else:
             try:

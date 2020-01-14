@@ -58,6 +58,10 @@ class ItemFactory:
 
         return None
 
+    @staticmethod
+    def from_json(json_blob):
+        return None
+
 
 class WeaponItemFactory:
 

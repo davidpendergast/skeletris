@@ -151,22 +151,26 @@ def run():
                 running = False
                 continue
 
+            elif global_event.get_type() == events.GlobalEventType.QUIT_TO_START_MENU:
+                print("INFO: quitting game")
+                RenderEngine.get_instance().clear_all_sprites()
+
+                gs.get_instance().save_settings_to_disk()
+                gs.get_instance().save_current_game_to_disk_softly()
+
+                gs.create_new(menus.StartMenu())
+                world_view = None
+
             elif global_event.get_type() == events.GlobalEventType.NEW_GAME:
                 print("INFO: starting fresh game")
                 RenderEngine.get_instance().clear_all_sprites()
-
-                if global_event.get_instant_start():
-                    menu = menus.InGameUiState()
-                else:
-                    menu = menus.StartMenu()
 
                 if debug.reset_tutorials_each_game():
                     gs.get_instance().settings().clear_finished_tutorials()
 
                 gs.get_instance().save_settings_to_disk()
-                gs.get_instance().set_world(None)  # just to make it clear...
 
-                gs.create_new(menu)
+                gs.create_new(menus.InGameUiState())
                 world_view = None
 
             elif global_event.get_type() == events.GlobalEventType.NEW_ZONE:

@@ -67,6 +67,7 @@ class EventQueue:
 class GlobalEventType(Enum):
     # these are 'global' events that are processed all the time, even when the game is paused
     GAME_EXIT = "GAME_EXIT"  # quitting the whole application
+    QUIT_TO_START_MENU = "QUIT_TO_START_MENU"
     NEW_GAME = "NEW_GAME"
     NEW_ZONE = "NEW_ZONE"
 
@@ -213,17 +214,19 @@ class GameExitEvent(Event):
         Event.__init__(self, GlobalEventType.GAME_EXIT, None, description="exit game")
 
 
+class QuitToStartMenuEvent(Event):
+
+    def __init__(self):
+        Event.__init__(self, GlobalEventType.QUIT_TO_START_MENU, (), description="quit to start")
+
+
 class NewGameEvent(Event):
 
-    def __init__(self, instant_start=True, from_save_data=None):
-        my_data = (instant_start, from_save_data)
-        Event.__init__(self, GlobalEventType.NEW_GAME, my_data, description="new game")
-
-    def get_instant_start(self):
-        return self.get_data()[0]
+    def __init__(self, from_save_data=None):
+        Event.__init__(self, GlobalEventType.NEW_GAME, from_save_data, description="new game")
 
     def get_save_data(self):
-        return self.get_data()[1]
+        return self.get_data()
 
 
 class ActionFinishedEvent(Event):

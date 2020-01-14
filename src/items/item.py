@@ -278,6 +278,9 @@ class Item(StatProvider):
     def get_entity_sprite(self):
         return spriteref.Items.misc_small
 
+    def to_json(self):
+        return None
+
 
 class SpriteItem(Item):
 

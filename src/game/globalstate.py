@@ -7,6 +7,7 @@ from src.utils.util import Utils
 import src.game.soundref as soundref
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
+import src.game.savedata as savedata
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -32,6 +33,8 @@ class RunStatisticTypes:
     KILL_COUNT = "KILL_COUNT"
     TURN_COUNT = "TURN_COUNT"
     ELAPSED_TICKS = "ELAPSED_TIPS"
+    CHECKPOINT_COUNT = "CHECKPOINTS"
+    DEATH_COUNT = "DEATH_COUNT"
 
     # used to skip tutorials
     OPENED_INVENTORY_COUNT = "OPENED_INV_COUNT"
@@ -42,7 +45,7 @@ class RunStatisticTypes:
 
 class GlobalState:
 
-    def __init__(self, initial_zone_id, menu_manager, dialog_manager):
+    def __init__(self, initial_zone_id, menu_manager, dialog_manager, from_save_data=None):
         self.tick_counter = 0
         self.anim_tick = 0
 
@@ -92,6 +95,7 @@ class GlobalState:
 
         # save data stuff
         self._run_statistics = {}
+        self._save_data = from_save_data
 
     def increment_tick_counts(self):
         self.tick_counter += 1
@@ -124,9 +128,47 @@ class GlobalState:
     def save_settings_to_disk(self):
         self._settings.save_to_disk()
 
+    def _update_save_data(self, save_id=None):
+        if self._save_data is None:
+            if save_id is None:
+                return  # can't do a soft update with no save_id
+            else:
+                self._save_data = savedata.make_brand_new_blob()
+
+        self._save_data.set(savedata.SaveDataTags.KILL_COUNT, self.get_run_statistic(RunStatisticTypes.KILL_COUNT))
+        self._save_data.set(savedata.SaveDataTags.ELAPSED_TIME, self.get_run_statistic(RunStatisticTypes.ELAPSED_TICKS))
+        self._save_data.set(savedata.SaveDataTags.DEATH_COUNT, self.get_run_statistic(RunStatisticTypes.DEATH_COUNT))
+        self._save_data.set(savedata.SaveDataTags.CHECKPOINT_COUNT, self.get_run_statistic(RunStatisticTypes.CHECKPOINT_COUNT))
+
+        if save_id is not None:
+            self._save_data.set(savedata.SaveDataTags.SPAWN_ID, save_id)
+            # TODO saving items
+
     def save_current_game_to_disk(self, save_id):
-        print("INFO: saving game...")
-        return True
+        if save_id is None:
+            print("ERROR: can't save game with no save_id")
+            return False
+
+        self._update_save_data(save_id=save_id)
+
+        if self._save_data is not None:
+            return savedata.write_to_disk(self._save_data)
+
+        print("ERROR: save_data is None?")
+        return False
+
+    def save_current_game_to_disk_softly(self):
+        """
+            Updates things like elapsed time, kill count, death count, etc. if
+            there's existing save data for this run. Note that this does NOT
+            update the items / save_location_id, or create a new save file if
+            one doesn't already exist, (hence "softly").
+        """
+        if self._save_data is None:
+            return False
+        else:
+            self._update_save_data(save_id=None)
+            return savedata.write_to_disk(self._save_data)
 
     def event_queue(self):
         return self._event_queue
@@ -480,7 +522,7 @@ class GlobalState:
             self._fade_overlay_sequence.pop(-1)
 
 
-def create_new(menu):
+def create_new(menu, from_save_data=None):
     import src.ui.menus as menus
     menu_manager = menus.MenuManager(menu)
 
@@ -488,7 +530,7 @@ def create_new(menu):
     dialog_manager = dialog.DialogManager()
 
     import src.worldgen.zones as zones
-    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager)
+    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, from_save_data=from_save_data)
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()

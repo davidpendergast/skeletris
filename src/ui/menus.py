@@ -494,7 +494,7 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
 
     def option_activated(self, idx):
         if idx == self._start_idx:
-            gs.get_instance().add_event(events.NewGameEvent(instant_start=True))
+            gs.get_instance().add_event(events.NewGameEvent())
             sound_effects.play_sound(soundref.newgame_start)
         elif idx == self._exit_idx:
             gs.get_instance().add_event(events.GameExitEvent())
@@ -589,7 +589,7 @@ class LoadMenu(OptionsMenu):
             sound_effects.play_sound(soundref.menu_select)
         elif 0 <= idx < len(self.data_for_opts):
             selected_data = self.data_for_opts[idx]
-            new_game_event = events.NewGameEvent(instant_start=True, from_save_data=selected_data)
+            new_game_event = events.NewGameEvent(from_save_data=selected_data)
             gs.get_instance().add_event(new_game_event)
             sound_effects.play_sound(soundref.newgame_start)
 
@@ -1036,10 +1036,11 @@ class DeathOptionMenu(OptionsMenu):
 
     def option_activated(self, idx):
         if idx == DeathOptionMenu.EXIT_OPT:
-            gs.get_instance().add_event(events.NewGameEvent(instant_start=False))
+            gs.get_instance().add_event(events.QuitToStartMenuEvent())
             sound_effects.play_sound(soundref.game_quit)
         elif idx == DeathOptionMenu.RETRY:
-            gs.get_instance().add_event(events.NewGameEvent(instant_start=True))
+            # TODO continue from same save file
+            gs.get_instance().add_event(events.NewGameEvent())
             sound_effects.play_sound(soundref.newgame_start)
 
 
