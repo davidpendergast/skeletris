@@ -208,7 +208,7 @@ def run():
 
                 elif zone_event.get_type() == events.EventType.GAME_WIN:
                     print("INFO: won game!")
-                    tick_count = gs.get_instance().tick_counter
+                    tick_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.ELAPSED_TICKS)
                     kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
                     turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
                     win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)

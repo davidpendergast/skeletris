@@ -31,6 +31,7 @@ def set_instance(new_instance):
 class RunStatisticTypes:
     KILL_COUNT = "KILL_COUNT"
     TURN_COUNT = "TURN_COUNT"
+    ELAPSED_TICKS = "ELAPSED_TIPS"
 
     # used to skip tutorials
     OPENED_INVENTORY_COUNT = "OPENED_INV_COUNT"
@@ -67,8 +68,6 @@ class GlobalState:
 
         self._story_vars = {}
 
-        self._run_statistics = {}
-
         self._menu_manager = menu_manager
         self._dialog_manager = dialog_manager
 
@@ -91,10 +90,16 @@ class GlobalState:
 
         self._targetable_coords_in_world = {}  # (x, y) -> color
 
+        # save data stuff
+        self._run_statistics = {}
+
     def increment_tick_counts(self):
         self.tick_counter += 1
         if self.tick_counter % self.ticks_per_anim_tick() == 0:
             self.anim_tick += 1
+
+        if not self.menu_manager().pause_world_updates():
+            self.inc_run_statistic(RunStatisticTypes.ELAPSED_TICKS)
 
     def set_world(self, world):
         self._active_world = world
