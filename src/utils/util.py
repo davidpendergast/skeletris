@@ -425,8 +425,8 @@ class Utils:
             Lists and tuples are considered identical. The only restriction is that keys of maps must
             be comparable, and there can't be loops (like a map containing itself).
 
-            param strict: if False, unrecognized types will be converted to strings and included in the checksum.
-                          if True, unrecognized types will cause a ValueError to be thrown.
+            param strict: if False, illegal types will be converted to strings and included in the checksum.
+                          if True, illegal types will cause a ValueError to be thrown.
         """
         if blob is None:
             return 11 % m

@@ -317,6 +317,9 @@ class SaveDataBlob:
         self.tags[tag] = value
 
     def get_pretty_string(self, max_length=-1):
+        if 0 < max_length <= 3:
+            max_length = 4
+
         save_id = self.get(SaveDataTags.SPAWN_ID)
         zone_name = None
         if save_id is not None:
@@ -335,24 +338,30 @@ class SaveDataBlob:
         else:
             elapsed_time_str = util.Utils.ticks_to_time_string(elapsed_time, fps=60)
 
-        save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
-        if save_time is None:
-            save_time_str = "?-?-20??"
-        else:
-            save_time_str = datetime.datetime.fromtimestamp(save_time).strftime("%m-%d-%Y")
-            if len(save_time_str) > 10:  # protect the UI
-                save_time_str = save_time_str[0:7] + "..."
+        time_part = " ({})".format(elapsed_time_str)
 
-        date_part = " ({}) {}".format(elapsed_time_str, save_time_str)
+        #save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
+        #if save_time is None:
+        #    save_time_str = "?-?-20??"
+        #else:
+        #    save_time_str = datetime.datetime.fromtimestamp(save_time).strftime("%m-%d-%Y")
+        #    if len(save_time_str) > 10:  # protect the UI
+        #        save_time_str = save_time_str[0:7] + "..."
+        #
+        #date_part = " ({}) {}".format(elapsed_time_str, save_time_str)
+        #
 
-        if 0 < max_length <= 3:
-            max_length = 4
+        version_part = ""
+        vers = self.get(SaveDataTags.VERSION_NUM)
+        if vers is not None and (vers[3] == "DEV" or vers[3] == "MOD"):
+            version_part = " ({})".format(vers[3])
 
-        if len(zone_name) > 0 and 0 < max_length < len(zone_name) + len(date_part):
-            new_zone_name_length = max(1, max_length - len(date_part) - 3)
+        if len(zone_name) > 0 and 0 < max_length < len(zone_name) + len(time_part) + len(version_part):
+            new_zone_name_length = max(1, max_length - len(time_part) - len(version_part) - 3)
             zone_name = zone_name[0:new_zone_name_length] + "..."
 
-        res = zone_name + date_part
+        res = zone_name + time_part + version_part
+
         if 0 < max_length < len(res):
             return res[0:max_length - 3] + "..."
 

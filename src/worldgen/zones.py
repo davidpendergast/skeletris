@@ -131,6 +131,9 @@ def init_zones():
     caves_song = music.Songs.get_basic_caves_song()
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=caves_song))
     story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=caves_song))
+
+    story_zones.append(get_zone(AbandonedMineZone.ZONE_ID))
+
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=caves_song))
     story_zones.append(get_zone(TombTownZone.ZONE_ID))
 
@@ -2050,6 +2053,34 @@ class TombTownZone(Zone):
 
     def is_boss_zone(self):
         return True
+
+
+class AbandonedMineZone(Zone):
+
+    ZONE_ID = "abandoned_mine"
+
+    def __init__(self):
+        Zone.__init__(self, "Abandoned Mine", 2, filename="abandoned_mine.png")
+
+        self._shovel_id = (255, 220, 115)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        if self._shovel_id in unknowns:
+            for pos in unknowns[self._shovel_id]:
+                sign = decoration.DecorationFactory.get_decoration(self.get_level(), 
+                                                                   dec_type=decoration.DecorationTypes.RAKE)  # TODO draw a shovel
+                w.add(sign, gridcell=(pos[0], pos[1] - 1))
+
+        return w
+
+    def get_save_id(self):
+        return "pre_tombtown"
+
+    def get_music_id(self):
+        return music.Songs.get_basic_caves_song()
 
 
 class DoorTestZone(Zone):
