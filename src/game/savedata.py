@@ -90,12 +90,19 @@ def get_all_save_data(load_if_needed=True):
     return list(_LOADED_FILES)
 
 
+_MOCK_CHECKSUM = 3141529   # security feature
+_CHECKSUM_MOD = 123342261  # a big prime
+
+
 def load_file(path_to_file):
     json_blob = util.Utils.load_json_from_path(path_to_file)
 
     ret = SaveDataBlob(filepath=path_to_file)
 
-    ret.set(SaveDataTags.GAME_UID, util.Utils.read_string(json_blob, SaveDataTags.GAME_UID, None))
+    claimed_checksum = util.Utils.read_int(json_blob, SaveDataTags.CHECKSUM, -1)
+
+    json_blob[SaveDataTags.CHECKSUM] = _MOCK_CHECKSUM
+    actual_checksum = util.Utils.checksum(json_blob, m=_CHECKSUM_MOD)
 
     if SaveDataTags.VERSION_NUM in json_blob:
         try:
@@ -104,24 +111,32 @@ def load_file(path_to_file):
             minor = int(vers_list[1])
             bugfix = int(vers_list[2])
             desc = str(vers_list[3])
-            ret.set(SaveDataTags.VERSION_NUM, (major, minor, bugfix, desc))
+
+            if actual_checksum != claimed_checksum:
+                print("WARN: checksum of {} is incorrect, marking as modified".format(path_to_file))
+                ret.set(SaveDataTags.VERSION_NUM, (major, minor, bugfix, "MOD"))
+            else:
+                ret.set(SaveDataTags.VERSION_NUM, (major, minor, bugfix, desc))
+
         except ValueError:
             traceback.print_exc()
             ret.set(SaveDataTags.VERSION_NUM, None)
     else:
         ret.set(SaveDataTags.VERSION_NUM, None)
 
+    ret.set(SaveDataTags.GAME_UID, util.Utils.read_string(json_blob, SaveDataTags.GAME_UID, None))
     ret.set(SaveDataTags.LAST_MODIFIED_TIME, util.Utils.read_int(json_blob, SaveDataTags.LAST_MODIFIED_TIME, None))
     ret.set(SaveDataTags.ELAPSED_TIME, util.Utils.read_int(json_blob, SaveDataTags.ELAPSED_TIME, None))
     ret.set(SaveDataTags.KILL_COUNT, util.Utils.read_int(json_blob, SaveDataTags.KILL_COUNT, None))
     ret.set(SaveDataTags.DEATH_COUNT, util.Utils.read_int(json_blob, SaveDataTags.DEATH_COUNT, None))
     ret.set(SaveDataTags.CHECKPOINT_COUNT, util.Utils.read_int(json_blob, SaveDataTags.CHECKPOINT_COUNT, None))
+    ret.set(SaveDataTags.CHECKSUM, -1)  # only ever set at save time
 
     ret.set(SaveDataTags.SPAWN_ID, util.Utils.read_string(json_blob, SaveDataTags.SPAWN_ID, None))
 
     # TODO loading items
 
-    invalid_tags = ret.get_invalid_tags()
+    invalid_tags = ret._get_invalid_tags()
     if len(invalid_tags) > 0:
         pretty_string = ", ".join([invalid_tags[t] for t in invalid_tags])
         raise ValueError("Invalid tags in {}: {}".format(path_to_file, pretty_string))
@@ -143,7 +158,9 @@ def write_to_disk(save_blob):
     cur_time = int(datetime.datetime.now().timestamp())
     save_blob.set(SaveDataTags.LAST_MODIFIED_TIME, cur_time)
 
-    invalid_tags = save_blob.get_invalid_tags()
+    save_blob.set(SaveDataTags.CHECKSUM, -1)
+
+    invalid_tags = save_blob._get_invalid_tags()
     if len(invalid_tags) > 0:
         pretty_string = ", ".join([invalid_tags[t] for t in invalid_tags])
         print("ERROR: invalid tags, not saving: {}".format(pretty_string))
@@ -184,6 +201,11 @@ def write_to_disk(save_blob):
     if save_blob.filepath is None:
         save_blob.filepath = make_new_filepath()
 
+    json_blob[SaveDataTags.CHECKSUM] = _MOCK_CHECKSUM
+    real_checksum = util.Utils.checksum(json_blob, m=_CHECKSUM_MOD)
+
+    json_blob[SaveDataTags.CHECKSUM] = real_checksum
+
     print("INFO: saving game data to {}".format(save_blob.filepath))
 
     try:
@@ -201,7 +223,7 @@ class SaveDataTags:
     # string: the unique identifier for the run, used to allow / prohibit overwrites
     GAME_UID = util.Utils.add_to_list_and_return("game_uid", _all_tags)
 
-    # (int, int, int, string): version the file was saved in, used for bridging
+    # [int, int, int, string]: version the file was saved in, used for bridging
     VERSION_NUM = util.Utils.add_to_list_and_return("version_num", _all_tags)
 
     # integer: time (in seconds since epoch) that this file was last saved
@@ -228,6 +250,9 @@ class SaveDataTags:
     # string: the save location's identifier
     SPAWN_ID = util.Utils.add_to_list_and_return("save_location_id", _all_tags)
 
+    # integer: checksum of the (other) contents of the file
+    CHECKSUM = util.Utils.add_to_list_and_return("checksum", _all_tags)
+
     @staticmethod
     def is_item_tag(tag):
         return tag in (SaveDataTags.INVENTORY_ITEMS, SaveDataTags.INVENTORY_ITEM_POSITIONS,
@@ -236,7 +261,7 @@ class SaveDataTags:
     @staticmethod
     def is_integer_tag(tag):
         return tag in (SaveDataTags.LAST_MODIFIED_TIME, SaveDataTags.ELAPSED_TIME, SaveDataTags.KILL_COUNT,
-                       SaveDataTags.DEATH_COUNT, SaveDataTags.CHECKPOINT_COUNT)
+                       SaveDataTags.DEATH_COUNT, SaveDataTags.CHECKPOINT_COUNT, SaveDataTags.CHECKSUM)
 
     @staticmethod
     def is_string_tag(tag):
@@ -333,7 +358,7 @@ class SaveDataBlob:
 
         return res
 
-    def get_invalid_tags(self):
+    def _get_invalid_tags(self):
         """returns: tag_id -> error message"""
         res = {}
         for t in _all_tags:

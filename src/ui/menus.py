@@ -594,7 +594,7 @@ class LoadMenu(OptionsMenu):
             sound_effects.play_sound(soundref.newgame_start)
 
 
-class PauseMenu(OptionsMenu):
+class PauseMenu(OptionsMenu, MenuWithVersionDisplay):
 
     CONTINUE_IDX = 0
     CONTROLS_IDX = 1
@@ -603,6 +603,8 @@ class PauseMenu(OptionsMenu):
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["resume", "controls", "sound", "quit"])
+
+        MenuWithVersionDisplay.__init__(self)
 
     def option_activated(self, idx):
         if idx == PauseMenu.EXIT_IDX:
@@ -620,6 +622,27 @@ class PauseMenu(OptionsMenu):
 
     def esc_pressed(self):
         self.option_activated(PauseMenu.CONTINUE_IDX)
+
+    def get_song(self):
+        return music.Songs.CONTINUE_CURRENT
+
+    def build_images(self):
+        super().build_images()
+        MenuWithVersionDisplay.build_version_images(self)
+
+    def layout_rects(self):
+        super().layout_rects()
+        MenuWithVersionDisplay.layout_version_rects(self)
+
+    def update_imgs(self):
+        super().update_imgs()
+        MenuWithVersionDisplay.update_version_images(self)
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        for bun in MenuWithVersionDisplay.all_bundles(self):
+            yield bun
 
 
 class ReallyQuitMenu(OptionsMenu):

@@ -410,4 +410,54 @@ class Utils:
         patch = sys.version_info[2]
         return "{}.{}.{}".format(major, minor, patch)
 
+    @staticmethod
+    def string_checksum(the_string, m=982451653):
+        res = 0
+        for c in the_string:
+            res += ord(c)
+            res = (res * 31) % m
+        return res
 
+    @staticmethod
+    def checksum(blob, m=982451653, strict=True):
+        """
+            Calculates a checksum of any composition of dicts, lists, tuples, bools, strings, and ints.
+            Lists and tuples are considered identical. The only restriction is that keys of maps must
+            be comparable, and there can't be loops (like a map containing itself).
+
+            param strict: if False, unrecognized types will be converted to strings and included in the checksum.
+                          if True, unrecognized types will cause a ValueError to be thrown.
+        """
+        if blob is None:
+            return 11 % m
+        elif isinstance(blob, bool):
+            return (31 if blob else 1279) % m
+        elif isinstance(blob, int):
+            return blob % m
+        elif isinstance(blob, str):
+            return Utils.string_checksum(blob, m=m)
+        elif isinstance(blob, (list, tuple)):
+            res = 0
+            for c in blob:
+                res += Utils.checksum(c)
+                res = (res * 37) % m
+            return res
+        elif isinstance(blob, dict):
+            keys = [k for k in blob]
+            keys.sort()
+
+            res = 0
+            for key in keys:
+                k_checksum = Utils.checksum(key, m=m)
+                val_checksum = Utils.checksum(blob[key])
+                res += k_checksum
+                res = (res * 41) % m
+                res += val_checksum
+                res = (res * 53) % m
+
+            return res
+        else:
+            if strict:
+                raise ValueError("blob has illegal type: {}".format(blob))
+            else:
+                return Utils.string_checksum(str(blob), m=m)
