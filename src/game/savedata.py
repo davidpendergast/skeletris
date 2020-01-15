@@ -340,6 +340,8 @@ class SaveDataBlob:
 
         time_part = " ({})".format(elapsed_time_str)
 
+        # TODO - the datestamp is too long for this text, but it would be
+        # TODO - nice if it was visible somewhere...
         #save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
         #if save_time is None:
         #    save_time_str = "?-?-20??"

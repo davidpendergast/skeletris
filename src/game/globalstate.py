@@ -45,11 +45,10 @@ class RunStatisticTypes:
 
 class GlobalState:
 
-    def __init__(self, initial_zone_id, menu_manager, dialog_manager, from_save_data=None):
+    def __init__(self, menu_manager, dialog_manager, from_save_data=None):
         self.tick_counter = 0
         self.anim_tick = 0
 
-        self.initial_zone_id = initial_zone_id
         self.current_zone = None
 
         self._settings = settings.Settings()
@@ -96,6 +95,7 @@ class GlobalState:
         # save data stuff
         self._run_statistics = {}
         self._save_data = from_save_data
+        self._pull_state_from_save_data(from_save_data)
 
     def increment_tick_counts(self):
         self.tick_counter += 1
@@ -144,6 +144,17 @@ class GlobalState:
             self._save_data.set(savedata.SaveDataTags.SPAWN_ID, save_id)
             # TODO saving items
 
+    def _pull_state_from_save_data(self, save_data):
+        """Note: this should only be called once per run, by GlobalState's constructor"""
+        if save_data is None:
+            return
+        self.set_run_statistic(RunStatisticTypes.KILL_COUNT, save_data.get(savedata.SaveDataTags.KILL_COUNT))
+        self.set_run_statistic(RunStatisticTypes.ELAPSED_TICKS, save_data.get(savedata.SaveDataTags.ELAPSED_TIME))
+        self.set_run_statistic(RunStatisticTypes.DEATH_COUNT, save_data.get(savedata.SaveDataTags.DEATH_COUNT))
+        self.set_run_statistic(RunStatisticTypes.CHECKPOINT_COUNT, save_data.get(savedata.SaveDataTags.CHECKPOINT_COUNT))
+
+        # TODO grab_items
+
     def save_current_game_to_disk(self, save_id):
         if save_id is None:
             print("ERROR: can't save game with no save_id")
@@ -156,6 +167,12 @@ class GlobalState:
 
         print("ERROR: save_data is None?")
         return False
+
+    def get_last_save_id(self):
+        if self._save_data is not None:
+            return self._save_data.get(savedata.SaveDataTags.SPAWN_ID)
+        else:
+            return None
 
     def save_current_game_to_disk_softly(self):
         """
@@ -232,7 +249,11 @@ class GlobalState:
         return self.get_run_statistic(RunStatisticTypes.KILL_COUNT) == 0
 
     def set_run_statistic(self, run_stat_type, val):
-        self._run_statistics[run_stat_type] = val
+        if val is None:
+            print("WARN: tried to set run statistic {} to None, setting to 0 instead".format(run_stat_type))
+            self._run_statistics[run_stat_type] = 0
+        else:
+            self._run_statistics[run_stat_type] = val
 
     def inc_run_statistic(self, run_stat_type, val=1):
         cur_value = self.get_run_statistic(run_stat_type)
@@ -529,8 +550,7 @@ def create_new(menu, from_save_data=None):
     import src.game.dialog as dialog
     dialog_manager = dialog.DialogManager()
 
-    import src.worldgen.zones as zones
-    new_instance = GlobalState(zones.first_zone_id(), menu_manager, dialog_manager, from_save_data=from_save_data)
+    new_instance = GlobalState(menu_manager, dialog_manager, from_save_data=from_save_data)
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()

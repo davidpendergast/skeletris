@@ -147,6 +147,8 @@ def run():
         gs.get_instance().global_event_queue().flip()
         for global_event in gs.get_instance().global_event_queue().all_events():
             if global_event.get_type() == events.GlobalEventType.GAME_EXIT:
+                gs.get_instance().save_settings_to_disk()
+                gs.get_instance().save_current_game_to_disk_softly()
                 print("INFO: quitting skeletris")
                 running = False
                 continue
@@ -168,9 +170,7 @@ def run():
                 if debug.reset_tutorials_each_game():
                     gs.get_instance().settings().clear_finished_tutorials()
 
-                gs.get_instance().save_settings_to_disk()
-
-                gs.create_new(menus.InGameUiState())
+                gs.create_new(menus.InGameUiState(), from_save_data=global_event.get_save_data())
                 world_view = None
 
             elif global_event.get_type() == events.GlobalEventType.NEW_ZONE:
@@ -295,7 +295,12 @@ def run():
             # building the initial world for the game
             RenderEngine.get_instance().clear_all_sprites()
 
-            world = zones.build_world(gs.get_instance().initial_zone_id)
+            save_id = gs.get_instance().get_last_save_id()
+            if save_id is not None:
+                world = zones.build_world_for_save_id(save_id)
+            else:
+                zone_id = zones.first_zone_id()
+                world = zones.build_world(zone_id)
 
             gs.get_instance().set_world(world)
             world_view = WorldView(world)

@@ -306,7 +306,16 @@ class ZoneLoader:
             raise e
 
 
-def build_world(zone_id, spawn_at_door_with_zone_id=None):
+def build_world_for_save_id(save_id):
+    zone_id = get_zone_id_for_save_id(save_id)
+    if zone_id is None:
+        print("ERROR: unrecognized save_id, starting at very beginning: \"{}\"".format(save_id))
+        return build_world(first_zone_id())
+    else:
+        return build_world(zone_id, spawn_at_save_point=save_id)
+
+
+def build_world(zone_id, spawn_at_save_point=None, spawn_at_door_with_zone_id=None):
     if zone_id not in _ALL_ZONES:
         raise ValueError("unknown zone id: {}".format(zone_id))
 
@@ -332,18 +341,31 @@ def build_world(zone_id, spawn_at_door_with_zone_id=None):
 
     p = w.get_player()
     if p is not None:
-        spawn_at_entity = None
+        special_spawn_pos = None
 
-        if spawn_at_door_with_zone_id is not None:
+        if spawn_at_save_point is not None:
+            for e in w.all_entities(onscreen=False):
+                if e.is_save_station() and e.get_save_id() == spawn_at_save_point:
+                    # TODO - animation for leaving the machine?
+                    e.already_used = True
+                    special_spawn_pos = w.to_grid_coords(*e.center())
+
+        elif spawn_at_door_with_zone_id is not None:
             for e in w.all_entities(onscreen=False):
                 if e.is_exit() and e.get_zone() == spawn_at_door_with_zone_id:
-                    e.set_open(True)
-                    spawn_at_entity = e
+                    special_spawn_pos = w.to_grid_coords(*e.center())
 
-        if spawn_at_entity is not None:
-            grid_xy = w.to_grid_coords(*spawn_at_entity.center())
-            size = w.cellsize()
-            p.set_center((grid_xy[0] + 0.5) * size, (grid_xy[1] + 0.5) * size)
+        if special_spawn_pos is not None:
+            if w.is_solid(*special_spawn_pos):
+                special_spawn_pos = (special_spawn_pos[0], special_spawn_pos[1] + 1)
+
+                if not w.is_solid(*special_spawn_pos):
+                    spawn_xy = w.cell_center(*special_spawn_pos)
+                    p.set_center(*spawn_xy)
+                else:
+                    print("ERROR: special spawn positions ({}, {}) and ({}, {}) were blocked!".format(
+                        special_spawn_pos[0], special_spawn_pos[1] - 1, special_spawn_pos[0], special_spawn_pos[1]
+                    ))
 
         grid_xy = w.to_grid_coords(*p.center())
         w.set_hidden(*grid_xy, False, and_fill_adj_floors=True)

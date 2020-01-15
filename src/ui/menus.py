@@ -794,6 +794,7 @@ class SoundSettingsMenu(OptionsMenu):
                 gs.get_instance().menu_manager().set_active_menu(StartMenu())
             else:
                 gs.get_instance().menu_manager().set_active_menu(PauseMenu())
+            gs.get_instance().save_settings_to_disk()
             sound_effects.play_sound(soundref.menu_back)
 
         if rebuild:
@@ -849,6 +850,7 @@ class ControlsMenu(OptionsMenu):
             else:
                 gs.get_instance().menu_manager().set_active_menu(PauseMenu())
             sound_effects.play_sound(soundref.menu_back)
+            gs.get_instance().save_settings_to_disk()
         else:
             opt = ControlsMenu.OPTS[idx]
             gs.get_instance().menu_manager().set_active_menu(KeybindingEditMenu(opt[1], opt[0], lambda: ControlsMenu(self.prev_id)))

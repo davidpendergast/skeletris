@@ -245,6 +245,9 @@ class Entity(Updateable):
     def interact(self, world):
         pass
 
+    def is_save_station(self):
+        return False
+
     def can_trade(self):
         return False
 
@@ -2284,6 +2287,9 @@ class SaveStation(Entity):
 
     def get_save_id(self):
         return self._save_id
+
+    def is_save_station(self):
+        return True
 
     def get_map_identifier(self):
         return ("S", colors.GREEN)
