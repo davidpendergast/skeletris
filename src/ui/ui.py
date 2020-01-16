@@ -1557,8 +1557,9 @@ class TextImage:
 
         chars = [c for c in self.text]
 
-        for c in chars:
-            if c == " " or c == TextImage.INVISIBLE_CHAR:
+        for i in range(0, len(chars)):
+            c = chars[i]
+            if (c == " " or c == TextImage.INVISIBLE_CHAR) and (i != 0 and i != len(chars)-1):
                 xpos += (self.x_kerning + a_sprite.width()) * self.scale
             elif c == "\n":
                 xpos = self.x_leading_kerning * self.scale

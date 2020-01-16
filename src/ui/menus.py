@@ -192,8 +192,8 @@ class OptionsMenu(Menu):
     def __init__(self, menu_id, title, options, title_size=2):
         """
         title: text or sprite
-        options: list of strings
         title_size: scale of title text or sprite
+        options: list of strings, or tuples of strings
         """
         Menu.__init__(self, menu_id)
 
@@ -205,16 +205,32 @@ class OptionsMenu(Menu):
             self.title_text = None
 
         self.title_size = title_size
-        self.options_text = options
+
+        self.options_text = []
+        for opt in options:
+            if isinstance(opt, str):
+                self.options_text.append((opt,))
+            elif isinstance(opt, (tuple, list)):
+                self.options_text.append(tuple(opt))
+            else:
+                raise ValueError("illegal option type: {}".format(opt))
 
         self.spacing = 4
         self.title_spacing = self.spacing * 3
 
         self._title_img = None
         self._title_rect = None    # tuple(x, y, w, h)
-        self._option_rects = None  # list of tuple(x, y, w, h)
-        self._option_imgs = None   # list of ImgBundle
-        self._selection = 0
+
+        self._option_rects = {}  # (int, int) -> tuple(x, y, w, h)
+        self._option_imgs = {}   # (int, int) -> ImgBundle
+
+        for r in range(0, self.get_num_option_rows()):
+            for c in range(0, self.get_row_size(r)):
+                self._option_rects[(r, c)] = None
+                self._option_imgs[(r, c)] = None
+
+        self._selection = (0, 0)  # row, column
+        self._hidden_c = 0  # col
 
         self._first_frame_active = True
 
@@ -240,10 +256,22 @@ class OptionsMenu(Menu):
             return colors.DARK_GRAY
 
     def get_option_text(self, idx):
-        return self.options_text[idx]
+        if self.has_option_at(idx):
+            return self.options_text[idx[0]][idx[1]]
+        else:
+            return None
 
-    def get_num_options(self):
+    def has_option_at(self, idx):
+        if 0 <= idx[0] < self.get_num_option_rows():
+            return 0 <= idx[1] < self.get_row_size(idx[0])
+        else:
+            return False
+
+    def get_num_option_rows(self):
         return len(self.options_text)
+
+    def get_row_size(self, r):
+        return len(self.options_text[r])
 
     def build_images(self):
         self.build_title_img()
@@ -260,26 +288,28 @@ class OptionsMenu(Menu):
                                               color=self.get_title_color(), scale=self.title_size)
 
     def build_option_imgs(self):
-        if self._option_imgs is None:
-            self._option_imgs = [None] * self.get_num_options()
-
-        for i in range(0, self.get_num_options()):
-            if self._option_imgs[i] is None:
-                self._option_imgs[i] = TextImage(0, 0, self.get_option_text(i), layer=spriteref.UI_0_LAYER,
-                                                 color=self.get_option_color(i), scale=1, x_kerning=0)
+        for r in range(0, self.get_num_option_rows()):
+            for c in range(0, self.get_row_size(r)):
+                idx = (r, c)
+                if self._option_imgs[idx] is None:
+                    self._option_imgs[idx] = TextImage(0, 0, self.get_option_text(idx), layer=spriteref.UI_0_LAYER,
+                                                       color=self.get_option_color(idx), scale=1, x_kerning=0)
 
     def layout_rects(self):
         if self._title_rect is None:
             self._title_rect = (0, 0, 0, 0)
-        if self._option_rects is None:
-            self._option_rects = [(0, 0, 0, 0)] * self.get_num_options()
 
         total_height = 0
         if self._title_img is not None:
             total_height += self._title_img.size()[1] + self.title_spacing
-        for opt in self._option_imgs:
-            if opt is not None:
-                total_height += opt.size()[1] + self.spacing
+        for r in range(0, self.get_num_option_rows()):
+            row_h = 0
+            for c in range(0, self.get_row_size(r)):
+                opt_img = self._option_imgs[(r, c)]
+                if opt_img is not None:
+                    row_h = max(row_h, opt_img.size()[1] + self.spacing)
+            total_height += row_h
+
         total_height -= self.spacing
 
         y_pos = RenderEngine.get_instance().get_game_size()[1] // 2 - total_height // 2
@@ -288,11 +318,24 @@ class OptionsMenu(Menu):
             self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
             y_pos += self._title_img.size()[1] + self.title_spacing
 
-        for i in range(0, self.get_num_options()):
-            if self._option_imgs[i] is not None:
-                opt_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._option_imgs[i].size()[0] // 2
-                self._option_rects[i] = (opt_x, y_pos, self._option_imgs[i].size()[0], self._option_imgs[i].size()[1])
-                y_pos += self._option_imgs[i].size()[1] + self.spacing
+        # TODO add support for grid-style layouts
+        for r in range(0, self.get_num_option_rows()):
+            row_width = 0
+            for c in range(0, self.get_row_size(r)):
+                idx = (r, c)
+                if self._option_imgs[idx] is not None:
+                    row_width += self._option_imgs[idx].size()[0]
+
+            opt_x = RenderEngine.get_instance().get_game_size()[0] // 2 - row_width // 2
+            row_h = 0
+            for c in range(0, self.get_row_size(r)):
+                idx = (r, c)
+                if self._option_imgs[idx] is not None:
+                    self._option_rects[idx] = (opt_x, y_pos, self._option_imgs[idx].size()[0], self._option_imgs[idx].size()[1])
+                    opt_x += self._option_imgs[idx].size()[0]
+                    row_h = max(row_h, self._option_imgs[idx].size()[1] + self.spacing)
+
+            y_pos += row_h
 
     def update_imgs(self):
         if self._title_img is not None:
@@ -300,26 +343,71 @@ class OptionsMenu(Menu):
             y = self._title_rect[1]
             self._title_img = self._title_img.update(new_x=x, new_y=y, new_color=self.get_title_color())
 
-        for i in range(0, self.get_num_options()):
-            color = self.get_option_color(i)
-            x = self._option_rects[i][0]
-            y = self._option_rects[i][1]
-            self._option_imgs[i] = self._option_imgs[i].update(new_x=x, new_y=y, new_color=color)
+        for r in range(0, self.get_num_option_rows()):
+            for c in range(0, self.get_row_size(r)):
+                idx = (r, c)
+                color = self.get_option_color(idx)
+                if self._option_rects[idx] is not None and self._option_imgs[idx] is not None:
+                    x = self._option_rects[idx][0]
+                    y = self._option_rects[idx][1]
+                    self._option_imgs[idx] = self._option_imgs[idx].update(new_x=x, new_y=y,
+                                                                           new_text=self.get_option_text(idx), new_color=color)
 
-    def set_selected(self, idx):
-        if idx != self._selection and self.get_enabled(idx):
+    def all_idxes(self):
+        for r in range(0, self.get_num_option_rows()):
+            for c in range(0, self.get_row_size(r)):
+                yield (r, c)
+
+    def set_selected(self, idx, forcefully=False, _soft_c=False):
+        if not self.has_option_at(idx):
+            return
+
+        if not self.get_enabled(idx) and not forcefully:
+            return
+
+        if idx != self._selection:
             sound_effects.play_sound(soundref.menu_move)
             self._selection = idx
 
+        if not _soft_c:
+            self._hidden_c = idx[1]
+
     def get_selected_idx(self):
         return self._selection
+
+    def _move_selection(self, cur_selection, dx, dy):
+        if dy != 0:
+            best_selection = None
+            best_dist = (float('inf'), float('inf'))
+            for sel in self.all_idxes():
+                if not self.get_enabled(sel) or sel == cur_selection:
+                    continue
+                r_dist = abs((cur_selection[0] + dy) - sel[0]) % self.get_num_option_rows()
+                c_dist = abs(self._hidden_c - sel[1])
+                if best_dist is None or r_dist < best_dist[0] or (r_dist == best_dist[0] and c_dist < best_dist[1]):
+                    best_selection = sel
+                    best_dist = (r_dist, c_dist)
+
+            if best_selection is not None:
+                self.set_selected(best_selection, _soft_c=True)
+                return True
+
+        elif dx != 0:
+            cur_r = cur_selection[0]
+            cur_c = cur_selection[1]
+            for i in range(1, self.get_row_size(cur_selection[0])):
+                new_sel = (cur_r, cur_c + dx * i)
+                if self.has_option_at(new_sel) and self.get_enabled(new_sel):
+                    self.set_selected(new_sel)
+                    return True
+
+        return False
 
     def handle_inputs(self, world):
         input_state = InputState.get_instance()
         if input_state.was_pressed(gs.get_instance().settings().exit_key()):
             self.esc_pressed()
         else:
-            new_selection = self._selection
             dy = 0
             up_pressed = input_state.was_pressed(gs.get_instance().settings().menu_up_key())
             up_pressed = up_pressed or input_state.was_pressed(gs.get_instance().settings().up_key())
@@ -331,13 +419,18 @@ class OptionsMenu(Menu):
             if down_pressed:
                 dy += 1
 
-            if dy != 0:
-                for i in range(1, self.get_num_options() + 1):
-                    new_selection = (self._selection + i*dy) % self.get_num_options()
-                    if self.get_enabled(new_selection):
-                        break
+            dx = 0
+            left_pressed = input_state.was_pressed(gs.get_instance().settings().menu_left_key())
+            left_pressed = left_pressed or input_state.was_pressed(gs.get_instance().settings().left_key())
+            if left_pressed:
+                dx -= 1
 
-            self.set_selected(new_selection)
+            right_pressed = input_state.was_pressed(gs.get_instance().settings().menu_right_key())
+            right_pressed = right_pressed or input_state.was_pressed(gs.get_instance().settings().right_key())
+            if right_pressed:
+                dx += 1
+
+            self._move_selection(self._selection, dx, dy)
 
             if input_state.was_pressed(gs.get_instance().settings().enter_key()):
                 if self.get_enabled(self._selection):
@@ -351,9 +444,9 @@ class OptionsMenu(Menu):
             if input_state.mouse_in_window():
                 pos = input_state.mouse_pos()
                 if input_state.mouse_moved() or self._first_frame_active:
-                    for i in range(0, self.get_num_options()):
-                        if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
-                            self.set_selected(i)
+                    for idx in self.all_idxes():
+                        if self._option_rects[idx] is not None and Utils.rect_contains(self._option_rects[idx], pos):
+                            self.set_selected(idx, forcefully=True)
 
                 if input_state.mouse_was_pressed():
                     clicked_option = None
@@ -362,21 +455,21 @@ class OptionsMenu(Menu):
                     if selected_rect is not None:
                         # give click priority to the thing that's selected
                         bigger_rect = Utils.rect_expand(selected_rect,
-                                                        left_expand=15, right_expand=15,
-                                                        up_expand=15, down_expand=15)
+                                                        left_expand=5, right_expand=5,
+                                                        up_expand=5, down_expand=5)
                         if Utils.rect_contains(bigger_rect, pos):
                             clicked_option = self._selection
 
                     if clicked_option is None:
                         # if the mouse hasn't moved yet on this menu, gotta catch those clicks too
-                        for i in range(0, self.get_num_options()):
-                            if self._option_rects[i] is not None and Utils.rect_contains(self._option_rects[i], pos):
-                                clicked_option = i
+                        for idx in self.all_idxes():
+                            if self._option_rects[idx] is not None and Utils.rect_contains(self._option_rects[idx], pos):
+                                clicked_option = idx
                                 break
 
                     if clicked_option is not None:
                         if self.get_enabled(clicked_option):
-                            self.option_activated(self._selection)
+                            self.option_activated(clicked_option)
                         else:
                             pass  # TODO sound effect
 
@@ -410,9 +503,9 @@ class OptionsMenu(Menu):
             for bun in self._title_img.all_bundles():
                 yield bun
         if self._option_imgs is not None:
-            for opt in self._option_imgs:
-                if opt is not None:
-                    for bun in opt.all_bundles():
+            for idx in self._option_imgs:
+                if self._option_imgs[idx] is not None:
+                    for bun in self._option_imgs[idx].all_bundles():
                         yield bun
 
     def cursor_style_at(self, world, xy):
@@ -456,18 +549,18 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
         has_save_data = savedata.has_files_on_disk()
         if not has_save_data:
             opts = ["start", "controls", "sound", "exit"]
-            self._start_idx = 0
-            self._load_idx = -1
-            self._options_idx = 1
-            self._sound_idx = 2
-            self._exit_idx = 3
+            self._start_idx = (0, 0)
+            self._load_idx = (-1, 0)
+            self._options_idx = (1, 0)
+            self._sound_idx = (2, 0)
+            self._exit_idx = (3, 0)
         else:
             opts = ["start", "load game", "controls", "sound", "exit"]
-            self._start_idx = 0
-            self._load_idx = 1
-            self._options_idx = 2
-            self._sound_idx = 3
-            self._exit_idx = 4
+            self._start_idx = (0, 0)
+            self._load_idx = (1, 0)
+            self._options_idx = (2, 0)
+            self._sound_idx = (3, 0)
+            self._exit_idx = (4, 0)
 
         OptionsMenu.__init__(self,
                              MenuManager.START_MENU,
@@ -553,16 +646,16 @@ class LoadMenu(OptionsMenu):
 
         if len(all_saves) > LoadMenu.FILES_PER_PAGE:
             self.opts.append("next page")
-            self.next_page_idx = len(self.opts) - 1
+            self.next_page_idx = (len(self.opts) - 1, 0)
 
             self.opts.append("prev page")
-            self.prev_page_idx = len(self.opts) - 1
+            self.prev_page_idx = (len(self.opts) - 1, 0)
         else:
-            self.next_page_idx = -1
-            self.prev_page_idx = -1
+            self.next_page_idx = (-1, 0)
+            self.prev_page_idx = (-1, 0)
 
         self.opts.append("back")
-        self.back_idx = len(self.opts) - 1
+        self.back_idx = (len(self.opts) - 1, 0)
 
         OptionsMenu.__init__(self, MenuManager.LOAD_MENU, "load game", self.opts)
 
@@ -587,8 +680,8 @@ class LoadMenu(OptionsMenu):
         elif idx == self.prev_page_idx:
             gs.get_instance().menu_manager().set_active_menu(LoadMenu(self.page - 1, reload_data=False))
             sound_effects.play_sound(soundref.menu_select)
-        elif 0 <= idx < len(self.data_for_opts):
-            selected_data = self.data_for_opts[idx]
+        elif 0 <= idx[0] < len(self.data_for_opts):
+            selected_data = self.data_for_opts[idx[0]]
             new_game_event = events.NewGameEvent(from_save_data=selected_data)
             gs.get_instance().add_event(new_game_event)
             sound_effects.play_sound(soundref.newgame_start)
@@ -596,10 +689,10 @@ class LoadMenu(OptionsMenu):
 
 class PauseMenu(OptionsMenu, MenuWithVersionDisplay):
 
-    CONTINUE_IDX = 0
-    CONTROLS_IDX = 1
-    SOUND_IDX = 2
-    EXIT_IDX = 3
+    CONTINUE_IDX = (0, 0)
+    CONTROLS_IDX = (1, 0)
+    SOUND_IDX = (2, 0)
+    EXIT_IDX = (3, 0)
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.PAUSE_MENU, "paused", ["resume", "controls", "sound", "quit"])
@@ -647,8 +740,8 @@ class PauseMenu(OptionsMenu, MenuWithVersionDisplay):
 
 class ReallyQuitMenu(OptionsMenu):
 
-    EXIT_IDX = 0
-    BACK = 1
+    EXIT_IDX = (0, 0)
+    BACK = (1, 0)
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.REALLY_QUIT, "really quit?", ["quit", "back"])
@@ -701,21 +794,19 @@ class TextOnlyMenu(OptionsMenu):
 
 
 class SoundSettingsMenu(OptionsMenu):
-    MUSIC_TOGGLE_IDX = 0
-    MUSIC_VOLUME_UP_IDX = 1
-    MUSIC_VOLUME_DOWN_IDX = 2
+    MUSIC_TOGGLE_IDX = (0, 0)
+    MUSIC_VOLUME_DOWN_IDX = (0, 1)
+    MUSIC_VOLUME_UP_IDX = (0, 2)
 
-    EFFECTS_TOGGLE_IDX = 3
-    EFFECTS_VOLUME_UP_IDX = 4
-    EFFECTS_VOLUME_DOWN_IDX = 5
+    EFFECTS_TOGGLE_IDX = (1, 0)
+    EFFECTS_VOLUME_DOWN_IDX = (1, 1)
+    EFFECTS_VOLUME_UP_IDX = (1, 2)
 
-    BACK_IDX = 6
+    BACK_IDX = (2, 0)
 
     def __init__(self, prev_id):
-        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound", ["~music toggle~",
-                                                                        "+10% music", "-10% music",
-                                                                        "~effects toggle~",
-                                                                        "+10% effects", "-10% effects",
+        OptionsMenu.__init__(self, MenuManager.SETTINGS_MENU, "sound", [("~music toggle~", " [-]", " [+]"),
+                                                                        ("~effects toggle~", " [-]", " [+]"),
                                                                         "back"])
         self.prev_id = prev_id
 
@@ -728,16 +819,35 @@ class SoundSettingsMenu(OptionsMenu):
     def get_option_text(self, idx):
         if idx == SoundSettingsMenu.MUSIC_TOGGLE_IDX:
             if not self.music_muted:
-                return "music: {}%".format(self.music_pcnt)
+                if self.music_pcnt == 100:
+                    return "  music: MAX".format(self.music_pcnt)
+                else:
+                    return "  music: {}%".format(self.music_pcnt)
             else:
-                return "music: OFF"
+                return "  music: OFF"
+
         elif idx == SoundSettingsMenu.EFFECTS_TOGGLE_IDX:
             if not self.effects_muted:
-                return "effects: {}%".format(self.effects_pcnt)
+                if self.effects_pcnt == 100:
+                    return "effects: MAX".format(self.effects_pcnt)
+                else:
+                    return "effects: {}%".format(self.effects_pcnt)
             else:
                 return "effects: OFF"
         else:
             return OptionsMenu.get_option_text(self, idx)
+
+    def get_enabled(self, idx):
+        if idx == SoundSettingsMenu.EFFECTS_VOLUME_DOWN_IDX:
+            return not self.effects_muted
+        elif idx == SoundSettingsMenu.EFFECTS_VOLUME_UP_IDX:
+            return self.effects_muted or self.effects_pcnt < 100
+        elif idx == SoundSettingsMenu.MUSIC_VOLUME_DOWN_IDX:
+            return not self.music_muted
+        elif idx == SoundSettingsMenu.MUSIC_VOLUME_UP_IDX:
+            return self.music_muted or self.music_pcnt < 100
+        else:
+            return True
 
     def option_activated(self, idx):
         rebuild = False
@@ -800,7 +910,7 @@ class SoundSettingsMenu(OptionsMenu):
         if rebuild:
             # rebuilding so the option text will change
             rebuilt = SoundSettingsMenu(self.prev_id)
-            rebuilt.set_selected(idx)
+            rebuilt.set_selected(idx, forcefully=True)
             gs.get_instance().menu_manager().set_active_menu(rebuilt)
 
     def esc_pressed(self):
@@ -819,17 +929,18 @@ class ControlsMenu(OptionsMenu):
         ("inventory", settings.KeyBindings.KEY_INVENTORY),
         ("map", settings.KeyBindings.KEY_MAP)
     ]
-    BACK_OPT_IDX = len(OPTS)
+    BACK_OPT_IDX = (len(OPTS), 0)
 
-    def __init__(self, prev_id):
+    def __init__(self, prev_id, selected_idx=(0, 0)):
         OptionsMenu.__init__(self, MenuManager.CONTROLS_MENU, "controls", ["~unused~"])
         self.prev_id = prev_id
+        self.set_selected(selected_idx)
 
     def get_option_text(self, idx):
         if idx == ControlsMenu.BACK_OPT_IDX:
             return "back"
         else:
-            opt = ControlsMenu.OPTS[idx]
+            opt = ControlsMenu.OPTS[idx[0]]
             cur_values = gs.get_instance().settings().get(opt[1])
 
             if len(cur_values) == 0:
@@ -840,8 +951,11 @@ class ControlsMenu(OptionsMenu):
 
                 return "{} {}".format(opt[0], value_str)
 
-    def get_num_options(self):
+    def get_num_option_rows(self):
         return len(ControlsMenu.OPTS) + 1  # extra one is the "back" option
+
+    def get_row_size(self, r):
+        return 1
 
     def option_activated(self, idx):
         if idx == ControlsMenu.BACK_OPT_IDX:
@@ -851,9 +965,10 @@ class ControlsMenu(OptionsMenu):
                 gs.get_instance().menu_manager().set_active_menu(PauseMenu())
             sound_effects.play_sound(soundref.menu_back)
             gs.get_instance().save_settings_to_disk()
-        else:
-            opt = ControlsMenu.OPTS[idx]
-            gs.get_instance().menu_manager().set_active_menu(KeybindingEditMenu(opt[1], opt[0], lambda: ControlsMenu(self.prev_id)))
+        elif 0 <= idx[0] < len(ControlsMenu.OPTS):
+            opt = ControlsMenu.OPTS[idx[0]]
+            gs.get_instance().menu_manager().set_active_menu(KeybindingEditMenu(opt[1], opt[0],
+                                                                                lambda: ControlsMenu(self.prev_id, selected_idx=idx)))
             sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
@@ -1050,8 +1165,8 @@ class DeathMenu(FadingInFlavorMenu):
 
 class DeathOptionMenu(OptionsMenu):
 
-    RETRY = 0
-    EXIT_OPT = 1
+    RETRY = (0, 0)
+    EXIT_OPT = (1, 0)
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["retry", "quit"])
@@ -1071,11 +1186,11 @@ class DeathOptionMenu(OptionsMenu):
 
 class DebugMenu(OptionsMenu):
 
-    STORYLINE_ZONE_JUMP = 0
-    SPECIAL_ZONE_JUMP = 1
-    LOOT_ZONE_JUMP = 2
-    DEBUG_SETTINGS = 3
-    BACK_OPT = 4
+    STORYLINE_ZONE_JUMP = (0, 0)
+    SPECIAL_ZONE_JUMP = (1, 0)
+    LOOT_ZONE_JUMP = (2, 0)
+    DEBUG_SETTINGS = (3, 0)
+    BACK_OPT = (4, 0)
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.DEBUG_MENU, "Debug",
@@ -1120,10 +1235,10 @@ class DebugSettingsMenu(OptionsMenu):
         return "{}: {}".format(setting.name, cur_val)
 
     def get_option_color(self, idx):
-        if not self.get_enabled(idx) or idx < 0 or idx >= len(self._debug_settings):
+        if not self.get_enabled(idx) or idx[0] < 0 or idx[0] >= len(self._debug_settings):
             return super().get_option_color(idx)
         else:
-            setting = self._debug_settings[idx]
+            setting = self._debug_settings[idx[0]]
             cur_val = gs.get_instance().settings().get(setting)
 
             if cur_val is True:
@@ -1134,11 +1249,12 @@ class DebugSettingsMenu(OptionsMenu):
 
             return super().get_option_color(idx)
 
-    def __init__(self, active_idx=0):
+    def __init__(self, active_idx=(0, 0)):
         self._debug_settings = self._get_all_debug_settings()
         option_names = [self._setting_name(x) for x in self._debug_settings]
-        self._back_idx = len(option_names)
-        self._debug_enable_idx = 0
+
+        self._debug_enable_idx = (0, 0)
+        self._back_idx = (len(option_names), 0)
 
         OptionsMenu.__init__(self, MenuManager.DEBUG_SETTINGS_MENU, "",
                              option_names + ["back"])
@@ -1155,8 +1271,8 @@ class DebugSettingsMenu(OptionsMenu):
         if idx == self._back_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugMenu())
             sound_effects.play_sound(soundref.menu_back)
-        elif 0 <= idx < len(self._debug_settings):
-            setting = self._debug_settings[idx]
+        elif 0 <= idx[0] < len(self._debug_settings):
+            setting = self._debug_settings[idx[0]]
 
             cur_val = gs.get_instance().settings().get(setting)
             gs.get_instance().settings().set(setting, not cur_val)
@@ -1353,13 +1469,13 @@ class DebugZoneSelectMenu(OptionsMenu):
             self.last_page = True
 
         self.opts.append("next page")
-        self.next_page_idx = len(self.opts) - 1
+        self.next_page_idx = (len(self.opts) - 1, 0)
 
         self.opts.append("prev page")
-        self.prev_page_idx = len(self.opts) - 1
+        self.prev_page_idx = (len(self.opts) - 1, 0)
 
         self.opts.append("back")
-        self.back_idx = len(self.opts) - 1
+        self.back_idx = (len(self.opts) - 1, 0)
 
         OptionsMenu.__init__(self, MenuManager.DEBUG_ZONE_SELECT_MENU, "zone select", self.opts)
 
@@ -1398,8 +1514,8 @@ class DebugZoneSelectMenu(OptionsMenu):
         elif idx == self.prev_page_idx:
             gs.get_instance().menu_manager().set_active_menu(DebugZoneSelectMenu(self.page - 1, self.zone_types))
             sound_effects.play_sound(soundref.menu_select)
-        elif 0 <= idx < len(self.opts):
-            selected_opt = self.opts[idx]
+        elif 0 <= idx[0] < len(self.opts):
+            selected_opt = self.opts[idx[0]]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
             new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
             gs.get_instance().add_event(new_zone_evt)

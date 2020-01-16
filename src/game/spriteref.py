@@ -264,6 +264,7 @@ class Animations:
 class Font:
     _alphabet = {}  # str -> img
     _char_mappings = {
+        "`": " ",  # invis char~
         "→": chr(16),
         "←": chr(17),
         "↑": chr(24),
@@ -293,6 +294,9 @@ class Font:
 
     @staticmethod
     def get_tiny_char(c):
+        if c == "`":
+            c = " "
+
         if c in Font._tiny_alphabet:
             return Font._tiny_alphabet[c]
         elif "?" in Font._tiny_alphabet:

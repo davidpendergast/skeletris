@@ -60,8 +60,11 @@
         
  - should have dmg and kills stats in inventory
  - [WASD to move] tutorial doesn't look good
- - frog lair's entry is screwed up
  - light potion should cure blindness
+ - save stations should heal you
+ - there's no way to delete saved games in-game
+ - save files should be moved to a high score table of some kind when you win
+ - the first save point is quite early
     
 
 [maintanence]

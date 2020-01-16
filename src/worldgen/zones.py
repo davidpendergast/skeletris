@@ -2145,5 +2145,3 @@ class DoorTestZoneR(Zone):
         w = bp.build_world()
 
         return w
-
-

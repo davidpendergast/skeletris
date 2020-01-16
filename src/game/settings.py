@@ -83,6 +83,8 @@ class KeyBindings:
     # not configurable
     KEY_MENU_UP = Setting("menu up", "MENU_UP", [pygame.K_UP], cleaner=clean_keys, filename=KEYS_FILENAME)
     KEY_MENU_DOWN = Setting("menu down", "MENU_DOWN", [pygame.K_DOWN], cleaner=clean_keys, filename=KEYS_FILENAME)
+    KEY_MENU_LEFT = Setting("menu left", "MENU_LEFT", [pygame.K_LEFT], cleaner=clean_keys, filename=KEYS_FILENAME)
+    KEY_MENU_RIGHT = Setting("menu right", "MENU_RIGHT", [pygame.K_RIGHT], cleaner=clean_keys, filename=KEYS_FILENAME)
     KEY_ENTER = Setting("enter", "ENTER", [pygame.K_RETURN], cleaner=clean_keys, filename=KEYS_FILENAME)
     KEY_EXIT = Setting("escape", "EXIT", [pygame.K_ESCAPE], cleaner=clean_keys, filename=KEYS_FILENAME)
 
@@ -269,6 +271,12 @@ class Settings:
 
     def menu_down_key(self):
         return self.get(KeyBindings.KEY_MENU_DOWN)
+
+    def menu_left_key(self):
+        return self.get(KeyBindings.KEY_MENU_LEFT)
+
+    def menu_right_key(self):
+        return self.get(KeyBindings.KEY_MENU_RIGHT)
 
     def inventory_key(self):
         return self.get(KeyBindings.KEY_INVENTORY)
