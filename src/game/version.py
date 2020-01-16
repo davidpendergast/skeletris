@@ -34,14 +34,12 @@ def get_version():
     return _VERSION
 
 
-def get_pretty_version_string():
-    global _VERSION
+def get_pretty_version_string(for_version=None):
+    if for_version is None:
+        for_version = get_version()
 
-    v = [_VERSION[i] if _VERSION[i] >= 0 else "?" for i in range(0, 3)]
+    v = [for_version[i] if for_version[i] >= 0 else "?" for i in range(0, 3)]
 
-    if len(_VERSION[3]) > 0:
-        return "{}.{}.{}-{}".format(v[0], v[1], v[2], _VERSION[3])
-    else:
-        return "{}.{}.{}".format(v[0], v[1], v[2])
+    return "{}.{}.{}-{}".format(v[0], v[1], v[2], for_version[3])
 
 

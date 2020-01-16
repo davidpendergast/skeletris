@@ -136,6 +136,7 @@ class GlobalState:
                 self._save_data = savedata.make_brand_new_blob()
 
         self._save_data.set(savedata.SaveDataTags.KILL_COUNT, self.get_run_statistic(RunStatisticTypes.KILL_COUNT))
+        self._save_data.set(savedata.SaveDataTags.TURN_COUNT, self.get_run_statistic(RunStatisticTypes.TURN_COUNT))
         self._save_data.set(savedata.SaveDataTags.ELAPSED_TIME, self.get_run_statistic(RunStatisticTypes.ELAPSED_TICKS))
         self._save_data.set(savedata.SaveDataTags.DEATH_COUNT, self.get_run_statistic(RunStatisticTypes.DEATH_COUNT))
         self._save_data.set(savedata.SaveDataTags.CHECKPOINT_COUNT, self.get_run_statistic(RunStatisticTypes.CHECKPOINT_COUNT))
@@ -149,6 +150,7 @@ class GlobalState:
         if save_data is None:
             return
         self.set_run_statistic(RunStatisticTypes.KILL_COUNT, save_data.get(savedata.SaveDataTags.KILL_COUNT))
+        self.set_run_statistic(RunStatisticTypes.TURN_COUNT, save_data.get(savedata.SaveDataTags.TURN_COUNT))
         self.set_run_statistic(RunStatisticTypes.ELAPSED_TICKS, save_data.get(savedata.SaveDataTags.ELAPSED_TIME))
         self.set_run_statistic(RunStatisticTypes.DEATH_COUNT, save_data.get(savedata.SaveDataTags.DEATH_COUNT))
         self.set_run_statistic(RunStatisticTypes.CHECKPOINT_COUNT, save_data.get(savedata.SaveDataTags.CHECKPOINT_COUNT))

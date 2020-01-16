@@ -28,8 +28,12 @@ class MenuManager:
     DEATH_OPTION_MENU = 0.5
     IN_GAME_MENU = 1
     START_MENU = 2
+
     LOAD_MENU = 2.5
-    CINEMATIC_MENU = 3
+    LOAD_INFO_MENU = 2.75
+    LOAD_REALLY_DELETE_MENU = 2.85
+
+    CINEMATIC_MENU = 3  # not used anymore
     PAUSE_MENU = 4
     CONTROLS_MENU = 5
     KEYBINDING_MENU = 7
@@ -189,7 +193,7 @@ class Menu:
 
 class OptionsMenu(Menu):
 
-    def __init__(self, menu_id, title, options, title_size=2):
+    def __init__(self, menu_id, title, options, title_size=2.0):
         """
         title: text or sprite
         title_size: scale of title text or sprite
@@ -215,9 +219,6 @@ class OptionsMenu(Menu):
             else:
                 raise ValueError("illegal option type: {}".format(opt))
 
-        self.spacing = 4
-        self.title_spacing = self.spacing * 3
-
         self._title_img = None
         self._title_rect = None    # tuple(x, y, w, h)
 
@@ -242,6 +243,12 @@ class OptionsMenu(Menu):
 
     def get_title_color(self):
         return (1, 1, 1)
+
+    def get_spacing(self):
+        return 4
+
+    def get_title_spacing(self):
+        return self.get_spacing() * 3
 
     def get_enabled(self, idx):
         return True
@@ -301,22 +308,22 @@ class OptionsMenu(Menu):
 
         total_height = 0
         if self._title_img is not None:
-            total_height += self._title_img.size()[1] + self.title_spacing
+            total_height += self._title_img.size()[1] + self.get_title_spacing()
         for r in range(0, self.get_num_option_rows()):
             row_h = 0
             for c in range(0, self.get_row_size(r)):
                 opt_img = self._option_imgs[(r, c)]
                 if opt_img is not None:
-                    row_h = max(row_h, opt_img.size()[1] + self.spacing)
+                    row_h = max(row_h, opt_img.size()[1] + self.get_spacing())
             total_height += row_h
 
-        total_height -= self.spacing
+        total_height -= self.get_spacing()
 
         y_pos = RenderEngine.get_instance().get_game_size()[1] // 2 - total_height // 2
         if self._title_img is not None:
             title_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._title_img.size()[0] // 2
             self._title_rect = (title_x, y_pos, self._title_img.size()[0], self._title_img.size()[1])
-            y_pos += self._title_img.size()[1] + self.title_spacing
+            y_pos += self._title_img.size()[1] + self.get_title_spacing()
 
         # TODO add support for grid-style layouts
         for r in range(0, self.get_num_option_rows()):
@@ -333,7 +340,7 @@ class OptionsMenu(Menu):
                 if self._option_imgs[idx] is not None:
                     self._option_rects[idx] = (opt_x, y_pos, self._option_imgs[idx].size()[0], self._option_imgs[idx].size()[1])
                     opt_x += self._option_imgs[idx].size()[0]
-                    row_h = max(row_h, self._option_imgs[idx].size()[1] + self.spacing)
+                    row_h = max(row_h, self._option_imgs[idx].size()[1] + self.get_spacing())
 
             y_pos += row_h
 
@@ -486,9 +493,6 @@ class OptionsMenu(Menu):
         for bun in self.all_bundles():
             render_eng.update(bun)
 
-    def get_back_idx(self):
-        return -1
-
     def option_activated(self, idx):
         pass
 
@@ -512,12 +516,74 @@ class OptionsMenu(Menu):
         return super().cursor_style_at(world, xy)
 
 
+class OptionsMenuWithTextBlurb(OptionsMenu):
+
+    def __init__(self, menu_id, title, options, title_size=2.0, info_text_size=1):
+        OptionsMenu.__init__(self, menu_id, title, options, title_size=title_size)
+
+        self._info_text_size = info_text_size
+        self._info_text_img = None
+        self._info_text_rect = None
+
+    def get_blurb_text(self):
+        return "Here's some info.\nOn multiple lines, no less."
+
+    def get_blurb_text_color(self):
+        return colors.WHITE
+
+    def get_title_spacing(self):
+        if self._info_text_img is None:
+            return super().get_title_spacing()
+        else:
+            # make room for the info
+            return super().get_title_spacing() + self._info_text_img.h() + self.get_spacing()
+
+    def build_images(self):
+        super().build_images()
+        if self._info_text_img is None:
+            self._info_text_img = TextImage(0, 0, self.get_blurb_text(), spriteref.UI_0_LAYER,
+                                            scale=self._info_text_size)
+
+    def layout_rects(self):
+        super().layout_rects()
+
+        title_rect = (0, 0, 0, 0) if self._title_rect is None else self._title_rect
+
+        if self._info_text_img is None:
+            self._info_text_rect = (0, 0, 0, 0)
+        else:
+            info_y = title_rect[1] + title_rect[3] + super().get_title_spacing()
+            info_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._info_text_img.w() // 2
+            self._info_text_rect = (info_x, info_y, self._info_text_img.w(), self._info_text_img.h())
+
+    def update_imgs(self):
+        super().update_imgs()
+
+        if self._info_text_img is not None and self._info_text_rect is not None:
+            new_text = self.get_blurb_text()  # TODO if this actually changes it'll be wrongly aligned for a frame
+            new_x = self._info_text_rect[0]
+            new_y = self._info_text_rect[1]
+            new_color = self.get_blurb_text_color()
+
+            self._info_text_img = self._info_text_img.update(new_text=new_text, new_x=new_x, new_y=new_y, new_color=new_color)
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        if self._info_text_img is not None:
+            for bun in self._info_text_img.all_bundles():
+                yield bun
+
+
 class MenuWithVersionDisplay:
 
     def __init__(self):
-        self._version_text = "[{}]".format(version.get_pretty_version_string())
+        self._version_text = "[{}]".format(self.get_version_number_string())
         self._version_img = None
         self._version_rect = [0, 0, 0, 0]
+
+    def get_version_number_string(self):
+        return version.get_pretty_version_string()
 
     def build_version_images(self):
         if self._version_text is not None:
@@ -616,7 +682,7 @@ class LoadMenu(OptionsMenu):
 
     FILES_PER_PAGE = 6
 
-    def __init__(self, page=0, reload_data=True):
+    def __init__(self, page=0, sel_idx=None, reload_data=True):
 
         self.page = page
 
@@ -659,6 +725,9 @@ class LoadMenu(OptionsMenu):
 
         OptionsMenu.__init__(self, MenuManager.LOAD_MENU, "load game", self.opts)
 
+        if sel_idx is not None:
+            self.set_selected(sel_idx)
+
     def get_enabled(self, idx):
         if idx == self.prev_page_idx and self.first_page:
             return False
@@ -680,11 +749,80 @@ class LoadMenu(OptionsMenu):
         elif idx == self.prev_page_idx:
             gs.get_instance().menu_manager().set_active_menu(LoadMenu(self.page - 1, reload_data=False))
             sound_effects.play_sound(soundref.menu_select)
+
         elif 0 <= idx[0] < len(self.data_for_opts):
             selected_data = self.data_for_opts[idx[0]]
-            new_game_event = events.NewGameEvent(from_save_data=selected_data)
+            bring_me_back = lambda: LoadMenu(page=self.page, sel_idx=idx, reload_data=False)
+            load_info_menu = LoadFileInfoMenu(selected_data, back_menu_builder=bring_me_back)
+            gs.get_instance().menu_manager().set_active_menu(load_info_menu)
+            sound_effects.play_sound(soundref.menu_select)
+
+
+class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
+
+    PLAY_IDX = (0, 0)
+    DELETE_IDX = (1, 0)
+    BACK_IDX = (2, 0)
+
+    def __init__(self, save_blob, back_menu_builder=None):
+        self.back_menu_builder = back_menu_builder
+        self.save_blob = save_blob
+
+        title = save_blob.get_pretty_string(max_length=40, include_elapsed_time=False, include_version_desc=False)
+
+        OptionsMenuWithTextBlurb.__init__(self, MenuManager.LOAD_INFO_MENU, title,
+                                          ["play", "delete", "back"],
+                                          title_size=1.5)
+
+        MenuWithVersionDisplay.__init__(self)
+
+    def get_blurb_text(self):
+        return (
+            # "{}\n".format(self.save_blob.get_pretty_last_modified_date()) +
+            "playtime: {}\n".format(self.save_blob.get_pretty_elapsed_time()) +
+            "kills: {}\n".format(self.save_blob.get(savedata.SaveDataTags.KILL_COUNT)) +
+            "turns: {}\n".format(self.save_blob.get(savedata.SaveDataTags.TURN_COUNT))
+        )
+
+    def option_activated(self, idx):
+        if idx == LoadFileInfoMenu.PLAY_IDX:
+            new_game_event = events.NewGameEvent(from_save_data=self.save_blob)
             gs.get_instance().add_event(new_game_event)
             sound_effects.play_sound(soundref.newgame_start)
+
+        elif idx == LoadFileInfoMenu.DELETE_IDX:
+            print("INFO: deleting save file: {}".format(self.save_blob.filepath))
+            # TODO - delete the file
+
+        elif idx == LoadFileInfoMenu.BACK_IDX:
+            if self.back_menu_builder is not None:
+                back_menu = self.back_menu_builder()
+            else:
+                back_menu = LoadMenu()
+            gs.get_instance().menu_manager().set_active_menu(back_menu)
+            sound_effects.play_sound(soundref.menu_back)
+
+    def get_version_number_string(self):
+        vers = self.save_blob.get(savedata.SaveDataTags.VERSION_NUM)
+        return version.get_pretty_version_string(for_version=vers)
+
+    def build_images(self):
+        super().build_images()
+        MenuWithVersionDisplay.build_version_images(self)
+
+    def layout_rects(self):
+        super().layout_rects()
+        MenuWithVersionDisplay.layout_version_rects(self)
+
+    def update_imgs(self):
+        super().update_imgs()
+        MenuWithVersionDisplay.update_version_images(self)
+
+    def all_bundles(self):
+        for bun in super().all_bundles():
+            yield bun
+        for bun in MenuWithVersionDisplay.all_bundles(self):
+            yield bun
 
 
 class PauseMenu(OptionsMenu, MenuWithVersionDisplay):

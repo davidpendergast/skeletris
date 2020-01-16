@@ -127,9 +127,10 @@ def load_file(path_to_file):
     ret.set(SaveDataTags.GAME_UID, util.Utils.read_string(json_blob, SaveDataTags.GAME_UID, None))
     ret.set(SaveDataTags.LAST_MODIFIED_TIME, util.Utils.read_int(json_blob, SaveDataTags.LAST_MODIFIED_TIME, None))
     ret.set(SaveDataTags.ELAPSED_TIME, util.Utils.read_int(json_blob, SaveDataTags.ELAPSED_TIME, None))
-    ret.set(SaveDataTags.KILL_COUNT, util.Utils.read_int(json_blob, SaveDataTags.KILL_COUNT, None))
-    ret.set(SaveDataTags.DEATH_COUNT, util.Utils.read_int(json_blob, SaveDataTags.DEATH_COUNT, None))
-    ret.set(SaveDataTags.CHECKPOINT_COUNT, util.Utils.read_int(json_blob, SaveDataTags.CHECKPOINT_COUNT, None))
+    ret.set(SaveDataTags.KILL_COUNT, util.Utils.read_int(json_blob, SaveDataTags.KILL_COUNT, 0))
+    ret.set(SaveDataTags.TURN_COUNT, util.Utils.read_int(json_blob, SaveDataTags.TURN_COUNT, 0))
+    ret.set(SaveDataTags.DEATH_COUNT, util.Utils.read_int(json_blob, SaveDataTags.DEATH_COUNT, 0))
+    ret.set(SaveDataTags.CHECKPOINT_COUNT, util.Utils.read_int(json_blob, SaveDataTags.CHECKPOINT_COUNT, 1))
     ret.set(SaveDataTags.CHECKSUM, -1)  # only ever set at save time
 
     ret.set(SaveDataTags.SPAWN_ID, util.Utils.read_string(json_blob, SaveDataTags.SPAWN_ID, None))
@@ -235,6 +236,9 @@ class SaveDataTags:
     # integer: kill count of the run so far
     KILL_COUNT = util.Utils.add_to_list_and_return("kill_count", _all_tags)
 
+    # integer: turn count of the run so far
+    TURN_COUNT = util.Utils.add_to_list_and_return("turn_count", _all_tags)
+
     # integer: death count of the run so far
     DEATH_COUNT = util.Utils.add_to_list_and_return("death_count", _all_tags)
 
@@ -261,7 +265,7 @@ class SaveDataTags:
     @staticmethod
     def is_integer_tag(tag):
         return tag in (SaveDataTags.LAST_MODIFIED_TIME, SaveDataTags.ELAPSED_TIME, SaveDataTags.KILL_COUNT,
-                       SaveDataTags.DEATH_COUNT, SaveDataTags.CHECKPOINT_COUNT, SaveDataTags.CHECKSUM)
+                       SaveDataTags.DEATH_COUNT, SaveDataTags.TURN_COUNT, SaveDataTags.CHECKPOINT_COUNT, SaveDataTags.CHECKSUM)
 
     @staticmethod
     def is_string_tag(tag):
@@ -316,10 +320,7 @@ class SaveDataBlob:
 
         self.tags[tag] = value
 
-    def get_pretty_string(self, max_length=-1):
-        if 0 < max_length <= 3:
-            max_length = 4
-
+    def get_pretty_zone_name(self):
         save_id = self.get(SaveDataTags.SPAWN_ID)
         zone_name = None
         if save_id is not None:
@@ -327,36 +328,43 @@ class SaveDataBlob:
             zone_id = zones.get_zone_id_for_save_id(save_id)
             if zone_id is not None:
                 zone_name = zones.get_zone(zone_id).get_name()
+
         if zone_name is None:
             return "UNKNOWN[{}={}]".format(SaveDataTags.SPAWN_ID, save_id)
+        else:
+            return zone_name
 
+    def get_pretty_elapsed_time(self):
         elapsed_time = self.get(SaveDataTags.ELAPSED_TIME)
         if elapsed_time is None:
-            elapsed_time_str = "???"
+            return "???"
         elif elapsed_time >= 216000000:  # you will NOT break my UI
-            elapsed_time_str = "999:59:59"
+            return "999:59:59"
         else:
-            elapsed_time_str = util.Utils.ticks_to_time_string(elapsed_time, fps=60)
+            return util.Utils.ticks_to_time_string(elapsed_time, fps=60)
 
-        time_part = " ({})".format(elapsed_time_str)
+    def get_pretty_last_modified_date(self):
+        save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
+        if save_time is None:
+            return "?-?-20??"
+        else:
+            save_time_str = datetime.datetime.fromtimestamp(save_time).strftime("%m-%d-%Y")
+            if len(save_time_str) > 10:  # remember to increase this in 10,000 C.E.
+                return save_time_str[0:7] + "..."
+            return save_time_str
 
-        # TODO - the datestamp is too long for this text, but it would be
-        # TODO - nice if it was visible somewhere...
-        #save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
-        #if save_time is None:
-        #    save_time_str = "?-?-20??"
-        #else:
-        #    save_time_str = datetime.datetime.fromtimestamp(save_time).strftime("%m-%d-%Y")
-        #    if len(save_time_str) > 10:  # protect the UI
-        #        save_time_str = save_time_str[0:7] + "..."
-        #
-        #date_part = " ({}) {}".format(elapsed_time_str, save_time_str)
-        #
+    def get_pretty_string(self, include_elapsed_time=True, include_version_desc=True, max_length=-1):
+        if 0 < max_length <= 3:
+            max_length = 4
+
+        zone_name = self.get_pretty_zone_name()
+        time_part = "" if not include_elapsed_time else " ({})".format(self.get_pretty_elapsed_time())
 
         version_part = ""
-        vers = self.get(SaveDataTags.VERSION_NUM)
-        if vers is not None and (vers[3] == "DEV" or vers[3] == "MOD"):
-            version_part = " ({})".format(vers[3])
+        if include_version_desc:
+            vers = self.get(SaveDataTags.VERSION_NUM)
+            if vers is not None and (vers[3] == "DEV" or vers[3] == "MOD"):
+                version_part = " ({})".format(vers[3])
 
         if len(zone_name) > 0 and 0 < max_length < len(zone_name) + len(time_part) + len(version_part):
             new_zone_name_length = max(1, max_length - len(time_part) - len(version_part) - 3)
