@@ -102,6 +102,7 @@
     
         
 [future features]
+ - when you go "back" to a previous menu, you should return to the same selected idx
  - traps / ground effects
  - some kind of checkpoint system (?)
     - wouldn't be too hard to implement actually

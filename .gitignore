@@ -13,5 +13,6 @@ assets/sounds/library/*
 src/spritesheet.png
 balance.ods
 merch/*
+test_saves/*
 *.wav
 *.lnk

@@ -31,7 +31,7 @@ class MenuManager:
 
     LOAD_MENU = 2.5
     LOAD_INFO_MENU = 2.75
-    LOAD_REALLY_DELETE_MENU = 2.85
+    REALLY_DELETE_SAVE_FILE_MENU = 2.85
 
     CINEMATIC_MENU = 3  # not used anymore
     PAUSE_MENU = 4
@@ -812,8 +812,18 @@ class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
             sound_effects.play_sound(soundref.newgame_start)
 
         elif idx == LoadFileInfoMenu.DELETE_IDX:
-            print("INFO: deleting save file: {}".format(self.save_blob.filepath))
-            # TODO - delete the file
+            after_back = lambda: LoadFileInfoMenu(self.save_blob, back_menu_builder=self.back_menu_builder)
+
+            def after_delete():
+                if savedata.has_files_on_disk():
+                    return LoadMenu(reload_data=True)
+                else:
+                    savedata.reload_all_save_data_from_disk()  # clear the deleted file from the cache
+                    return StartMenu()
+
+            really_del_menu = ReallyDeleteSaveFileMenu(self.save_blob, after_back, after_delete)
+            gs.get_instance().menu_manager().set_active_menu(really_del_menu)
+            sound_effects.play_sound(soundref.menu_select)
 
         elif idx == LoadFileInfoMenu.BACK_IDX:
             if self.back_menu_builder is not None:
@@ -844,6 +854,37 @@ class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
             yield bun
         for bun in MenuWithVersionDisplay.all_bundles(self):
             yield bun
+
+
+class ReallyDeleteSaveFileMenu(OptionsMenu):
+
+    DELETE_IDX = (0, 0)
+    BACK_IDX = (1, 0)
+
+    def __init__(self, save_blob, back_menu_builder, after_delete_menu_builder):
+        OptionsMenu.__init__(self, MenuManager.REALLY_DELETE_SAVE_FILE_MENU,
+                             "really delete?",
+                             ["delete", "back"])
+        self.save_blob = save_blob
+
+        self.back_menu_builder = back_menu_builder
+        self.after_delete_menu_builder = after_delete_menu_builder
+
+    def option_activated(self, idx):
+        if idx == ReallyDeleteSaveFileMenu.DELETE_IDX:
+            print("INFO: deleting save file: {}".format(self.save_blob.filepath))
+            res = savedata.delete_from_disk(self.save_blob)
+            if res:
+                after_delete_menu = self.after_delete_menu_builder()
+                gs.get_instance().menu_manager().set_active_menu(after_delete_menu)
+                sound_effects.play_sound(soundref.menu_select)
+            else:
+                sound_effects.play_sound(soundref.error)
+
+        elif idx == ReallyDeleteSaveFileMenu.BACK_IDX:
+            back_menu = self.back_menu_builder()
+            gs.get_instance().menu_manager().set_active_menu(back_menu)
+            sound_effects.play_sound(soundref.menu_back)
 
 
 class PauseMenu(OptionsMenu, MenuWithVersionDisplay):

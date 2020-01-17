@@ -71,14 +71,32 @@ def make_brand_new_blob():
 def reload_all_save_data_from_disk():
     _LOADED_FILES.clear()
 
+    uids_to_blobs = {}  # uid str -> SaveDataBlob
+
     for fpath in all_files_on_disk():
         try:
             save_blob = load_file(fpath)
             if save_blob is not None:
-                _LOADED_FILES.append(save_blob)
+                uid = save_blob.get(SaveDataTags.GAME_UID)
+
+                if uid not in uids_to_blobs:
+                    uids_to_blobs[uid] = save_blob
+                else:
+                    print("WARN: files with duplicate GAME_UIDs detected: files=({}, {}), uid={}".format(
+                        fpath, uids_to_blobs[uid].filepath, uid))
+
+                    # choose the more recent one
+                    new_blob_time = save_blob.get_last_modified_time_for_sorting()
+                    old_blob_time = uids_to_blobs[uid].get_last_modified_time_for_sorting()
+
+                    if new_blob_time > old_blob_time:
+                        uids_to_blobs[uid] = save_blob
         except:
             print("ERROR: failed to read save data from: {}".format(fpath))
             traceback.print_exc()
+
+    for uid in uids_to_blobs:
+        _LOADED_FILES.append(uids_to_blobs[uid])
 
     _LOADED_FILES.sort(key=lambda data: data.get_last_modified_time_for_sorting(), reverse=True)
 
@@ -126,7 +144,7 @@ def load_file(path_to_file):
 
     ret.set(SaveDataTags.GAME_UID, util.Utils.read_string(json_blob, SaveDataTags.GAME_UID, None))
     ret.set(SaveDataTags.LAST_MODIFIED_TIME, util.Utils.read_int(json_blob, SaveDataTags.LAST_MODIFIED_TIME, None))
-    ret.set(SaveDataTags.ELAPSED_TIME, util.Utils.read_int(json_blob, SaveDataTags.ELAPSED_TIME, None))
+    ret.set(SaveDataTags.ELAPSED_TIME, util.Utils.read_int(json_blob, SaveDataTags.ELAPSED_TIME, 0))
     ret.set(SaveDataTags.KILL_COUNT, util.Utils.read_int(json_blob, SaveDataTags.KILL_COUNT, 0))
     ret.set(SaveDataTags.TURN_COUNT, util.Utils.read_int(json_blob, SaveDataTags.TURN_COUNT, 0))
     ret.set(SaveDataTags.DEATH_COUNT, util.Utils.read_int(json_blob, SaveDataTags.DEATH_COUNT, 0))
@@ -151,7 +169,7 @@ def write_to_disk(save_blob):
     if blob_version is None or len(blob_version) != 4:
         save_blob.set(SaveDataTags.VERSION_NUM, cur_version)
     elif blob_version[3] == "DEV" or blob_version[3] == "MOD":
-        # if you ever play it in a non-standard mode, forever stain the save file
+        # if you ever played it in a non-standard mode, forever blemish the save file
         save_blob.set(SaveDataTags.VERSION_NUM, (cur_version[0], cur_version[1], cur_version[2], blob_version[3]))
     else:
         save_blob.set(SaveDataTags.VERSION_NUM, cur_version)
@@ -212,11 +230,28 @@ def write_to_disk(save_blob):
     try:
         # here goes nothing...
         util.Utils.save_json_to_path(json_blob, save_blob.filepath)
-    except (IOError, ValueError):
+    except (OSError, ValueError, TypeError):
+        print("ERROR: failed to write json to file: {}\njson_blob={}".format(save_blob.filepath, json_blob))
+        traceback.print_exc()
+        return False
+    except:
+        print("ERROR: failed to save json to file due to unexpected error: {}".format(save_blob.filepath))
         traceback.print_exc()
         return False
 
     return True
+
+
+def delete_from_disk(save_blob):
+    the_filepath = save_blob.filepath
+    if the_filepath is not None:
+        try:
+            os.remove(the_filepath)
+            return True
+        except OSError:
+            print("ERROR: failed to delete save file: {}".format(the_filepath))
+            traceback.print_exc()
+            return False
 
 
 class SaveDataTags:

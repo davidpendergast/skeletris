@@ -25,7 +25,7 @@ def load_version_info(force_nodev=False):
     except FileNotFoundError:
         print("ERROR: failed to load version info, version.json is missing")
         traceback.print_exc()
-    except (ValueError, KeyError):
+    except:
         print("ERROR: failed to load version info, version.json couldn't be parsed")
         traceback.print_exc()
 

@@ -215,7 +215,7 @@ class Settings:
 
                 print("INFO: successfully loaded settings from {}".format(filepath))
 
-            except IOError:
+            except (OSError, ValueError, TypeError):
                 print("ERROR: failed to load settings from {}".format(filepath))
                 traceback.print_exc()
 
@@ -243,7 +243,7 @@ class Settings:
                 Utils.save_json_to_path(blob, filepath)
                 print("INFO: successfully saved settings to {}".format(filepath))
 
-            except IOError:
+            except (OSError, ValueError, TypeError):
                 print("ERROR: failed to save settings to {}".format(filepath))
                 traceback.print_exc()
 

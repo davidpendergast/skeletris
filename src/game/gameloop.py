@@ -164,7 +164,7 @@ def run():
                 world_view = None
 
             elif global_event.get_type() == events.GlobalEventType.NEW_GAME:
-                print("INFO: starting fresh game")
+                print("INFO: starting game")
                 RenderEngine.get_instance().clear_all_sprites()
 
                 if debug.reset_tutorials_each_game():
