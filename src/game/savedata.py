@@ -13,6 +13,9 @@ _all_tags = []
 _LOADED_FILES = []
 
 
+WIN_SAVE_ID = "normal_win"
+
+
 def get_path_to_saves():
     return str(pathlib.Path("save_data/saves/"))
 
@@ -101,11 +104,25 @@ def reload_all_save_data_from_disk():
     _LOADED_FILES.sort(key=lambda data: data.get_last_modified_time_for_sorting(), reverse=True)
 
 
-def get_all_save_data(load_if_needed=True):
+def get_all_in_progress_save_data(load_if_needed=True):
     if len(_LOADED_FILES) == 0 and load_if_needed:
         reload_all_save_data_from_disk()
 
-    return list(_LOADED_FILES)
+    return [blob for blob in _LOADED_FILES if not blob.is_completed()]
+
+
+def get_all_completed_save_data(load_if_needed=True, filter_non_standard_versions=True):
+    """Sorts by elapsed time."""
+    if len(_LOADED_FILES) == 0 and load_if_needed:
+        reload_all_save_data_from_disk()
+
+    res = []
+    for blob in _LOADED_FILES:
+        if blob.is_completed() and (blob.has_standard_version() or not filter_non_standard_versions):
+            res.append(blob)
+
+    res.sort(key=lambda data: data.get_elapsed_time_for_sorting())
+    return res
 
 
 _MOCK_CHECKSUM = 3141529   # security feature
@@ -355,8 +372,24 @@ class SaveDataBlob:
 
         self.tags[tag] = value
 
-    def get_pretty_zone_name(self):
+    def is_completed(self):
+        """Whether the save file has been won (thus making it a high score file)."""
+        return self.get(SaveDataTags.SPAWN_ID) == WIN_SAVE_ID
+
+    def has_standard_version(self):
+        my_version = self.get(SaveDataTags.VERSION_NUM)
+        if my_version is None or len(my_version) != 4:
+            return False
+        else:
+            desc = my_version[3]
+            return desc != "DEV" and desc != "MOD"
+
+    def get_pretty_save_id_name(self):
         save_id = self.get(SaveDataTags.SPAWN_ID)
+
+        if self.is_completed():
+            return "Win"
+
         zone_name = None
         if save_id is not None:
             import src.worldgen.zones as zones
@@ -392,7 +425,7 @@ class SaveDataBlob:
         if 0 < max_length <= 3:
             max_length = 4
 
-        zone_name = self.get_pretty_zone_name()
+        zone_name = self.get_pretty_save_id_name()
         time_part = "" if not include_elapsed_time else " ({})".format(self.get_pretty_elapsed_time())
 
         version_part = ""
@@ -439,9 +472,10 @@ class SaveDataBlob:
 
         import src.worldgen.zones as zones
         t = SaveDataTags.SPAWN_ID
-        save_zone = zones.get_zone_id_for_save_id(self.tags[t])
-        if save_zone is None:
-            res[t] = "{} isn't recognized: {}".format(t, self.tags[t])
+        if self.tags[t] != WIN_SAVE_ID:
+            save_zone = zones.get_zone_id_for_save_id(self.tags[t])
+            if save_zone is None:
+                res[t] = "{} isn't recognized: {}".format(t, self.tags[t])
 
         return res
 
@@ -449,6 +483,13 @@ class SaveDataBlob:
         res = self.get(SaveDataTags.LAST_MODIFIED_TIME)
         if res is None or not isinstance(res, int):
             return 0
+        else:
+            return res
+
+    def get_elapsed_time_for_sorting(self):
+        res = self.get(SaveDataTags.ELAPSED_TIME)
+        if res is None or not isinstance(res, int) or res < 0:
+            return float('inf')
         else:
             return res
 

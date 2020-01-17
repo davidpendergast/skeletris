@@ -385,11 +385,13 @@ class Utils:
         else:
             res = ":" + res
 
-        res = str(minutes) + res
+        if minutes < 10 and (hours > 0 or show_hours_if_zero):
+            res = "0" + str(minutes) + res
+        else:
+            res = str(minutes) + res
+
         if hours == 0:
             return "0:" + res if show_hours_if_zero else res
-        elif minutes < 10:
-            return str(hours) + ":0" + res
         else:
             return str(hours) + ":" + res
 

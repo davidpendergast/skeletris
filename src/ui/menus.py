@@ -49,6 +49,8 @@ class MenuManager:
     YOU_WIN_MENU = 13
     CREDITS_MENU = 14
 
+    HIGH_SCORES = 15
+
     def __init__(self, menu):
         self._active_menu = TitleMenu()
         self._next_active_menu = menu
@@ -641,12 +643,13 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
             self._sound_idx = (2, 0)
             self._exit_idx = (3, 0)
         else:
-            opts = ["start", "load game", "controls", "sound", "exit"]
+            opts = ["start", "load game", "controls", "sound", "scores", "exit"]
             self._start_idx = (0, 0)
             self._load_idx = (1, 0)
             self._options_idx = (2, 0)
             self._sound_idx = (3, 0)
-            self._exit_idx = (4, 0)
+            self._high_scores_idx = (4, 0)
+            self._exit_idx = (5, 0)
 
         OptionsMenu.__init__(self,
                              MenuManager.START_MENU,
@@ -686,6 +689,9 @@ class StartMenu(OptionsMenu, MenuWithVersionDisplay):
         elif idx == self._load_idx:
             gs.get_instance().menu_manager().set_active_menu(LoadMenu(reload_data=True))
             sound_effects.play_sound(soundref.menu_select)
+        elif idx == self._high_scores_idx:
+            gs.get_instance().menu_manager().set_active_menu(HighScoresMenu(reload_data=True))
+            sound_effects.play_sound(soundref.menu_select)
 
     def esc_pressed(self):
         gs.get_instance().menu_manager().set_active_menu(TitleMenu())
@@ -709,7 +715,7 @@ class LoadMenu(OptionsMenu):
         if reload_data:
             savedata.reload_all_save_data_from_disk()
 
-        all_saves = savedata.get_all_save_data(load_if_needed=False)
+        all_saves = savedata.get_all_in_progress_save_data(load_if_needed=False)
 
         start_idx = LoadMenu.FILES_PER_PAGE * page
 
@@ -805,6 +811,9 @@ class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
             "   turns: {}\n".format(self.save_blob.get(savedata.SaveDataTags.TURN_COUNT))
         ]
 
+    def esc_pressed(self):
+        self.option_activated(LoadFileInfoMenu.BACK_IDX)
+
     def option_activated(self, idx):
         if idx == LoadFileInfoMenu.PLAY_IDX:
             new_game_event = events.NewGameEvent(from_save_data=self.save_blob)
@@ -870,6 +879,9 @@ class ReallyDeleteSaveFileMenu(OptionsMenu):
         self.back_menu_builder = back_menu_builder
         self.after_delete_menu_builder = after_delete_menu_builder
 
+    def esc_pressed(self):
+        self.option_activated(ReallyDeleteSaveFileMenu.BACK_IDX)
+
     def option_activated(self, idx):
         if idx == ReallyDeleteSaveFileMenu.DELETE_IDX:
             print("INFO: deleting save file: {}".format(self.save_blob.filepath))
@@ -884,6 +896,106 @@ class ReallyDeleteSaveFileMenu(OptionsMenu):
         elif idx == ReallyDeleteSaveFileMenu.BACK_IDX:
             back_menu = self.back_menu_builder()
             gs.get_instance().menu_manager().set_active_menu(back_menu)
+            sound_effects.play_sound(soundref.menu_back)
+
+
+# TODO - make it so you can view the info of each run
+class HighScoresMenu(OptionsMenuWithTextBlurb):
+    _SCORES_PER_PAGE = 5
+
+    def __init__(self, reload_data=True, page=0):
+        if reload_data:
+            savedata.reload_all_save_data_from_disk()
+
+        import src.game.debug as debug
+        do_filter = not debug.is_dev()
+
+        all_scores = savedata.get_all_completed_save_data(load_if_needed=False, filter_non_standard_versions=do_filter)
+        if len(all_scores) > HighScoresMenu._SCORES_PER_PAGE:
+            self.page = Utils.bound(page, 0, len(all_scores) // HighScoresMenu._SCORES_PER_PAGE)
+            self._first_page = self.page == 0
+            self._last_page = self.page == (len(all_scores) // HighScoresMenu._SCORES_PER_PAGE)
+
+            opts = []
+            if not self._last_page:
+                self._next_page_idx = (len(opts), 0)
+                opts.append("next page")
+            else:
+                self._next_page_idx = (-1, 0)
+
+            if not self._first_page:
+                self._prev_page_idx = (len(opts), 0)
+                opts.append("prev page")
+            else:
+                self._prev_page_idx = (-1, 0)
+
+            self._back_idx = (len(opts), 0)
+            opts.append("back")
+
+            first_score_idx = self.page * HighScoresMenu._SCORES_PER_PAGE
+            end_score_idx = min(first_score_idx + HighScoresMenu._SCORES_PER_PAGE, len(all_scores))
+            self.scores_on_page = all_scores[first_score_idx:end_score_idx]
+        else:
+            opts = ["back"]
+            self.page = 0
+            self._first_page = True
+            self._last_page = True
+            self._next_page_idx = (-1, 0)
+            self._prev_page_idx = (-1, 0)
+            self._back_idx = (0, 0)
+            self.scores_on_page = all_scores
+
+        OptionsMenuWithTextBlurb.__init__(self, MenuManager.HIGH_SCORES, "high scores", opts)
+
+    def get_blurb_text(self):
+        if len(self.scores_on_page) == 0:
+            return "no scores yet!"
+        else:
+            lines = []
+            for i in range(0, len(self.scores_on_page)):
+                save_blob = self.scores_on_page[i]
+                n = self.page * HighScoresMenu._SCORES_PER_PAGE + i + 1
+                if n < 10 <= (self.page * HighScoresMenu._SCORES_PER_PAGE + len(self.scores_on_page)):
+                    row_str = " {}. ".format(n)
+                else:
+                    row_str = "{}. ".format(n)
+
+                row_str += "{}".format(save_blob.get_pretty_elapsed_time(show_hours_if_zero=True))
+
+                row_str += " " + save_blob.get_pretty_last_modified_date()
+
+                if not save_blob.has_standard_version():
+                    vers_string = save_blob.get(savedata.SaveDataTags.VERSION_NUM)[3]
+                    row_str += " ({})".format(vers_string)
+
+                lines.append(row_str)
+
+            return "\n".join(lines)
+
+    def esc_pressed(self):
+        self.option_activated(self._back_idx)
+
+    def get_enabled(self, idx):
+        if idx == self._prev_page_idx:
+            return not self._first_page
+        elif idx == self._next_page_idx:
+            return not self._last_page
+        else:
+            return True
+
+    def option_activated(self, idx):
+        if idx == self._prev_page_idx:
+            new_menu = HighScoresMenu(reload_data=False, page=self.page - 1)
+            gs.get_instance().menu_manager().set_active_menu(new_menu)
+            sound_effects.play_sound(soundref.menu_select)
+
+        elif idx == self._next_page_idx:
+            new_menu = HighScoresMenu(reload_data=False, page=self.page + 1)
+            gs.get_instance().menu_manager().set_active_menu(new_menu)
+            sound_effects.play_sound(soundref.menu_select)
+
+        elif idx == self._back_idx:
+            gs.get_instance().menu_manager().set_active_menu(StartMenu())
             sound_effects.play_sound(soundref.menu_back)
 
 
