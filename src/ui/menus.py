@@ -522,56 +522,76 @@ class OptionsMenuWithTextBlurb(OptionsMenu):
         OptionsMenu.__init__(self, menu_id, title, options, title_size=title_size)
 
         self._info_text_size = info_text_size
-        self._info_text_img = None
-        self._info_text_rect = None
+        self._info_text_imgs = []
+        self._info_text_rects = []
 
     def get_blurb_text(self):
         return "Here's some info.\nOn multiple lines, no less."
 
-    def get_blurb_text_color(self):
+    def get_blurb_text_color(self, i=-1):
         return colors.WHITE
 
     def get_title_spacing(self):
-        if self._info_text_img is None:
+        if len(self._info_text_imgs) == 0:
             return super().get_title_spacing()
         else:
             # make room for the info
-            return super().get_title_spacing() + self._info_text_img.h() + self.get_spacing()
+            total_h = 0
+            for i in range(0, len(self._info_text_imgs)):
+                text_img = self._info_text_imgs[i]
+                total_h += text_img.h()
+                total_h += self.get_spacing() if i < len(self._info_text_imgs) - 1 else super().get_title_spacing()
+
+            return super().get_title_spacing() + total_h
 
     def build_images(self):
         super().build_images()
-        if self._info_text_img is None:
-            self._info_text_img = TextImage(0, 0, self.get_blurb_text(), spriteref.UI_0_LAYER,
-                                            scale=self._info_text_size)
+        blurbs = Utils.listify(self.get_blurb_text())
+        while len(self._info_text_imgs) < len(blurbs):
+            self._info_text_imgs.append(TextImage(0, 0, " ", spriteref.UI_0_LAYER, scale=self._info_text_size))
+
+        r_engine = RenderEngine.get_instance()
+        while len(self._info_text_imgs) > len(blurbs):
+            to_rem = self._info_text_imgs.pop()
+            for bun in to_rem.all_bundles():
+                r_engine.remove(bun)
+
+        for i in range(0, len(self._info_text_imgs)):
+            text_blurb = blurbs[i]
+            self._info_text_imgs[i] = self._info_text_imgs[i].update(new_text=text_blurb)
 
     def layout_rects(self):
         super().layout_rects()
 
         title_rect = (0, 0, 0, 0) if self._title_rect is None else self._title_rect
+        cur_y = title_rect[1] + title_rect[3] + super().get_title_spacing()
 
-        if self._info_text_img is None:
-            self._info_text_rect = (0, 0, 0, 0)
-        else:
-            info_y = title_rect[1] + title_rect[3] + super().get_title_spacing()
-            info_x = RenderEngine.get_instance().get_game_size()[0] // 2 - self._info_text_img.w() // 2
-            self._info_text_rect = (info_x, info_y, self._info_text_img.w(), self._info_text_img.h())
+        self._info_text_rects.clear()
+
+        for i in range(0, len(self._info_text_imgs)):
+            text_img = self._info_text_imgs[i]
+            info_x = RenderEngine.get_instance().get_game_size()[0] // 2 - text_img.w() // 2
+            self._info_text_rects.append((info_x, cur_y, text_img.w(), text_img.h()))
+
+            cur_y += text_img.h()
+            cur_y += self.get_spacing() if i < len(self._info_text_imgs) - 1 else super().get_title_spacing()
 
     def update_imgs(self):
         super().update_imgs()
 
-        if self._info_text_img is not None and self._info_text_rect is not None:
-            new_text = self.get_blurb_text()  # TODO if this actually changes it'll be wrongly aligned for a frame
-            new_x = self._info_text_rect[0]
-            new_y = self._info_text_rect[1]
-            new_color = self.get_blurb_text_color()
+        n_info_blurbs = min(len(self._info_text_imgs), len(self._info_text_rects))
+        for i in range(0, n_info_blurbs):
+            text_img = self._info_text_imgs[i]
+            text_rect = self._info_text_rects[i]
+            new_color = self.get_blurb_text_color(i=i)
 
-            self._info_text_img = self._info_text_img.update(new_text=new_text, new_x=new_x, new_y=new_y, new_color=new_color)
+            self._info_text_imgs[i] = text_img.update(new_x=text_rect[0], new_y=text_rect[1], new_color=new_color)
 
     def all_bundles(self):
         for bun in super().all_bundles():
             yield bun
-        if self._info_text_img is not None:
-            for bun in self._info_text_img.all_bundles():
+        for text_img in self._info_text_imgs:
+            for bun in text_img.all_bundles():
                 yield bun
 
 
@@ -777,12 +797,13 @@ class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
         MenuWithVersionDisplay.__init__(self)
 
     def get_blurb_text(self):
-        return (
-            # "{}\n".format(self.save_blob.get_pretty_last_modified_date()) +
-            "playtime: {}\n".format(self.save_blob.get_pretty_elapsed_time()) +
-            "kills: {}\n".format(self.save_blob.get(savedata.SaveDataTags.KILL_COUNT)) +
-            "turns: {}\n".format(self.save_blob.get(savedata.SaveDataTags.TURN_COUNT))
-        )
+        return [
+            "{}".format(self.save_blob.get_pretty_last_modified_date()),
+
+            "playtime: {}\n".format(self.save_blob.get_pretty_elapsed_time(show_hours_if_zero=True)) +
+            "   kills: {}\n".format(self.save_blob.get(savedata.SaveDataTags.KILL_COUNT)) +
+            "   turns: {}\n".format(self.save_blob.get(savedata.SaveDataTags.TURN_COUNT))
+        ]
 
     def option_activated(self, idx):
         if idx == LoadFileInfoMenu.PLAY_IDX:

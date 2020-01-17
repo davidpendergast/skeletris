@@ -334,14 +334,14 @@ class SaveDataBlob:
         else:
             return zone_name
 
-    def get_pretty_elapsed_time(self):
+    def get_pretty_elapsed_time(self, show_hours_if_zero=False):
         elapsed_time = self.get(SaveDataTags.ELAPSED_TIME)
         if elapsed_time is None:
             return "???"
         elif elapsed_time >= 216000000:  # you will NOT break my UI
             return "999:59:59"
         else:
-            return util.Utils.ticks_to_time_string(elapsed_time, fps=60)
+            return util.Utils.ticks_to_time_string(elapsed_time, show_hours_if_zero=show_hours_if_zero, fps=60)
 
     def get_pretty_last_modified_date(self):
         save_time = self.get(SaveDataTags.LAST_MODIFIED_TIME)
