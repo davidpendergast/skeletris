@@ -8,4 +8,5 @@
 4. the build will be dropped into the dist folder with a name 
    like "skeletris_windows_64bit_v1_0_0".
 
-5. zip it and ship it (optional).
+5. zip it (optional).
+

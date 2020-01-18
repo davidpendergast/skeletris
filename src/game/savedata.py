@@ -262,7 +262,7 @@ def delete_from_disk(save_blob):
     the_filepath = save_blob.filepath
     if the_filepath is not None:
         try:
-            os.remove(the_filepath)
+            os.remove(str(the_filepath))
             return True
         except OSError:
             print("ERROR: failed to delete save file: {}".format(the_filepath))

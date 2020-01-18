@@ -16,3 +16,5 @@ merch/*
 test_saves/*
 *.wav
 *.lnk
+make_legit_builds.txt
+info/version_override.json

@@ -1,5 +1,4 @@
 import os
-import sys
 import platform
 import pathlib
 import datetime
@@ -108,8 +107,16 @@ Launch Instructions:
 """.format(system_str, bit_count_str, version_str, date_str)
 
 
-if __name__ == "__main__":
-    version.load_version_info(force_nodev=True)
+def do_it():
+    version.load_version_info(force_nodev=True, ignore_override=True)
+
+    if not os.path.exists(pathlib.Path("make_legit_builds.txt")):
+        version._create_version_desc_override_file(desc="MOD")
+        version.load_version_info(force_nodev=True)
+    else:
+        # in case there's one left over from a previous failed run or something
+        version._remove_version_desc_override_file()
+
     version_num_str = version.get_pretty_version_string()  # version number of the game, expect "X.Y.Z-DESC"
 
     os_system_str = platform.system()  # expect "Windows" or "Linux"
@@ -123,7 +130,7 @@ if __name__ == "__main__":
 
     if not make_the_exe:
         print("INFO: make_exe was canceled by user, exiting")
-        sys.exit(0)
+        return
 
     spec_filename = pathlib.Path("skeletris.spec")
     print("INFO: creating spec file {}".format(spec_filename))
@@ -142,7 +149,7 @@ if __name__ == "__main__":
             shutil.rmtree(str(dist_dir), ignore_errors=True)
         else:
             print("INFO: user opted to not overwrite pre-existing build, exiting")
-            sys.exit(0)
+            return
 
     dist_dir_subdir = pathlib.Path("{}/Skeletris".format(dist_dir))
 
@@ -175,3 +182,15 @@ if __name__ == "__main__":
             os.chmod(str(exe_path), st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
     print("\nINFO: make_exe.py has finished")
+
+
+if __name__ == "__main__":
+    try:
+        do_it()
+
+    finally:
+        version._remove_version_desc_override_file()
+
+
+
+

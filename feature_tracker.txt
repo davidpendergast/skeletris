@@ -64,7 +64,6 @@
      - the first save point is quite early
         - should just have one after each boss probably
      - saving items
-     - dying, retrying should use same save data
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)
