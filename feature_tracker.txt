@@ -32,6 +32,7 @@
 [testing]
  - make sure that statuses 'apply' the correct number of times
  - test anything on mac (where can i find a mac?)
+    - zach says it doesn't work on mac anymore... rip
 
 
 [balance issues]    
@@ -54,14 +55,16 @@
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
-        
- - should have dmg and kills stats in inventory
+ - att stat in inventory should reflect active weapon
  - [WASD to move] tutorial doesn't look good
+    - honestly it's probably fine
  - light potion should cure blindness
- - save files should be moved to a high score table of some kind when you win
- - the first save point is quite early
-    - should just have one after each boss probably
-    
+ 
+ - save-related stuff
+     - the first save point is quite early
+        - should just have one after each boss probably
+     - saving items
+     - dying, retrying should use same save data
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)

@@ -242,8 +242,6 @@ def write_to_disk(save_blob):
 
     json_blob[SaveDataTags.CHECKSUM] = real_checksum
 
-    print("INFO: saving game data to {}".format(save_blob.filepath))
-
     try:
         # here goes nothing...
         util.Utils.save_json_to_path(json_blob, save_blob.filepath)
@@ -256,6 +254,7 @@ def write_to_disk(save_blob):
         traceback.print_exc()
         return False
 
+    print("INFO: successfully saved game data to {}".format(save_blob.filepath))
     return True
 
 

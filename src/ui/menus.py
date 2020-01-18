@@ -808,6 +808,7 @@ class LoadFileInfoMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
 
             "playtime: {}\n".format(self.save_blob.get_pretty_elapsed_time(show_hours_if_zero=True)) +
             "   kills: {}\n".format(self.save_blob.get(savedata.SaveDataTags.KILL_COUNT)) +
+            "  deaths: {}\n".format(self.save_blob.get(savedata.SaveDataTags.DEATH_COUNT)) +
             "   turns: {}\n".format(self.save_blob.get(savedata.SaveDataTags.TURN_COUNT))
         ]
 
@@ -912,9 +913,9 @@ class HighScoresMenu(OptionsMenuWithTextBlurb):
 
         all_scores = savedata.get_all_completed_save_data(load_if_needed=False, filter_non_standard_versions=do_filter)
         if len(all_scores) > HighScoresMenu._SCORES_PER_PAGE:
-            self.page = Utils.bound(page, 0, len(all_scores) // HighScoresMenu._SCORES_PER_PAGE)
+            self.page = Utils.bound(page, 0, len(all_scores) // HighScoresMenu._SCORES_PER_PAGE - 1)
             self._first_page = self.page == 0
-            self._last_page = self.page == (len(all_scores) // HighScoresMenu._SCORES_PER_PAGE)
+            self._last_page = self.page == (len(all_scores) // HighScoresMenu._SCORES_PER_PAGE - 1)
 
             opts = []
             if not self._last_page:
@@ -955,7 +956,7 @@ class HighScoresMenu(OptionsMenuWithTextBlurb):
             for i in range(0, len(self.scores_on_page)):
                 save_blob = self.scores_on_page[i]
                 n = self.page * HighScoresMenu._SCORES_PER_PAGE + i + 1
-                if n < 10 <= (self.page * HighScoresMenu._SCORES_PER_PAGE + len(self.scores_on_page)):
+                if n < 10:
                     row_str = " {}. ".format(n)
                 else:
                     row_str = "{}. ".format(n)
@@ -1061,7 +1062,7 @@ class ReallyQuitMenu(OptionsMenu):
     def option_activated(self, idx):
         OptionsMenu.option_activated(self, idx)
         if idx == ReallyQuitMenu.EXIT_IDX:
-            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            gs.get_instance().add_event(events.QuitToStartMenuEvent())
             sound_effects.play_sound(soundref.game_quit)
         elif idx == ReallyQuitMenu.BACK:
             gs.get_instance().menu_manager().set_active_menu(PauseMenu())
@@ -1739,7 +1740,7 @@ class CreditsMenu(Menu):
                 y_pos += text_img.h() + self.text_y_spacing
 
         if y_pos < 0:
-            gs.get_instance().menu_manager().set_active_menu(StartMenu())
+            gs.get_instance().add_event(events.QuitToStartMenuEvent())
 
     def all_bundles(self):
         for bun in super().all_bundles():

@@ -147,14 +147,11 @@ def run():
         gs.get_instance().global_event_queue().flip()
         for global_event in gs.get_instance().global_event_queue().all_events():
             if global_event.get_type() == events.GlobalEventType.GAME_EXIT:
-                gs.get_instance().save_settings_to_disk()
-                gs.get_instance().save_current_game_to_disk_softly()
-                print("INFO: quitting skeletris")
                 running = False
                 continue
 
             elif global_event.get_type() == events.GlobalEventType.QUIT_TO_START_MENU:
-                print("INFO: quitting game")
+                print("INFO: quitting to start menu")
                 RenderEngine.get_instance().clear_all_sprites()
 
                 gs.get_instance().save_settings_to_disk()
@@ -212,6 +209,10 @@ def run():
 
                 elif zone_event.get_type() == events.EventType.GAME_WIN:
                     print("INFO: won game!")
+
+                    import src.game.savedata as savedata
+                    gs.get_instance().save_current_game_to_disk(savedata.WIN_SAVE_ID)
+
                     tick_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.ELAPSED_TICKS)
                     kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
                     turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
@@ -219,6 +220,9 @@ def run():
                     gs.get_instance().menu_manager().set_active_menu(win_menu)
 
                 elif zone_event.get_type() == events.EventType.PLAYER_DIED:
+                    # the death_count run stat has already been inc'd by this point
+                    gs.get_instance().save_current_game_to_disk_softly()
+
                     gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
         # processing user input events
@@ -370,7 +374,11 @@ def run():
                 print("WARN: fps drop: {} ({} sprites)".format(round(clock.get_fps() * 10) / 10.0,
                                                                RenderEngine.get_instance().count_sprites()))
 
-    print("INFO: saving settings before exit")
+    print("INFO: saving game data before exit...")
+    gs.get_instance().save_current_game_to_disk_softly()
+
+    print("INFO: saving settings before exit...")
     gs.get_instance().save_settings_to_disk()
 
+    print("INFO: quitting skeletris")
     pygame.quit()

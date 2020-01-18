@@ -135,6 +135,10 @@ class GlobalState:
             else:
                 self._save_data = savedata.make_brand_new_blob()
 
+        elif self._save_data.is_completed():
+            print("WARN: save file is already completed, skipping update")
+            return
+
         self._save_data.set(savedata.SaveDataTags.KILL_COUNT, self.get_run_statistic(RunStatisticTypes.KILL_COUNT))
         self._save_data.set(savedata.SaveDataTags.TURN_COUNT, self.get_run_statistic(RunStatisticTypes.TURN_COUNT))
         self._save_data.set(savedata.SaveDataTags.ELAPSED_TIME, self.get_run_statistic(RunStatisticTypes.ELAPSED_TICKS))
@@ -184,6 +188,7 @@ class GlobalState:
             one doesn't already exist, (hence "softly").
         """
         if self._save_data is None:
+            print("INFO: nothing to save, skipping")
             return False
         else:
             self._update_save_data(save_id=None)

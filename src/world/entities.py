@@ -1195,6 +1195,8 @@ class Player(ActorEntity):
         total_delay = 240
         fade_duration = 30
 
+        gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
+
         gs.get_instance().add_event(events.PlayerDiedEvent(), delay=total_delay)
         gs.get_instance().do_fade_sequence(0.0, 1.0, fade_duration,
                                            start_delay=total_delay-fade_duration, end_delay=5)
