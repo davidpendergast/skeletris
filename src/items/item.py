@@ -81,14 +81,18 @@ class ItemTags:
 
 class ItemType:
 
-    def __init__(self, name, tags, min_level=0, max_level=float("inf"), drop_rate=1):
+    def __init__(self, name, type_id, tags, min_level=0, max_level=float("inf"), drop_rate=1):
         self.name = name
+        self.type_id = type_id
         self.tags = tags
         self.level_range = (min_level, max_level)
         self.drop_rate = drop_rate
 
     def get_name(self):
         return self.name
+
+    def get_id(self):
+        return self.type_id
 
     def get_tags(self):
         return self.tags
@@ -106,14 +110,14 @@ class ItemType:
         return self.name
 
 
-_ALL_TYPES = []
+_ALL_TYPES = {}  # type_id -> ItemType
 
 
-def _new_type(name, tags, min_level=0, max_level=float('inf'), drop_rate=1):
+def _new_type(name, type_id, tags, min_level=0, max_level=float('inf'), drop_rate=1):
     if not isinstance(tags, tuple):
         raise ValueError("tags needs to be a tuple: {}".format(tags))
-    res = ItemType(name, tags, min_level=min_level, max_level=max_level, drop_rate=drop_rate)
-    _ALL_TYPES.append(res)
+    res = ItemType(name, type_id, tags, min_level=min_level, max_level=max_level, drop_rate=drop_rate)
+    _ALL_TYPES[type_id] = res
     return res
 
 
@@ -122,58 +126,66 @@ class ItemTypes:
     @staticmethod
     def all_types(at_level=None, with_tags=()):
         if at_level is None:
-            types_at_level = list(_ALL_TYPES)
+            types_at_level = [_ALL_TYPES[t_id] for t_id in _ALL_TYPES]
         else:
             types_at_level = []
-            for t in _ALL_TYPES:
+            for t_id in _ALL_TYPES:
+                t = _ALL_TYPES[t_id]
                 if t.get_level_range()[0] <= at_level <= t.get_level_range()[1]:
                     types_at_level.append(t)
 
         if len(with_tags) > 0:
-            return [t for t in types_at_level if t in with_tags]
+            return [t for t in types_at_level if any(t.has_tag(tag) for tag in with_tags)]
         else:
             return types_at_level
 
-    STAT_CUBE_5 = _new_type("Small Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES),
+    @staticmethod
+    def get_type_for_id(type_id):
+        if type_id in _ALL_TYPES:
+            return _ALL_TYPES[type_id]
+        else:
+            return None
+
+    STAT_CUBE_5 = _new_type("Small Artifact", "stat_cubes_5", (ItemTags.EQUIPMENT, ItemTags.CUBES),
                             drop_rate=balance.STAT_CUBE_5_DROP_RATE)
-    STAT_CUBE_6 = _new_type("Medium Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=1,
+    STAT_CUBE_6 = _new_type("Medium Artifact", "stat_cubes_6", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=1,
                             drop_rate=balance.STAT_CUBE_6_DROP_RATE)
-    STAT_CUBE_7 = _new_type("Large Artifact", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=2,
+    STAT_CUBE_7 = _new_type("Large Artifact", "stat_cubes_7", (ItemTags.EQUIPMENT, ItemTags.CUBES), min_level=2,
                             drop_rate=balance.STAT_CUBE_7_DROP_RATE)
 
-    SWORD_WEAPON = _new_type("Sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3,
+    SWORD_WEAPON = _new_type("Sword", "weapon_sword", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=3,
                              drop_rate=balance.WEAPON_DROP_RATE)
-    SHIELD_WEAPON = _new_type("Shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
+    SHIELD_WEAPON = _new_type("Shield", "weapon_shield", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
                               drop_rate=balance.WEAPON_DROP_RATE)
-    SPEAR_WEAPON = _new_type("Spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7,
+    SPEAR_WEAPON = _new_type("Spear", "weapon_spear", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=7,
                              drop_rate=balance.WEAPON_DROP_RATE)
-    WHIP_WEAPON = _new_type("Whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
+    WHIP_WEAPON = _new_type("Whip", "weapon_whip", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=5,
                             drop_rate=balance.WEAPON_DROP_RATE)
-    DAGGER_WEAPON = _new_type("Dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=1,
+    DAGGER_WEAPON = _new_type("Dagger", "weapon_dagger", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=1,
                               drop_rate=balance.WEAPON_DROP_RATE)
-    AXE_WEAPON = _new_type("Axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9,
+    AXE_WEAPON = _new_type("Axe", "weapon_axe", (ItemTags.EQUIPMENT, ItemTags.WEAPON, ItemTags.THROWABLE), min_level=9,
                            drop_rate=balance.WEAPON_DROP_RATE)
-    BOW_WEAPON = _new_type("Bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9,
+    BOW_WEAPON = _new_type("Bow", "weapon_bow", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=9,
                            drop_rate=balance.WEAPON_DROP_RATE)
-    WAND_WEAPON = _new_type("Wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7,
+    WAND_WEAPON = _new_type("Wand", "weapon_wand", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=7,
                             drop_rate=balance.WEAPON_DROP_RATE)
-    FISHING_ROD_WEAPON = _new_type("Fishing Rod", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=4,
+    FISHING_ROD_WEAPON = _new_type("Fishing Rod", "weapon_fishing_rod", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=4,
                                    drop_rate=balance.FISHING_ROD_DROP_RATE)
-    SLINGSHOT_WEAPON = _new_type("Slingshot", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=6,
+    SLINGSHOT_WEAPON = _new_type("Slingshot", "weapon_slingshot", (ItemTags.EQUIPMENT, ItemTags.WEAPON), min_level=6,
                                  drop_rate=balance.WEAPON_DROP_RATE)
 
-    POTION = _new_type("Potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]),
+    POTION = _new_type("Potion", "potion", tuple([ItemTags.CONSUMABLE, ItemTags.THROWABLE]),
                        drop_rate=balance.POTION_DROP_RATE)
 
     # TODO - one day
-    #SUMMONING_TOME = _new_type("Summoning Tome", tuple([ItemTags.CONSUMABLE]),
+    #SUMMONING_TOME = _new_type("Summoning Tome", "summon_tome", tuple([ItemTags.CONSUMABLE]),
     #                           drop_rate=balance.SUMMONING_TOME_DROP_RATE)
 
 
 class Item(StatProvider):
 
     def __init__(self, name, item_type, level, cubes, stats, actions=None, consume_effect=None, consume_duration=3,
-                 color=(1, 1, 1), uuid_str=None, can_rotate=True, title_color=(1, 1, 1)):
+                 color=(1, 1, 1), uuid_str=None, can_rotate=True):
         self.name = name
         self.level = level
         self.item_type = item_type
@@ -183,7 +195,6 @@ class Item(StatProvider):
         self.color = color
         self.uuid = uuid_str if uuid_str is not None else str(uuid.uuid4())
         self._can_rotate = can_rotate
-        self.title_color = title_color
 
         self.consume_effect = consume_effect
         self.consume_duration = consume_duration
@@ -203,6 +214,9 @@ class Item(StatProvider):
     def get_type(self):
         return self.item_type
 
+    def get_cubes(self):
+        return self.cubes
+
     def get_uid(self):
         return self.uuid
 
@@ -211,9 +225,6 @@ class Item(StatProvider):
 
     def get_color(self):
         return self.color
-
-    def get_title_color(self):
-        return self.title_color
 
     def sprite_rotation(self):
         return 0
@@ -278,18 +289,15 @@ class Item(StatProvider):
     def get_entity_sprite(self):
         return spriteref.Items.misc_small
 
-    def to_json(self):
-        return None
-
 
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
-                 uuid_str=None, can_rotate=True, color=(1, 1, 1), title_color=(1, 1, 1), actions=None,
+                 uuid_str=None, can_rotate=True, color=(1, 1, 1), actions=None,
                  consume_effect=None, consume_duration=3, projectile_sprite=None):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
-                      can_rotate=can_rotate, title_color=title_color, actions=actions,
+                      can_rotate=can_rotate, actions=actions,
                       consume_effect=consume_effect, consume_duration=consume_duration)
 
         self._small_sprite = small_sprite
@@ -324,7 +332,7 @@ class SpriteItem(Item):
 
             return SpriteItem(self.name, self.get_type(), self.get_level(), new_cubes, self.stats, self._small_sprite,
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
-                              can_rotate=self._can_rotate, title_color=self.title_color, actions=self.item_actions,
+                              can_rotate=self._can_rotate, actions=self.item_actions,
                               consume_effect=self.consume_effect, consume_duration=self.consume_duration,
                               projectile_sprite=self._projectile_sprite)
 
@@ -349,11 +357,14 @@ class StatCubesItem(Item):
             item_type = ItemTypes.STAT_CUBE_7
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
-                      can_rotate=True, title_color=(1, 1, 1))
+                      can_rotate=True)
         self.cube_art = {} if cube_art is None else cube_art
     
     def level_string(self):
         return "lvl:{}".format(self.level + 1)
+
+    def get_cube_art(self):
+        return self.cube_art
 
     def rotate(self):
         new_cubes = []

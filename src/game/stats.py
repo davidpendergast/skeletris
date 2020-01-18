@@ -182,6 +182,13 @@ class StatTypes:
         for stat_id in _ALL_STAT_TYPES:
             yield _ALL_STAT_TYPES[stat_id]
 
+    @staticmethod
+    def get_type_for_id(stat_id):
+        if stat_id in _ALL_STAT_TYPES:
+            return _ALL_STAT_TYPES[stat_id]
+        else:
+            return None
+
 
 class StatProvider:
 

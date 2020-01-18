@@ -10,7 +10,7 @@ def init():
 
 def is_dev():
     if _IS_DEV is None:
-        raise ValueError("module has not been initialized")
+        init()
     return _IS_DEV
 
 

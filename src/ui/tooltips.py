@@ -22,7 +22,7 @@ class TooltipFactory:
             op = "(+" if plus_att > 0 else "-"
             text_builder.add(op + str(plus_att) + ") ", color=StatTypes.ATT.get_color())
 
-        text_builder.add_line(str(target_item.get_title()), color=target_item.get_title_color())
+        text_builder.add_line(str(target_item.get_title()))
 
         all_tags = [t for t in target_item.get_type().get_tags() if not t.startswith("_")]
         if item.ItemTags.WEAPON in all_tags and item.ItemTags.EQUIPMENT in all_tags:

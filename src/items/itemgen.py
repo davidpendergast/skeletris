@@ -34,10 +34,8 @@ class ItemFactory:
                 print("WARN: no valid item types to drop as loot at level: {}".format(level))
                 return None
 
-
     @staticmethod
     def gen_item(level, item_type=None):
-
         if item_type is None:
             item_type = ItemFactory.gen_item_type(level)
             if item_type is None:
@@ -58,9 +56,31 @@ class ItemFactory:
 
         return None
 
-    @staticmethod
-    def from_json(json_blob):
-        return None
+
+#_ALL_SPRITE_BUNDLES_FOR_ITEMS = {}  # bundle_id -> _SpriteBundleForItem
+
+
+#class _SpriteBundleForItem:
+
+#    def __init__(self, bundle_id, entity_sprite, inventory_sprite, projectile_sprite=None):
+#        self.bundle_id = bundle_id
+#        self.entity_sprite = entity_sprite
+#        self.inventory_sprite = inventory_sprite
+#        self.projectile_sprite = projectile_sprite
+
+#        _ALL_SPRITE_BUNDLES_FOR_ITEMS[bundle_id] = self
+
+
+#class _SpriteBundlesForItems:
+
+#    @staticmethod
+#    def get_bundle_for_id(bundle_id):
+#        if bundle_id in _ALL_SPRITE_BUNDLES_FOR_ITEMS:
+#            return _ALL_SPRITE_BUNDLES_FOR_ITEMS[bundle_id]
+#        else:
+#            return None
+
+#    SWORD_SPRITES = _SpriteBundleForItem("sword_sprites", spriteref.Items.sword_small, spriteref.Items.sword_big)
 
 
 class WeaponItemFactory:
@@ -176,7 +196,7 @@ class PotionTemplate:
         _ALL_POTION_TEMPLATES.append(self)
 
 
-HEALING = PotionTemplate("Potion of Healing", min_level=1, drop_rate=7,
+HEALING = PotionTemplate("Potion of Healing", min_level=0, drop_rate=7,
                          status=statuseffects.StatusEffectTypes.HP_REGEN_1,
                          duration=balance.POTION_SMALL_HEAL_DURATION)
 
@@ -188,7 +208,7 @@ HARMING = PotionTemplate("Potion of Harming", min_level=4, drop_rate=5,
                          status=statuseffects.StatusEffectTypes.POISON,
                          duration=balance.POTION_POIS_DURATION)
 
-SPEED_POTION = PotionTemplate("Potion of Quickness", min_level=2, drop_rate=5,
+SPEED_POTION = PotionTemplate("Potion of Quickness", min_level=1, drop_rate=5,
                               status=statuseffects.StatusEffectTypes.SPEED,
                               duration=balance.POTION_SPEED_DUR)
 
