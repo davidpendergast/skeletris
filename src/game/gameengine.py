@@ -39,6 +39,7 @@ class ActorState(StatProvider):
 
     def get_all_mappable_action_providers(self):
         # yield ItemActions.UNARMED_ATTACK  # this is unnecessary, confusing
+        # unless...?
         # TODO - but how does the player know that slapping has 2 damage?
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
@@ -81,7 +82,7 @@ class ActorState(StatProvider):
         new_hp = min(val, self.max_hp())
 
         # just a debug thing, don't worry about it
-        if self.alignment == 0 and debug.player_cant_die():
+        if self.is_player() and debug.player_cant_die():
             new_hp = max(1, new_hp)
 
         self.current_hp = new_hp
@@ -241,6 +242,9 @@ class ActorState(StatProvider):
             flinch_recovery_dur = self.stat_value(StatTypes.FLINCH_RESIST)
             if flinch_recovery_dur > 0:
                 self.try_to_add_status_effect(statuseffects.StatusEffectTypes.FLINCH_RESIST, flinch_recovery_dur)
+
+    def clear_all_status_effects(self):
+        self.status_effects.clear()
 
 
 class ActorController:

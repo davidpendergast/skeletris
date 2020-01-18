@@ -621,6 +621,7 @@ item_throw_start = None
 player_skip_turn = _soft_blip_1
 enemy_skip_turn = _soft_blip_2
 summon_enemy = (sfx_sound_mechanicalnoise3, 0.2)
+saved_game = summon_enemy
 
 item_pickup = (sfx_movement_ladder5b, 0.3)
 item_place = (sfx_movement_ladder5a, 0.3)

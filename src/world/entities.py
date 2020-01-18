@@ -2398,7 +2398,8 @@ class SaveStation(Entity):
                 import src.game.dialog as dialog
                 gs.get_instance().dialog_manager().set_dialog(dialog.Dialog("Game Saved."))
 
-                # TODO sound effect
+                self._heal_player_for_save(world, p)
+                sound_effects.play_sound(soundref.saved_game)
 
     def _update_puppet(self, world, sprite, xy, z, shadow_sprite):
         puppet_ent = world.get_entity(self._anim_puppet_uid)
@@ -2455,16 +2456,32 @@ class SaveStation(Entity):
 
         return p_xy[0] == my_xy[0] and p_xy[1] == my_xy[1] + 1
 
+    def _heal_player_for_save(self, world, player):
+        if player is not None:
+            max_hp = player.get_actor_state().max_hp()
+            # note that we're purposely not removing status effects here mainly because
+            # it looks weird to just yoink them away (there's no 'status cleanse' animation)...
+            # and thematically it sorta makes sense that you'd keep your statuses but
+            # your clones wouldn't.
+            player.apply_hp_change(max_hp, world,
+                                   pulse_color=stats.StatTypes.HEAL_AT_LEVEL_END.get_color(),
+                                   sound=None,  # there's already a sound that plays after saving
+                                   show_text=True)
+
     def interact(self, world):
         if self.already_used:
             print("WARN: this save station was already used, skipping")
             return
+
+        cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
+        gs.get_instance().set_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT, cp_count + 1)
 
         res = gs.get_instance().save_current_game_to_disk(self.get_save_id())
 
         import src.game.dialog as dialog
         if res:
             self.already_used = True
+
             hop_in_dialog = dialog.Dialog(">> Welcome to CloneBot!\n" +
                                           ">> Please step into the chamber.")
             d = [hop_in_dialog,
@@ -2492,7 +2509,10 @@ class SaveStation(Entity):
 
         else:
             self.already_used = False
+            gs.get_instance().set_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT, cp_count)  # undo the inc
+
             gs.get_instance().dialog_manager().set_dialog(dialog.Dialog("Failed to Save."))
+            sound_effects.play_sound(soundref.error)
             return
 
         # start the animation stuff

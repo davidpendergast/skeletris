@@ -35,9 +35,6 @@
 
 
 [balance issues]    
- - probably better to admit now that perma-death is too harsh
-    - players can easily place this restriction on themselves if they like
-
  - spider boss can be 'out-of-sync' with hit and step technique, causing confusion
     - teach player to skip their turn at the same time?
     - somehow force it to be in-sync?
@@ -61,10 +58,9 @@
  - should have dmg and kills stats in inventory
  - [WASD to move] tutorial doesn't look good
  - light potion should cure blindness
- - save stations should heal you
- - there's no way to delete saved games in-game
  - save files should be moved to a high score table of some kind when you win
  - the first save point is quite early
+    - should just have one after each boss probably
     
 
 [maintanence]
