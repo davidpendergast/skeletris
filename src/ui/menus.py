@@ -1332,6 +1332,7 @@ class KeybindingEditMenu(OptionsMenu):
         return True
 
 
+# TODO - srsly delete this
 class CinematicMenu(Menu):
 
     def __init__(self):
@@ -1467,13 +1468,13 @@ class DeathMenu(FadingInFlavorMenu):
         "ouch!"
     ]
 
+    def __init__(self, retry_save_data=None):
+        FadingInFlavorMenu.__init__(self, MenuManager.DEATH_MENU, self.get_flavor_text(),
+                                    DeathOptionMenu(retry_save_data=retry_save_data), auto_next=True)
+
     def get_flavor_text(self):
         idx = int(random.random() * len(DeathMenu.ALL_FLAVOR))
         return DeathMenu.ALL_FLAVOR[idx]
-
-    def __init__(self):
-        FadingInFlavorMenu.__init__(self, MenuManager.DEATH_MENU, self.get_flavor_text(),
-                                    DeathOptionMenu(), auto_next=True)
 
 
 class DeathOptionMenu(OptionsMenu):
@@ -1481,8 +1482,12 @@ class DeathOptionMenu(OptionsMenu):
     RETRY = (0, 0)
     EXIT_OPT = (1, 0)
 
-    def __init__(self):
-        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", ["retry", "quit"])
+    def __init__(self, retry_save_data=None):
+        self._retry_save_data = retry_save_data
+
+        retry_text = "continue" if self._retry_save_data is not None else "retry"
+
+        OptionsMenu.__init__(self, MenuManager.DEATH_OPTION_MENU, "game over", [retry_text, "quit"])
 
     def get_song(self):
         return None
@@ -1491,9 +1496,9 @@ class DeathOptionMenu(OptionsMenu):
         if idx == DeathOptionMenu.EXIT_OPT:
             gs.get_instance().add_event(events.QuitToStartMenuEvent())
             sound_effects.play_sound(soundref.game_quit)
+
         elif idx == DeathOptionMenu.RETRY:
-            # TODO continue from same save file
-            gs.get_instance().add_event(events.NewGameEvent())
+            gs.get_instance().add_event(events.NewGameEvent(from_save_data=self._retry_save_data))
             sound_effects.play_sound(soundref.newgame_start)
 
 

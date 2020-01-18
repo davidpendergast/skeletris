@@ -220,10 +220,17 @@ def run():
                     gs.get_instance().menu_manager().set_active_menu(win_menu)
 
                 elif zone_event.get_type() == events.EventType.PLAYER_DIED:
-                    # the death_count run stat has already been inc'd by this point
+                    # saving the stats (kill_count, elapsed_time, etc.) from this run to disk
+                    # (note that death_count is inc'd the moment the player dies, so we don't touch it here)
                     gs.get_instance().save_current_game_to_disk_softly()
 
-                    gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
+                    # grab the save data in case we opt to retry
+                    save_data = gs.get_instance().get_save_data_if_present()
+
+                    # detach the save data from the (still-active) GS so that we stop adding elapsed time
+                    gs.get_instance().detach_save_data_if_present()
+
+                    gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu(retry_save_data=save_data))
 
         # processing user input events
         all_resize_events = []
@@ -317,11 +324,6 @@ def run():
         if debug.is_dev() and world_active and input_state.was_pressed(pygame.K_F6):
             gs.get_instance().menu_manager().set_active_menu(menus.DebugMenu())
             sound_effects.play_sound(soundref.pause_in)
-
-        if debug.is_debug() and input_state.was_pressed(pygame.K_x):
-            manager = gs.get_instance().menu_manager()
-            if manager.get_active_menu().get_type() == menus.MenuManager.IN_GAME_MENU:
-                gs.get_instance().menu_manager().set_active_menu(menus.DeathMenu())
 
         if input_state.was_pressed(pygame.K_F5):
             current_scale = gs.get_instance().settings().pixel_scale()

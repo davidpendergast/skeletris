@@ -128,6 +128,13 @@ class GlobalState:
     def save_settings_to_disk(self):
         self._settings.save_to_disk()
 
+    def get_save_data_if_present(self):
+        return self._save_data
+
+    def detach_save_data_if_present(self):
+        """Severs the connection between this globalstate and its save data file."""
+        self._save_data = None
+
     def _update_save_data(self, save_id=None):
         if self._save_data is None:
             if save_id is None:
