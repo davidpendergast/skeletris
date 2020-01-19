@@ -97,6 +97,14 @@ class ItemGrid:
             self._dirty = True
             return True
         return False
+
+    def remove_all(self):
+        res = []
+        all_items = [item for item in self.items]
+        for item in all_items:
+            if self.remove(item):
+                res.append(item)
+        return res
         
     def item_at_position(self, pos):
         for item in self.items:

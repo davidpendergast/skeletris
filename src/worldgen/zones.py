@@ -96,7 +96,7 @@ def next_storyline_zone(current_id):
     if current_id == CaveHorrorZonePeaceful.ZONE_ID:
         return _END_OF_GAME_ZONE_ID
     elif current_id not in _STORYLINE_ZONES:
-        print("WARN: {} isn't a storyline zone, so there's no 'next' storyline zone")
+        print("WARN: {} isn't a storyline zone, so there's no 'next' storyline zone".format(current_id))
         return None
     else:
         idx = _STORYLINE_ZONES.index(current_id)

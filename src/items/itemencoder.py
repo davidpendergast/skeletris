@@ -13,7 +13,7 @@ STATS_KEY = "stats"         # list of (str, int, bool)
 # specific to stat cube items
 NAME_KEY = "name"           # str
 COLOR_KEY = "color"         # (int, int, int)
-CUBE_ART_KEY = "cube_art"  # dict (int, int) -> int
+CUBE_ART_KEY = "cube_art"   # list of (int, int, int)
 
 # specific to sprite items
 ROTATION_KEY = "rotation"   # int equal to 0, 1, 2, or 3
@@ -59,10 +59,11 @@ def json_to_item(json_blob):
     if item_type.has_tag(item.ItemTags.CUBES):
         # stat cube item
         color_in_json = _get_json_attribute(json_blob, COLOR_KEY, assert_type=list, fail_if_missing=True)
+        cube_art_in_json = _get_json_attribute(json_blob, CUBE_ART_KEY, assert_type=list, fail_if_missing=True)
 
         item_name = _get_json_attribute(json_blob, NAME_KEY, assert_type=str, fail_if_missing=True)
         item_color = _json_to_color(color_in_json)
-        item_cube_art = _get_json_attribute(json_blob, CUBE_ART_KEY, assert_type=dict, fail_if_missing=True)
+        item_cube_art = _json_to_cube_art(cube_art_in_json)
 
         return build_stat_cubes_item(item_type, item_cubes, item_level, item_uid, item_stats,
                                      item_name, item_color, item_cube_art)
@@ -97,7 +98,7 @@ def _get_json_attribute(json_blob, key, assert_type=None, allow_none=False, fail
 def _add_stat_cube_item_attributes_to_json(json_blob, the_item):
     json_blob[NAME_KEY] = str(the_item.get_title())
     json_blob[COLOR_KEY] = _color_to_json(the_item.get_color())
-    json_blob[CUBE_ART_KEY] = dict(the_item.get_cube_art())
+    json_blob[CUBE_ART_KEY] = _cube_art_to_json(the_item.get_cube_art())
 
 
 def _add_sprite_item_attributes_to_json(json_blob, the_item):
@@ -117,6 +118,23 @@ def _json_to_color(int_color):
     g = min(1, max(0, int_color[1] / 255))
     b = min(1, max(0, int_color[2] / 255))
     return (r, g, b)
+
+
+def _cube_art_to_json(cube_art):
+    res = []  # list of (cube_x, cube_y, art_id)
+    for cube_xy in cube_art:
+        art_id = cube_art[cube_xy]
+        res.append((cube_xy[0], cube_xy[1], art_id))
+    return res
+
+
+def _json_to_cube_art(json_art_list):
+    res = {}  # (int, int) -> int
+    for val in json_art_list:
+        cube_pos = (int(val[0]), int(val[1]))
+        art_id = int(val[2])
+        res[cube_pos] = art_id
+    return res
 
 
 def _stats_to_json(applied_stats_list):

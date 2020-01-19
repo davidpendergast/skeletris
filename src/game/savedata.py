@@ -6,6 +6,7 @@ import random
 
 import src.utils.util as util
 import src.game.version as version
+import src.items.itemencoder as itemencoder
 
 _all_tags = []
 
@@ -170,7 +171,19 @@ def load_file(path_to_file):
 
     ret.set(SaveDataTags.SPAWN_ID, util.Utils.read_string(json_blob, SaveDataTags.SPAWN_ID, None))
 
-    # TODO loading items
+    inv_items_tag = SaveDataTags.INVENTORY_ITEMS
+    inv_pos_tag = SaveDataTags.INVENTORY_ITEM_POSITIONS
+    inv_items, inv_positions = _load_items_from_json(json_blob, inv_items_tag, inv_pos_tag)
+
+    ret.set(SaveDataTags.INVENTORY_ITEMS, inv_items)
+    ret.set(SaveDataTags.INVENTORY_ITEM_POSITIONS, inv_positions)
+
+    eq_items_tag = SaveDataTags.EQUIPMENT_ITEMS
+    eq_pos_tag = SaveDataTags.EQUIPMENT_ITEM_POSITIONS
+    eq_items, eq_positions = _load_items_from_json(json_blob, eq_items_tag, eq_pos_tag)
+
+    ret.set(SaveDataTags.EQUIPMENT_ITEMS, eq_items)
+    ret.set(SaveDataTags.EQUIPMENT_ITEM_POSITIONS, eq_positions)
 
     invalid_tags = ret._get_invalid_tags()
     if len(invalid_tags) > 0:
@@ -178,6 +191,38 @@ def load_file(path_to_file):
         raise ValueError("Invalid tags in {}: {}".format(path_to_file, pretty_string))
 
     return ret
+
+
+def _load_items_from_json(json_blob, items_tag, positions_tag):
+    """
+        returns: list of items, list of (x, y) positions
+    """
+    json_items = util.Utils.read_safely(json_blob, items_tag, [])
+    json_positions = util.Utils.read_safely(json_blob, positions_tag, [])
+
+    if len(json_items) != len(json_positions):
+        print("ERROR: malformed json, item list and position list have different lengths: " +
+              "{} has length {}, and {} has length {}".format(
+                items_tag, len(json_items), positions_tag, len(json_positions)))
+        return [], []
+
+    res_items = []
+    res_positions = []
+    for i in range(0, len(json_items)):
+        try:
+            json_pos = json_positions[i]
+            json_item = json_items[i]
+
+            raw_pos = (int(json_pos[0]), int(json_pos[1]))
+            raw_item = itemencoder.json_to_item(json_item)
+
+            res_positions.append(raw_pos)
+            res_items.append(raw_item)
+        except:
+            traceback.print_exc()
+            print("ERROR: failed to deserialize item at list index, skipping it: {}".format(i))
+
+    return res_items, res_positions
 
 
 def write_to_disk(save_blob):
@@ -221,15 +266,17 @@ def write_to_disk(save_blob):
 
         for i in range(0, len(item_list)):
             json_item = None
+            raw_item = item_list[i]
             pos = [position_list[i][0], position_list[i][1]]
 
             try:
-                json_item = item_list[i].to_json()
-            except ValueError:
+                json_item = itemencoder.item_to_json(raw_item)
+
+            except:
                 traceback.print_exc()
 
             if json_item is None:
-                print("ERROR: failed to serialize item: {}".format(item_list[i]))
+                print("ERROR: failed to serialize item: {}".format(raw_item))
             else:
                 json_blob[item_list_tag].append(json_item)
                 json_blob[position_list_tag].append(pos)

@@ -8,6 +8,7 @@ import src.game.soundref as soundref
 import src.game.sound_effects as sound_effects
 from src.renderengine.engine import RenderEngine
 import src.game.savedata as savedata
+import src.items.itemencoder
 
 _GLOBAL_STATE_INSTANCE = None
 
@@ -45,7 +46,7 @@ class RunStatisticTypes:
 
 class GlobalState:
 
-    def __init__(self, menu_manager, dialog_manager, from_save_data=None):
+    def __init__(self, menu_manager, dialog_manager):
         self.tick_counter = 0
         self.anim_tick = 0
 
@@ -94,8 +95,7 @@ class GlobalState:
 
         # save data stuff
         self._run_statistics = {}
-        self._save_data = from_save_data
-        self._pull_state_from_save_data(from_save_data)
+        self._save_data = None
 
     def increment_tick_counts(self):
         self.tick_counter += 1
@@ -154,19 +154,73 @@ class GlobalState:
 
         if save_id is not None:
             self._save_data.set(savedata.SaveDataTags.SPAWN_ID, save_id)
-            # TODO saving items
 
-    def _pull_state_from_save_data(self, save_data):
-        """Note: this should only be called once per run, by GlobalState's constructor"""
+            inv_items = []
+            inv_item_positions = []
+
+            inv_grid = self.player_state().inventory().get_inv_grid()
+            for it in inv_grid.all_items():
+                pos = inv_grid.get_pos(it)
+                inv_items.append(it)
+                inv_item_positions.append(pos)
+
+            self._save_data.set(savedata.SaveDataTags.INVENTORY_ITEM_POSITIONS, inv_item_positions)
+            self._save_data.set(savedata.SaveDataTags.INVENTORY_ITEMS, inv_items)
+
+            equip_items = []
+            equip_item_positions = []
+
+            equip_grid = self.player_state().inventory().get_equip_grid()
+            for it in equip_grid.all_items():
+                pos = equip_grid.get_pos(it)
+                equip_items.append(it)
+                equip_item_positions.append(pos)
+
+            self._save_data.set(savedata.SaveDataTags.EQUIPMENT_ITEM_POSITIONS, equip_item_positions)
+            self._save_data.set(savedata.SaveDataTags.EQUIPMENT_ITEMS, equip_items)
+
+    def pull_state_from_save_data(self, save_data):
+        """Note: this should only be called once, global_state.create_new"""
         if save_data is None:
             return
+        else:
+            self._save_data = save_data
+
         self.set_run_statistic(RunStatisticTypes.KILL_COUNT, save_data.get(savedata.SaveDataTags.KILL_COUNT))
         self.set_run_statistic(RunStatisticTypes.TURN_COUNT, save_data.get(savedata.SaveDataTags.TURN_COUNT))
         self.set_run_statistic(RunStatisticTypes.ELAPSED_TICKS, save_data.get(savedata.SaveDataTags.ELAPSED_TIME))
         self.set_run_statistic(RunStatisticTypes.DEATH_COUNT, save_data.get(savedata.SaveDataTags.DEATH_COUNT))
         self.set_run_statistic(RunStatisticTypes.CHECKPOINT_COUNT, save_data.get(savedata.SaveDataTags.CHECKPOINT_COUNT))
 
-        # TODO grab_items
+        inv_grid = self.player_state().inventory().get_inv_grid()
+        removed_from_inv = inv_grid.remove_all()
+
+        inv_items = save_data.get(savedata.SaveDataTags.INVENTORY_ITEMS)
+        inv_item_positions = save_data.get(savedata.SaveDataTags.INVENTORY_ITEM_POSITIONS)
+        for i in range(0, len(inv_items)):
+            the_item = inv_items[i]
+            pos = inv_item_positions[i]
+            placed = inv_grid.place(the_item, pos)
+            if not placed:
+                print("WARN: failed to place inventory item at position {}, skipping it {}".format(pos, the_item))
+
+        eq_grid = self.player_state().inventory().get_equip_grid()
+        removed_from_eq = eq_grid.remove_all()
+
+        eq_items = save_data.get(savedata.SaveDataTags.EQUIPMENT_ITEMS)
+        eq_item_positions = save_data.get(savedata.SaveDataTags.EQUIPMENT_ITEM_POSITIONS)
+        for i in range(0, len(eq_items)):
+            the_item = eq_items[i]
+            pos = eq_item_positions[i]
+            placed = eq_grid.place(the_item, pos)
+            if not placed:
+                print("WARN: failed to place equipment item at position {}, skipping it {}".format(pos, the_item))
+
+        if len(removed_from_inv) + len(removed_from_eq) > 0:
+            # this would mean we're slamming the save over an active run or something, not good
+            print("WARN: deleted {} pre-existing items while loading save file".format(
+                len(removed_from_inv) + len(removed_from_eq)
+            ))
 
     def save_current_game_to_disk(self, save_id):
         if save_id is None:
@@ -564,7 +618,7 @@ def create_new(menu, from_save_data=None):
     import src.game.dialog as dialog
     dialog_manager = dialog.DialogManager()
 
-    new_instance = GlobalState(menu_manager, dialog_manager, from_save_data=from_save_data)
+    new_instance = GlobalState(menu_manager, dialog_manager)
 
     import src.game.inventory as inventory
     inventory_state = inventory.InventoryState()
@@ -575,6 +629,7 @@ def create_new(menu, from_save_data=None):
     player_controller = gameengine.PlayerController()
 
     new_instance.set_player_state(player_state, player_controller)
+    new_instance.pull_state_from_save_data(from_save_data)
 
     set_instance(new_instance)
 
