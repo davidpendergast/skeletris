@@ -3,6 +3,7 @@ import pygame
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
 import src.game.debug as debug
+import src.game.constants as constants
 
 DEFAULT_SCREEN_SIZE = (800, 600)
 MINIMUM_SCREEN_SIZE = (800, 600)
@@ -312,6 +313,10 @@ def run():
             else:
                 zone_id = zones.first_zone_id()
                 world = zones.build_world(zone_id)
+
+            fade_duration = constants.STANDARD_FADE_DURATION
+            gs.get_instance().do_fade_sequence(1.0, 0.0, fade_duration)
+            gs.get_instance().pause_world_updates(fade_duration // 2)
 
             gs.get_instance().set_world(world)
             world_view = WorldView(world)

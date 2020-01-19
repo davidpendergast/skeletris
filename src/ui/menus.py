@@ -20,6 +20,7 @@ import src.utils.colors as colors
 import src.game.gameengine as gameengine
 import src.game.version as version
 import src.game.savedata as savedata
+import src.game.constants as constants
 
 
 class MenuManager:
@@ -1074,10 +1075,8 @@ class ReallyQuitMenu(OptionsMenu):
 
 class TextOnlyMenu(OptionsMenu):
 
-    def __init__(self, text, next_menu, auto_advance_duration=None, fade_back_to_world_duration=30):
+    def __init__(self, text, next_menu, auto_advance_duration=None):
         OptionsMenu.__init__(self, MenuManager.TEXT_MENU, text, ["~hidden~"])
-
-        self.fade_back_to_world_duration = fade_back_to_world_duration
         self.next_menu = next_menu
 
         # to automatically advance the text menu
@@ -1101,9 +1100,9 @@ class TextOnlyMenu(OptionsMenu):
         if do_advance:
             gs.get_instance().menu_manager().set_active_menu(self.next_menu)
 
-            if self.fade_back_to_world_duration > 0 and self.next_menu.get_type() == MenuManager.IN_GAME_MENU:
-                gs.get_instance().do_fade_sequence(1.0, 0.0, self.fade_back_to_world_duration)
-                gs.get_instance().pause_world_updates(self.fade_back_to_world_duration // 2)
+            if self.next_menu.get_type() == MenuManager.IN_GAME_MENU:
+                gs.get_instance().do_fade_sequence(1.0, 0.0, constants.STANDARD_FADE_DURATION)
+                gs.get_instance().pause_world_updates(constants.STANDARD_FADE_DURATION // 2)
 
 
 class SoundSettingsMenu(OptionsMenu):

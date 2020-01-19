@@ -437,19 +437,29 @@ class ConversationFactory:
             ]
 
         if conv == Conversations.MARY_SKELLY_SWAMPS:
-            res_list = [
-                NpcDialog("You wouldn't be able to tell now, but these swamps used to be a popular place for picnics and hikes."),
-                NpcDialog("City skeletons would come through here all the time, and it was our job at the outpost to make sure none of them accidentally wandered into the caves."),
-                NpcDialog("Getting lost was the biggest danger back then. Not like now. It's so violent now.")
-            ]
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("You wouldn't be able to tell now, but these swamps used to be a popular place for picnics and hikes."),
+                    NpcDialog("City skeletons would come through here all the time, and it was our job at the outpost to make sure none of them accidentally wandered into the caves."),
+                    NpcDialog("Getting lost was the biggest danger back then. Not like now. It's so violent now.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Anyways, we should get moving.")
+                ]
 
         if conv == Conversations.MARY_SKELLY_PRE_FROG_FIGHT:
-            res_list = [
-                NpcDialog("The gate to the city is behind this chamber."),
-                NpcDialog("The monster behind this door... it dismantled... someone important to me."),
-                NpcDialog("If you see any stray bones in there... well just be careful with them, ok?"),
-                NpcDialog("Good luck, survivor.")
-            ]
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("The gate to the city is behind this chamber."),
+                    NpcDialog("The monster behind this door... it dismantled... someone important to me."),
+                    NpcDialog("If you see any stray bones in there... well just be careful with them, ok?"),
+                    NpcDialog("Good luck, survivor.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("Good luck, survivor.")
+                ]
 
         if conv == Conversations.MARY_SKELLY_POST_FROG_FIGHT:
             res_list = [

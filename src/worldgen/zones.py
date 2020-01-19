@@ -17,6 +17,7 @@ import src.game.npc as npc
 import src.game.decoration as decoration
 import src.utils.colors as colors
 import src.game.debug as debug
+import src.game.constants as constants
 
 _FIRST_ZONE_ID = None
 _ZONE_TRANSITIONS = {}
@@ -1931,7 +1932,7 @@ class CaveHorrorZonePeaceful(CaveHorrorZone):
 
             delay_between_anim_and_fade = 150
 
-            fade_duration = 30
+            fade_duration = constants.STANDARD_FADE_DURATION
             gs.get_instance().do_fade_sequence(0.0, 1.0, fade_duration,
                                                start_delay=total_anim_duration + delay_between_anim_and_fade,
                                                end_delay=10)  # buffer

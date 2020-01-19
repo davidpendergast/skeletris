@@ -1193,7 +1193,7 @@ class Player(ActorEntity):
         sound_effects.play_sound(self.get_death_sound())
 
         total_delay = 240
-        fade_duration = 30
+        fade_duration = constants.STANDARD_FADE_DURATION
 
         gs.get_instance().inc_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
 
