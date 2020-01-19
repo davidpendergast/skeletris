@@ -292,6 +292,12 @@ class Conversations:
 
     MARY_SKELLY_POST_SPIDER_FIGHT = Conversation("MARY_SKELLY_POST_SPIDER_FIGHT", NpcID.MARY_SKELLY)
 
+    MARY_CLONING_EXPLANATION = Conversation("MARY_CLONING_EXPLANATION", NpcID.MARY_SKELLY)
+
+    MARY_POST_CLONING_NO_DEATHS_YET = Conversation("MARY_POST_CLONING_NO_DEATHS_YET", NpcID.MARY_SKELLY)
+
+    MARY_POST_CLONING_WITH_DEATHS = Conversation("MARY_POST_CLONING_WITH_DEATHS", NpcID.MARY_SKELLY)
+
     MARY_SKELLY_PRE_FROG_FIGHT = Conversation("MARY_SKELLY_PRE_FROG_FIGHT", NpcID.MARY_SKELLY)
 
     MARY_SKELLY_POST_FROG_FIGHT = Conversation("MARY_SKELLY_POST_FROG_FIGHT", NpcID.MARY_SKELLY)
@@ -401,6 +407,34 @@ class ConversationFactory:
                     NpcDialog("The path is just north of here, through the swamps."),
                     NpcDialog("You're our only hope, survivor.")
                 ]
+
+        if conv == Conversations.MARY_CLONING_EXPLANATION:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("Oh, and feel free to use our cloning machine if you like."),
+                    NpcDialog("Just in case... well, ya know."),
+                    NpcDialog("No pressure.")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("It's ok if you don't want to.")
+                ]
+
+        if conv == Conversations.MARY_POST_CLONING_NO_DEATHS_YET:
+            if interact_count == 0:
+                res_list = [
+                    NpcDialog("I hope it goes without saying, but if anything does happen..."),
+                    NpcDialog("I'll do everything I can to bring you back, ok?")
+                ]
+            else:
+                res_list = [
+                    NpcDialog("We should probably get moving.")
+                ]
+
+        if conv == Conversations.MARY_POST_CLONING_WITH_DEATHS:
+            res_list = [
+                NpcDialog("It's nice to have you back.")
+            ]
 
         if conv == Conversations.MARY_SKELLY_SWAMPS:
             res_list = [

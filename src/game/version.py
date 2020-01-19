@@ -28,7 +28,7 @@ def _try_parse_version_info(filepath, do_err_logging=True):
         if do_err_logging:
             print("ERROR: failed to load version info, {} is missing".format(filepath))
             traceback.print_exc()
-    except:
+    except Exception:
         if do_err_logging:
             print("ERROR: failed to load version info, {} couldn't be parsed".format(filepath))
             traceback.print_exc()

@@ -172,7 +172,7 @@ class Settings:
             self.values[setting.key] = new_val
             setting.on_set(self, old_val, new_val)
 
-        except:
+        except Exception:
             print("ERROR: failed to set {} to {}".format(setting.key, val))
             traceback.print_exc()
 
@@ -219,7 +219,7 @@ class Settings:
                 print("ERROR: failed to load settings from {}".format(filepath))
                 traceback.print_exc()
 
-            except:
+            except Exception:
                 print("ERROR: unexpected error while loading settings from {}".format(filepath))
                 traceback.print_exc()
 
@@ -247,7 +247,7 @@ class Settings:
                 print("ERROR: failed to save settings to {}".format(filepath))
                 traceback.print_exc()
 
-            except:
+            except Exception:
                 print("ERROR: unexpected error while saving settings to {}".format(filepath))
                 traceback.print_exc()
 

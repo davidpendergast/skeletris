@@ -1603,7 +1603,7 @@ class DoorEntity(Entity):
             act = name_and_act[1]
             try:
                 act(world)
-            except:
+            except Exception:
                 print("ERROR: a special on-open hook \"{}\" threw an error".format(name))
                 traceback.print_exc()
 
@@ -2049,7 +2049,7 @@ class NpcEntity(Entity):
     def get_sprite_height(self):
         return self.get_sprite().height()
 
-    def should_show_hover_text(self):
+    def should_show_hover_text(self, world):
         if self.hover_text is None or len(self.hover_text) == 0:
             return False
 
@@ -2097,7 +2097,7 @@ class NpcEntity(Entity):
         else:
             hover_entity = None
 
-        if not self.should_show_hover_text():
+        if not self.should_show_hover_text(world):
             self.hover_text_entity_uid = None
             if hover_entity is not None:
                 world.remove(hover_entity)
@@ -2131,21 +2131,68 @@ class NpcConversationEntity(NpcEntity):
         self.conv = conversation
         self.npc_interact_count = 0
 
+        self._conditional_convos = []  # list of lists [cond, conversation, interact_count]
+
+    def add_conditional_conversation(self, condition, conversation):
+        """
+            condition: lambda world, interact_count: -> bool
+        """
+        ccc = [condition, conversation, 0]
+        self._conditional_convos.append(ccc)
+
     def interact(self, world):
-        if self.conv is not None:
+        convo_and_count = self._get_current_convo_and_interact_count(world, and_increment=True)
+
+        if convo_and_count is not None:
+            conv, interact_count = convo_and_count
+
             import src.game.npc as npc
-            dia = npc.ConversationFactory.get_dialog(self.conv, self.npc_interact_count)
+            dia = npc.ConversationFactory.get_dialog(conv, interact_count)
+
             if dia is not None:
                 gs.get_instance().dialog_manager().set_dialog(dia)
-            gs.get_instance().set_story_var(self.conv.get_id(), True)
 
-        self.npc_interact_count += 1
+    def _get_current_convo_and_interact_count(self, world, and_increment=False):
+        threw_errors = []
+        for i in range(0, len(self._conditional_convos)):
+            ccc = self._conditional_convos[i]
+            cond = ccc[0]
+            convo = ccc[1]
+            count = ccc[2]
 
-    def should_show_hover_text(self):
-        if not super().should_show_hover_text():
+            try:
+                if cond(world, count):
+                    if and_increment:
+                        ccc[2] += 1
+                    return (convo, count)
+
+            except Exception:
+                traceback.print_exc()
+                threw_errors.append(i)
+
+        # don't want it to be possible to have an evil, game-crashing npc
+        # and i also don't want it to spew errors forever if one tries
+        if len(threw_errors) > 0:
+            threw_errors.reverse()
+            for i in threw_errors:
+                print("ERROR: conversation condition on npc {} threw exceptions, removing it".format(self))
+                self._conditional_convos.pop(i)
+
+        count = self.npc_interact_count
+        if and_increment:
+            self.npc_interact_count += 1
+
+        if self.conv is not None:
+            return (self.conv, count)
+        else:
+            return None
+
+    def should_show_hover_text(self, world):
+        if not super().should_show_hover_text(world):
             return False
         else:
-            return self.npc_interact_count <= 0
+            cur_convo = self._get_current_convo_and_interact_count(world, and_increment=False)
+            return cur_convo is not None and cur_convo[1] <= 0
 
     def is_interactable(self, world):
         return True
@@ -2167,7 +2214,7 @@ class NpcLinkedEntity(NpcEntity):
         else:
             parent_ent.interact(world)
 
-    def should_show_hover_text(self):
+    def should_show_hover_text(self, world):
         return False
 
     def is_interactable(self, world):
@@ -2193,8 +2240,8 @@ class NpcTradeEntity(NpcEntity):
     def can_trade(self):
         return True
 
-    def should_show_hover_text(self):
-        if not super().should_show_hover_text():
+    def should_show_hover_text(self, world):
+        if not super().should_show_hover_text(world):
             return False
         else:
             return self.num_trades_done <= 0
@@ -2485,23 +2532,26 @@ class SaveStation(Entity):
             self.already_used = True
 
             hop_in_dialog = dialog.Dialog(">> Welcome to CloneBot!\n" +
-                                          ">> Please step into the chamber.")
+                                          ">> Please enter the chamber.")
+            if cp_count == 0:
+                build_template_line = ">> Building new template..."
+            else:
+                build_template_line = ">> Welcome back!\n" + ">> Updating template..."
+
             d = [hop_in_dialog,
                  dialog.Dialog("..."),
 
                  dialog.Dialog(">> Scanning...\n" +
                                ">> Processing...\n" +
-                               ">> Gathering materials..."),
+                               build_template_line),
 
-                 dialog.Dialog(">> Building cloning template...\n" +
+                 dialog.Dialog(">> Gathering materials...\n" +
                                ">> Finalizing...\n" +
                                ">> Success!"),
 
-                 dialog.Dialog(">> In accordance with city policy,\n" +
-                               ">> clones may ONLY be produced after\n" +
-                               ">> the original organism is destroyed."),
-
-                 dialog.Dialog(">> AUTO_CLONE is set to <True>"),
+                 dialog.Dialog(">> In accordance with city policy, clones may\n" +
+                               ">> ONLY be produced upon receipt of at least\n" +
+                               ">> 66.6% of the original organism's remains."),
 
                  dialog.Dialog(">> Please exit the chamber.")]
 

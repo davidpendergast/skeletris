@@ -65,7 +65,7 @@ def play_sound(sound):
         try:
             effect = pygame.mixer.Sound(effect_path)
             effect.set_volume(_MASTER_VOLUME * volume)
-        except:
+        except Exception:
             print("ERROR: failed to load sound effect {}".format(effect_path))
             traceback.print_exc()
             effect = None

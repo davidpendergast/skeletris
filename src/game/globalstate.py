@@ -217,7 +217,7 @@ class GlobalState:
                 print("WARN: failed to place equipment item at position {}, skipping it {}".format(pos, the_item))
 
         if len(removed_from_inv) + len(removed_from_eq) > 0:
-            # this would mean we're slamming the save over an active run or something, not good
+            # this would mean we're slamming over an active run or something, not good
             print("WARN: deleted {} pre-existing items while loading save file".format(
                 len(removed_from_inv) + len(removed_from_eq)
             ))

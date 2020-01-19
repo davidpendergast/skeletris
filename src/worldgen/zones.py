@@ -131,11 +131,10 @@ def init_zones():
     caves_song = music.Songs.get_basic_caves_song()
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=caves_song))
     story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=caves_song))
-
-    story_zones.append(get_zone(AbandonedMineZone.ZONE_ID))
-
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=caves_song))
     story_zones.append(get_zone(TombTownZone.ZONE_ID))
+
+    story_zones.append(get_zone(CloningBayZone.ZONE_ID))
 
     swamp_song = music.Songs.get_basic_swamp_song()
     green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
@@ -2077,14 +2076,15 @@ class TombTownZone(Zone):
         return True
 
 
-class AbandonedMineZone(Zone):
+class CloningBayZone(Zone):
 
-    ZONE_ID = "abandoned_mine"
+    ZONE_ID = "cloning_bay"
 
     def __init__(self):
-        Zone.__init__(self, "Abandoned Mine", 2, filename="abandoned_mine.png")
+        Zone.__init__(self, "Cloning Bay", 3, filename="cloning_bay.png")
 
         self._shovel_id = (255, 220, 115)
+        self._mary_id = (255, 172, 255)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
@@ -2093,13 +2093,37 @@ class AbandonedMineZone(Zone):
         if self._shovel_id in unknowns:
             for pos in unknowns[self._shovel_id]:
                 sign = decoration.DecorationFactory.get_decoration(self.get_level(), 
-                                                                   dec_type=decoration.DecorationTypes.RAKE)  # TODO draw a shovel
+                                                                   dec_type=decoration.DecorationTypes.RAKE,
+                                                                   with_dialog=None)
                 w.add(sign, gridcell=(pos[0], pos[1] - 1))
+
+        def _already_did_clone_no_deaths(world, interact_count):
+            # XXX so that the hovering "!" doesn't pop until the end of the cloning animation
+            if gs.get_instance().world_updates_paused():
+                return False
+
+            death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
+            cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
+            return death_count == 0 and cp_count > 0
+
+        def _already_did_clone_with_deaths(world, interact_count):
+            death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
+            cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
+            return death_count > 0 and cp_count > 0
+
+        if self._mary_id in unknowns:
+            mary_pos = unknowns[self._mary_id][0]
+            mary_ent = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_CLONING_EXPLANATION)
+
+            mary_ent.add_conditional_conversation(_already_did_clone_no_deaths, npc.Conversations.MARY_POST_CLONING_NO_DEATHS_YET)
+            mary_ent.add_conditional_conversation(_already_did_clone_with_deaths, npc.Conversations.MARY_POST_CLONING_WITH_DEATHS)
+
+            w.add(mary_ent, gridcell=mary_pos)
 
         return w
 
     def get_save_id(self):
-        return "pre_tombtown"
+        return "post_tombtown"
 
     def get_music_id(self):
         return music.Songs.get_basic_caves_song()

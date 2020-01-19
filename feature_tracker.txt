@@ -10,6 +10,7 @@
 [P2 bugs]
  - tutorial text renders awkwardly when it overlaps very large enemies
  - enemies w/ regen do the graphical effect in darkness (giants)
+ - prevent invalid json from ever being written out
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -63,7 +64,6 @@
  - save-related stuff
      - the first save point is quite early
         - should just have one after each boss probably
-     - saving items
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)

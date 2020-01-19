@@ -95,7 +95,7 @@ def reload_all_save_data_from_disk():
 
                     if new_blob_time > old_blob_time:
                         uids_to_blobs[uid] = save_blob
-        except:
+        except Exception:
             print("ERROR: failed to read save data from: {}".format(fpath))
             traceback.print_exc()
 
@@ -218,7 +218,7 @@ def _load_items_from_json(json_blob, items_tag, positions_tag):
 
             res_positions.append(raw_pos)
             res_items.append(raw_item)
-        except:
+        except Exception:
             traceback.print_exc()
             print("ERROR: failed to deserialize item at list index, skipping it: {}".format(i))
 
@@ -272,7 +272,7 @@ def write_to_disk(save_blob):
             try:
                 json_item = itemencoder.item_to_json(raw_item)
 
-            except:
+            except Exception:
                 traceback.print_exc()
 
             if json_item is None:
@@ -296,7 +296,7 @@ def write_to_disk(save_blob):
         print("ERROR: failed to write json to file: {}\njson_blob={}".format(save_blob.filepath, json_blob))
         traceback.print_exc()
         return False
-    except:
+    except Exception:
         print("ERROR: failed to save json to file due to unexpected error: {}".format(save_blob.filepath))
         traceback.print_exc()
         return False
