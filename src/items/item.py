@@ -289,21 +289,40 @@ class Item(StatProvider):
     def get_entity_sprite(self):
         return spriteref.Items.misc_small
 
+    def test_equals(self, other):
+        try:
+            return (
+                self.name == other.name and
+                self.level == other.level and
+                self.stats == other.stats and
+                Utils.mag(Utils.sub(self.color, other.color)) < 0.01 and
+                set(self.cubes) == set(other.cubes) and
+                self.uuid == other.uuid and
+                self.consume_effect == other.consume_effect and
+                self.consume_duration == other.consume_duration
+            )
+        except ValueError:
+            return False
+
 
 class SpriteItem(Item):
 
     def __init__(self, name, item_type, level, cubes, stats, small_sprite, big_sprite, sprite_rotation=0,
                  uuid_str=None, can_rotate=True, color=(1, 1, 1), actions=None,
-                 consume_effect=None, consume_duration=3, projectile_sprite=None):
+                 consume_effect=None, consume_duration=3, projectile_sprite=None, subtype_id="basic"):
 
         Item.__init__(self, name, item_type, level, cubes, stats, color=color, uuid_str=uuid_str,
                       can_rotate=can_rotate, actions=actions,
                       consume_effect=consume_effect, consume_duration=consume_duration)
 
+        self._subtype_id = subtype_id
         self._small_sprite = small_sprite
         self._big_sprite = big_sprite
         self._projectile_sprite = projectile_sprite
         self._sprite_rotation = sprite_rotation
+
+    def get_subtype_id(self):
+        return self._subtype_id
 
     def big_sprite(self):
         return self._big_sprite
@@ -334,7 +353,20 @@ class SpriteItem(Item):
                               self._big_sprite, sprite_rotation=new_rotation, uuid_str=self.uuid, color=self.color,
                               can_rotate=self._can_rotate, actions=self.item_actions,
                               consume_effect=self.consume_effect, consume_duration=self.consume_duration,
-                              projectile_sprite=self._projectile_sprite)
+                              projectile_sprite=self._projectile_sprite, subtype_id=self._subtype_id)
+
+    def test_equals(self, other):
+        try:
+            return (
+                super().test_equals(other) and
+                self._subtype_id == other._subtype_id and
+                self._small_sprite == other._small_sprite and
+                self._big_sprite == other._big_sprite and
+                self._projectile_sprite == other._projectile_sprite and
+                self._sprite_rotation == other._sprite_rotation
+            )
+        except ValueError:
+            return False
 
 
 class StatCubesItem(Item):
@@ -437,7 +469,8 @@ class StatCubesItem(Item):
     def __str__(self):
         res = "[{}]".format(self.name)
         res += "\n  " + self.uuid
-        res += "\n  " + self.level_string()
+        res += "\n  " + self.level_string() + ", color:{}".format(self.color) + " cube_art:{}".format(self.cube_art)
+        res += "\n  cubes: {}".format(self.cubes)
         for stat in self.stats:
             res += "\n  " + str(stat)
         res += "\n"
@@ -457,13 +490,8 @@ class StatCubesItem(Item):
     def test_equals(self, other):
         try:
             return (
-                self.name == other.name and
-                self.level == other.level and
-                self.stats == other.stats and
-                self.color == other.color and
-                self.cubes == other.cubes and
-                self.cube_art == other.cube_art and
-                self.uuid == other.uuid
+                super().test_equals(other) and
+                self.cube_art == other.cube_art
             )
         except ValueError:
             return False

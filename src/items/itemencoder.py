@@ -17,6 +17,7 @@ CUBE_ART_KEY = "cube_art"  # dict (int, int) -> int
 
 # specific to sprite items
 ROTATION_KEY = "rotation"   # int equal to 0, 1, 2, or 3
+SUBTYPE_KEY = "subtype"     # str
 
 
 def item_to_json(the_item):
@@ -55,7 +56,6 @@ def json_to_item(json_blob):
 
     item_stats = _json_to_stats(stats_in_json, strict=True)
 
-
     if item_type.has_tag(item.ItemTags.CUBES):
         # stat cube item
         color_in_json = _get_json_attribute(json_blob, COLOR_KEY, assert_type=list, fail_if_missing=True)
@@ -69,8 +69,9 @@ def json_to_item(json_blob):
     else:
         # it's a sprite item
         item_rotation = _get_json_attribute(json_blob, ROTATION_KEY, assert_type=int, fail_if_missing=True)
+        item_subtype = _get_json_attribute(json_blob, SUBTYPE_KEY, assert_type=str, fail_if_missing=True)
 
-        return build_sprite_item(item_type, item_cubes, item_level, item_uid, item_stats, item_rotation)
+        return build_sprite_item(item_type, item_subtype, item_level, item_uid, item_rotation)
 
 
 def _get_json_attribute(json_blob, key, assert_type=None, allow_none=False, fail_if_missing=False, or_else=None):
@@ -101,6 +102,7 @@ def _add_stat_cube_item_attributes_to_json(json_blob, the_item):
 
 def _add_sprite_item_attributes_to_json(json_blob, the_item):
     json_blob[ROTATION_KEY] = int(the_item.sprite_rotation())
+    json_blob[SUBTYPE_KEY] = str(the_item.get_subtype_id())
 
 
 def _color_to_json(float_color):
@@ -146,6 +148,7 @@ def _json_to_stats(list_blob, strict=False):
                 print("WARN: unrecognized stat id, skipping: {}".format(stat_id))
         else:
             res.append(item.AppliedStat(stat_type, stat_value, local=stat_is_local))
+
     return res
 
 
@@ -165,24 +168,56 @@ def build_stat_cubes_item(item_type, cubes, level, uid, stats, name, color, cube
     return item.StatCubesItem(name, level, stats, cubes, color, cube_art=cube_art, uuid_str=uid)
 
 
-def build_sprite_item(item_type, cubes, level, uid, stats, rotation):
-    pass
+def build_sprite_item(item_type, subtype, level, uid, rotation):
+    if item_type == item.ItemTypes.POTION:
+        return build_potion_item(subtype, level, uid)
+    elif item_type.has_tag(item.ItemTags.WEAPON):
+        return build_weapon_item(item_type, level, uid, rotation)
+    else:
+        raise ValueError("unrecognized item type: {}".format(item_type))
+
+
+def build_potion_item(subtype, level, uid):
+    potion_template = itemgen.PotionTemplates.get_template_with_id(subtype)
+    if potion_template is None:
+        raise ValueError("unrecognized potion type: {}".format(subtype))
+    else:
+        res = itemgen.PotionItemFactory.gen_item(level, template=potion_template)
+        if res is None:
+            raise ValueError("failed to make potion for template: {}".format(potion_template))
+        else:
+            res.uuid = uid  # just for good measure
+            return res
+
+
+def build_weapon_item(item_type, level, uid, rotation):
+    res = itemgen.WeaponItemFactory.gen_item(level, item_type)
+    if res is None:
+        raise ValueError("failed to build item for type: {}".format(item_type))
+    res.uuid = uid  # just for good measure
+
+    for _ in range(0, 4):
+        if res.sprite_rotation() != (rotation % 4):
+            res = res.rotate()
+        else:
+            return res
+
+    raise ValueError("failed to rotate item to rotation: {}".format(rotation))
 
 
 if __name__ == "__main__":
     import random
 
-    n = 100
+    n = 10000
     for i in range(0, n):
         item_level = int(16 * random.random())
+
         rand_item = itemgen.ItemFactory.gen_item(item_level)
-
-        print("\n###        {}.        ###".format(i))
-        print("started with item: {}".format(rand_item))
-
         as_json = item_to_json(rand_item)
-        print("made json: {}".format(as_json))
-
         back_to_item = json_to_item(as_json)
-        print("converted back to item: {}".format(back_to_item))
+
+        if not rand_item.test_equals(back_to_item):
+            print("failed to roundtrip item: {}".format(rand_item))
+            print("made json: {}".format(as_json))
+            print("converted back to item: {}".format(back_to_item))
 

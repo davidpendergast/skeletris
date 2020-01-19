@@ -186,8 +186,9 @@ _ALL_POTION_TEMPLATES = []
 
 class PotionTemplate:
 
-    def __init__(self, name, min_level=0, status=None, duration=3, drop_rate=1):
+    def __init__(self, name, type_id, min_level=0, status=None, duration=3, drop_rate=1):
         self.name = name
+        self.type_id = type_id
         self.min_level = min_level
         self.status_effect = status
         self.duration = duration
@@ -196,36 +197,36 @@ class PotionTemplate:
         _ALL_POTION_TEMPLATES.append(self)
 
 
-HEALING = PotionTemplate("Potion of Healing", min_level=0, drop_rate=7,
+HEALING = PotionTemplate("Potion of Healing", "heal_1", min_level=0, drop_rate=7,
                          status=statuseffects.StatusEffectTypes.HP_REGEN_1,
                          duration=balance.POTION_SMALL_HEAL_DURATION)
 
-MAJOR_HEALING = PotionTemplate("Potion of Healing II", min_level=5, drop_rate=4,
+MAJOR_HEALING = PotionTemplate("Potion of Healing II", "heal_2", min_level=5, drop_rate=4,
                                status=statuseffects.StatusEffectTypes.HP_REGEN_2,
                                duration=balance.POTION_MED_HEAL_DURATION)
 
-HARMING = PotionTemplate("Potion of Harming", min_level=4, drop_rate=5,
+HARMING = PotionTemplate("Potion of Harming", "harm_1", min_level=4, drop_rate=5,
                          status=statuseffects.StatusEffectTypes.POISON,
                          duration=balance.POTION_POIS_DURATION)
 
-SPEED_POTION = PotionTemplate("Potion of Quickness", min_level=1, drop_rate=5,
+SPEED_POTION = PotionTemplate("Potion of Quickness", "speed_1", min_level=1, drop_rate=5,
                               status=statuseffects.StatusEffectTypes.SPEED,
                               duration=balance.POTION_SPEED_DUR)
 
-SLOW_POTION = PotionTemplate("Potion of the Sloth", min_level=5, drop_rate=4,
+SLOW_POTION = PotionTemplate("Potion of the Sloth", "slow_1", min_level=5, drop_rate=4,
                              status=statuseffects.StatusEffectTypes.SLOWNESS,
                              duration=balance.POTION_SLOW_DUR)
 
 
-NULL_POTION = PotionTemplate("Null Potion", min_level=6, drop_rate=3,
+NULL_POTION = PotionTemplate("Null Potion", "null_1", min_level=6, drop_rate=3,
                              status=statuseffects.StatusEffectTypes.NULLIFICATION,
                              duration=balance.POTION_NULLIFICATION_DURATION)
 
-NIGHT_VISION = PotionTemplate("Potion of Light", min_level=3, drop_rate=2,
+NIGHT_VISION = PotionTemplate("Potion of Light", "light_1", min_level=3, drop_rate=2,
                               status=statuseffects.StatusEffectTypes.NIGHT_VISION,
                               duration=balance.POTION_NIGHT_VISION_DURATION)
 
-CONFUSION_POTION = PotionTemplate("Confusion Potion", min_level=5, drop_rate=5,
+CONFUSION_POTION = PotionTemplate("Confusion Potion", "confuse_1", min_level=5, drop_rate=5,
                                   status=statuseffects.StatusEffectTypes.CONFUSION,
                                   duration=balance.POTION_CONFUSION_DURATION)
 
@@ -241,10 +242,10 @@ class PotionTemplates:
             return [t for t in all_of_em if t.min_level <= for_level]
 
     @staticmethod
-    def get_template_with_name(name):
-        for template in _ALL_POTION_TEMPLATES:
-            if template.name == name:
-                return template
+    def get_template_with_id(type_id):
+        for pot in _ALL_POTION_TEMPLATES:
+            if pot.type_id == type_id:
+                return pot
         return None
 
 
@@ -273,7 +274,7 @@ class PotionItemFactory:
         color = (1, 1, 1) if template.status_effect is None else template.status_effect.get_color()
         res = SpriteItem(template.name, ItemTypes.POTION, template.min_level, cubes, {},
                          spriteref.Items.potion_small, spriteref.Items.potion_big,
-                         actions=[ItemActions.CONSUME_ITEM], color=color,
+                         subtype_id=template.type_id, actions=[ItemActions.CONSUME_ITEM], color=color,
                          consume_effect=template.status_effect, consume_duration=template.duration)
 
         return res
