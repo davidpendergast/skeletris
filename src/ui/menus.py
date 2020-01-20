@@ -1835,7 +1835,8 @@ class DebugZoneSelectMenu(OptionsMenu):
         elif 0 <= idx[0] < len(self.opts):
             selected_opt = self.opts[idx[0]]
             print("INFO: used debug menu to jump to zone: {}".format(selected_opt))
-            new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone, show_zone_title_menu=False)
+            new_zone_evt = events.NewZoneEvent(selected_opt, gs.get_instance().current_zone,
+                                               show_zone_title_menu=False, do_fade_in=False)
             gs.get_instance().add_event(new_zone_evt)
             sound_effects.play_sound(soundref.menu_select)
 

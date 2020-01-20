@@ -31,7 +31,6 @@
 
 
 [testing]
- - make sure that statuses 'apply' the correct number of times
  - test anything on mac (where can i find a mac?)
     - zach says it doesn't work on mac anymore... rip
 
@@ -56,13 +55,12 @@
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
- - att stat in inventory should reflect active weapon
  - [WASD to move] tutorial doesn't look good
     - honestly it's probably fine
- - light potion should cure blindness
  
- - save-related stuff
-    - 'save zones' shouldn't pop the title card menu when you enter them.
+ - att stat in inventory should reflect active weapon
+ - light potion should cure blindness
+  
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)

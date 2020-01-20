@@ -193,8 +193,8 @@ class DialogExitEvent(Event):
 
 class NewZoneEvent(Event):
 
-    def __init__(self, next_zone, current_zone, show_zone_title_menu=True):
-        data = (next_zone, current_zone, show_zone_title_menu)
+    def __init__(self, next_zone, current_zone, show_zone_title_menu=True, do_fade_in=True):
+        data = (next_zone, current_zone, show_zone_title_menu, do_fade_in)
         desc = "moved from zone {} to {} via {}".format(current_zone, next_zone, show_zone_title_menu)
         Event.__init__(self, GlobalEventType.NEW_ZONE, data, description=desc)
 
@@ -206,6 +206,9 @@ class NewZoneEvent(Event):
 
     def get_show_zone_title(self):
         return self.get_data()[2]
+
+    def do_fade_in(self):
+        return self.get_data()[3]
 
 
 class GameExitEvent(Event):

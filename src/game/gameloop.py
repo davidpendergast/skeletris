@@ -187,6 +187,10 @@ def run():
                 else:
                     gs.get_instance().menu_manager().set_active_menu(menus.InGameUiState())
 
+                    if global_event.do_fade_in():
+                        gs.get_instance().do_fade_sequence(1.0, 0.0, constants.STANDARD_FADE_DURATION)
+                        gs.get_instance().pause_world_updates(constants.STANDARD_FADE_DURATION // 2)
+
                 world = zones.build_world(zone_id)
                 world_view = WorldView(world)
 

@@ -376,10 +376,11 @@ def build_world(zone_id, spawn_at_save_point=None, spawn_at_door_with_zone_id=No
     return w
 
 
-def get_zone_name(zone_id):
-    if zone_id not in _ALL_ZONES:
-        raise ValueError("unknown zone id: {}".format(zone_id))
-    return _ALL_ZONES[zone_id].get_name()
+def get_zone_name(zone_id, or_else=None):
+    if zone_id in _ALL_ZONES:
+        return _ALL_ZONES[zone_id].get_name()
+    else:
+        return or_else
 
 
 def make(zone):

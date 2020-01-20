@@ -1785,7 +1785,18 @@ class ExitEntity(Entity):
         self.update_images(world)
 
     def make_open_event(self):
-        return events.NewZoneEvent(self.next_zone_id, gs.get_instance().get_zone_id())
+        cur_zone_id = gs.get_instance().get_zone_id()
+        next_zone_id = self.next_zone_id
+
+        import src.worldgen.zones as zones
+        cur_zone_name = zones.get_zone_name(cur_zone_id, or_else=None)
+        next_zone_name = zones.get_zone_name(next_zone_id, or_else=None)
+
+        # if we're passing between zones with the same name, don't show the card
+        # (like when you go from the boss-zone "Tombtown" to the save-zone "Tombtown").
+        show_title_card = cur_zone_name != next_zone_name
+
+        return events.NewZoneEvent(next_zone_id, cur_zone_id, show_zone_title_menu=show_title_card)
 
     def is_interactable(self, world):
         return not self._is_opening
