@@ -2531,29 +2531,26 @@ class SaveStation(Entity):
         if res:
             self.already_used = True
 
-            hop_in_dialog = dialog.Dialog(">> Welcome to CloneBot!\n" +
+            hop_in_dialog = dialog.Dialog((">> Welcome to CloneBot!" if cp_count == 0 else ">> Welcome back!") + "\n"
                                           ">> Please enter the chamber.")
-            if cp_count == 0:
-                build_template_line = ">> Building new template..."
-            else:
-                build_template_line = ">> Welcome back!\n" + ">> Updating template..."
-
             d = [hop_in_dialog,
                  dialog.Dialog("..."),
 
                  dialog.Dialog(">> Scanning...\n" +
                                ">> Processing...\n" +
-                               build_template_line),
+                               ">> Building new template..." if cp_count == 0 else ">> Updating template..."),
 
-                 dialog.Dialog(">> Gathering materials...\n" +
-                               ">> Finalizing...\n" +
-                               ">> Success!"),
+                 dialog.Dialog(">> Finalizing...\n" +
+                               ">> Success!")]
 
-                 dialog.Dialog(">> In accordance with city policy, clones may\n" +
-                               ">> ONLY be produced upon receipt of at least\n" +
-                               ">> 66.6% of the original organism's remains."),
+            if cp_count == 0:
+                d.append(dialog.Dialog(">> Due to city anti-duplication policy,\n" +
+                                       ">> clones may ONLY be produced upon receipt of\n" +
+                                       ">> 66.6% of the original organism's remains."))
 
-                 dialog.Dialog(">> Please exit the chamber.")]
+                d.append(dialog.Dialog(">> We apologise for the inconvenience."))
+
+            d.append(dialog.Dialog(">> Please exit the chamber."))
 
             gs.get_instance().dialog_manager().set_dialog(dialog.Dialog.link_em_up(d))
 

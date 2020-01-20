@@ -96,6 +96,7 @@ class GlobalState:
         # save data stuff
         self._run_statistics = {}
         self._save_data = None
+        self._loaded_from_save_id = None
 
     def increment_tick_counts(self):
         self.tick_counter += 1
@@ -130,6 +131,9 @@ class GlobalState:
 
     def get_save_data_if_present(self):
         return self._save_data
+
+    def get_loaded_from_save_id(self):
+        return self._loaded_from_save_id
 
     def detach_save_data_if_present(self):
         """Severs the connection between this globalstate and its save data file."""
@@ -183,8 +187,9 @@ class GlobalState:
         """Note: this should only be called once, global_state.create_new"""
         if save_data is None:
             return
-        else:
-            self._save_data = save_data
+
+        self._save_data = save_data
+        self._loaded_from_save_id = save_data.get(savedata.SaveDataTags.SPAWN_ID)
 
         self.set_run_statistic(RunStatisticTypes.KILL_COUNT, save_data.get(savedata.SaveDataTags.KILL_COUNT))
         self.set_run_statistic(RunStatisticTypes.TURN_COUNT, save_data.get(savedata.SaveDataTags.TURN_COUNT))

@@ -133,9 +133,9 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(0, "Caves I", "caves_1", dims=(3, 1), music_id=caves_song))
     story_zones.append(ZoneBuilder.make_generated_zone(1, "Caves II", "caves_2", dims=(4, 1), music_id=caves_song))
     story_zones.append(ZoneBuilder.make_generated_zone(2, "Caves III", "caves_3", dims=(3, 2), music_id=caves_song))
-    story_zones.append(get_zone(TombTownZone.ZONE_ID))
+    story_zones.append(get_zone(TombtownZone.ZONE_ID))
 
-    story_zones.append(get_zone(CloningBayZone.ZONE_ID))
+    story_zones.append(get_zone(TombtownSaveZone.ZONE_ID))
 
     swamp_song = music.Songs.get_basic_swamp_song()
     green_color = get_zone(FrogLairZone.ZONE_ID).get_color()
@@ -146,7 +146,7 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(5, "Swamps II", "swamps_2", geo_color=green_color, music_id=swamp_song, dims=(3, 2), conversation_ids=mary_swamp_conv))
     story_zones.append(ZoneBuilder.make_generated_zone(6, "Swamps III", "swamps_3", geo_color=green_color, music_id=swamp_song, dims=(4, 2)))
     story_zones.append(get_zone(FrogLairZone.ZONE_ID))
-    story_zones.append(get_zone(CityGateZone.ZONE_ID))
+    story_zones.append(get_zone(CityGateZone.ZONE_ID))  # save point
 
     city_song = music.Songs.get_basic_city_song()
     blue_color = get_zone(RoboLairZone.ZONE_ID).get_color()
@@ -156,6 +156,7 @@ def init_zones():
     story_zones.append(get_zone(VentilationZone.ZONE_ID))
     story_zones.append(ZoneBuilder.make_generated_zone(10, "City III", "city_3", geo_color=blue_color, music_id=city_song, dims=(3, 3)))
     story_zones.append(get_zone(RoboLairZone.ZONE_ID))
+    story_zones.append(get_zone(RoboSaveZone.ZONE_ID))  # save point
 
     catacombs_song = music.Songs.get_basic_catacombs_song()
     red_color = get_zone(CaveHorrorZone.ZONE_ID).get_color()
@@ -167,6 +168,7 @@ def init_zones():
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs II", "core_2", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs, conversation_ids=catacombs_conv))
     story_zones.append(ZoneBuilder.make_generated_zone(14, "Catacombs III", "core_3", geo_color=red_color, music_id=catacombs_song, dims=(3, 3), bonus_decorations=core_bonus_decs))
     story_zones.append(get_zone(CaveHorrorZone.ZONE_ID))
+    story_zones.append(get_zone(CaveHorrorSaveZone.ZONE_ID))  # save point
 
     story_zones.append(get_zone(UndergrowthZone.ZONE_ID))
     story_zones.append(get_zone(MedusaLairZone.ZONE_ID))
@@ -1164,60 +1166,6 @@ class FrogLairZone(Zone):
         return colors.LIGHT_GREEN
 
 
-class CityGateZone(Zone):
-
-    ZONE_ID = "city_gate"
-
-    def __init__(self):
-        Zone.__init__(self, "City Gate", 7, filename="city_gate.png")
-        self._mary_npc = (255, 172, 150)
-        self._head_npc = (255, 173, 150)
-
-        self._gate_left = (255, 234, 150)
-        self._gate_right = (255, 235, 150)
-
-    def build_world(self):
-        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
-        w = bp.build_world()
-
-        dec_lookup = {
-            self._gate_left: decoration.DecorationTypes.GATE_LEFT,
-            self._gate_right: decoration.DecorationTypes.GATE_RIGHT
-        }
-
-        head_npc = None
-        mary_pos = None
-
-        for key in unknowns:
-            for pos in unknowns[key]:
-                if key in dec_lookup:
-                    dec_type = dec_lookup[key]
-                    ent = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type)
-                    w.add(ent, gridcell=(pos[0], pos[1] - 1))
-
-            if key == self._mary_npc:
-                mary_pos = unknowns[key][0]
-
-            elif key == self._head_npc:
-                head_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.HEAD, npc.Conversations.MARY_AND_HEAD_AT_GATE)
-                w.add(head_npc, gridcell=unknowns[key][0])
-
-        if mary_pos is not None and head_npc is not None:
-            mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, head_npc.get_uid())
-            w.add(mary_npc, gridcell=mary_pos)
-
-        return w
-
-    def get_music_id(self):
-        return music.Songs.SILENCE
-
-    def get_color(self):
-        return colors.LIGHT_GREEN
-
-    def get_save_id(self):
-        return "post_frog_fight"
-
-
 class VentilationZone(Zone):
 
     ZONE_ID = "vents"
@@ -1250,8 +1198,7 @@ class VentilationZone(Zone):
                 w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
 
         if self.sign_pos in unknowns:
-            text = "WARNING: Dangerous Fumes!\n" + \
-                   "NO living entities past this point."
+            text = "WARNING: Dangerous Fumes!"
 
             sign_ent = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=text)
             pos = unknowns[self.sign_pos][0]
@@ -1269,9 +1216,6 @@ class VentilationZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_BLUE
-
-    def get_save_id(self):
-        return "pre_robo_fight"
 
 
 class RoboLairZone(Zone):
@@ -1677,7 +1621,7 @@ class CaveHorrorZone(Zone):
             if tree_ent_in_world is not None:
                 # want it to wait a few turns before it starts summoning
                 import src.game.statuseffects as statuseffects
-                tree_ent_in_world.get_actor_state().add_status_effect(statuseffects.StatusEffectTypes.SUMMON_SICKNESS, 2)
+                tree_ent_in_world.get_actor_state().try_to_add_status_effect(statuseffects.StatusEffectTypes.SUMMON_SICKNESS, 2)
 
         special_door.add_special_open_hook("cave_horror_main_door", entry_door_action)
 
@@ -1954,7 +1898,7 @@ class CaveHorrorZonePeaceful(CaveHorrorZone):
         return w
 
 
-class TombTownZone(Zone):
+class TombtownZone(Zone):
 
     ZONE_ID = "tomb_town"
 
@@ -1999,12 +1943,12 @@ class TombTownZone(Zone):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
-        dec_type_lookup = {TombTownZone.MUSHROOMS: (decoration.DecorationTypes.MUSHROOM, None),
-                           TombTownZone.TOMATO_PLANTS: (decoration.DecorationTypes.PLANT, "It's a tomato plant. It looks well-maintained."),
-                           TombTownZone.RAKE: (decoration.DecorationTypes.RAKE, None),
-                           TombTownZone.WORKBENCH: (decoration.DecorationTypes.WORKBENCH, None),
-                           TombTownZone.BONE_DECORATIONS: (decoration.DecorationTypes.BONES, "It appears to be a memorial plate of some kind. The bones are made from stone."),
-                           TombTownZone.BUCKET: (decoration.DecorationTypes.BUCKET, None)}
+        dec_type_lookup = {TombtownZone.MUSHROOMS: (decoration.DecorationTypes.MUSHROOM, None),
+                           TombtownZone.TOMATO_PLANTS: (decoration.DecorationTypes.PLANT, "It's a tomato plant. It looks well-maintained."),
+                           TombtownZone.RAKE: (decoration.DecorationTypes.RAKE, None),
+                           TombtownZone.WORKBENCH: (decoration.DecorationTypes.WORKBENCH, None),
+                           TombtownZone.BONE_DECORATIONS: (decoration.DecorationTypes.BONES, "It appears to be a memorial plate of some kind. The bones are made from stone."),
+                           TombtownZone.BUCKET: (decoration.DecorationTypes.BUCKET, None)}
 
         mary_pre_fight_ent_uid = None
         mary_pos_2 = None
@@ -2012,9 +1956,9 @@ class TombTownZone(Zone):
         spider_ent = None
 
         for key in unknowns:
-            if key in TombTownZone.WALL_SIGNS:
+            if key in TombtownZone.WALL_SIGNS:
                 pos = unknowns[key][0]
-                sign = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=TombTownZone.WALL_SIGNS[key])
+                sign = decoration.DecorationFactory.get_sign(self.get_level(), sign_text=TombtownZone.WALL_SIGNS[key])
                 w.add(sign, gridcell=(pos[0], pos[1] - 1))
 
             elif key in dec_type_lookup:
@@ -2026,19 +1970,19 @@ class TombTownZone(Zone):
                         dec_entity = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type, with_dialog=dec_desc)
                     w.add(dec_entity, gridcell=(pos[0], pos[1] - 1))
 
-            elif key == TombTownZone.BEANSKULL:
+            elif key == TombtownZone.BEANSKULL:
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.BEANSKULL, npc.Conversations.BEANSKULL_INTRO)
                 w.add(e, gridcell=unknowns[key][0])
-            elif key == TombTownZone.MAYOR:
+            elif key == TombtownZone.MAYOR:
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MAYOR, npc.Conversations.MAYOR_INTRO)
                 w.add(e, gridcell=unknowns[key][0])
-            elif key == TombTownZone.MARY:
+            elif key == TombtownZone.MARY:
                 e = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_SKELLY_PRE_SPIDER_FIGHT)
                 w.add(e, gridcell=unknowns[key][0])
                 mary_pre_fight_ent_uid = e.get_uid()
-            elif key == TombTownZone.MARY_2:
+            elif key == TombtownZone.MARY_2:
                 mary_pos_2 = unknowns[key][0]
-            elif key == TombTownZone.SPIDER_BOSS:
+            elif key == TombtownZone.SPIDER_BOSS:
                 pos = unknowns[key][0]
                 spider_ent = enemies.EnemyFactory.gen_enemy(enemies.TEMPLATE_SPIDER, self.get_level())
                 w.add(spider_ent, gridcell=pos)
@@ -2077,47 +2021,48 @@ class TombTownZone(Zone):
         return True
 
 
-class CloningBayZone(Zone):
+class TombtownSaveZone(Zone):
 
-    ZONE_ID = "cloning_bay"
+    ZONE_ID = "town_save"
 
     def __init__(self):
-        Zone.__init__(self, "Cloning Bay", 3, filename="cloning_bay.png")
+        Zone.__init__(self, "Tombtown", 3, filename="town_save.png")
 
-        self._shovel_id = (255, 220, 115)
+        self._rake_id = (255, 220, 115)
         self._mary_id = (255, 172, 255)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
-        if self._shovel_id in unknowns:
-            for pos in unknowns[self._shovel_id]:
+        if self._rake_id in unknowns:
+            for pos in unknowns[self._rake_id]:
                 sign = decoration.DecorationFactory.get_decoration(self.get_level(), 
                                                                    dec_type=decoration.DecorationTypes.RAKE,
                                                                    with_dialog=None)
                 w.add(sign, gridcell=(pos[0], pos[1] - 1))
 
-        def _already_did_clone_no_deaths(world, interact_count):
-            # XXX so that the hovering "!" doesn't pop until the end of the cloning animation
-            if gs.get_instance().world_updates_paused():
-                return False
-
-            death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
-            cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
-            return death_count == 0 and cp_count > 0
-
-        def _already_did_clone_with_deaths(world, interact_count):
-            death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
-            cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
-            return death_count > 0 and cp_count > 0
-
         if self._mary_id in unknowns:
             mary_pos = unknowns[self._mary_id][0]
-            mary_ent = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_CLONING_EXPLANATION)
 
-            mary_ent.add_conditional_conversation(_already_did_clone_no_deaths, npc.Conversations.MARY_POST_CLONING_NO_DEATHS_YET)
-            mary_ent.add_conditional_conversation(_already_did_clone_with_deaths, npc.Conversations.MARY_POST_CLONING_WITH_DEATHS)
+            if gs.get_instance().get_loaded_from_save_id() == self.get_save_id():
+                if gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT) > 0:
+                    mary_ent = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_POST_CLONING_WITH_DEATHS)
+                else:
+                    mary_ent = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_POST_CLONING_NO_DEATHS_YET)
+            else:
+                mary_ent = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_CLONING_EXPLANATION)
+
+                def _already_did_clone_no_deaths(world, interact_count):
+                    # XXX so that the hovering "!" doesn't pop until the end of the cloning animation
+                    if gs.get_instance().world_updates_paused():
+                        return False
+
+                    death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
+                    cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
+                    return death_count == 0 and cp_count > 0
+
+                mary_ent.add_conditional_conversation(_already_did_clone_no_deaths, npc.Conversations.MARY_POST_CLONING_NO_DEATHS_YET)
 
             w.add(mary_ent, gridcell=mary_pos)
 
@@ -2127,7 +2072,174 @@ class CloningBayZone(Zone):
         return "post_tombtown"
 
     def get_music_id(self):
-        return music.Songs.get_basic_caves_song()
+        return music.Songs.SILENCE
+
+
+class CityGateZone(Zone):
+
+    ZONE_ID = "city_gate"
+
+    def __init__(self):
+        Zone.__init__(self, "City Gate", 7, filename="city_gate.png")
+        self._mary_npc = (255, 172, 150)
+        self._head_npc = (255, 173, 150)
+
+        self._mary_npc_from_load = (225, 172, 150)
+
+        self._gate_left = (255, 234, 150)
+        self._gate_right = (255, 235, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        dec_lookup = {
+            self._gate_left: decoration.DecorationTypes.GATE_LEFT,
+            self._gate_right: decoration.DecorationTypes.GATE_RIGHT
+        }
+
+        from_load = gs.get_instance().get_loaded_from_save_id() == self.get_save_id()
+        has_deaths = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT) > 0
+
+        head_pos = None
+        mary_pos = None
+        mary_pos_from_load = None
+
+        for key in unknowns:
+            for pos in unknowns[key]:
+                if key in dec_lookup:
+                    dec_type = dec_lookup[key]
+                    ent = decoration.DecorationFactory.get_decoration(self.get_level(), dec_type)
+                    w.add(ent, gridcell=(pos[0], pos[1] - 1))
+
+            if key == self._mary_npc:
+                mary_pos = unknowns[key][0]
+
+            if key == self._mary_npc_from_load:
+                mary_pos_from_load = unknowns[key][0]
+
+            if key == self._head_npc:
+                head_pos = unknowns[key][0]
+
+        if mary_pos is not None and head_pos is not None:
+            # XXX there's no way to tell if you loaded from a death or a legitimate quit, so we assume all
+            # loads are from death if there have been any deaths thus far.
+            if from_load and has_deaths:
+                head_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.HEAD, npc.Conversations.HEAD_AT_GATE_AFTER_LOAD)
+                w.add(head_npc, gridcell=head_pos)
+
+                mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_AT_GATE_AFTER_LOAD)
+                w.add(mary_npc, gridcell=mary_pos_from_load)
+            else:
+                head_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.HEAD, npc.Conversations.MARY_AND_HEAD_AT_GATE)
+                w.add(head_npc, gridcell=head_pos)
+
+                mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, head_npc.get_uid())
+                w.add(mary_npc, gridcell=mary_pos)
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_color(self):
+        return colors.LIGHT_GREEN
+
+    def get_save_id(self):
+        return "post_frog_fight"
+
+
+class RoboSaveZone(Zone):
+
+    ZONE_ID = "robo_save"
+
+    def __init__(self):
+        Zone.__init__(self, "Server Room", 11, filename="robo_save.png")
+        self.fan_wall_id = (0, 170, 170)
+        self.mary_id = (225, 172, 150)
+        self.grok_id = (225, 173, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        if self.fan_wall_id in unknowns:
+            for wall_pos in unknowns[self.fan_wall_id]:
+                fan_dec = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.FAN)
+                w.add(fan_dec, gridcell=(wall_pos[0], wall_pos[1]))
+
+        loaded_from_save = gs.get_instance().get_loaded_from_save_id() == self.get_save_id()
+        has_deaths = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT) > 0
+
+        # XXX there's no way to tell if you loaded from a death or a legitimate quit, so we assume all
+        # loads are from death if there have been any deaths thus far.
+        if loaded_from_save and has_deaths:
+            mary_pos = None
+            if self.mary_id in unknowns:
+                mary_pos = unknowns[self.mary_id][0]
+
+            grok_pos = None
+            if self.grok_id in unknowns:
+                grok_pos = unknowns[self.grok_id][0]
+
+            if mary_pos is not None and grok_pos is not None:
+                mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY,
+                                                        npc.Conversations.MARY_AND_GROK_AT_SERVER_AFTER_LOAD)
+                w.add(mary_npc, gridcell=mary_pos)
+
+                grok_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GROK, mary_npc.get_uid())
+                w.add(grok_npc, gridcell=grok_pos)
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_color(self):
+        return colors.LIGHT_BLUE
+
+    def get_save_id(self):
+        return "post_robo_fight"
+
+
+class CaveHorrorSaveZone(Zone):
+
+    ZONE_ID = "cave_horror_save"
+
+    def __init__(self):
+        Zone.__init__(self, "The Vault", 15, filename="cave_horror_save.png")
+        self.mushroom_id = (255, 234, 150)
+        self.mary_id = (225, 172, 150)
+
+    def build_world(self):
+        bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
+        w = bp.build_world()
+
+        if self.mushroom_id in unknowns:
+            for pos in unknowns[self.mushroom_id]:
+                ent = decoration.DecorationFactory.get_decoration(self.get_level(), decoration.DecorationTypes.MUSHROOM)
+                w.add(ent, gridcell=(pos[0], pos[1] - 1))
+
+        loaded_from_save = gs.get_instance().get_loaded_from_save_id() == self.get_save_id()
+        has_deaths = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT) > 0
+
+        if loaded_from_save and has_deaths:
+            if self.mary_id in unknowns:
+                mary_pos = unknowns[self.mary_id][0]
+                mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY_WITH_HEAD,
+                                                        npc.Conversations.MARY_AT_VAULT_AFTER_LOAD)
+                w.add(mary_npc, gridcell=mary_pos)
+
+        return w
+
+    def get_music_id(self):
+        return music.Songs.SILENCE
+
+    def get_color(self):
+        return colors.LIGHT_RED
+
+    def get_save_id(self):
+        return "post_cave_horror"
 
 
 class DoorTestZone(Zone):

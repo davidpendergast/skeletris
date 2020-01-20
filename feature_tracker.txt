@@ -62,8 +62,7 @@
  - light potion should cure blindness
  
  - save-related stuff
-     - the first save point is quite early
-        - should just have one after each boss probably
+    - 'save zones' shouldn't pop the title card menu when you enter them.
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)

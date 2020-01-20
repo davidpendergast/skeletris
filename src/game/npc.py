@@ -306,19 +306,25 @@ class Conversations:
 
     MARY_AND_HEAD_AT_GATE = Conversation("MARY_AND_HEAD_AT_GATE", NpcID.HEAD)
 
+    MARY_AT_GATE_AFTER_LOAD = Conversation("MARY_AT_GATE_AFTER_LOAD", NpcID.MARY_SKELLY)
+
+    HEAD_AT_GATE_AFTER_LOAD = Conversation("HEAD_AT_GATE_AFTER_LOAD", NpcID.HEAD)
+
     SKELEKID_GROK_AND_MARY_AT_VENTS = Conversation("SKELEKID_GROK_AND_MARY_AT_VENTS", NpcID.SKELEKID)
 
     PRE_ROBO_FIGHT = Conversation("MARY_PRE_ROBO_FIGHT", NpcID.MARY_SKELLY)
 
     POST_ROBO_FIGHT = Conversation("MARY_POST_ROBO_FIGHT", NpcID.MACHINE)
 
+    MARY_AND_GROK_AT_SERVER_AFTER_LOAD = Conversation("MARY_AND_GROK_AT_SERVER_AFTER_LOAD", NpcID.MARY_SKELLY)
+
     MARY_SKELLY_CATACOMBS = Conversation("MARY_SKELLY_CATACOMBS", NpcID.MARY_SKELLY)
 
     MARY_PRE_CAVE_HORROR = Conversation("MARY_PRE_CAVE_HORROR", NpcID.MARY_SKELLY)
 
-    MARY_POST_CAVE_HORROR = Conversation("MARY_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
-
     MARY_DOCTOR_POST_CAVE_HORROR = Conversation("MARY_DOCTOR_POST_CAVE_HORROR", NpcID.MARY_SKELLY)
+
+    MARY_AT_VAULT_AFTER_LOAD = Conversation("MARY_AT_VAULT_AFTER_LOAD", NpcID.MARY_SKELLY)
 
     DOCTOR_PRE_MEDUSA = Conversation("DOCTOR_PRE_MEDUSA", NpcID.DOCTOR)
 
@@ -423,7 +429,8 @@ class ConversationFactory:
         if conv == Conversations.MARY_POST_CLONING_NO_DEATHS_YET:
             if interact_count == 0:
                 res_list = [
-                    NpcDialog("I hope it goes without saying, but if anything does happen..."),
+                    NpcDialog("That wasn't so bad, was it?"),
+                    NpcDialog("I hope it goes without saying, but if anything goes wrong on this adventure..."),
                     NpcDialog("I'll do everything I can to bring you back, ok?")
                 ]
             else:
@@ -432,8 +439,12 @@ class ConversationFactory:
                 ]
 
         if conv == Conversations.MARY_POST_CLONING_WITH_DEATHS:
+
             res_list = [
-                NpcDialog("It's nice to have you back.")
+                NpcDialog("Welcome back. Do you still remember me?"),
+                NpcDialog("You... took such a beating back there. I'm sorry for putting you up to this."),
+                NpcDialog("I made sure to collect all your gear... and limbs, though."),
+                NpcDialog("I'm glad to have you back.")
             ]
 
         if conv == Conversations.MARY_SKELLY_SWAMPS:
@@ -488,6 +499,16 @@ class ConversationFactory:
                     NpcDialog("We should get moving. There's nothing we can do for him here.", npc_id=NpcID.MARY_SKELLY)
                 ]
 
+        if conv == Conversations.MARY_AT_GATE_AFTER_LOAD:
+            res_list = [
+                NpcDialog("Glad to have you back, survivor.")
+            ]
+
+        if conv == Conversations.HEAD_AT_GATE_AFTER_LOAD:
+            res_list = [
+                NpcDialog("Where are my BONES? My precious bones...", npc_id=NpcID.HEAD)
+            ]
+
         if conv == Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS:
             if interact_count == 0:
                 res_list = [
@@ -537,7 +558,7 @@ class ConversationFactory:
                               ">> No illicit activity detected.", npc_id=NpcID.ROBO),
                     NpcDialog("Then why didn't you PROTECT us?", npc_id=NpcID.SKELEKID),
                     NpcDialog(">> Scanning...\n" +
-                              ">> 96.25% of citizens are protected.", npc_id=NpcID.ROBO),
+                              ">> 96.2% of citizens are protected.", npc_id=NpcID.ROBO),
                     NpcDialog("It thinks they're protected? But no one is even here.", npc_id=NpcID.MARY_SKELLY),
                     NpcDialog("Computer, where is everyone?", npc_id=NpcID.GROK),
                     NpcDialog(">> Skeletris Catacombs", npc_id=NpcID.ROBO),
@@ -568,6 +589,18 @@ class ConversationFactory:
                 res_list = [
                     NpcDialog("We should search the catacombs.", npc_id=NpcID.MARY_SKELLY),
                 ]
+
+        if conv == Conversations.MARY_AND_GROK_AT_SERVER_AFTER_LOAD:
+            res_list = [
+                NpcDialog("Whew, I'm glad that worked. Are you ok?", npc_id=NpcID.MARY_SKELLY),
+                NpcDialog("You lucked out - we just barely had enough material to clone you.", npc_id=NpcID.GROK),
+                NpcDialog("Those creatures were nasty. Glad to see you back in one piece.", npc_id=NpcID.GROK)
+            ]
+
+        if conv == Conversations.MARY_AT_VAULT_AFTER_LOAD:
+            res_list = [
+                NpcDialog("Hi again. Let's finish this.")
+            ]
 
         if conv == Conversations.MARY_SKELLY_CATACOMBS:
             if interact_count == 0:

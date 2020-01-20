@@ -1106,6 +1106,7 @@ class TextOnlyMenu(OptionsMenu):
 
 
 class SoundSettingsMenu(OptionsMenu):
+
     MUSIC_TOGGLE_IDX = (0, 0)
     MUSIC_VOLUME_DOWN_IDX = (0, 1)
     MUSIC_VOLUME_UP_IDX = (0, 2)
