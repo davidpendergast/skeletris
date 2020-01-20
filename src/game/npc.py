@@ -593,8 +593,8 @@ class ConversationFactory:
         if conv == Conversations.MARY_AND_GROK_AT_SERVER_AFTER_LOAD:
             res_list = [
                 NpcDialog("Whew, I'm glad that worked. Are you ok?", npc_id=NpcID.MARY_SKELLY),
-                NpcDialog("You lucked out - we just barely had enough material to clone you.", npc_id=NpcID.GROK),
-                NpcDialog("Those creatures were nasty. Glad to see you back in one piece.", npc_id=NpcID.GROK)
+                NpcDialog("You lucked out - we almost couldn't find enough material to regenerate you.", npc_id=NpcID.GROK),
+                NpcDialog("Glad to see you back in one piece.", npc_id=NpcID.GROK)
             ]
 
         if conv == Conversations.MARY_AT_VAULT_AFTER_LOAD:
