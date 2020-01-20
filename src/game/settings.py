@@ -239,16 +239,13 @@ class Settings:
         for filename in blob_per_file:
             blob = blob_per_file[filename]
             filepath = self._to_filepath(filename)
+
             try:
                 Utils.save_json_to_path(blob, filepath)
                 print("INFO: successfully saved settings to {}".format(filepath))
 
-            except (OSError, ValueError, TypeError):
-                print("ERROR: failed to save settings to {}".format(filepath))
-                traceback.print_exc()
-
             except Exception:
-                print("ERROR: unexpected error while saving settings to {}".format(filepath))
+                print("ERROR: failed to save settings to {}".format(filepath))
                 traceback.print_exc()
 
     def up_key(self):

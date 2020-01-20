@@ -219,8 +219,8 @@ def _load_items_from_json(json_blob, items_tag, positions_tag):
             res_positions.append(raw_pos)
             res_items.append(raw_item)
         except Exception:
-            traceback.print_exc()
             print("ERROR: failed to deserialize item at list index, skipping it: {}".format(i))
+            traceback.print_exc()
 
     return res_items, res_positions
 
@@ -292,12 +292,8 @@ def write_to_disk(save_blob):
     try:
         # here goes nothing...
         util.Utils.save_json_to_path(json_blob, save_blob.filepath)
-    except (OSError, ValueError, TypeError):
-        print("ERROR: failed to write json to file: {}\njson_blob={}".format(save_blob.filepath, json_blob))
-        traceback.print_exc()
-        return False
     except Exception:
-        print("ERROR: failed to save json to file due to unexpected error: {}".format(save_blob.filepath))
+        print("ERROR: failed to write game data to file: {}".format(save_blob.filepath))
         traceback.print_exc()
         return False
 

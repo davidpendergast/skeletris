@@ -383,9 +383,9 @@ class ConversationFactory:
                     NpcDialog("But that could take a half-cycle or longer depending on when it last fed..."),
                     NpcDialog("And meanwhile I'm stuck out here, hoping nothing worse comes out of the caves and dismantles me."),
                     NpcDialog("Do you... think you could help? You must be tough as nails, coming all the way here by yourself."),
-                    NpcDialog("It's strong, but not very fast. The best way to fight it is to hit and step away."),
-                    NpcDialog("Does that make sense? Just hit and step away. And repeat."),
-                    NpcDialog("That way, you can deal damage while it's resting and it will waste its energy chasing you. Make sense?"),
+                    NpcDialog("It's strong, but not very fast. The best way to fight it is to attack while it's resting and step away while it's active."),
+                    NpcDialog("That way, you can deal damage without being counterattacked, and it will waste its energy chasing you."),
+                    NpcDialog("Does that make sense? You'll know it's resting when you see Zzz's above its head."),
                     NpcDialog("It's right through that door. Thank you, survivor.")
                 ]
             else:

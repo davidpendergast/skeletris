@@ -281,7 +281,7 @@ class Utils:
         except AttributeError:
             base_path = os.path.abspath(".")
 
-        return os.path.join(base_path, pathlib.Path(relative_path))
+        return os.path.join(base_path, str(pathlib.Path(relative_path)))
 
     @staticmethod
     def load_json_from_path(filepath):
@@ -291,6 +291,13 @@ class Utils:
 
     @staticmethod
     def save_json_to_path(json_blob, filepath):
+        try:
+            json.dumps(json_blob, indent=4, sort_keys=True)
+        except (ValueError, TypeError) as e:
+            print("ERROR: tried to save invalid json to file: {}".format(filepath))
+            print("ERROR: json_blob: {}".format(json_blob))
+            raise e
+
         directory = os.path.dirname(filepath)
         if not os.path.exists(directory):
             os.makedirs(directory)
