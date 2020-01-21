@@ -86,7 +86,6 @@ class WindowState:
         if self.is_fullscreen() == val:
             return
         else:
-            # print("INFO: set fullscreen to: {}".format(val))
             self._cached_fullscreen_size = None
 
             self._is_fullscreen = val

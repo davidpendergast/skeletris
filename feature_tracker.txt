@@ -4,11 +4,9 @@
                         *------------------------*
                       
 [P1 bugs]
- - there are probably issues with fullscreening if you have multiple monitors w/ different sizes
-    - maybe fixed, need to test
+ - there many issues with fullscreening if you have multiple monitors
 
 [P2 bugs]
- - tutorial text renders awkwardly when it overlaps very large enemies
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -53,8 +51,6 @@
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
- - [WASD to move] tutorial doesn't look good
-    - honestly it's probably fine
  
  - light potion should cure blindness
   
@@ -95,14 +91,16 @@
         
 [future features]
  - when you go "back" to a previous menu, you should return to the same selected idx
+ - [WASD to move] tutorial doesn't look good
+    - honestly it's probably fine
+    - render it underneath the player maybe?
  - traps / ground effects
- - some kind of checkpoint system (?)
-    - wouldn't be too hard to implement actually
-    - could be one-time-use?
+    - not sure how much sense this makes, given that enemies can already block you pretty fiercely
  - enemies picking up items (intelligence >= 4)
     - we'd want an "arms up" sprite for eligible enemies I think
  - holding the up/down key in menus should continue scrolling
     - careful, the hold-down behavior on keys differs between OSes
+        - (meaning this might already be a thing on windows / mac)
  - projectiles should get a color based on the item/status or something
  - tiles that alter movement
     - jump / teleport tiles
@@ -120,13 +118,13 @@
             - force engagement?
                 - running away is sorta hopeless already
                     - and turtling in doorways only works if you can facetank the enemy
- - backstab attack 
-    - jump over target, attack from other side (if possible)
  - new (secondary) item stats
     - poison duration
     - confusion duration
  - quest system
  - permanent effects (aka curses)
+    - only fun if it truly changes your options somehow
+    - and it's obligitory to have different art
  - doors that can only be unlocked with "keys"
  - varying scenery
     - bridges over deep pits, water pits
@@ -192,13 +190,6 @@
     - this should be done with pink zees I think, and other status effects should have similar effects
         - or just regular zees?
         - or just flash the status's color...?
-        
- - checkpoints
-    - should be a mechanism to start from a checkpoint after each of the first three boss fights
-    - maybe some kind of item-scavenging mechanism?
-        - after each boss, if you place an artifact with a very specific shape into the checkpoint,
-          you gain the ability to restart from there
-        - (AND, you can reuse that artifact + a weapon on subsequent runs??)
     
 
 [rejected future features]

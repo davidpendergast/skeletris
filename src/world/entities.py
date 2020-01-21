@@ -2873,6 +2873,12 @@ class HoverTextEntity(Entity):
 
         return changed
 
+    def get_depth(self):
+        if self.target_entity is not None:
+            return self.target_entity.get_depth() - 0.01  # XXX hopefully it isn't overlapping...
+        else:
+            return super().get_depth()
+
     def update(self, world):
         if self.text is None or len(self.text) == 0:
             self.text = "?"
@@ -2900,10 +2906,7 @@ class HoverTextEntity(Entity):
 
         self._update_position()
 
-        if self.target_entity is not None:
-            depth = self.target_entity.get_depth() + 1  # draw behind target entity
-        else:
-            depth = self.get_depth()
+        depth = self.get_depth()
 
         actual_text_size = self._text_img.size()
         text_w, text_h = actual_text_size
@@ -2923,7 +2926,7 @@ class HoverTextEntity(Entity):
 
         self._text_img = self._text_img.update(new_x=int(text_x + text_w / 2 - actual_text_size[0] / 2),
                                                new_y=int(text_y + text_h / 2 - actual_text_size[1] / 2),
-                                               new_depth=depth, new_scale=self.text_sc)
+                                               new_depth=depth - 0.1, new_scale=self.text_sc)
 
         tl_pos = (text_x - border_size_x, text_y - border_size_y)
 
@@ -2932,34 +2935,34 @@ class HoverTextEntity(Entity):
 
         if self._border_imgs[0] is not None:  # TL
             self._border_imgs[0] = self._border_imgs[0].update(new_x=tl_pos[0], new_y=tl_pos[1],
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
 
         if self._border_imgs[1] is not None:  # T
             self._border_imgs[1] = self._border_imgs[1].update(new_x=text_x, new_y=tl_pos[1],
                                                                new_ratio=(h_ratio, 1),
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
         if self._border_imgs[2] is not None:  # TR,
             self._border_imgs[2] = self._border_imgs[2].update(new_x=text_x + text_w, new_y=tl_pos[1],
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
 
         if self._border_imgs[3] is not None:  # L,
             self._border_imgs[3] = self._border_imgs[3].update(new_x=tl_pos[0], new_y=text_y,
                                                                new_ratio=(1, v_ratio),
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
         if self._border_imgs[4] is not None:  # C,
             self._border_imgs[4] = self._border_imgs[4].update(new_x=text_x, new_y=text_y,
                                                                new_ratio=(h_ratio, v_ratio),
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
         if self._border_imgs[5] is not None:  # R,
             self._border_imgs[5] = self._border_imgs[5].update(new_x=text_x + text_w, new_y=text_y,
                                                                new_ratio=(1, v_ratio),
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
         if self._border_imgs[6] is not None:  # BL
             self._border_imgs[6] = self._border_imgs[6].update(new_x=tl_pos[0], new_y=text_y + text_h,
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
         if self._border_imgs[8] is not None:  # BR
             self._border_imgs[8] = self._border_imgs[8].update(new_x=text_x + text_w, new_y=text_y + text_h,
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
 
         if self._bottom_imgs[1] is not None:  # Bottom Middle (the little arrow)
             if text_w % 2 == 0:
@@ -2971,15 +2974,15 @@ class HoverTextEntity(Entity):
             bm_x = text_x + (text_w - bm_w) / 2  # guaranteed to be an int
 
             self._bottom_imgs[1] = self._bottom_imgs[1].update(new_model=arrow_model, new_x=bm_x, new_y=text_y + text_h,
-                                                               new_depth=depth + 1, new_scale=self.sc)
+                                                               new_depth=depth, new_scale=self.sc)
             if self._bottom_imgs[0] is not None:  # Bottom Left
                 ratio = (int((bm_x - text_x) / border_size_x + 0.5), 1)
                 self._bottom_imgs[0] = self._bottom_imgs[0].update(new_x=text_x, new_y=text_y + text_h,
-                                                                   new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
+                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
             if self._bottom_imgs[2] is not None:  # Bottom Right
                 ratio = (int((bm_x - text_x) / border_size_x + 0.5), 1)
                 self._bottom_imgs[2] = self._bottom_imgs[2].update(new_x=bm_x + bm_w, new_y=text_y + text_h,
-                                                                   new_ratio=ratio, new_depth=depth + 1, new_scale=self.sc)
+                                                                   new_ratio=ratio, new_depth=depth, new_scale=self.sc)
 
     def set_target_entity(self, entity, offset=None):
         self.target_entity = entity
