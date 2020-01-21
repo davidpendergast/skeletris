@@ -908,16 +908,18 @@ class ActorEntity(Entity):
         if old_hp == new_hp:
             return
 
-        if pulse_color is not None:
-            self.perturb_color(pulse_color, 30)
+        if self.is_visible_in_world(world):
+            if pulse_color is not None:
+                self.perturb_color(pulse_color, 30)
 
-        if sound is not None:
-            sound_effects.play_sound(sound)
+            if sound is not None:
+                sound_effects.play_sound(sound)
 
-        if new_hp > old_hp:
-            world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 1.5, self)
-        elif new_hp < old_hp:
-            world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 1.5, self)
+            if show_text:
+                if new_hp > old_hp:
+                    world.show_floating_text("+{}".format(abs(new_hp - old_hp)), colors.G_TEXT_COLOR, 1.5, self)
+                elif new_hp < old_hp:
+                    world.show_floating_text("-{}".format(abs(new_hp - old_hp)), colors.R_TEXT_COLOR, 1.5, self)
 
     def update(self, world):
         Entity.update(self, world)

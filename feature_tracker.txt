@@ -9,7 +9,6 @@
 
 [P2 bugs]
  - tutorial text renders awkwardly when it overlaps very large enemies
- - enemies w/ regen do the graphical effect in darkness (giants)
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)

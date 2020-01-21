@@ -913,7 +913,7 @@ def apply_damage_and_hit_effects(damage, attacker, defender, world=None,
                         world.show_effect_circle(cx, cy, effect.get_effect_circle_art_type(),
                                                  color=effect.get_color(), duration=45)
 
-        new_status_effects_for_defender = [] # (StatusEffectType, duration)
+        new_status_effects_for_defender = []  # (StatusEffectType, duration)
 
         pois_duration = attacker.stat_value_with_item(StatTypes.POISON_ON_HIT, item_used)
         if pois_duration > 0:
