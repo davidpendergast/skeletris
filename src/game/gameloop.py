@@ -165,9 +165,6 @@ def run():
                 print("INFO: starting game")
                 RenderEngine.get_instance().clear_all_sprites()
 
-                if debug.reset_tutorials_each_game():
-                    gs.get_instance().settings().clear_finished_tutorials()
-
                 gs.create_new(menus.InGameUiState(), from_save_data=global_event.get_save_data())
                 world_view = None
 

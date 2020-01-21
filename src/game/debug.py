@@ -57,11 +57,6 @@ def unlimited_trades():
     return is_debug() and _lookup_val(settings.DebugSettings.UNLIMITED_TRADES, False)
 
 
-def reset_tutorials_each_game():
-    import src.game.settings as settings
-    return is_debug() and _lookup_val(settings.DebugSettings.RESET_TUTORIALS_ON_NEWGAME, False)
-
-
 def never_show_tutorials():
     import src.game.settings as settings
     return is_debug() and _lookup_val(settings.DebugSettings.NEVER_SHOW_TUTORIALS, False)

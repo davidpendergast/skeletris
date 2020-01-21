@@ -648,7 +648,7 @@ class TutorialFactory:
 
         if tut_id == TutorialID.HOW_TO_MOVE:
             return TutorialPlugin(tut_id, 0, [
-                HowToMoveStage(delay=90)
+                HowToMoveStage(delay=60)
             ])
         elif tut_id == TutorialID.HOW_TO_EQUIP:
             return TutorialPlugin(tut_id, 0, [
@@ -657,7 +657,7 @@ class TutorialFactory:
                 HowToPutItemInGridStage(delay=20, item_tag=ItemTags.EQUIPMENT, grid_type=ItemGridType.EQUIPMENT),
             ])
         elif tut_id == TutorialID.HOW_TO_ROTATE:
-            return TutorialPlugin(tut_id, 0, [
+            return TutorialPlugin(tut_id, 1, [
                 HowToRotateItemStage(delay=20)
             ])
         elif tut_id == TutorialID.HOW_TO_USE_POTIONS:
@@ -674,7 +674,7 @@ class TutorialFactory:
             #])
             return None
         elif tut_id == TutorialID.HOW_TO_OPEN_MAP:
-            return TutorialPlugin(tut_id, 5, [
+            return TutorialPlugin(tut_id, 2, [
                 HowToOpenMapPanelStage(delay=120)
             ])
         elif tut_id == TutorialID.HOW_TO_SKIP:

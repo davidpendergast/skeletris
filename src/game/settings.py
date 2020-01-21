@@ -148,10 +148,7 @@ class DebugSettings:
     HOLY_ARTIFACTS_100x_MORE_LIKELY = Setting("holy cannoli", "HOLY_ARTIFACTS_100x_MORE_LIKELY", False,
                                               cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
 
-    RESET_TUTORIALS_ON_NEWGAME = Setting("always teaching", "RESET_TUTORIALS_ON_NEWGAME", False,
-                                         cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
-
-    NEVER_SHOW_TUTORIALS = Setting("never teaching", "NEVER_SHOW_TUTORIALS", False,
+    NEVER_SHOW_TUTORIALS = Setting("never show tutorials", "NEVER_SHOW_TUTORIALS", False,
                                    cleaner=lambda val: bool(val), filename=DEBUG_FILENAME)
 
 

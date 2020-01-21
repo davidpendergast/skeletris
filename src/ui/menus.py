@@ -1508,11 +1508,12 @@ class DebugMenu(OptionsMenu):
     SPECIAL_ZONE_JUMP = (1, 0)
     LOOT_ZONE_JUMP = (2, 0)
     DEBUG_SETTINGS = (3, 0)
-    BACK_OPT = (4, 0)
+    RESET_TUTORIALS = (4, 0)
+    BACK_OPT = (5, 0)
 
     def __init__(self):
         OptionsMenu.__init__(self, MenuManager.DEBUG_MENU, "Debug",
-                             ["storyline zones", "special zones", "loot zones", "debug settings", "back"])
+                             ["storyline zones", "special zones", "loot zones", "debug settings", "reset tutorials", "back"])
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
@@ -1532,6 +1533,10 @@ class DebugMenu(OptionsMenu):
             sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.DEBUG_SETTINGS:
             gs.get_instance().menu_manager().set_active_menu(DebugSettingsMenu())
+            sound_effects.play_sound(soundref.menu_select)
+        elif idx == DebugMenu.RESET_TUTORIALS:
+            gs.get_instance().settings().clear_finished_tutorials()
+            sound_effects.play_sound(soundref.menu_select)
         elif idx == DebugMenu.BACK_OPT:
             gs.get_instance().menu_manager().set_active_menu(InGameUiState())
             sound_effects.play_sound(soundref.menu_back)
