@@ -38,8 +38,12 @@ class WindowState:
         self._update_display_mode()
 
     def _update_display_mode(self):
-        """WARNING: anytime this is called, it is crucial to """
-        new_size = self.get_display_size()
+        if self._is_fullscreen:
+            new_size = self._calc_fullscreen_size_for_set_mode()
+            self._cached_fullscreen_size = new_size
+        else:
+            new_size = self._window_size
+
         pygame.display.set_mode(new_size, self._get_mods())
 
         from src.renderengine.engine import RenderEngine
@@ -56,23 +60,21 @@ class WindowState:
 
     def get_display_size(self):
         if self._is_fullscreen:
-            return self.get_fullscreen_size()
+            return self._cached_fullscreen_size
         else:
             return self._window_size
 
-    def get_fullscreen_size(self):
-        """returns: the size of pygame's active monitor"""
-        if self._cached_fullscreen_size is None:
-            fullscreen_modes = pygame.display.list_modes()
-            if fullscreen_modes != -1 and len(fullscreen_modes) > 0:
-                self._cached_fullscreen_size = fullscreen_modes[0]
-            else:
-                # indicates some kind of error state, just going to try our best
-                # note that this call is somewhat slow
-                info = pygame.display.Info()
-                self._cached_fullscreen_size = (info.current_w, info.current_h)
+    def _calc_fullscreen_size_for_set_mode(self):
+        fullscreen_modes = pygame.display.list_modes()
+        if fullscreen_modes != -1 and len(fullscreen_modes) > 0:
+            # XXX this give bizarre results when multiple monitors are present.
+            print("INFO: list_modes = {}".format(fullscreen_modes))
+            return fullscreen_modes[0]
 
-        return self._cached_fullscreen_size
+        print("WARN: falling back to display.Info() to calculate fullscreen size")
+        # indicates some kind of error state, just going to try our best
+        info = pygame.display.Info()
+        return (info.current_w, info.current_h)  # this gets the current window size
 
     def set_window_size(self, w, h):
         # print("INFO: set window size to: ({}, {})".format(w, h))
