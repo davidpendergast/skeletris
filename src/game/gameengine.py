@@ -63,6 +63,17 @@ class ActorState(StatProvider):
 
         return res
 
+    def get_att_value_with_active_weapon(self):
+        if self.is_player(): # enemies can't use weapons... (yet?)
+            active_action = gs.get_instance().get_targeting_action_provider()
+            if active_action is not None and active_action.get_type() == ActionType.ATTACK:
+
+                action_item = self.get_item_in_possession_with_uid(active_action.get_item_uid())
+                if action_item is not None:
+                    return self.stat_value_with_item(StatTypes.ATT, action_item)
+
+        return self.stat_value(StatTypes.UNARMED_ATT) + self.stat_value(StatTypes.ATT)
+
     def is_player(self):
         return self._is_player
 

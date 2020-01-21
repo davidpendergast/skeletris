@@ -56,7 +56,6 @@
  - [WASD to move] tutorial doesn't look good
     - honestly it's probably fine
  
- - att stat in inventory should reflect active weapon
  - light potion should cure blindness
   
 

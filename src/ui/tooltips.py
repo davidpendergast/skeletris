@@ -104,7 +104,7 @@ class TooltipFactory:
                 text_builder.add(", ", color=color)
 
         text_builder.add_line("")
-        att_val = e_state.stat_value(StatTypes.ATT) + e_state.stat_value(StatTypes.UNARMED_ATT)
+        att_val = e_state.get_att_value_with_active_weapon()
         text_builder.add_line("Attack: {}".format(att_val), color=StatTypes.ATT.get_color())
         text_builder.add_line("Defense: {}".format(e_state.stat_value(StatTypes.DEF)), color=StatTypes.DEF.get_color())
         text_builder.add_line("Speed: {}".format(e_state.speed()), color=StatTypes.SPEED.get_color())
