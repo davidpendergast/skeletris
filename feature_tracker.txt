@@ -36,15 +36,12 @@
 
 [balance issues]    
  - players can quite easily forget how to rotate items or skip turns
-    - realistically, they'll probably just look at the store page
+    - realistically, they can just look at the store page
  
  - robo boss should do something
     - he big. he tuff. maybe that's enough
     - maybe just add a 2nd phase?
         - "just" ? ok gamer
- 
- - cave horror should have like 2x as much health
- - medusa is quite... strong...
  
  
 [current features] 
@@ -58,6 +55,7 @@
 
 [maintanence]
  - fix up project requirements. can probably update all the dependencies (even python)
+    - why though?
  
  
 [what's stressing me out?]
@@ -345,5 +343,14 @@
         - cons:
             - identical to "Crypt of the Fungal Lord", which exists
             - similar to "Curse of the Mushroom King", which exists
+            
+            
+A remnant of the past:
+
+   "Note: The game is quite difficult, and it's probably not for everyone. 
+   If you become surrounded or get hit by something nasty, you'll likely 
+   die. And have to start over. The idea is that each death will teach a 
+   lesson, and as those lessons are learned, you'll stop getting hit and 
+   the game will feel more fair and satisfying :)"
 
             

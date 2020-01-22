@@ -1,1 +1,10 @@
-## intentionally left blank
+
+When the game is launched, it'll switch to dev mode if it sees this file
+(or any file named "this_is_dev.txt") in the working directory. 
+
+dev commands can be used in-game by pressing F6.
+
+If you load a legitimate save file in dev mode, it'll permanently mark that
+file's version as "DEV", and it won't show up in the high score menu anymore. 
+So be careful if you care about that.
+

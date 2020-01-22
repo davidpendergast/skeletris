@@ -73,7 +73,6 @@ Controls:
  Open Map: M
  Pick up Item: Click it
  Use, Trade, or Throw Item: While the item is on the cursor, click the target 
-
  Rotate Item on Cursor: E
  Activate Weapon: 1-6
 
@@ -91,8 +90,8 @@ Version Info:
 Launch Instructions:
   The game and all of its assets are bundled into a single executable, so after 
   unzipping this directory you should be able to just double click "Skeletris.exe" 
-  to launch it. A subdirectory named "save_data" will be created to store settings 
-  and stuff like that.
+  to launch it. A subdirectory named "save_data" will be created to store settings, 
+  saved games, high scores, and stuff like that.
   
   On Windows 8.1 and onwards, when you launch the game it may show a warning like:
     "Windows protected your PC - Windows Defender SmartScreen prevented an 
