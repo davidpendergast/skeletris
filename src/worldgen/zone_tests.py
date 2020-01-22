@@ -37,9 +37,9 @@ def test_grids_are_possible(n, level, dims=(3, 3)):
                         worldgen2.TileType.STRAY_ITEM)
 
         reachable_by_player = worldgen2.TileGridBuilder.flood_search(t_grid, start[0], start[1], can_traverse)
-        for exit in exit_coords:
-            if exit not in reachable_by_player:
-                print("FAIL: unreachable exit: {} (level={})".format(exit, level))
+        for ex in exit_coords:
+            if ex not in reachable_by_player:
+                print("FAIL: unreachable exit: {} (level={})".format(ex, level))
                 return t_grid
 
 

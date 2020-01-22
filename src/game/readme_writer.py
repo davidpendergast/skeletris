@@ -55,4 +55,4 @@ def write_readme(game_name, template_file, dest_file, gif_directory):
 
 
 if __name__ == "__main__":
-    write_readme("readme_template.txt", "README.md", "gifs")
+    write_readme("Skeletris", "readme_template.txt", "README.md", "gifs")

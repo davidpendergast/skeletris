@@ -1007,7 +1007,7 @@ class MedusaTemplate(EnemyTemplate):
         return {
             StatTypes.VIT: 60,
             StatTypes.SPEED: 8,  # sorry..
-            StatTypes.ATT: 8,
+            StatTypes.ATT: 6,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.UNFLINCHING: 1,
@@ -1056,7 +1056,7 @@ class CaveHorrorTemplate(EnemyTemplate):
 
     def get_stat_overrides(self):
         return {
-            StatTypes.VIT: 40,
+            StatTypes.VIT: 80,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 10,
             StatTypes.UNARMED_ATT: 0,

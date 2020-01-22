@@ -229,18 +229,18 @@ class PartitionGrid:
 
     def needed_doors(self, x, y, prevent_boundary_doors=False):
         res = []
-        for dir in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
-            if not (0 <= x + dir[0] < self.w() and 0 <= y + dir[1] < self.h()):
+        for direction in [(0, -1), (1, 0), (0, 1), (-1, 0)]:
+            if not (0 <= x + direction[0] < self.w() and 0 <= y + direction[1] < self.h()):
                 res.append(False if prevent_boundary_doors else None)
                 res.append(False if prevent_boundary_doors else None)
             else:
-                n = self.get(x + dir[0], y + dir[1])
+                n = self.get(x + direction[0], y + direction[1])
                 if n is None:
                     res.append(None)
                     res.append(None)
                 else:
-                    d1 = Tile.doors_on_side((-dir[0], -dir[1]))[0]
-                    d2 = Tile.doors_on_side((-dir[0], -dir[1]))[1]
+                    d1 = Tile.doors_on_side((-direction[0], -direction[1]))[0]
+                    d2 = Tile.doors_on_side((-direction[0], -direction[1]))[1]
                     res.append(n.has_door(d2))  # gotta flip it because it's... mirrored?
                     res.append(n.has_door(d1))
         return res

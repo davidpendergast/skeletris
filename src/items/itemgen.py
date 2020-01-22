@@ -362,7 +362,7 @@ class StatCubesItemFactory:
 
     @staticmethod
     def gen_cube_art_for_stats_and_cubes(stats, cubes, art_types=()):
-        """:param art_types: int from 1 to 5"""
+        """art_types: list of ints from 1 to 5"""
         cube_art = {}
         cubes_copy = [c for c in cubes]
         random.shuffle(cubes_copy)

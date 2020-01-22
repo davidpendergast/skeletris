@@ -27,7 +27,7 @@ class CameraModifier:
         return None
 
     def __contains__(self, pos):
-        """:param item: a tuple (int x, int y)."""
+        """pos: a tuple (int x, int y)."""
         if isinstance(pos, tuple):
             return Utils.rect_contains(self.get_rect(), (pos[0], pos[1]))
         else:

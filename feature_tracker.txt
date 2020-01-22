@@ -5,6 +5,7 @@
                       
 [P1 bugs]
  - there many issues with fullscreening if you have multiple monitors
+    - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
 
@@ -29,18 +30,18 @@
 [testing]
  - test anything on mac (where can i find a mac?)
     - zach says it doesn't work on mac anymore... rip
+        - most likely due to the OpenGL version change
+        - it would be nice if I had a mac to test on...
 
 
 [balance issues]    
- - spider boss can be 'out-of-sync' with hit and step technique, causing confusion
-    - teach player to skip their turn at the same time?
-    - somehow force it to be in-sync?
-        - like setting its energy to 0 or 2 something when the door opens?
-    - also with 3~ defense you can pretty much just facetank it
+ - players can quite easily forget how to rotate items or skip turns
+    - realistically, they'll probably just look at the store page
  
  - robo boss should do something
     - he big. he tuff. maybe that's enough
     - maybe just add a 2nd phase?
+        - "just" ? ok gamer
  
  - cave horror should have like 2x as much health
  - medusa is quite... strong...
