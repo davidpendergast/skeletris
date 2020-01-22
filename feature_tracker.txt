@@ -8,6 +8,10 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
+ - skull face on the computer in the post-robo fight is still wonky
+ - seemed like a wraith wasn't taking poison damage?
+ - win screen doesn't show death count
+ - and the press-any-key to skip behavior on the win screen sucks, if you want to screenshot
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -37,11 +41,10 @@
 [balance issues]    
  - players can quite easily forget how to rotate items or skip turns
     - realistically, they can just look at the store page
- 
- - robo boss should do something
-    - he big. he tuff. maybe that's enough
-    - maybe just add a 2nd phase?
-        - "just" ? ok gamer
+ - slow potions are a bit OP against bosses
+    - maybe OK?
+ - enemies shouldn't drink health potions when they could attack instead
+    - maybe?
  
  
 [current features] 
