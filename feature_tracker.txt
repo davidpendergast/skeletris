@@ -12,6 +12,9 @@
  - seemed like a wraith wasn't taking poison damage?
  - win screen doesn't show death count
  - and the press-any-key to skip behavior on the win screen sucks, if you want to screenshot
+ - the dialog is a little cringe in some parts 
+    - ("but it started being used in the private sector"...? lol)
+    - still not in love with the cloning machine dialog, it's kinda overexplaining
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -19,16 +22,7 @@
       which costs hundreds of dollars and requires me to be a legitimate company?
  
 [story bugs]
- - it's never explained what you are exactly
-    - a skeleton? why don't you look like the others
-    - an undead? why aren't you affected by the parasite?
-        - you don't have a brain?
-    - something else?
-        - some kind of husk?
- - what is grok?
-    - a disembodied skeleton, joined to a "husk" which replaces his body
- - mary doesn't have repeat dialog at the frog gate
-    - this is a reoccurring problem
+ - mary doesn't have repeat dialog at many places
 
 
 [testing]
@@ -45,7 +39,8 @@
     - maybe OK?
  - enemies shouldn't drink health potions when they could attack instead
     - maybe?
- 
+ - medusa is still quite strong...
+    - a little less damage / hp should be ok I think.
  
 [current features] 
  - figure out how to make 32-bit windows builds
@@ -92,6 +87,8 @@
     
         
 [future features]
+ - alternate ending for deathless / cp-less runs
+    - fight the cloning machine? lol
  - when you go "back" to a previous menu, you should return to the same selected idx
  - [WASD to move] tutorial doesn't look good
     - honestly it's probably fine
