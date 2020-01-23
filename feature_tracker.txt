@@ -9,17 +9,19 @@
 
 [P2 bugs]
  - skull face on the computer in the post-robo fight is still wonky
- - seemed like a wraith wasn't taking poison damage?
+ 
  - win screen doesn't show death count
  - and the press-any-key to skip behavior on the win screen sucks, if you want to screenshot
+ 
  - the dialog is a little cringe in some parts 
-    - ("but it started being used in the private sector"...? lol)
+    - "but it started being used in the private sector"...? lol
     - still not in love with the cloning machine dialog, it's kinda overexplaining
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
     - it seems like the only way around this is to get a digital certificate,
-      which costs hundreds of dollars and requires me to be a legitimate company?
+      which costs hundreds of dollars and requires me to be a company?
+    - this is kind of a non-starter
  
 [story bugs]
  - mary doesn't have repeat dialog at many places
@@ -34,19 +36,16 @@
 
 [balance issues]    
  - players can quite easily forget how to rotate items or skip turns
-    - realistically, they can just look at the store page
+    - realistically, they can just look at the store page / controls menu
  - slow potions are a bit OP against bosses
-    - maybe OK?
- - enemies shouldn't drink health potions when they could attack instead
-    - maybe?
- - medusa is still quite strong...
-    - a little less damage / hp should be ok I think.
+    - maybe OK? bosses are pretty tough otherwise...
  
 [current features] 
  - figure out how to make 32-bit windows builds
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
+        - it's 2020, 64-bit is standard
  
  - light potion should cure blindness
   

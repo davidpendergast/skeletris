@@ -17,13 +17,27 @@ def _new_unique_key():
 
 class StatusEffectType(StatProvider):
 
-    def __init__(self, name, color, icon, applied_stats, is_debuff=False, circle_art_type=None, blocked_by=None):
+    def __init__(self, name, color, icon, applied_stats, is_debuff=False, circle_art_type=None, blocked_by=None, bonus_text=None):
+        """
+        blocked_by: list of StatusEffectTypes that block this one.
+        bonus_text: list of (str, color) that will shown in tooltips alongside the effect's stats.
+        """
         self.name = name
         self.color = color
         self.circle_art_type = circle_art_type
         self.icon = icon
         self.applied_stats = applied_stats
         self._is_debuff = is_debuff
+
+        # weakly-typed languages were a mistake
+        if bonus_text is not None:
+            if not isinstance(bonus_text, list):
+                raise ValueError("Illegal value for bonus_text: {}".format(bonus_text))
+            for t in bonus_text:
+                if not isinstance(t, tuple) or not len(t) == 2:
+                    raise ValueError("Illegal value for bonus_text: {}".format(bonus_text))
+
+        self.bonus_text = [] if bonus_text is None else bonus_text
 
         if blocked_by is not None and not isinstance(blocked_by, list):
             raise ValueError("Illegal value for blocked_by: {}".format(blocked_by))
@@ -58,6 +72,9 @@ class StatusEffectType(StatProvider):
     def get_icon(self):
         return self.icon
 
+    def all_bonus_text(self):
+        return self.bonus_text
+
     def all_applied_stats(self):
         return self.applied_stats
 
@@ -77,11 +94,6 @@ class StatusEffectTypes:
                                      [AppliedStat(StatTypes.NULLIFICATION, 1)],
                                      is_debuff=True,
                                      circle_art_type=spriteref.EffectCircleTypes.GROWING_CIRCLES)
-
-    NIGHT_VISION = StatusEffectType("Night Vision", StatTypes.LIGHT_LEVEL.get_color(), spriteref.UI.status_eye_icon,
-                                    [AppliedStat(StatTypes.LIGHT_LEVEL, balance.POTION_NIGHT_VISION_VAL)],
-                                    is_debuff=False, blocked_by=[NULLIFICATION],
-                                    circle_art_type=spriteref.EffectCircleTypes.TRIANGLE_WITH_CIRCLES)
 
     PLUS_DEFENSES = StatusEffectType("Defense", StatTypes.DEF.get_color(), spriteref.UI.status_shield_icon,
                                      [AppliedStat(StatTypes.DEF, balance.STATUS_EFFECT_PLUS_DEFENSE_VAL)],
@@ -123,9 +135,15 @@ class StatusEffectTypes:
                                is_debuff=True, blocked_by=[NULLIFICATION],
                                circle_art_type=spriteref.EffectCircleTypes.SQUARE_VS_STAR)
 
+    NIGHT_VISION = StatusEffectType("Night Vision", StatTypes.LIGHT_LEVEL.get_color(), spriteref.UI.status_eye_icon,
+                                    [AppliedStat(StatTypes.LIGHT_LEVEL, balance.POTION_NIGHT_VISION_VAL)],
+                                    is_debuff=False, blocked_by=[NULLIFICATION],
+                                    circle_art_type=spriteref.EffectCircleTypes.TRIANGLE_WITH_CIRCLES,
+                                    bonus_text=[("Prevents Blindness", StatTypes.LIGHT_LEVEL.get_color())])
+
     BLINDNESS = StatusEffectType("Blindness", colors.DARK_BLUE, spriteref.UI.status_eye_xed_icon,
                                  [AppliedStat(StatTypes.LIGHT_LEVEL, -4)],
-                                 is_debuff=True, blocked_by=[NULLIFICATION],
+                                 is_debuff=True, blocked_by=[NULLIFICATION, NIGHT_VISION],
                                  circle_art_type=spriteref.EffectCircleTypes.TRIANGLE_WITH_CIRCLES)
 
     SUMMON_SICKNESS = StatusEffectType("Summoning Sickness", StatTypes.SUMMONING_SICKNESS.get_color(), spriteref.UI.status_skull_icon,

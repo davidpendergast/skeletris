@@ -734,7 +734,7 @@ class OysterTemplate(EnemyTemplate):
             StatTypes.UNARMED_ATT: 5,
             StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 2,
-            StatTypes.BLINDNESS_ON_HIT: 3,
+            StatTypes.BLINDNESS_ON_HIT: 6,
             StatTypes.UNFLINCHING: 1,
         }
 
@@ -742,6 +742,7 @@ class OysterTemplate(EnemyTemplate):
         return ("O", colors.RED)
 
 
+# TODO these suck so bad that i'm starting to miss the snowman
 class SkulkerTemplate(EnemyTemplate):
 
     def __init__(self):
@@ -773,9 +774,6 @@ class SkulkerTemplate(EnemyTemplate):
 
     def get_shadow_sprite(self):
         return spriteref.medium_shadow
-
-    def get_spawn_items(self, level, randval=None):
-        yield itemgen.PotionItemFactory.gen_item(level, template=itemgen.HEALING)
 
 
 class FrogBossTemplate(EnemyTemplate):
@@ -1005,9 +1003,10 @@ class MedusaTemplate(EnemyTemplate):
 
     def get_stat_overrides(self):
         return {
-            StatTypes.VIT: 60,
+            StatTypes.VIT: 50,
             StatTypes.SPEED: 8,  # sorry..
             StatTypes.ATT: 6,
+            StatTypes.UNARMED_ATT: 0,
             StatTypes.DEF: 4,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.UNFLINCHING: 1,

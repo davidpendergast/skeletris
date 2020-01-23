@@ -9,6 +9,7 @@ import src.utils.colors as colors
 import src.game.globalstate as gs
 import src.game.statuseffects as statuseffects
 from src.utils.util import Utils
+import traceback
 
 
 class TooltipFactory:
@@ -178,12 +179,16 @@ class TooltipFactory:
 
         text_builder.add_line(effect.get_name())
 
-        # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
-        turns_remaining = gs.get_instance().player_state().get_turns_remaining(effect)
+        for bonus_text in effect.all_bonus_text():
+            text, color = bonus_text
+            text_builder.add_line(text, color=color)
 
         for applied_stat in effect.all_applied_stats():
             if not applied_stat.is_hidden():
                 text_builder.add_line(str(applied_stat), color=applied_stat.color())
+
+        # TODO - we're assuming this effect is on the player, which may (in the future) not always be the case.
+        turns_remaining = gs.get_instance().player_state().get_turns_remaining(effect)
 
         text_builder.add_line("")
         text_builder.add_line("({} turns remaining)".format(turns_remaining), color=colors.LIGHT_GRAY)
@@ -192,24 +197,30 @@ class TooltipFactory:
 
     @staticmethod
     def get_tooltip_text(obj):
-        if isinstance(obj, entities.ItemEntity):
-            obj = obj.get_item()
+        try:
+            if isinstance(obj, entities.ItemEntity):
+                obj = obj.get_item()
 
-        if isinstance(obj, item.Item):
-            return TooltipFactory.get_item_tooltip_text(obj)
-        elif isinstance(obj, entities.Enemy):
-            return TooltipFactory.get_enemy_tooltip_text(obj)
-        elif isinstance(obj, entities.NpcEntity):
-            return TooltipFactory.get_npc_tooltip_text(obj)
-        elif isinstance(obj, entities.ChestEntity):
-            return TooltipFactory.get_chest_tooltip_text(obj)
-        elif isinstance(obj, gameengine.ActionProvider):
-            return TooltipFactory.get_action_provider_tooltip_text(obj)
-        elif isinstance(obj, statuseffects.StatusEffectType):
-            return TooltipFactory.get_status_effect_tooltip_text(obj)
-        elif isinstance(obj, TextBuilder):
-            return obj
-        else:
+            if isinstance(obj, item.Item):
+                return TooltipFactory.get_item_tooltip_text(obj)
+            elif isinstance(obj, entities.Enemy):
+                return TooltipFactory.get_enemy_tooltip_text(obj)
+            elif isinstance(obj, entities.NpcEntity):
+                return TooltipFactory.get_npc_tooltip_text(obj)
+            elif isinstance(obj, entities.ChestEntity):
+                return TooltipFactory.get_chest_tooltip_text(obj)
+            elif isinstance(obj, gameengine.ActionProvider):
+                return TooltipFactory.get_action_provider_tooltip_text(obj)
+            elif isinstance(obj, statuseffects.StatusEffectType):
+                return TooltipFactory.get_status_effect_tooltip_text(obj)
+            elif isinstance(obj, TextBuilder):
+                return obj
+            else:
+                return None
+
+        except Exception:
+            # errors in these can go unnoticed for a long time in development
+            traceback.print_exc()
             return None
 
     @staticmethod
