@@ -218,7 +218,16 @@ def run():
                     tick_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.ELAPSED_TICKS)
                     kill_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.KILL_COUNT)
                     turn_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.TURN_COUNT)
-                    win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count)
+                    death_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.DEATH_COUNT)
+                    cp_count = gs.get_instance().get_run_statistic(gs.RunStatisticTypes.CHECKPOINT_COUNT)
+
+                    save_blob = gs.get_instance().get_save_data_if_present()
+                    if save_blob is not None:
+                        saved_version = save_blob.get(savedata.SaveDataTags.VERSION_NUM)
+                    else:
+                        saved_version = None
+
+                    win_menu = menus.YouWinMenu(tick_count, turn_count, kill_count, death_count, cp_count, saved_version=saved_version)
                     gs.get_instance().menu_manager().set_active_menu(win_menu)
 
                 elif zone_event.get_type() == events.EventType.PLAYER_DIED:

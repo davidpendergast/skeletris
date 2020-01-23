@@ -1613,31 +1613,59 @@ class DebugSettingsMenu(OptionsMenu):
 
 class YouWinMenu(FadingInFlavorMenu):
 
-    def __init__(self, total_time, turn_count, kill_count):
+    def __init__(self, total_time, turn_count, kill_count, death_count, cp_count, saved_version=None):
         FadingInFlavorMenu.__init__(self, MenuManager.YOU_WIN_MENU, "You Win!",
-                                    YouWinStats(total_time, turn_count, kill_count),
-                                    auto_next=True)
+                                    YouWinStatsMenu(total_time, turn_count, kill_count, death_count, cp_count,
+                                                    saved_version=saved_version), auto_next=True)
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
 
 
-class YouWinStats(FadingInFlavorMenu, MenuWithVersionDisplay):
+class YouWinStatsMenu(OptionsMenuWithTextBlurb, MenuWithVersionDisplay):
 
-    def __init__(self, total_time, turn_count, kill_count):
-        text = ["Time:  {}".format(Utils.ticks_to_time_string(total_time, fps=60)),
-                "Turns: {}".format(turn_count),
-                "Kills: {}".format(kill_count)]
+    CONTINUE_IDX = (0, 0)
 
-        self.version_text = "[{}]".format(version.get_pretty_version_string())
-        self.version_img = None
-        self.version_rect = [0, 0, 0, 0]
+    def __init__(self, total_time, turn_count, kill_count, death_count, cp_count, saved_version=None):
+        """
+        saved_version: tuple (int, int, int, string) the version of this run's save file if one exists
+        """
+        if total_time < 216000000:
+            time_str = Utils.ticks_to_time_string(total_time, show_hours_if_zero=True, fps=60)
+        else:
+            time_str = "999:59:59"  # protect the UI, always
 
-        FadingInFlavorMenu.__init__(self, MenuManager.YOU_WIN_MENU, "\n".join(text), CreditsMenu(), auto_next=False)
+        self._result_text = "\n".join(
+                [" turns: {}".format(turn_count),
+                 "deaths: {}".format(death_count),
+                 " kills: {}".format(kill_count),
+                 " saves: {}".format(cp_count)])
+
+        OptionsMenuWithTextBlurb.__init__(self, MenuManager.YOU_WIN_MENU, "time: {}".format(time_str), ["continue"],
+                                          title_size=1.5, info_text_size=1)
+
+        self.saved_version_text = version.get_pretty_version_string(saved_version)
         MenuWithVersionDisplay.__init__(self)
 
     def get_song(self):
         return music.Songs.CONTINUE_CURRENT
+
+    def get_version_number_string(self):
+        if self.saved_version_text is not None:
+            return self.saved_version_text
+        else:
+            return version.get_pretty_version_string()
+
+    def get_blurb_text(self):
+        return self._result_text
+
+    def option_activated(self, idx):
+        if idx == YouWinStatsMenu.CONTINUE_IDX:
+            gs.get_instance().menu_manager().set_active_menu(CreditsMenu())
+            sound_effects.play_sound(soundref.menu_select)
+
+    def esc_pressed(self):
+        self.option_activated(YouWinStatsMenu.CONTINUE_IDX)
 
     def build_images(self):
         super().build_images()

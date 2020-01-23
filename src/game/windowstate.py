@@ -68,7 +68,6 @@ class WindowState:
         fullscreen_modes = pygame.display.list_modes()
         if fullscreen_modes != -1 and len(fullscreen_modes) > 0:
             # XXX this give bizarre results when multiple monitors are present.
-            print("INFO: list_modes = {}".format(fullscreen_modes))
             return fullscreen_modes[0]
 
         print("WARN: falling back to display.Info() to calculate fullscreen size")

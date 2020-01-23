@@ -9,10 +9,7 @@
 
 [P2 bugs]
  - skull face on the computer in the post-robo fight is still wonky
- 
- - win screen doesn't show death count
- - and the press-any-key to skip behavior on the win screen sucks, if you want to screenshot
- 
+
  - the dialog is a little cringe in some parts 
     - "but it started being used in the private sector"...? lol
     - still not in love with the cloning machine dialog, it's kinda overexplaining
@@ -45,9 +42,7 @@
     - download 32-bit python and dependencies and fire away?
     - could also consider only shipping 32 bit exes?
         - i think this is normal way, yeah
-        - it's 2020, 64-bit is standard
- 
- - light potion should cure blindness
+        - it's 2020, time to let 32-bit die...
   
 
 [maintanence]
