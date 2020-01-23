@@ -33,6 +33,7 @@ class Dialog:
         self.left_side = left_side
 
         self.next = None    # next Dialog after this one
+        self.prev = None    # the Dialog that comes before this one
 
         self.scroll_pos = 0
         self.uid = Dialog._gen_uid()
@@ -43,6 +44,9 @@ class Dialog:
     def set_next(self, next_dialog):
         self.next = next_dialog
 
+    def set_prev(self, prev_dialog):
+        self.prev = prev_dialog
+
     def get_uid(self):
         return self.uid
 
@@ -51,6 +55,9 @@ class Dialog:
 
     def get_next(self):
         return self.next
+
+    def get_prev(self):
+        return self.prev
 
     def get_text(self):
         return self.text
@@ -89,6 +96,7 @@ class Dialog:
             d1 = dialog_list[i]
             d2 = dialog_list[i + 1]
             d1.set_next(d2)
+            d2.set_prev(d1)
         return dialog_list[0]
 
 

@@ -1288,8 +1288,25 @@ class RoboLairZone(Zone):
             def _get_robo_sprites(_ent, _world):
                 if gs.get_instance().dialog_manager().is_active():
                     dia = gs.get_instance().dialog_manager().get_dialog()
-                    if dia is not None and dia.get_speaker_id() == npc.NpcID.ROBO:
-                        return [spriteref.wall_decoration_robo_console_skull]
+                    if dia is not None:
+                        # we want to show the active sprites if robo is talking
+                        # or if it's between his first and last sections of dialog.
+                        after_first = False
+                        before_last = False
+                        t = dia
+                        while t is not None:
+                            if t.get_speaker_id() == npc.NpcID.ROBO:
+                                after_first = True
+                                break
+                            t = t.get_prev()
+
+                        if after_first:
+                            t = dia
+                            while t is not None:
+                                if t.get_speaker_id() == npc.NpcID.ROBO:
+                                    return [spriteref.wall_decoration_robo_console_skull]
+                                t = t.get_next()
+
                 return [spriteref.wall_decoration_robo_console_empty]
 
             dec.set_sprite_provider(_get_robo_sprites)
