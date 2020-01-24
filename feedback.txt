@@ -1,0 +1,194 @@
+
+[playtesting notes]
+
+ - coffee shop guy (nervous dog) (7/21/19)
+    situation: stranger, asked what i was working on, i offered to let him playtest
+    - 45 minutes, made it through 2 levels
+    - thought flashing red dagger meant it would break soon
+    - couldn't figure out how to pick up items (mouse)
+    - couldn't figure out how how to open inventory
+    - couldn't figure out how how to rotate items
+    - avoided ReturnExitEntity, thought it was fire and would kill him
+        - correct behavior, but incorrect reasoning. probably fine?
+    - put dagger into inventory instead of equipment grid
+    - but figured out how to use the dagger from hotbar without help (pressed 1)
+    - lot of awkward hand alternating with controls
+    - compulsively picking up, equipping items
+        - swapping an rearranging items even when their stats were the same
+        - judging items based on color, rather than stats? 
+            - thought a yellow item affected speed.
+        - eventually became seemingly annoyed whenever an item would drop, would check phone, look away, etc
+        - filled up entire inventory with garbage items
+    - thought vitality was different from HP
+    - seemed bored, playing to pass the time and be polite
+        - obv not a fan of the genre, but concerning nonetheless
+    - story seemed to amuse him at first, bore him as time went on
+    - said art was good, but "programming seems basic"
+        - not sure what this means, hurt though lol
+    - didn't understand why he couldn't pick up items two squares away
+    
+    takeaways: 
+        - ~early game is slow, easy, confusing, and boring~
+        - way too many chests
+        - need in-game tutorial
+        - shift click to auto-pickup items
+        - better indicator when item is too far away to be picked up
+        - needs to be possible to die in early levels
+        - early levels potentially should be a lot smaller?
+        - might want to prevent "ATT" items from being pure yellow
+        
+ - jeff (home) (8/25/19)
+    situation: friend, invited him to playtest
+        - 35 minutes, played four games, died at caves 2 or 3 each time
+        - most early tutorials in place, game was untuned, pretty hard
+    good:
+        - equipment and rotation tutorials worked!
+        - used item tooltips to decide what to replace when equip space ran out
+    neutral:
+        - scared of enemies at first, wouldn't fight anything
+        - used mouse + inventory hotbar button to open inventory thereafter
+    bad:
+        - pressed arrow keys before "[WASD]" message appeared, used them throughout
+        - had to instruct how to use potions (tried dragging it onto player)
+            - didn't really get to see tutorial text because it was on mouse while trying to use it.
+        - often tried moving items via drag-n-drop instead of click-move-click
+        - rapidly mashed movement keys while fighting, didn't seem to grasp concept of turn-basedness
+            - kept doing it after i explained why it wasn't necessary, kept doing it anyways
+            - perhaps more of a mental tic in response to stress
+        - ran past enemies even whenever possible, causing him to recieve no potions and die in later levels
+        - didn't realize you could attack enemies by running into them
+        - struggled to equip dagger
+            - tried dragging it onto player
+            - tried right-clicking it in inventory
+            - confused about what "Throwable" meant
+            - had to instruct how to select it (there's no in-game explanation for this currently)
+        - noticed Zzz's on enemies, but didn't understand what it meant or how to take advantage
+            - even after explanation and demonstration, couldn't (immediately~) start fighting slow enemies safely 
+        - never tried hovering over enemies to see stats
+        
+    takeaways:
+        - need to streamline the way weapons are equipped. 
+            - it should *just work* when you put a weapon into the equipment grid
+            - only two attacks available, and a maximum of two weapons equipped
+        - there should be a way to recover life at the end of a level
+        - drag-n-drop should work
+        - disable arrow keys as default controls, it just screws people up
+        - need some non-enemy challenges in early levels, to introduce the movement and turn system
+        - clicking a potion onto yourself should probably just use it~
+        - clicking an equipment onto yourself should equip it if possible
+        
+        
+[beta testing notes]
+
+  date:      1/23/2020
+  
+  situation: all done remotely on version 0.1.1-BETA , when I asked for 
+             volunteers on twitter. sent out private DL links. was mostly
+             interested in whether the game would run for everyone.
+  - jonny
+    - said it was fun, strategic, challenge to get past the first area
+    - enjoyed filling up the grid
+    - gathered many knives lol
+    - said mary explained fighting well
+        - (i had given some guidance prior to that)
+    - liked the town! talked to the ppl!
+  
+  - alex
+    - chrome & windows both popped 'suspicious file' warnings
+        - we must end the tyranny of microsoft and google
+    - liked the ASCII map
+    - read info.txt before playing, which inspired several strange ideas:
+        - thought 'jumping' was a seperate action, that wasn't included in controls menu
+        - thought clicking was the prefered way to attack, and running into things was wrong
+        - thought filling the grid would do something special 
+            - (mostly my fault for jokingly implying it would, lol)
+        - tutorials were annoying, because things like opening the map etc. had already been done
+            - in a previous run, so the tutorial skip detection didn't work
+    - died once (I think) before spider zone
+        - "feels like I'm playing wrong"
+    - liked spider music, general look & feel, checkpoint design
+    - swamps are a big difficulty spike
+        - "dying too much"
+    - likes the turn counter on load menu
+    - ended up pretty underpowered at the swamps, unable to make much progress
+        - no potions
+        - att: 6, def: 2, vit: 9
+    - quit at that point
+    - all in all, didn't seem to enjoy the game very much
+            
+  - dk
+    - runs well on his potato
+    - got to the swamps
+        - quit to get dinner
+    - came back
+    - slugs were tough
+        - is it optimistic to assume players won't get hit by slugs?
+    - it FAILED TO SAVE
+        - could still continue from checkpoints (good)
+        - but no save_data directory was ever created
+        - after flipping the read-only flag on the 'Skeletris' folder it became fixed?
+        - although that shouldn't matter
+        - unclear if he restarted the game after flipping the box to make it work or what
+        - the real issue here is that there's no way to diagnose this problem remotely
+    - went silent as we were investigating the saving issue
+    
+  - necro
+    - runs well, likes the feel
+    - didn't play too long, enjoyed it though
+    - claimed to quit for IRL reasons
+    
+  - av reference
+    - sent me a very detailed list of his thoughts, super helpful:
+
+        "Hi there! I downloaded and successfully run the game on Windows 10. 
+         Here are some considerations after some time playing; I arrived to 
+         the first save point and the swamps."
+
+        "1. I like the graphic and music very much but if you are planning to 
+            sell it some people would aspect more atmosphere and details."
+        "2. I found some fx sounds to be slightly louder, like when you are hit 
+            by an enemy or when you heal with a potion."
+        "3. The game runs smooth; custom controls are perfect as some people like 
+            me prefer to use arrows rather than wasd."
+        "4. The idea of fitting items like a puzzle is very nice."
+        "5. Why would you skip a turn? There seems to be a lack of information 
+            about that. The jump is cute!"
+        "6. I like the map; sometimes it didn't show the doors, other times it 
+            did with a O."
+        "7. The saved data load perfectly."
+        
+        - beginning isn't engaging enough
+            - should think about improving this post-release
+            
+        - should dial back the potion / damage sounds a bit perhaps?
+            - reduce default sound effects volume?  (FIXED in v0.1.3-BETA)
+            
+        - improve mary's dialog to include some info about turn skipping?
+            - or put some info in the store page
+            - if players can't learn this they'll likely be unable to progress
+            
+        - likely some confusion about doors going away when they're opened
+            - tested to make sure and it seems to work correctly
+            - yep
+  
+  takeaways: 
+    - it ran well on everybody's computers!! (all used windows, I believe)
+        - except for DK whose game was failing to write anything to disk
+            - fixed by jibbling the 'read-only' checkbox on the folder??
+    - but people didn't seem to want to play for very long
+    - swamps was a major dropping off point
+        - not sure why though, exactly
+            - crabs, ghasts, and cyclopses, might be a bit much (FIXED? by v0.1.2)
+    - remote "playtesting" is so bad compared to in-person
+        - obviously...
+    - need better handling for when the game is unable to write to disk
+        - logging wouldn't help here (can't write logs either...)
+        - pop a message with the stacktrace to the screen maybe?
+            - when? at save time?
+            - this is so messy
+        - can instruct people to run the game the game through a terminal, take screenshot
+          of stacktrace in console if necessary
+    - game data should be be saved to the OS's AppData folder, not the working directory (FIXED by v0.1.3)
+        - this is likely the root cause of DK's saving issue
+        - although it's unclear why it couldn't write to the desktop or why
+          closing and reopening the game fixed those issues...
