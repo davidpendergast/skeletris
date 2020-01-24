@@ -1900,7 +1900,6 @@ class TitleMenu(Menu):
         return False
 
     def update(self, world):
-
         if self.tick_count > 15 and InputState.get_instance().was_anything_pressed():
             if self.tick_count > self.show_press_any_tick:
                 gs.get_instance().menu_manager().set_active_menu(StartMenu())

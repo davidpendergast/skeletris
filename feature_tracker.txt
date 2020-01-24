@@ -8,16 +8,19 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
- - if you've ever (ever) popped the map before it shouldn't show the map tutorial.
+ - if you've ever popped the map before it shouldn't show the map tutorial.
+ - if you've ever drank a potion, it shouldn't pop the potion tutorial
 
-[distribution bugs]
- - windows freaks out when you try to run the exe (how do I authorize it?)
-    - it seems like the only way around this is to get a digital certificate,
-      which costs hundreds of dollars and requires me to be a company?
-    - this is kind of a non-starter
- 
+
 [story bugs]
  - mary doesn't have repeat dialog at many places
+ 
+[sound bugs]
+ - no sound effect when you activate / deactivate an attack on the hotbar
+ - some effects are quite loud compared to others
+    - made the master level default to 60% to account for this, but could use
+      some more attention here.
+ - frog song could use a bit of remastering
 
 
 [testing]
@@ -32,13 +35,11 @@
     - realistically, they can just look at the store page / controls menu
  - slow potions are a bit OP against bosses
     - maybe OK? bosses are pretty tough otherwise...
+ - weapon drops become extremely common at the later difficulties because
+   all of them are in the loot pool
  
 [current features] 
- - figure out how to make 32-bit windows builds
-    - download 32-bit python and dependencies and fire away?
-    - could also consider only shipping 32 bit exes?
-        - i think this is normal way, yeah
-        - it's 2020, time to let 32-bit die...
+
   
 
 [maintanence]
@@ -115,7 +116,7 @@
     - only fun if it truly changes your options somehow
     - and it's obligitory to have different art
  - doors that can only be unlocked with "keys"
- - varying scenery
+ - more varied scenery
     - bridges over deep pits, water pits
  
  - figure out whether it's possible to make/distribute mac builds
@@ -189,9 +190,15 @@
     - would allow weapons to have global stats (not currently possible because 
       it'd become more efficient to stack small weapons instead of cubes)
     - would need to elegantly "fail to equip" somehow
+ 
  - putting skeletons back together with bone pieces
+ 
+ - figure out how to make 32-bit windows builds
+    - download 32-bit python and dependencies and fire away?
+    - could also consider only shipping 32 bit exes?
+        - i think this is normal way, yeah
+        - it's 2020, time to let 32-bit die...
   
-
 
 [~dream features~]
  - farming
@@ -211,6 +218,10 @@
         - should it?
     - if you have temporary speed boost that's about to expire, enemies with z's can act after you move
         - need to math a little harder here (or just leave it...)
+    - windows freaks out when you try to run the exe (how do I authorize it?)
+        - it seems like the only way around this is to get a digital certificate,
+          which costs hundreds of dollars and requires me to be a company?
+        - this is kind of a non-starter
         
 [playtesting notes]
 
@@ -391,7 +402,9 @@
         - pop a message with the stacktrace to the screen maybe?
             - when? at save time?
             - this is so messy
-    - game data should be be saved to the OS's AppData folder, not the working directory
+        - can instruct people to run the game the game through a terminal, take screenshot
+          of stacktrace in console if necessary
+    - game data should be be saved to the OS's AppData folder, not the working directory (FIXED by v0.1.3)
         - this is likely the root cause of DK's saving issue
         - although it's unclear why it couldn't write to the desktop or why
           closing and reopening the game fixed those issues...

@@ -109,7 +109,7 @@ class VideoSettings:
 
 class SoundSettings:
 
-    EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 100,
+    EFFECTS_VOLUME = Setting("effects volume", "EFFECTS_VOLUME", 60,
                              cleaner=lambda val: Utils.bound(int(val), 0, 100),
                              on_set=lambda sttgs, old_val, new_val: sttgs.update_volume_levels(for_effects=True, for_music=False))
 
