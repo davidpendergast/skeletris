@@ -67,18 +67,41 @@ def _get_info_text(system_str, bit_count_str, version_str, date_str):
 
 Controls:
  Move: W, A, S, D
- Attack & Interact: W, A, S, D or Click
+ Attack & Interact: Walk into the enemy/object or click it.
  Skip Turn: Space
  Open Inventory: R
  Open Map: M
  Pick up Item: Click it
- Use, Trade, or Throw Item: While the item is on the cursor, click the target 
+ Use, Trade, or Throw Item: While the item is on the cursor, click the target. 
  Rotate Item on Cursor: E
  Activate Weapon: 1-6
 
  Toggle Fullscreen: F4
  Toggle Resolution: F5
  Pause: Esc
+ 
+ 
+Advanced Tips:
+ - You can right-click items on the ground to pick them up instantly.
+ - You can right click potions in your inventory to drink them.
+ - Status Effects with the same name do not stack.
+    - But similar ones with different names, like "Regeneration I" and "Regeneration II", do.
+ - Almost every 1-on-1 encounter with regular enemies should be winnable without taking damage.
+    - Try to kite slow enemies, use the whip on fast ones, and use potions on fast & unflinching ones.
+    - It's generally better to let enemies approach you than it is to approach them (use Skip Turn for this). 
+ - Attack and HP on Kill are the best item stats, followed by Defense and Vitality.
+ - If you have X attack, and the opponent has Y defense, you'll always deal at least (X-Y) damage to them.
+ 
+ 
+Super Advanced Info:
+ - Damage is calculated like this (it's somewhat similar to the board game "Risk"):
+    - Attacker rolls X D6s, and the defender rolls Y D4s (for their respective ATT and DEF stats).
+    - The defender can "block" any of the attacker's dice rolls with one of their own dice with >= value.
+    - The defender will block as many dice as they possibly can.
+    - The number of unblocked dice is the damage dealt.
+        - For example, if the rolls are like this:
+            Attacker: [1] [6] [3] [3]   Defender: [2] [2] [4]
+        - Then 2 damage will be dealt because the attacker's [1] and [3] rolls can be blocked.
  
  
 Version Info:
@@ -90,8 +113,17 @@ Version Info:
 Launch Instructions:
   The game and all of its assets are bundled into a single executable, so after 
   unzipping this directory you should be able to just double click "Skeletris.exe" 
-  to launch it. A subdirectory named "save_data" will be created to store settings, 
-  saved games, high scores, and stuff like that.
+  to launch it.
+  
+  Save data will (likely) be stored in one of these locations:
+    Mac OS X:    ~/Library/Application Support/Skeletris
+    Unix:        ~/.local/share/Skeletris
+    Win XP:      C:\Documents and Settings\<username>\Local Settings\Application Data\Ghast\Skeletris
+    Win 7+:      C:\Users\<username>\AppData\Roaming\Ghast\Skeletris
+    
+  If you'd prefer to have save data live in this directory instead, you can create 
+  a text file named "put_save_data_here.txt" right next to this one. If the game sees 
+  a file with that name when it's launching, it will put all its save data here instead.
   
   On Windows 8.1 and onwards, when you launch the game it may show a warning like:
     "Windows protected your PC - Windows Defender SmartScreen prevented an 

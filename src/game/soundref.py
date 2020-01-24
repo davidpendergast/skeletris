@@ -691,4 +691,3 @@ def rand_explosion_long():
 
 
 
-

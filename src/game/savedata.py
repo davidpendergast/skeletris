@@ -5,6 +5,7 @@ import datetime
 import random
 
 import src.utils.util as util
+import src.game.pathutils as pathutils
 import src.game.version as version
 import src.items.itemencoder as itemencoder
 
@@ -18,7 +19,7 @@ WIN_SAVE_ID = "normal_win"
 
 
 def get_path_to_saves():
-    return str(pathlib.Path("save_data/saves/"))
+    return str(pathutils.get_save_data_path(with_subpath="saves/"))
 
 
 def has_files_on_disk():

@@ -3,6 +3,7 @@ from src.utils.util import Utils
 import src.game.sound_effects as sound_effects
 import src.game.music as music
 import src.game.debug as debug
+import src.game.pathutils as pathutils
 
 import pathlib
 import traceback
@@ -185,7 +186,8 @@ class Settings:
         return [x for x in res]
 
     def _to_filepath(self, filename):
-        return pathlib.Path("save_data/" + filename)
+        save_data_dir = pathutils.get_save_data_path()
+        return pathlib.Path(save_data_dir, filename)
 
     def load_from_disk(self, filenames=None):
         if filenames is None:
