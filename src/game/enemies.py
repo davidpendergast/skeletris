@@ -611,7 +611,7 @@ class GhastTemplate(EnemyTemplate):
 
     def get_stat_overrides(self):
         return {
-            StatTypes.VIT: 12,
+            StatTypes.VIT: 9,
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
