@@ -8,6 +8,7 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
+ - if you've ever (ever) popped the map before it shouldn't show the map tutorial.
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)
@@ -288,6 +289,51 @@
         - need some non-enemy challenges in early levels, to introduce the movement and turn system
         - clicking a potion onto yourself should probably just use it~
         - clicking an equipment onto yourself should equip it if possible
+        
+        
+[beta testing notes]
+  situation: all done remotely on version 0.1.1-BETA, when I asked for 
+             volunteers on twitter. sent out private DL links. was mostly
+             interested in whether the game would run for everyone.
+  - jonny
+    - said it was fun, strategic, challenge to get past the first area
+    - enjoyed filling up the grid
+    - gathered many knives lol
+    - said mary explained fighting well
+        - (i had given some guidance prior to that)
+    - went silent after spider fight...
+  
+  - alex
+    - chrome & windows both popped 'suspicious file' warnings
+    - liked the ASCII map
+    - read info.txt before playing, which inspired several strange ideas:
+        - thought 'jumping' was a seperate action, that wasn't included in controls menu
+        - thought clicking was the prefered way to attack, and running into things was wrong
+        - thought filling the grid would do something special 
+            - (my fault for jokingly implying it would, lol)
+        - tutorials were annoying, because things like opening the map etc. had already been done
+            - in a previous run, so the tutorial skip detection didn't work
+    - died once (I think) before spider zone
+        - "feels like I'm playing wrong"
+    - liked spider music, general look & feel, save point design
+    - swamps are a big difficulty spike
+        - "dying too much"
+    - likes the turn counter on load menu
+    - ended up pretty underpowered at the swamps, unable to make much progress
+        - no potions
+        - att: 6, def: 2, vit: 9
+            
+  - dk
+    - runs well on his potato
+    
+  - necro
+    - runs well, likes the feel
+    - didn't play too long, enjoyed it though
+    - quit for IRL reasons
+    
+  - av reference
+    -
+        
         
 
 [game name]

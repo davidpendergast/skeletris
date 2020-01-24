@@ -608,6 +608,8 @@ error = (sfx_negative_2, 0.8)
 sidepanel_in = None
 sidepanel_out = None
 
+clone_machine = (sfx_movement_portal3, 0.1)
+
 dialog_click = _soft_blip_1
 dialog_skip = _soft_blip_2
 dialog_next = _soft_blip_2

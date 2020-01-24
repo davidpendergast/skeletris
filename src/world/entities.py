@@ -2331,6 +2331,8 @@ class SaveStation(Entity):
         self._anim_tick_count = 0
         self._float_tick_offset = 0
 
+        self._did_sound = False
+
         self._start_delay = 30  # this waits for the first line of dialog to end
 
         self._getting_in_duration = 20
@@ -2403,6 +2405,10 @@ class SaveStation(Entity):
 
             elif self._anim_tick_count < end_float:
                 self._set_player_visible(p, False, no_item=True)
+
+                if not self._did_sound:
+                    sound_effects.play_sound(soundref.clone_machine)
+                    self._did_sound = True
 
                 if self._float_tick_offset == 0:
                     # force it to start at the highest point of the bobbing animation
@@ -2579,6 +2585,7 @@ class SaveStation(Entity):
 
         # start the animation stuff
         self._is_animating = True
+        self._did_sound = False
         self._anim_tick_count = 0
 
     def visible_in_darkness(self):
