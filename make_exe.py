@@ -83,7 +83,7 @@ Controls:
  
 Advanced Tips:
  - You can right-click items on the ground to pick them up instantly.
- - You can right click potions in your inventory to drink them.
+ - You can right-click potions in your inventory to drink them.
  - Status Effects with the same name do not stack.
     - But similar ones with different names, like "Regeneration I" and "Regeneration II", do.
  - Almost every 1-on-1 encounter with regular enemies should be winnable without taking damage.
@@ -118,8 +118,8 @@ Launch Instructions:
   Save data will (likely) be stored in one of these locations:
     Mac OS X:    ~/Library/Application Support/Skeletris
     Unix:        ~/.local/share/Skeletris
-    Win XP:      C:\Documents and Settings\<username>\Local Settings\Application Data\Ghast\Skeletris
-    Win 7+:      C:\Users\<username>\AppData\Roaming\Ghast\Skeletris
+    Win XP:      C:\\Documents and Settings\\<username>\\Local Settings\\Application Data\\Ghast\\Skeletris
+    Win 7+:      C:\\Users\\<username>\\AppData\\Local\\Ghast\\Skeletris
     
   If you'd prefer to have save data live in this directory instead, you can create 
   a text file named "put_save_data_here.txt" right next to this one. If the game sees 

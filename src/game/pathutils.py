@@ -46,10 +46,7 @@ def get_save_data_path(with_subpath=None):
     if not use_workingdir_for_save_data():
         appdata_path = get_user_appdata_path()
         if appdata_path is not None:
-            if with_subpath is not None:
-                base_path = pathlib.Path(appdata_path, _SAVE_DATA_DIR)
-            else:
-                base_path = pathlib.Path(appdata_path)
+            base_path = pathlib.Path(appdata_path, _SAVE_DATA_DIR)
         else:
             print("WARN: couldn't get appdata path, falling back to working directory for save_data")
 
