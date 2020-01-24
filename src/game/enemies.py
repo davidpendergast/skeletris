@@ -240,7 +240,7 @@ class TrilliteTemplate(EnemyTemplate):
         }
 
     def get_level_range(self):
-        return range(5, 8)
+        return range(5, 11)
 
 
 class TrillaTemplate(EnemyTemplate):
@@ -525,7 +525,7 @@ class CrabTemplate(EnemyTemplate):
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 1,
-            StatTypes.GRASP_ON_MELEE_HIT: 2
+            StatTypes.GRASP_ON_MELEE_HIT: 1
         }
 
 
@@ -552,7 +552,7 @@ class CyclopsTemplate(EnemyTemplate):
     def get_stat_overrides(self):
         return {
             StatTypes.VIT: 15,
-            StatTypes.SPEED: 3,
+            StatTypes.SPEED: 2,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 4,
             StatTypes.DEF: 2,
@@ -615,7 +615,7 @@ class GhastTemplate(EnemyTemplate):
             StatTypes.SPEED: 4,
             StatTypes.ATT: 0,
             StatTypes.UNARMED_ATT: 2,
-            StatTypes.DEF: 4,
+            StatTypes.DEF: 2,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 2,
             StatTypes.UNARMED_RANGE: 2,
@@ -940,11 +940,11 @@ class CrawlingLepiotaTemplate(EnemyTemplate):
         return {
             StatTypes.VIT: 35,
             StatTypes.SPEED: 2,
-            StatTypes.ATT: 16,
+            StatTypes.ATT: 5,
             StatTypes.DEF: 3,
             StatTypes.INTELLIGENCE: 3,
             StatTypes.WEALTH: 3,
-            StatTypes.CONFUSION_ON_HIT: 4,
+            StatTypes.GRASP_ON_MELEE_HIT: 2,
             StatTypes.UNFLINCHING: 1
         }
 
