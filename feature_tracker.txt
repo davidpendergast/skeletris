@@ -8,10 +8,6 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
- - the dialog is a little cringe in some parts 
-    - "but it started being used in the private sector"...? lol
-    - still not in love with the cloning machine dialog, it's kinda overexplaining
-    - don't give in to imaginary cringe culture
 
 [distribution bugs]
  - windows freaks out when you try to run the exe (how do I authorize it?)

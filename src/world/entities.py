@@ -2557,7 +2557,7 @@ class SaveStation(Entity):
                                ">> Success!")]
 
             if cp_count == 0:
-                d.append(dialog.Dialog(">> Due to city anti-duplication policy,\n" +
+                d.append(dialog.Dialog(">> Due to our strict anti-duplication policy,\n" +
                                        ">> clones may ONLY be produced upon receipt of\n" +
                                        ">> 66.6% of the original organism's remains."))
 
