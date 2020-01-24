@@ -305,48 +305,72 @@
   
   - alex
     - chrome & windows both popped 'suspicious file' warnings
+        - we must end the tyranny of microsoft and google
     - liked the ASCII map
     - read info.txt before playing, which inspired several strange ideas:
         - thought 'jumping' was a seperate action, that wasn't included in controls menu
         - thought clicking was the prefered way to attack, and running into things was wrong
         - thought filling the grid would do something special 
-            - (my fault for jokingly implying it would, lol)
+            - (mostly my fault for jokingly implying it would, lol)
         - tutorials were annoying, because things like opening the map etc. had already been done
             - in a previous run, so the tutorial skip detection didn't work
     - died once (I think) before spider zone
         - "feels like I'm playing wrong"
-    - liked spider music, general look & feel, save point design
+    - liked spider music, general look & feel, checkpoint design
     - swamps are a big difficulty spike
         - "dying too much"
     - likes the turn counter on load menu
     - ended up pretty underpowered at the swamps, unable to make much progress
         - no potions
         - att: 6, def: 2, vit: 9
+    - quit at that point
+    - all in all, didn't seem to enjoy the game very much
             
   - dk
     - runs well on his potato
     - got to the swamps
         - quit to get dinner
+    - came back
+    - slugs were tough
+        - is it optimistic to assume players won't get hit by slugs?
+    - it FAILED TO SAVE
+        - could still continue from checkpoints (good)
+        - but no save_data directory was ever created
+        - after flipping the read-only flag on the 'Skeletris' folder it became fixed?
+        - although that shouldn't matter
+        - unclear if he restarted the game after flipping the box to make it work or what
+        - the real issue here is that there's no way to diagnose this problem remotely
+    - went silent as we were investigating the saving issue
     
   - necro
     - runs well, likes the feel
     - didn't play too long, enjoyed it though
-    - quit for IRL reasons
+    - claimed to quit for IRL reasons
     
   - av reference
     - will play tomorrow and get back to me?
+        - we'll see...
     
   takeaways: 
     - it ran well on everybody's computers!! (all used windows, I believe)
+        - except for DK whose game was failing to write anything to disk
+            - fixed by jibbling the 'read-only' checkbox on the folder??
     - but people didn't seem to want to play for very long
     - swamps was a major dropping off point
         - not sure why though, exactly
-            - crabs, ghasts, and cyclopses, might be a bit much
+            - crabs, ghasts, and cyclopses, might be a bit much (FIXED? by v0.1.2)
     - remote "playtesting" is so bad compared to in-person
         - obviously...
-    
-        
-        
+    - need better handling for when the game is unable to write to disk
+        - logging wouldn't help here (can't write logs either...)
+        - pop a message with the stacktrace to the screen maybe?
+            - when? at save time?
+            - this is so messy
+    - game data should be be saved to the OS's AppData folder, not the working directory
+        - this is likely the root cause of DK's saving issue
+        - although it's unclear why it couldn't write to the desktop or why
+          closing and reopening the game fixed those issues...
+             
 
 [game name]
 
