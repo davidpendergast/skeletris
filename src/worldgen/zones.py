@@ -793,7 +793,7 @@ class QuietInlet(Zone):
     ZONE_ID = "quiet_inlet"
 
     def __init__(self):
-        Zone.__init__(self, "Quiet Inlet", 1, filename="quiet_inlet.png")
+        Zone.__init__(self, "Quiet Inlet", 0, filename="quiet_inlet.png")
         self._sign_color = (225, 230, 150)
         self._web_color = (255, 255, 100)
 

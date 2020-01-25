@@ -79,6 +79,7 @@
     
 [next features]
   - osx support
+  - shift + direction should force a walk action, even if there's a target in that direction
     
         
 [future features]
