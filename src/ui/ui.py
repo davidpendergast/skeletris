@@ -390,7 +390,7 @@ class InventoryPanel(SidePanel):
             render_eng.update(self.lvl_text)
         s_xy[1] += self.lvl_text.line_height()
 
-        att_value = self.player_state.get_att_value_with_active_weapon()
+        att_value = self.player_state.stat_value(StatTypes.ATT)
         att_str = "ATT:{}".format(att_value if att_value < 100 else "99+")
         if att_str != self.att_text.get_text():
             self.att_text = self.att_text.update(new_text=att_str, new_x=s_xy[0], new_y=s_xy[1])

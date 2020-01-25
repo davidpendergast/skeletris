@@ -20,7 +20,7 @@ class TooltipFactory:
 
         plus_att = target_item.stat_value(StatTypes.ATT, local=True)
         if plus_att != 0:
-            op = "(+" if plus_att > 0 else "-"
+            op = "(+" if plus_att > 0 else "("
             text_builder.add(op + str(plus_att) + ") ", color=StatTypes.ATT.get_color())
 
         text_builder.add_line(str(target_item.get_title()))

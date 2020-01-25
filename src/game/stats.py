@@ -212,10 +212,10 @@ class StatProvider:
 
 def default_player_stats():
     stats = {
-        StatTypes.ATT: 0,
+        StatTypes.ATT: 3,
         StatTypes.VIT: 8,
         StatTypes.DEF: 1,
-        StatTypes.UNARMED_ATT: 2,
+        StatTypes.UNARMED_ATT: 0,
         StatTypes.UNARMED_RANGE: 1,
         StatTypes.LIGHT_LEVEL: 4,
         StatTypes.MIN_LIGHT_LEVEL: 2,

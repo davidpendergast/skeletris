@@ -1358,6 +1358,7 @@ class TradeItemAction(Action):
                 print("WARN: failed to remove traded item: {}".format(self.item))
 
     def finalize(self, world):
+        super().finalize(world)
         self.get_actor().set_visually_held_item_override(None)
 
         if self._received_items is not None and len(self._received_items) > 0:
@@ -1829,6 +1830,7 @@ class AddItemToGridAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         grid = self.get_grid()
         it = self.get_item()
 
@@ -1855,6 +1857,7 @@ class AddItemToGridAction(Action):
             raise ValueError("failed to place item {} in grid {}".format(it, grid))
 
     def finalize(self, world):
+        super().finalize(world)
         self._handle_auto_activate(world)
 
     def _handle_auto_activate(self, world):
@@ -1910,6 +1913,7 @@ class RemoveItemFromGridAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         grid = self.get_grid()
         my_item = self.get_item()
 
@@ -2030,6 +2034,7 @@ class SpawnActorAction(Action):
         return True
 
     def start(self, world):
+        super().start(world)
         pass
 
     def animate_in_world(self, progress, world):
@@ -2062,6 +2067,7 @@ class SpawnActorAction(Action):
             self._did_add = True
 
     def finalize(self, world):
+        super().finalize(world)
         if not self._did_add:
             world.add(self.new_actor, self.get_position())
             self._did_add = True
