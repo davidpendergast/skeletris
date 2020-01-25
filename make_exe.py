@@ -94,6 +94,7 @@ Advanced Tips:
  
  
 Super Advanced Info:
+
  - Damage is calculated like this (it's somewhat similar to the board game "Risk"):
     - Attacker rolls X D6s, and the defender rolls Y D4s (for their respective ATT and DEF stats).
     - The defender can "block" any of the attacker's dice rolls with one of their own dice with >= value.
@@ -102,7 +103,16 @@ Super Advanced Info:
         - For example, if the rolls are like this:
             Attacker: [1] [6] [3] [3]   Defender: [2] [2] [4]
         - Then 2 damage will be dealt because the attacker's [1] and [3] rolls can be blocked.
- 
+        
+ - The most important stat on an enemy is its speed, and it's a good idea to check it before you start fighting.
+    - Your base speed is 4, and it can be modified by potions and status effects.
+    - If your current speed is X, and the enemies speed is Y, you'll be able to take X actions for every Y of theirs.
+    - Examples:
+        - If your speed is 4, and the enemy's is 2, it means you'll act exactly twice as often as they do.
+        - If your speed is equal to the enemy's, your turns will alternate.
+        - If the enemy is faster than you, they'll effectively "double hit" every few turns, depending on how much faster.
+    - It's often useful to get "in sync" with an enemy's turn pattern by skipping your turn or stepping away.
+    
  
 Version Info:
   Platform: {} ({})
