@@ -1,7 +1,9 @@
 # {game_name}
-babby's first roguelike
+A turn-based dungeon crawler with a spooky theme and lots of pixelart.
 
-here are the five most recent gifs committed:
+This project has been released! [itch.io](https://ghastly.itch.io/skeletris)
+
+And here are the five most recent gifs committed:
 
 ![{file_0}](gifs/{file_0}?raw=true "{name_0}")
 

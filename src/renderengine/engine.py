@@ -426,7 +426,7 @@ class RenderEngine:
     def __contains__(self, key):
         try:
             return key.uid() in self.bundles
-        except ValueError:
+        except Exception:
             return False
         
     def render_layers(self):

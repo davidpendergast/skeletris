@@ -278,7 +278,7 @@ class Conversation:
     def __eq__(self, other):
         try:
             return self.get_id() == other.get_id()
-        except ValueError:
+        except Exception:
             return False
 
 

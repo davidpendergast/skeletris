@@ -303,7 +303,7 @@ class ZoneLoader:
 
             return bp, unknowns
 
-        except ValueError as e:
+        except Exception as e:
             print("failed to load " + str(filename))
             raise e
 
@@ -571,7 +571,7 @@ class ZoneBuilder:
                 else:
                     raise ValueError("got a null level...? level={}, dims={}".format(level, dims))
 
-            except ValueError as e:
+            except Exception as e:
                 print("WARN: failed to generate tile grid {} time(s): level={}, dims={}".format(i+1, level, dims))
                 if debug.is_dev():
                     # y'all better fix this

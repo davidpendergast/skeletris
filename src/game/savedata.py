@@ -155,7 +155,7 @@ def load_file(path_to_file):
             else:
                 ret.set(SaveDataTags.VERSION_NUM, (major, minor, bugfix, desc))
 
-        except ValueError:
+        except Exception:
             traceback.print_exc()
             ret.set(SaveDataTags.VERSION_NUM, None)
     else:

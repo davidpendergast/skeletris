@@ -48,7 +48,7 @@ class AppliedStat:
             return (self.stat_type == other.stat_type and
                     self.value == other.value and
                     self.local == other.local)
-        except ValueError:
+        except Exception:
             return False
 
     def __hash__(self):
@@ -301,7 +301,7 @@ class Item(StatProvider):
                 self.consume_effect == other.consume_effect and
                 self.consume_duration == other.consume_duration
             )
-        except ValueError:
+        except Exception:
             return False
 
 
@@ -365,7 +365,7 @@ class SpriteItem(Item):
                 self._projectile_sprite == other._projectile_sprite and
                 self._sprite_rotation == other._sprite_rotation
             )
-        except ValueError:
+        except Exception:
             return False
 
 
@@ -493,13 +493,13 @@ class StatCubesItem(Item):
                 super().test_equals(other) and
                 self.cube_art == other.cube_art
             )
-        except ValueError:
+        except Exception:
             return False
 
     def __eq__(self, other):
         try:
             return self.uuid == other.uuid
-        except ValueError:
+        except Exception:
             return False
 
     def __hash__(self):

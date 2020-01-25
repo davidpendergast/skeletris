@@ -50,8 +50,8 @@ def write_readme(game_name, template_file, dest_file, gif_directory):
         with open(dest_file, "w") as dest_f:
             dest_f.write("".join(result_lines))
 
-    except ValueError as e:
-        print("failed to generate readme: {}".format(e))
+    except Exception as e:
+        print("ERROR: failed to generate readme: {}".format(e))
 
 
 if __name__ == "__main__":

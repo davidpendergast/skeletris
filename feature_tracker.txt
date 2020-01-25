@@ -10,8 +10,6 @@
 [P2 bugs]
  - if you've ever popped the map before, even in a previous life, it shouldn't show the map tutorial.
  - if you've ever drank a potion, it shouldn't pop the potion tutorial
- - the "this_is_dev.txt" flag doesn't work in runtime
-    - it fails while trying to generate the readme
  - crash files go to the working dir (maybe that's fine?)
  - if you have a high score, but no in-progress save files, 
         the load option still appears

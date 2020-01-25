@@ -409,7 +409,7 @@ class Utils:
         else:
             try:
                 return mapper(json_blob[key])
-            except ValueError:
+            except Exception:
                 return default
 
     @staticmethod

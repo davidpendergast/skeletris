@@ -574,7 +574,7 @@ class GlobalState:
                         if trigger.predicate(e):
                             try:
                                 trigger.do_action(e, world)
-                            except ValueError:
+                            except Exception:
                                 traceback.print_exc()
 
                             if trigger.single_use:
