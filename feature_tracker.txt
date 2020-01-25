@@ -8,8 +8,13 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
- - if you've ever popped the map before it shouldn't show the map tutorial.
+ - if you've ever popped the map before, even in a previous life, it shouldn't show the map tutorial.
  - if you've ever drank a potion, it shouldn't pop the potion tutorial
+ - the "this_is_dev.txt" flag doesn't work in runtime
+    - it fails while trying to generate the readme
+ - crash files go to the working dir (maybe that's fine?)
+ - if you have a high score, but no in-progress save files, 
+        the load option still appears
 
 
 [story bugs]
@@ -39,7 +44,10 @@
    all of them are in the loot pool
  
 [current features] 
-
+ - better death animations for enemies
+    - i was looking through old gifs, and i swear they used to be better
+    - can probably generate some "falling down" animations based on the enemy's sprite
+        - sorta like i did in 'HATE', where they'd desintigrate
   
 
 [maintanence]

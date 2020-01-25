@@ -1,5 +1,39 @@
 
-[playtesting notes]
+[beta release feedback]
+
+ - @lofttom (through DM, 01/25/2020 - release day v1.0.0)
+    
+    "Your game rocks man. Incredible job.
+     Inventory management and rerolling the shapes of stuff is a ton of fun and made me feel like i was optimizing
+     Went for whip and full life on kill for ez mode"
+
+    - (i said thank you, mentioned playtesters had been having difficulty)
+    
+    "Im surprised they had a hard time honestly!! But to be fair people never 
+     read the readme files lol
+     
+     Once i figured out the rest system it got easier
+     
+     Some feedback if you want it:
+     Make the dying animation more dramatic, its a little quick
+     devoted boyfriend and father
+     
+     Also an idea: consider a gauntlet mode unlocked for beating the game or 
+     something, a chest after each boss or something? Would be cool to hve a 
+     quick gamemode for ppl who want to play something fast"
+     
+    takeaways:
+        - someone likes it!! anxiety melting away
+        - enemy death animations do suck, lol, should fix
+        - rest system is crucial, needs better explained
+        - an endless 'survival' mode after the main game would actually be very cool
+            - would sorta actually *be* a pure roguelike at that point.
+            - endless content requires a lot of content
+                - generate "attributes" on enemies
+                - boss versions of standard enemies
+
+
+[pre-beta playtesting notes]
 
  - coffee shop guy (nervous dog) (7/21/19)
     situation: stranger, asked what i was working on, i offered to let him playtest
@@ -192,3 +226,4 @@
         - this is likely the root cause of DK's saving issue
         - although it's unclear why it couldn't write to the desktop or why
           closing and reopening the game fixed those issues...
+          
