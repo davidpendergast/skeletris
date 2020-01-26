@@ -11,7 +11,6 @@ from src.utils.util import Utils
 from src.game.loot import LootFactory
 from src.game.dialog import Dialog, NpcDialog, PlayerDialog
 import src.game.events as events
-from src.game.updatable import Updateable
 import src.game.globalstate as gs
 import src.game.sound_effects as sound_effects
 import src.game.soundref as soundref
@@ -24,7 +23,7 @@ import src.game.constants as constants
 ENTITY_UID_COUNTER = 0
 
 
-class Entity(Updateable):
+class Entity:
 
     @staticmethod
     def gen_uid():
