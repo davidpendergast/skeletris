@@ -93,25 +93,32 @@ class WorldView:
         else:
             return None
 
+    def _get_cam_grid_center(self):
+        cam_x, cam_y = gs.get_instance().get_actual_camera_xy()
+        cam_w, cam_h = gs.get_instance().get_world_camera_size()
+        p = self.world.get_player()
+        if p is not None:
+            return self.world.to_grid_coords(*p.center())
+        else:
+            cam_center = Utils.rect_center([cam_x, cam_y, cam_w, cam_h])
+            return self.world.to_grid_coords(*cam_center)
+
     def _get_grid_rect_to_render(self):
         cam_x, cam_y = gs.get_instance().get_actual_camera_xy()
         cam_w, cam_h = gs.get_instance().get_world_camera_size()
-        grid_rect = [cam_x // self.world.cellsize(), cam_y // self.world.cellsize(),
-                     cam_w // self.world.cellsize() + 2, cam_h // self.world.cellsize() + 2]
+        screen_grid_rect = [cam_x // self.world.cellsize(), cam_y // self.world.cellsize(),
+                            cam_w // self.world.cellsize() + 2, cam_h // self.world.cellsize() + 2]
 
-        p = self.world.get_player()
-        if p is not None:
-            center_xy = self.world.to_grid_coords(*p.center())
-        else:
-            cam_center = Utils.rect_center([cam_x, cam_y, cam_w, cam_h])
-            center_xy = self.world.to_grid_coords(*cam_center)
+        max_grid_rect = self._get_max_grid_rect_to_render()
 
-        grid_rect[0] = max(grid_rect[0], center_xy[0] - self._max_render_range[0])
-        grid_rect[1] = max(grid_rect[1], center_xy[1] - self._max_render_range[1])
-        grid_rect[2] = min(grid_rect[2], 1 + 2 * self._max_render_range[0])
-        grid_rect[3] = min(grid_rect[3], 1 + 2 * self._max_render_range[1])
+        return Utils.get_rect_intersect(screen_grid_rect, max_grid_rect)
 
-        return grid_rect
+    def _get_max_grid_rect_to_render(self):
+        center_xy = self._get_cam_grid_center()
+        return [center_xy[0] - self._max_render_range[0],
+                center_xy[1] - self._max_render_range[1],
+                1 + 2 * self._max_render_range[0],
+                1 + 2 * self._max_render_range[1]]
 
     def _update_onscreen_tile_bundles(self):
         render_eng = RenderEngine.get_instance()
@@ -206,11 +213,15 @@ class WorldView:
         cam_center = gs.get_instance().get_camera_center_in_world()
         cam_rect = gs.get_instance().get_world_camera_rect(fudge=int(self.world.cellsize() * 1.5))
 
+        max_render_rect = self._get_max_grid_rect_to_render()
+
         new_onscreens = set()
         for e in self.world.visible_entities(cam_rect, onscreen=True):
-            new_onscreens.add(e)
-            if e in self._onscreen_entities:
-                self._onscreen_entities.remove(e)
+            e_grid_xy = self.world.to_grid_coords(*e.center())
+            if Utils.rect_contains(max_render_rect, e_grid_xy):
+                new_onscreens.add(e)
+                if e in self._onscreen_entities:
+                    self._onscreen_entities.remove(e)
 
         render_eng = RenderEngine.get_instance()
 
