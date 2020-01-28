@@ -1,6 +1,72 @@
 
 [beta release feedback]
 
+ - Game Curator (wrote an article + made video! 1/27/2020 v1.0.0)
+    - article:
+        - very positive
+        - thought MC was a skeleton (they're a HUSK, not a skeleton!!)
+            - it's not really that important, but could consider adding some 
+              more dialog to explain this. kinda relevant to the "lore" 
+              OH WAIT, the game actually never calls you a husk...
+              I thought mary did, but she does not lmao
+        - "innovative inventory and status points system"
+        - "As 'Skeletris' is a somewhat addictive roguelike adventure without
+           annoying permadeath, neat boss fights and really intriguing core
+           design, I simply have to highly recommend it to you. A wonderful job."
+    - video:
+        - learned the controls / gameplay a bit off-camera beforehand (much appreciated!)
+        - some mistakes:
+            - clicked the "skip" button every time, instead of pressing space
+                - i assume he tried clicking it before ever being shown the tutorial
+                - which means he'd never be shown the tutorial at depth 3 or whatever
+                - this is not good UX        
+            - filled equipment grid with daggers, even though it gives no benefit to have > 1
+            - never right-clicked to insta-pickup stuff
+                - it's never taught in game, after all
+            - didn't click-to-replace items (it's never really taught...)
+                - started doing this naturally after a while
+            - equipped the sword, but didn't actually use it, because a dagger was still active
+                - equipment grid was still full of daggers... lol
+            - frequently pressed "R", when he wanted to rotate, which closed the inventory
+                - this tapered off after a little while
+            - never really opened the map. not sure why.
+            - facetanked the crabs every time
+            - double applied a health potion
+            - couldn't figure out how to activate the whip
+                - CRITICAL UI ISSUE
+            - first death at the swamps, fighting two slugs a the same time without kiting them
+            - status effects didn't seem to register
+            - didn't hover over enemies to get info about them
+            - even after kiting the spider perfectly, didn't really kite regular enemies
+            - never threw daggers or spears at enemies
+        - used turn-skipping effectively to fight despite having to click every time
+        - NAILED the spider fight!!
+        - talked to everyone in the town!
+        - feels like there's A LOT of dialog at tombtown + cloning area
+        - it's a good thing I tuned down the difficulty of swamps
+        - instantly understood trading!
+        - just brutalized the frog boss LOL, 14 dmg.. was a bit much hmm...
+        - FIGURED OUT WEAPON ACTIVATION (40 minutes in ahhhh)
+        - seemed to get a bit fatigued with the item management after a while
+            - which is understandable~
+        - started throwing potions at the robo fight, and just barely squeaked through
+            - my heart was pounding, I can only imagine his, lmao
+        - decided to stop playing at the start of the catacombs
+        - total playtime 1hr
+        
+    takeaways:
+        - potential for CRITICAL misteachings exist
+            - the idea of activating weapons (missed, for a long time)
+            - multi-equipping weapons (misunderstood)
+            - status effects in general seems to have been missed
+            - hovering over enemies to see their stats was missed
+            - never found the MAP
+        - despite those misunderstandings, had a pretty successful run
+            - kinda lucky with items, might have gone differently otherwise
+            - made it past robo, not a small feat
+            - probably could have made it through catacombs
+        - 100% would have quit if he'd died at robo
+
  - @lofttom (through DM, 01/25/2020 - release day v1.0.0)
     
     "Your game rocks man. Incredible job.
