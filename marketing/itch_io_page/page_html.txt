@@ -1,0 +1,77 @@
+<p><em>The outpost has lost contact</em><em> with Skeletris, the central skeleton city. And creatures in the wilderness are acting strangely. Make your way to the city, find out what's happened, and use your wits to defeat the unknown evil that now lurks there.<br></em></p>
+<h4>Puzzle-Based Equipment System
+</h4>
+<ul><li>Use procedurally generated "artifacts" and weapons&nbsp;to build your character.</li><li>Arrange them in your 5x5 equipment grid like puzzle pieces!</li><li>Some NPCs can re-roll stats,&nbsp;change&nbsp;the&nbsp;shape, or modify items in&nbsp;other&nbsp;ways.</li></ul>
+<h4>Turn-Based Combat</h4>
+<ul><li>Take advantage of enemy positioning and timing to fight safely. </li><li>Potions and certain weapons can be thrown at enemies.</li><li>Tip: When "Zzz"s appear above an enemy, that indicates it won't act for a turn. </li></ul>
+<h4>Full Story and Soundtrack</h4>
+<ul><li>Hand-built levels are interspersed with generated ones to tell a linear story. </li><li>Each section ends with a  unique boss encounter.</li><li>Progress can be saved at checkpoints.</li><li>Over 10+ songs!</li></ul>
+<h2>Controls</h2>
+<table><tbody><tr><td>Move*<br></td><td>W, A, S, D<br></td></tr><tr><td>Attack & Interact*<br></td><td>Walk into the target or Click it<br></td></tr><tr><td>Skip Turn</td><td>Space<br></td></tr><tr><td>Open Inventory</td><td>R</td></tr><tr><td>Open Map<br></td><td>M</td></tr><tr><td>Pick up Item</td><td>Click it (while nearby)<br></td></tr><tr><td>Use, Trade, or Throw Item*<br></td><td>While the item is on the cursor, click <br>the target player, enemy, or NPC<br></td></tr><tr><td>Rotate Item on Cursor<br></td><td>E<br></td></tr><tr><td>Activate Weapon</td><td>1-6</td></tr><tr><td>Toggle Fullscreen**<br></td><td>F4<br></td></tr><tr><td>Toggle Resolution<br></td><td>F5<br></td></tr><tr><td>Pause</td><td>Esc</td></tr></tbody></table>
+<p>*Cardinal directions only.<br>**Fullscreen doesn't work very well with multiple monitors, sorry~<br></p>
+<p>Most controls can be re-mapped in the pause menu.<br></p>
+<h2>Dev Status</h2>
+<p>The game is in open beta. All the main features are done, and it closely resembles what&nbsp;the final product will be. You can play it from start to finish, see the whole story, save your progress, etc. Updates after this point will be incremental.<br></p>
+<p>The difficulty curve needs some work and there's a handful of other things I want to add too. In particular: mac support, better in-game tutorials, achievements, and more story endings. Feedback is welcome!<br></p>
+<h2>Credits</h2>
+<div>Art, coding, music, design, and concept by:</div>
+<ul><li>Ghast (<a href="https://twitter.com/Ghast_NEOH" target="_blank">twitter</a>, <a href="https://soundcloud.com/ghast-tunes/sets/skeletris-ost" target="_blank">soundcloud</a>)</li></ul>
+<p><em>Made with PyGame and PyOpenGL</em><br></p>
+
+
+Don't stack weapons! They don't buff each other, so it's a waste of precious space. Use one (or two, at most) weapons at a time, and support them with artifacts. Switch between weapons using the number keys or the hotbar at the bottom of the screen.
+
+
+If you do decide to equip multiple weapons (like a sword and a whip, in this example), use the number keys 1-6 to select which one to activate.  Again, their bonuses do not stack.
+
+
+
+################################## html new
+
+<p><em>The outpost has lost contact with Skeletris, the central skeleton city. And creatures in the wilderness are acting strangely. Make your way to the city, find out what's happened, and use your wits to defeat the unknown evil that now lurks there.<br></em></p>
+<h4>Puzzle-Based Equipment System
+</h4>
+<ul><li>Use procedurally generated "artifacts" and weapons&nbsp;to build your character.</li><li>Arrange them in your 5x5 equipment grid like puzzle pieces!</li><li>Some NPCs can re-roll stats,&nbsp;change&nbsp;the&nbsp;shape, or modify items in&nbsp;other&nbsp;ways.</li></ul>
+<h4>Turn-Based Combat</h4>
+<ul><li>Take advantage of enemy positioning and timing to fight safely. </li><li>Potions and certain weapons can be thrown at enemies.</li><li>Tip: When "Zzz"s appear above an enemy, that indicates it won't act for a turn. </li></ul>
+<h4>Full Story and Soundtrack</h4>
+<ul><li>Hand-built levels are interspersed with generated ones to tell a linear story. </li><li>Each section ends with a  unique boss encounter.</li><li>Progress can be saved at checkpoints.</li><li>Over 10+ songs!</li></ul>
+<h2>Controls</h2>
+<table><tbody><tr><td>Move*<br></td><td>W, A, S, D<br></td></tr><tr><td>Attack & Interact*<br></td><td>Walk into the target or Click it<br></td></tr><tr><td>Skip Turn</td><td>Space<br></td></tr><tr><td>Open Inventory</td><td>R</td></tr><tr><td>Open Map<br></td><td>M</td></tr><tr><td>Pick up Item</td><td>Click it (while nearby)<br></td></tr><tr><td>Use, Trade, or Throw Item*<br></td><td>While the item is on the cursor, click <br>the target player, enemy, or NPC<br></td></tr><tr><td>Rotate Item on Cursor<br></td><td>E<br></td></tr><tr><td>Activate Weapon</td><td>1-6</td></tr><tr><td>Toggle Fullscreen**<br></td><td>F4<br></td></tr><tr><td>Toggle Resolution<br></td><td>F5<br></td></tr><tr><td>Pause</td><td>Esc</td></tr></tbody></table>
+<p>*Cardinal directions only.<br>**Fullscreen doesn't work very well with multiple monitors, sorry~<br></p>
+<p>Most controls can be re-mapped in the pause menu.</p>
+<h2>Tips and Tricks</h2>
+<p><img src="https://img.itch.zone/aW1nLzI5MjIwNjcucG5n/original/H1GZr9.png"><img src="https://img.itch.zone/aW1nLzI5MjIwNjgucG5n/original/oZSe2j.png"></p>
+<table><tbody><tr><td>Avoid stacking weapons! They don't buff each other, so it's a waste of precious space. Use one (or two, at most) weapons at a time, and support them with artifacts. <br></td><td>If you do decide to equip multiple weapons (like a sword and a whip, in this example), use the number keys 1-6 to select which one to activate.&nbsp; Again, their bonuses do not stack.</td></tr></tbody></table>
+<h2>Dev Status</h2>
+<p>The game is in open beta. All the main features are done, and it closely resembles what&nbsp;the final product will be. You can play it from start to finish, see the whole story, save your progress, etc. Updates after this point will be incremental.<br></p>
+<p>The difficulty curve needs some work and there's a handful of other things I want to add too. In particular: mac support, better in-game tutorials, achievements, and more story endings. Feedback is welcome!<br></p>
+<h2>Credits</h2>
+<div>Art, coding, music, design, and concept by:</div>
+<ul><li>Ghast (<a href="https://twitter.com/Ghast_NEOH" target="_blank">twitter</a>, <a href="https://soundcloud.com/ghast-tunes/sets/skeletris-ost" target="_blank">soundcloud</a>)</li></ul>
+<p><em>Made with PyGame and PyOpenGL</em><br></p>
+
+############################################ html new 2
+
+<p><em>The outpost has lost contact</em><em> with Skeletris, the central skeleton city. And creatures in the wilderness are acting strangely. Make your way to the city, find out what's happened, and use your wits to defeat the unknown evil that now lurks there.<br></em></p>
+<h4>Puzzle-Based Equipment System
+</h4>
+<ul><li>Use procedurally generated "artifacts" and weapons&nbsp;to build your character.</li><li>Arrange them in your 5x5 equipment grid like puzzle pieces!</li><li>Some NPCs can re-roll stats,&nbsp;change&nbsp;the&nbsp;shape, or modify items in&nbsp;other&nbsp;ways.</li></ul>
+<h4>Turn-Based Combat</h4>
+<ul><li>Take advantage of enemy positioning and timing to fight safely. </li><li>Potions and certain weapons can be thrown at enemies.</li><li>Tip: When "Zzz"s appear above an enemy, that indicates it won't act for a turn. </li></ul>
+<h4>Full Story and Soundtrack</h4>
+<ul><li>Hand-built levels are interspersed with generated ones to tell a linear story. </li><li>Each section ends with a  unique boss encounter.</li><li>Progress can be saved at checkpoints.</li><li>Over 10+ songs!</li></ul>
+<h2>Controls</h2>
+<table><tbody><tr><td>Move*<br></td><td>W, A, S, D<br></td></tr><tr><td>Attack & Interact*<br></td><td>Walk into the target or Click it<br></td></tr><tr><td>Skip Turn</td><td>Space<br></td></tr><tr><td>Open Inventory</td><td>R</td></tr><tr><td>Open Map<br></td><td>M</td></tr><tr><td>Pick up Item</td><td>Click it (while nearby)<br></td></tr><tr><td>Use, Trade, or Throw Item*<br></td><td>While the item is on the cursor, click <br>the target player, enemy, or NPC<br></td></tr><tr><td>Rotate Item on Cursor<br></td><td>E<br></td></tr><tr><td>Activate Weapon</td><td>1-6</td></tr><tr><td>Toggle Fullscreen**<br></td><td>F4<br></td></tr><tr><td>Toggle Resolution<br></td><td>F5<br></td></tr><tr><td>Pause</td><td>Esc</td></tr></tbody></table>
+<p>*Cardinal directions only.<br>**Fullscreen doesn't work very well with multiple monitors, sorry~<br></p>
+<p>Most controls can be re-mapped in the pause menu.</p>
+<h2>Tips and Tricks</h2><p>Here's a rundown of some tips and common pitfalls new players fall into. The in-game tutorials are a bit lacking so it's described here in more detail.<br></p>
+<p><img src="https://img.itch.zone/aW1nLzI5MjIwOTEucG5n/original/%2BNnPPx.png"></p>
+<table><tbody><tr><td>Don't stack weapons! They don't buff each other, so it's a waste of precious space. Use one or two weapons at a time, and support them with artifacts.<br></td><td>With multiple weapons equipped (like a sword and a whip, in this example), use the number keys&nbsp; or hotbar&nbsp;to select which one to activate.&nbsp; Again, their bonuses do not stack.</td></tr></tbody></table>
+<h2>Dev Status</h2>
+<p>The game is in open beta. All the main features are done, and it closely resembles what&nbsp;the final product will be. You can play it from start to finish, see the whole story, save your progress, etc. Updates after this point will be incremental.<br></p>
+<p>The difficulty curve needs some work and there's a handful of other things I want to add too. In particular: mac support, better in-game tutorials, achievements, and more story endings. Feedback is welcome!<br></p>
+<h2>Credits</h2>
+<div>Art, coding, music, design, and concept by:</div>
+<ul><li>Ghast (<a href="https://twitter.com/Ghast_NEOH" target="_blank">twitter</a>, <a href="https://soundcloud.com/ghast-tunes/sets/skeletris-ost" target="_blank">soundcloud</a>)</li></ul>
+<p><em>Made with PyGame and PyOpenGL</em><br></p>

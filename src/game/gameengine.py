@@ -2081,9 +2081,10 @@ class SpawnActorAction(Action):
 class ActionProvider:
 
     def __init__(self, name, action_type, target_dists=(0,), icon_sprite=None, color=(1, 1, 1),
-                 needs_to_be_equipped=False):
+                 hotbar_color=None, needs_to_be_equipped=False):
         self.name = name
         self.color = color
+        self.hotbar_color = hotbar_color
         self.action_type = action_type
         self.target_dists = target_dists
         self.icon_sprite = icon_sprite
@@ -2110,6 +2111,9 @@ class ActionProvider:
 
     def get_color(self):
         return self.color
+
+    def get_hotbar_color(self):
+        return self.hotbar_color if self.hotbar_color is not None else self.get_color()
 
     def get_target_dists(self):
         return self.target_dists
@@ -2161,6 +2165,9 @@ class ItemActionProvider(ActionProvider):
     def get_color(self):
         return self.action_provider.get_color()
 
+    def get_hotbar_color(self):
+        return self.action_provider.get_hotbar_color()
+
     def get_target_dists(self):
         return self.action_provider.get_target_dists()
 
@@ -2190,7 +2197,7 @@ class ConsumeItemActionProvider(ActionProvider):
 
 class AttackItemActionProvider(ActionProvider):
 
-    def __init__(self, name, icon, target_dists, color=colors.RED, projectile=False):
+    def __init__(self, name, icon, target_dists, color=colors.RED, hotbar_color=(1, 0.5, 0.5), projectile=False):
         # i don't trust myself to not typo this
         if not isinstance(target_dists, tuple):
             raise ValueError("target_dists needs to be a tuple. instead got {}".format(target_dists))
@@ -2198,7 +2205,8 @@ class AttackItemActionProvider(ActionProvider):
         self.projectile = projectile
 
         ActionProvider.__init__(self, name, ActionType.ATTACK, icon_sprite=icon,
-                                target_dists=target_dists, color=color, needs_to_be_equipped=True)
+                                target_dists=target_dists, color=color, hotbar_color=hotbar_color,
+                                needs_to_be_equipped=True)
 
     def is_mappable(self):
         return True

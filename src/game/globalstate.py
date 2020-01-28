@@ -510,7 +510,7 @@ class GlobalState:
         if action_prov is None:
             return (1, 1, 1)
         else:
-            color = action_prov.get_color()
+            color = action_prov.get_hotbar_color()
             return self.get_pulsing_color(color)
 
     def get_pulsing_color(self, color):
