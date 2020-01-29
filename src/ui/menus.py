@@ -2175,9 +2175,9 @@ class InGameUiState(Menu):
             gs.get_instance().set_active_sidepanel(None, play_sound=False)
 
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().inventory_key()):
-            gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY)
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.INVENTORY, play_sound=False)
         elif InputState.get_instance().was_pressed(gs.get_instance().settings().map_key()):
-            gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP)
+            gs.get_instance().toggle_sidepanel(SidePanelTypes.MAP, play_sound=False)
 
         # TODO - add 'close' key
 

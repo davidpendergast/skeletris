@@ -1227,6 +1227,13 @@ class HotbarSkipTurnButton(HotbarMoveButton):
     def is_active(self):
         return not gs.get_instance().world_updates_paused()
 
+    def get_tooltip_text(self):
+        skip_keys = gs.get_instance().settings().skip_turn_key()
+        if len(skip_keys) > 0:
+            return "Skip Turn [{}]".format(Utils.stringify_key(skip_keys[0]))
+        else:
+            return "Skip Turn"
+
 
 class HealthBarPanel(InteractableImage):
 
@@ -1254,12 +1261,12 @@ class HealthBarPanel(InteractableImage):
         self._sidepanel_buttons[1] = HotbarMapButton(None)
         # self._sidepanel_buttons[2] = HotbarHelpButton(None)  # not ready, need to cut
 
-        self._move_buttons = [None] * 5
-        self._move_buttons[0] = HotbarMoveLeftButton()
-        self._move_buttons[1] = HotbarMoveUpButton()
-        self._move_buttons[2] = HotbarMoveDownButton()
-        self._move_buttons[3] = HotbarMoveRightButton()
-        self._move_buttons[4] = HotbarSkipTurnButton()
+        self._move_buttons = [None] * 8
+        self._move_buttons[0] = HotbarSkipTurnButton()
+        self._move_buttons[2] = HotbarMoveUpButton()
+        self._move_buttons[4] = HotbarMoveLeftButton()
+        self._move_buttons[5] = HotbarMoveRightButton()
+        self._move_buttons[6] = HotbarMoveDownButton()
 
     def contains_point(self, x, y):
         if super().contains_point(x, y):

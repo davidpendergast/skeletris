@@ -605,9 +605,6 @@ pause_out = (sfx_sounds_pause1_out, 0.1)
 
 error = (sfx_negative_2, 0.8)
 
-sidepanel_in = None
-sidepanel_out = None
-
 clone_machine = (sfx_movement_portal3, 0.1)
 
 dialog_click = _soft_blip_1
@@ -634,6 +631,9 @@ item_cant_place = (sfx_sounds_Blip7, 0.2)
 
 action_activate = item_place
 action_deactivate = item_pickup
+
+sidepanel_in = action_activate
+sidepanel_out = action_deactivate
 
 
 def rand_deathscream_android():
