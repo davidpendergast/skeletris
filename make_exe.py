@@ -81,7 +81,7 @@ Controls:
  Pause: Esc
  
  
-Advanced Tips:
+Advanced Info:
  - You can right-click items on the ground to pick them up instantly.
  - You can right-click potions in your inventory to drink them.
  - Status Effects with the same name do not stack.
@@ -94,7 +94,6 @@ Advanced Tips:
  
  
 Super Advanced Info:
-
  - Damage is calculated like this (it's somewhat similar to the board game "Risk"):
     - Attacker rolls X D6s, and the defender rolls Y D4s (for their respective ATT and DEF stats).
     - The defender can "block" any of the attacker's dice rolls with one of their own dice with >= value.
