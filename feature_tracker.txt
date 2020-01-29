@@ -11,24 +11,24 @@
  - if you've ever drank a potion, it shouldn't pop the potion tutorial
     - the tutorial can basically get blocked by the equipment one
  - crash files go to the working dir (maybe that's fine?)
- - if you have a high score, but no in-progress save files, 
-        the load option still appears
- - telling potions apart is probably pretty hard for colorblind people
+    - it's the most convenient place (if i want people to find & send me them)
+    - but it could fail if the directory is restricted
+ - if you have a high score, but no in-progress save files, the "load" option still appears
+    - same problem w/ high scores
+    - not sure if I want to parse the files on game start
+        - what if you have a crazy number of them?
+ - telling potions apart is probably impossible for colorblind people
         
 [story bugs]
  
 [sound bugs]
- - no sound effect when you activate / deactivate an attack on the hotbar
  - frog song could use a bit of remastering
       
         
 [current features]
- - should add a save point at the vents
-    - people are pretty likely to die at robo, and right now they'll quit if they do
  - maybe before vault too?
- - make selected weapon even brighter
- - make hover text on skip button say "Skip Turn [Space]"
  - mention right-click to pickup on itch page
+    - eh, probably not necessary?
  
 [next features]
   - osx support

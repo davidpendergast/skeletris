@@ -1,0 +1,18 @@
+
+  *---------------*
+  |  Patch Notes  |
+  *---------------*
+  
+v1.0.0-BETA
+    - first release
+    
+v1.0.1-BETA
+    - added a checkpoint to The Vents (shortly before B.O.S.S. fight)
+    - made the "active weapon" more obvious on the hotbar, and improved tooltips in that area
+    - made tooltips' backgrounds slightly darker in general to improve readibility
+    - rearranged the "skip" button / arrow buttons so that i could put a tooltip on the skip button
+    - made potion tooltips a little less wumbo
+    - fixed minor bug where doors and exits would render even when VERY far away
+    - added some info about resting & speed to info.txt
+    - fixed bug that caused debug mode to be inaccessible
+
