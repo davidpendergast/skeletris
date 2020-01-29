@@ -21,6 +21,8 @@ DARK_GREEN = (0.35, 0.85, 0.35)
 DARK_YELLOW = (0.85, 0.85, 0.35)
 DARK_BLUE = (0.35, 0.35, 0.85)
 
+DARKER_RED = (1, 0.25, 0.25)
+
 # for 'floating text in world'
 R_TEXT_COLOR = (0.65, 0.1, 0.1)
 G_TEXT_COLOR = (0.2, 0.85, 0.2)

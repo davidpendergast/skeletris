@@ -59,7 +59,7 @@ class TooltipFactory:
             if consume_effect is not None:
                 text_builder.add("Gives ")
                 text_builder.add(consume_effect.get_name(), color=consume_effect.get_color())
-                text_builder.add_line(" when consumed ({} turns).".format(target_item.get_consume_duration()))
+                text_builder.add_line(" ({} turns).".format(target_item.get_consume_duration()))
 
         if p is not None:
             right_click_action = gameengine.get_right_click_action_for_item(target_item)
@@ -138,8 +138,23 @@ class TooltipFactory:
 
     @staticmethod
     def get_action_provider_tooltip_text(action_prov):
+
+        key_str = "None"
+
+        for i in range(0, 6):
+            if gs.get_instance().get_mapped_action(i) == action_prov:
+                keys = gs.get_instance().settings().action_key(i)
+                if len(keys) > 0:
+                    key_str = Utils.stringify_key(keys[0])
+
         text_builder = TextBuilder()
-        text_builder.add_line(action_prov.get_name())
+
+        # "Action Name [key]"
+        text_builder.add(action_prov.get_name())
+        if key_str != "None":
+            text_builder.add(" [{}]\n".format(key_str))
+        else:
+            text_builder.add("\n")
 
         ps = gs.get_instance().player_state()
         action_item = ps.get_item_in_possession_with_uid(action_prov.get_item_uid())
@@ -161,15 +176,14 @@ class TooltipFactory:
                         added_newline = True
                     text_builder.add_line(str(item_stat), color=item_stat.color())
 
-        for i in range(0, 6):
-            if gs.get_instance().get_mapped_action(i) == action_prov:
-                keys = gs.get_instance().settings().action_key(i)
-                if len(keys) == 0:
-                    key_str = "None"
-                else:
-                    key_str = Utils.stringify_key(keys[0])
-                text_builder.add_line("")
-                text_builder.add_line("([{}] to Activate)".format(key_str), color=colors.LIGHT_GRAY)
+        # XXX this is literally only here to push the rest of the tooltip text up off the HP bar
+        cur_targeting_action = gs.get_instance().get_targeting_action_provider()
+        if action_prov == cur_targeting_action:
+            text_builder.add_line("")
+            text_builder.add_line("(Current Attack)".format(key_str), color=colors.LIGHT_GRAY)
+        else:
+            text_builder.add_line("")
+            text_builder.add_line("(Click to Activate)".format(key_str), color=colors.LIGHT_GRAY)
 
         return text_builder
 

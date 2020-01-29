@@ -632,6 +632,9 @@ item_drop = (sfx_movement_ladder5a, 0.3)
 item_rotate = (sfx_movement_ladder5b, 0.3)
 item_cant_place = (sfx_sounds_Blip7, 0.2)
 
+action_activate = item_place
+action_deactivate = item_pickup
+
 
 def rand_deathscream_android():
     choices = [

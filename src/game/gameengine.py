@@ -2197,7 +2197,7 @@ class ConsumeItemActionProvider(ActionProvider):
 
 class AttackItemActionProvider(ActionProvider):
 
-    def __init__(self, name, icon, target_dists, color=colors.RED, hotbar_color=(1, 0.5, 0.5), projectile=False):
+    def __init__(self, name, icon, target_dists, color=colors.RED, hotbar_color=colors.DARKER_RED, projectile=False):
         # i don't trust myself to not typo this
         if not isinstance(target_dists, tuple):
             raise ValueError("target_dists needs to be a tuple. instead got {}".format(target_dists))

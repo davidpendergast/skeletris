@@ -746,8 +746,10 @@ class MappedActionImage(InteractableImage):
             targeting_action = gs.get_instance().get_targeting_action_provider()
             if self.action_prov == targeting_action:
                 gs.get_instance().set_targeting_action_provider(None)
+                sound_effects.play_sound(soundref.action_deactivate)
             else:
                 gs.get_instance().set_targeting_action_provider(self.action_prov)
+                sound_effects.play_sound(soundref.action_activate)
             return True
         return False
 
@@ -798,13 +800,18 @@ class MappedActionImage(InteractableImage):
 
     def update_images(self):
         if self.action_prov is None:
-            RenderEngine.get_instance().remove(self._border_img)
-            self._border_img = None
-            RenderEngine.get_instance().remove(self._icon_img)
-            self._icon_img = None
+            if self._border_img is not None:
+                RenderEngine.get_instance().remove(self._border_img)
+                self._border_img = None
+            if self._icon_img is not None:
+                RenderEngine.get_instance().remove(self._icon_img)
+                self._icon_img = None
         else:
             targeting_action = gs.get_instance().get_targeting_action_provider()
-            color = gs.get_instance().get_targeting_action_color() if self.action_prov == targeting_action else (1, 1, 1)
+            if self.action_prov == targeting_action:
+                color = self.action_prov.get_hotbar_color()
+            else:
+                color = colors.WHITE
 
             if self._icon_img is None:
                 self._icon_img = ImageBundle.new_bundle(spriteref.UI_0_LAYER, scale=2 * self.sc, depth=FG_DEPTH)
@@ -1074,7 +1081,15 @@ class HotbarMoveButton(InteractableImage):
     def on_click(self, x, y, button=1):
         if button == 1 and self.is_active():
             self.last_clicked_at = gs.get_instance().tick_counter
+
+            sound = self.get_click_sound_effect()
+            if sound is not None:
+                sound_effects.play_sound(sound)
+
         return True
+
+    def get_click_sound_effect(self):
+        return soundref.action_activate
 
     def is_active(self):
         if gs.get_instance().world_updates_paused():
@@ -1186,6 +1201,9 @@ class HotbarSkipTurnButton(HotbarMoveButton):
 
     def get_icon_sprite(self):
         return spriteref.UI.skip_button
+
+    def get_click_sound_effect(self):
+        return None  # skipping has its own sound
 
     def on_click(self, x, y, button=1):
         super().on_click(x, y, button=1)

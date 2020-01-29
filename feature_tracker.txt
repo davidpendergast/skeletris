@@ -8,29 +8,35 @@
     - it's not really supported by pygame / SDL (are you kidding me?!)
 
 [P2 bugs]
- - if you've ever popped the map before, even in a previous life, it shouldn't show the map tutorial.
  - if you've ever drank a potion, it shouldn't pop the potion tutorial
+    - the tutorial can basically get blocked by the equipment one
  - crash files go to the working dir (maybe that's fine?)
  - if you have a high score, but no in-progress save files, 
         the load option still appears
-
-
+ - telling potions apart is probably pretty hard for colorblind people
+        
 [story bugs]
- - mary doesn't have repeat dialog at many places
  
 [sound bugs]
  - no sound effect when you activate / deactivate an attack on the hotbar
- - some effects are quite loud compared to others
-    - made the master level default to 60% to account for this, but could use
-      some more attention here.
  - frog song could use a bit of remastering
+      
+        
+[current features]
+ - should add a save point at the vents
+    - people are pretty likely to die at robo, and right now they'll quit if they do
+ - maybe before vault too?
+ - make selected weapon even brighter
+ - make hover text on skip button say "Skip Turn [Space]"
+ - mention right-click to pickup on itch page
+ 
+[next features]
+  - osx support
+  - shift + direction should force a walk action, even if there's a target in that direction
+    - (more secret keycommands?)
 
 
 [testing]
- - test anything on mac (where can i find a mac?)
-    - zach says it doesn't work on mac anymore... rip
-        - most likely due to the OpenGL version change
-        - it would be nice if I had a mac to test on...
 
 
 [balance issues]    
@@ -40,12 +46,6 @@
     - maybe OK? bosses are pretty tough otherwise...
  - weapon drops become extremely common at the later difficulties because
    all of them are in the loot pool
- 
-[current features] 
- - better death animations for enemies
-    - i was looking through old gifs, and i swear they used to be better
-    - can probably generate some "falling down" animations based on the enemy's sprite
-        - sorta like i did in 'HATE', where they'd desintigrate
   
 
 [maintanence]
@@ -82,13 +82,13 @@
     - but if it's bad cut it
     - after two tries, move on
     
-    
-[next features]
-  - osx support
-  - shift + direction should force a walk action, even if there's a target in that direction
-    
         
 [future features]
+ - mary doesn't have repeat dialog at many places
+ - better death animations for enemies
+    - i was looking through old gifs, and i swear they used to be better
+    - can probably generate some "falling down" animations based on the enemy's sprite
+        - sorta like i did in 'HATE', where they'd desintigrate
  - alternate ending for deathless / cp-less runs
     - fight the cloning machine? lol
  - when you go "back" to a previous menu, you should return to the same selected idx

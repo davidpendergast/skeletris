@@ -505,14 +505,6 @@ class GlobalState:
 
         return None
 
-    def get_targeting_action_color(self):
-        action_prov = self.get_targeting_action_provider()
-        if action_prov is None:
-            return (1, 1, 1)
-        else:
-            color = action_prov.get_hotbar_color()
-            return self.get_pulsing_color(color)
-
     def get_pulsing_color(self, color):
         interp = 0.25 * (1 + math.sin(2 * math.pi * self.anim_tick / 8))
         return Utils.linear_interp(color, (1, 1, 1), interp)

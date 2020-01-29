@@ -2327,8 +2327,10 @@ class InGameUiState(Menu):
                 new_targeting_action = gs.get_instance().get_mapped_action(i)
                 if cur_targeting_action == new_targeting_action:
                     gs.get_instance().set_targeting_action_provider(None)
+                    sound_effects.play_sound(soundref.action_deactivate)
                 else:
                     gs.get_instance().set_targeting_action_provider(new_targeting_action)
+                    sound_effects.play_sound(soundref.action_activate)
 
         self._update_health_bar_panel()
         self._update_dialog_panel()
