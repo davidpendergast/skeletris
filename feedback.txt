@@ -1,6 +1,25 @@
 
 [beta release feedback]
 
+ - Game Curator (through DMs, i sent a thank you message, and he replied:)
+    "About your game: I wasn't really frustrated overall, though I appreciated 
+     that you afterwards posted some gameplay hints on itch. The only thing I 
+     was confused about was the controls, as I struggled with the E and R keys. 
+     In my head it felt more natural to use the R key to rotate instead of 
+     opening the inventory.
+
+     I was aware about the map function, because I played the first three levels 
+     before I actually decided to record a little playthrough. But the levels 
+     had a great size, so I thought that I won't need it and instead explore a 
+     bit to see if I missed any enemies. :D"
+
+     Yeah, I should have used the weapons more often, touché. :) But bumping 
+     into the creatures was more fun to me, hahaha.
+
+     I am glad it helped you out in some ways. And I hope that your game will 
+     be played a bit more often now - it definitely deserves more attention. 
+     Great work, Ghast!"
+
  - Game Curator (wrote an article + made video! 1/27/2020 v1.0.0)
     - article:
         - very positive

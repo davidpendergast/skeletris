@@ -1177,26 +1177,43 @@ class VentilationZone(Zone):
         self.mary_pos = (255, 171, 171)
         self.grok_pos = (255, 172, 172)
 
+        self._mary_pos_on_load = (225, 171, 172)
+
         self.sign_pos = (255, 175, 150)
         self.fan_wall_pos = (0, 170, 170)
+
+        self.chest_pos = (255, 0, 230)
 
     def build_world(self):
         bp, unknowns = ZoneLoader.load_blueprint_from_file(self.get_id(), self.get_file(), self.get_level())
         w = bp.build_world()
 
-        skelekid_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.SKELEKID, npc.Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS)
-        grok_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GROK, skelekid_npc.get_uid())
-        mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, skelekid_npc.get_uid())
+        from_load = gs.get_instance().get_loaded_from_save_id() == self.get_save_id()
 
-        if self.skelekid_pos in unknowns:
-            w.add(skelekid_npc, gridcell=unknowns[self.skelekid_pos][0])
+        if not from_load:
+            skelekid_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.SKELEKID, npc.Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS)
+            grok_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.GROK, skelekid_npc.get_uid())
+            mary_npc = npc.NpcFactory.gen_linked_npc(npc.NpcID.MARY_SKELLY, skelekid_npc.get_uid())
 
-            # only add these if skelekid is present (which should always be the case)
-            if self.grok_pos in unknowns:
-                w.add(grok_npc, gridcell=unknowns[self.grok_pos][0])
+            if self.skelekid_pos in unknowns:
+                w.add(skelekid_npc, gridcell=unknowns[self.skelekid_pos][0])
 
-            if self.mary_pos in unknowns:
-                w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
+                if self.grok_pos in unknowns:
+                    w.add(grok_npc, gridcell=unknowns[self.grok_pos][0])
+
+                if self.mary_pos in unknowns:
+                    w.add(mary_npc, gridcell=unknowns[self.mary_pos][0])
+        else:
+            mary_npc = npc.NpcFactory.gen_convo_npc(npc.NpcID.MARY_SKELLY, npc.Conversations.MARY_AT_VENTS_AFTER_LOAD)  # TODO replace
+            if self._mary_pos_on_load in unknowns:
+                w.add(mary_npc, gridcell=unknowns[self._mary_pos_on_load][0])
+
+        if self.chest_pos in unknowns:
+            chest_xy = unknowns[self.chest_pos][0]
+
+            # chest is already opened if you loaded into the zone
+            chest_ent = entities.ChestEntity(chest_xy[0], chest_xy[1], is_open=from_load)
+            w.add(chest_ent)
 
         if self.sign_pos in unknowns:
             text = "WARNING: Dangerous Fumes!"
@@ -1217,6 +1234,9 @@ class VentilationZone(Zone):
 
     def get_color(self):
         return colors.LIGHT_BLUE
+
+    def get_save_id(self):
+        return "pre_robo_fight"
 
 
 class RoboLairZone(Zone):

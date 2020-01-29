@@ -1357,10 +1357,10 @@ class Enemy(ActorEntity):
 
 class ChestEntity(Entity):
 
-    def __init__(self, grid_x, grid_y):
+    def __init__(self, grid_x, grid_y, is_open=False):
         Entity.__init__(self, 0, 0, 12, 12)
         self.set_center((grid_x + 0.5) * constants.CELLSIZE, (grid_y + 0.5) * constants.CELLSIZE)
-        self._is_open = False
+        self._is_open = is_open
         self._left_side = random.random() > 0.5
         
     def is_chest(self):

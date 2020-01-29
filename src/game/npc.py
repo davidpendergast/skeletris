@@ -312,6 +312,8 @@ class Conversations:
 
     SKELEKID_GROK_AND_MARY_AT_VENTS = Conversation("SKELEKID_GROK_AND_MARY_AT_VENTS", NpcID.SKELEKID)
 
+    MARY_AT_VENTS_AFTER_LOAD = Conversation("MARY_AT_VENTS_AFTER_LOAD", NpcID.MARY_SKELLY)
+
     PRE_ROBO_FIGHT = Conversation("MARY_PRE_ROBO_FIGHT", NpcID.MARY_SKELLY)
 
     POST_ROBO_FIGHT = Conversation("MARY_POST_ROBO_FIGHT", NpcID.MACHINE)
@@ -509,6 +511,11 @@ class ConversationFactory:
                 NpcDialog("Where are my BONES? My precious bones...", npc_id=NpcID.HEAD)
             ]
 
+        if conv == Conversations.MARY_AT_VENTS_AFTER_LOAD:
+            res_list = [
+                NpcDialog("Whew, that one looked painful.", npc_id=NpcID.MARY_SKELLY)
+            ]
+
         if conv == Conversations.SKELEKID_GROK_AND_MARY_AT_VENTS:
             if interact_count == 0:
                 res_list = [
@@ -593,7 +600,7 @@ class ConversationFactory:
         if conv == Conversations.MARY_AND_GROK_AT_SERVER_AFTER_LOAD:
             res_list = [
                 NpcDialog("Whew, I'm glad that worked. Are you ok?", npc_id=NpcID.MARY_SKELLY),
-                NpcDialog("You lucked out - we almost couldn't find enough material to regenerate you.", npc_id=NpcID.GROK),
+                NpcDialog("You lucked out - we almost didn't find enough material to regenerate you.", npc_id=NpcID.GROK),
                 NpcDialog("Glad to see you back in one piece.", npc_id=NpcID.GROK)
             ]
 
