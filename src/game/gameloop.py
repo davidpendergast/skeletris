@@ -231,6 +231,9 @@ def run():
                     gs.get_instance().menu_manager().set_active_menu(win_menu)
 
                 elif zone_event.get_type() == events.EventType.PLAYER_DIED:
+                    # save completed tutorials to disk, because these get reloaded.
+                    gs.get_instance().save_settings_to_disk()
+
                     # saving the stats (kill_count, elapsed_time, etc.) from this run to disk
                     # (note that death_count is inc'd the moment the player dies, so we don't touch it here)
                     gs.get_instance().save_current_game_to_disk_softly()
