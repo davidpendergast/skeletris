@@ -12,6 +12,7 @@ v1.0.1-BETA
     - made tooltips' backgrounds slightly darker in general to improve readibility
     - rearranged the "skip" button / arrow buttons so that i could put a tooltip on the skip button
     - made potion tooltips a little less wumbo
+    - tutorials are no longer (partially) reset on death
     - fixed minor bug where doors and exits would render even when VERY far away
     - added some info about resting & speed to info.txt
     - fixed bug that caused debug mode to be inaccessible
