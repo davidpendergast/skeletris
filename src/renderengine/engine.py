@@ -220,7 +220,9 @@ class RenderEngine:
         minor_vers = 0
 
         try:
-            chunks = re.split("\w+", glsl_version)
+            # it's formatted like "##.##.## <Anything>", so we split on periods and spaces
+            chunks = re.split("[. ]", glsl_version)
+            chunks = [c for c in chunks if len(c) > 0]
             if len(chunks) >= 1:
                 major_vers = int(chunks[0])
             if len(chunks) >= 2:

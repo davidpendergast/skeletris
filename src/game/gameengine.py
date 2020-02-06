@@ -444,7 +444,7 @@ class EnemyController(ActorController):
                     if res.is_possible(world):
                         return res
                     else:
-                        print("WARN: world gave {} an impossible path? {}".format(actor.get_actor_state().name, path))
+                        print("WARN: world gave {} an impossible path? {}".format(actor, path))
 
         # if hidden, avoid stepping next to doors
         # (so that the player can't get instagibbed as they open a door)

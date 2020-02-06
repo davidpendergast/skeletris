@@ -18,3 +18,4 @@ test_saves/*
 *.lnk
 make_legit_builds.txt
 info/version_override.json
+*.DS_Store

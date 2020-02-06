@@ -5,15 +5,20 @@ import datetime
 import tempfile
 import shutil
 import stat
+import struct
 
 import src.game.version as version
 
 
 _WINDOWS = "Windows"
 _LINUX = "Linux"
+_MAC = "Darwin"
 
 
-SPEC_CONTENTS = """
+ICON_PATH_KEY = "~ICON_PATH~"
+
+
+SPEC_CONTENTS = f"""
 # -*- mode: python -*-
 # WARNING: This file is auto-generated (see make_exe.py)
 
@@ -44,7 +49,12 @@ exe = EXE(pyz,
           upx=True,
           runtime_tmpdir=None,
           console=False,
-          icon='assets/icon.ico')
+          icon='{ICON_PATH_KEY}')
+          
+app = BUNDLE(exe,
+         name='Skeletris.app',
+         icon='{ICON_PATH_KEY}',
+         bundle_identifier=None)
 """
 
 
@@ -59,6 +69,17 @@ def _ask_yes_or_no_question(question):
             answer = False
     print("")
     return answer
+
+
+def _calc_bit_count_str():
+    return "{}bit".format(struct.calcsize("P") * 8)
+
+
+def _get_icon_path(os_version_str):
+    if os_version_str == _MAC:
+        return str(pathlib.Path('assets/icon.icns'))
+    else:
+        return str(pathlib.Path('assets/icon.icn'))
 
 
 def _get_info_text(system_str, bit_count_str, version_str, date_str):
@@ -120,9 +141,7 @@ Version Info:
 
 
 Launch Instructions:
-  The game and all of its assets are bundled into a single executable, so after 
-  unzipping this directory you should be able to just double click "Skeletris.exe" 
-  to launch it.
+  Just double click the launcher after unzipping this directory.
   
   Save data will (likely) be stored in one of these locations:
     Mac OS X:    ~/Library/Application Support/Skeletris
@@ -159,14 +178,19 @@ def do_it():
 
     version_num_str = version.get_pretty_version_string()  # version number of the game, expect "X.Y.Z-DESC"
 
-    os_system_str = platform.system()  # expect "Windows" or "Linux"
-    if os_system_str != _WINDOWS and os_system_str != _LINUX:
+    os_system_str = platform.system()
+    if os_system_str not in (_WINDOWS, _LINUX, _MAC):
         raise ValueError("Unrecognized operating system: {}".format(os_system_str))
 
-    os_bit_count_str = platform.architecture()[0]  # expect "32bit" or "64bit" (note that this doesn't work in OSX).
+    if os_system_str == _MAC:
+        pretty_os_str = "Mac"  # darwin is weird
+    else:
+        pretty_os_str = os_system_str
+
+    os_bit_count_str = _calc_bit_count_str()
 
     make_the_exe = _ask_yes_or_no_question("Create v{} executable for {} ({})?".format(
-        version_num_str, os_system_str, os_bit_count_str))
+        version_num_str, pretty_os_str, os_bit_count_str))
 
     if not make_the_exe:
         print("INFO: make_exe was canceled by user, exiting")
@@ -174,13 +198,16 @@ def do_it():
 
     spec_filename = pathlib.Path("skeletris.spec")
     print("INFO: creating spec file {}".format(spec_filename))
+
+    icon_path = _get_icon_path(os_system_str)
+
     with open(spec_filename, "w") as f:
-        f.write(SPEC_CONTENTS)
+        f.write(SPEC_CONTENTS.replace(ICON_PATH_KEY, icon_path))
 
     version_num_str_no_dots = version_num_str.replace(".", "_").replace("-", "_")
 
     dist_dir = pathlib.Path("dist/skeletris_v{}_{}_{}".format(
-        version_num_str_no_dots.lower(), os_system_str.lower(), os_bit_count_str.lower()))
+        version_num_str_no_dots.lower(), pretty_os_str.lower(), os_bit_count_str.lower()))
 
     if os.path.exists(str(dist_dir)):
         ans = _ask_yes_or_no_question("Overwrite {}?".format(dist_dir))
@@ -198,7 +225,8 @@ def do_it():
         print("INFO: launching pyinstaller...\n")
 
         # note that this call blocks until the process is finished
-        os.system("pyinstaller {} --distpath {} --workpath {}".format(spec_filename, dist_dir_subdir, temp_dir))
+        os.system("pyinstaller {} --distpath {} --workpath {}".format(
+            spec_filename, dist_dir_subdir, temp_dir))
 
         print("\nINFO: cleaning up {}".format(temp_dir))
 
@@ -210,7 +238,7 @@ def do_it():
     info_txt_filepath = pathlib.Path("{}/info.txt".format(dist_dir_subdir))
     with open(info_txt_filepath, "w") as f:
         date_str = datetime.datetime.today()
-        f.write(_get_info_text(os_system_str, os_bit_count_str, version_num_str, date_str))
+        f.write(_get_info_text(pretty_os_str, os_bit_count_str, version_num_str, date_str))
 
     if os_system_str == _LINUX:
         print("INFO: chmod'ing execution permissions to all users (linux)")

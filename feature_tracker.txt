@@ -31,9 +31,14 @@
     - eh, probably not necessary?
  
 [next features]
-  - osx support
   - shift + direction should force a walk action, even if there's a target in that direction
-    - (more secret keycommands?)
+    - (more secret key commands?)
+  - having an item on the cursor shouldn't prevent you from attacking
+    - this gets in the way a lot when you're weapon swapping mid-fight
+  - rename "Inventory" to "Equipment" in all places, switch default keybinding to [E], and change
+  	UI button to say [e]
+  - change rotate's default keybinding to [R] 
+  - Add some info text to the controls menu that says "click to edit" or similar
 
 
 [testing]
@@ -129,13 +134,6 @@
  - doors that can only be unlocked with "keys"
  - more varied scenery
     - bridges over deep pits, water pits
- 
- - figure out whether it's possible to make/distribute mac builds
-    - no opengl? no app notarizaiton w/out developer account? looking grim...
-        - confident i could do this iff i had a mac computer at my disposal
-            - 300-400 for a cheap laptop
-                - 600-800 probably more realistic (refurb'd 2015 macbook air?)
-            - 150-200 for a mac mini (are these even computers?)
  
  - make enemies move at the same time as you...?
     - this would be my #1 complaint with the game if I were a player
