@@ -3,6 +3,8 @@ from OpenGL.GLU import *
 
 import numpy
 import math
+import re
+import traceback
 
 
 def assert_int(val):
@@ -213,13 +215,42 @@ _SINGLETON = None
 class RenderEngine:
 
     @staticmethod
+    def _get_best_render_engine(glsl_version):
+        major_vers = 1
+        minor_vers = 0
+
+        try:
+            chunks = re.split("\w+", glsl_version)
+            if len(chunks) >= 1:
+                major_vers = int(chunks[0])
+            if len(chunks) >= 2:
+                minor_vers = int(chunks[1])
+
+        except Exception:
+            print("ERROR: failed to parse glsl_version: {}".format(glsl_version))
+            traceback.print_exc()
+
+        if major_vers <= 1 and minor_vers < 30:
+            return RenderEngine120()
+        else:
+            return RenderEngine130()
+
+    @staticmethod
     def create_instance():
         """intializes the RenderEngine singleton."""
         global _SINGLETON
         if _SINGLETON is not None:
             raise ValueError("There is already a RenderEngine initialized.")
         else:
-            _SINGLETON = RenderEngine130()
+            vstring = glGetString(GL_VERSION)
+            vstring = vstring.decode() if vstring is not None else None
+            print("INFO: running OpenGL version: {}".format(vstring))
+
+            glsl_version = glGetString(GL_SHADING_LANGUAGE_VERSION)
+            glsl_version = glsl_version.decode() if glsl_version is not None else None
+            print("INFO: with shading language version: {}".format(glsl_version))
+
+            _SINGLETON = RenderEngine._get_best_render_engine(glsl_version)
             return _SINGLETON
 
     @staticmethod
@@ -347,10 +378,6 @@ class RenderEngine:
     def init(self, w, h):
         glShadeModel(GL_FLAT)
         glClearColor(0.5, 0.5, 0.5, 0.0)
-        
-        vstring = glGetString(GL_VERSION)
-        vstring = vstring.decode() if vstring is not None else None
-        print("INFO: running OpenGL version: {}".format(vstring))
 
         print("INFO: building shader for GLSL version: {}".format(self.get_glsl_version()))
         self.shader = self.build_shader()
