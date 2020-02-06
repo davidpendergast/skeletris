@@ -455,94 +455,6 @@ class RenderEngine:
         return res
 
 
-# TODO - welp, this doesn't work anymore
-
-class RenderEngine110(RenderEngine):
-
-    def __init__(self):
-        super().__init__()
-
-    def get_glsl_version(self):
-        return "110"
-
-    def build_shader(self):
-        return Shader(
-            '''
-            #version 110
-            varying vec2 vTexCoord;
-
-            void main() {
-                vTexCoord = gl_MultiTexCoord0.st;
-                gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-                gl_FrontColor = gl_Color;
-            }
-            ''',
-            '''
-            #version 110
-            uniform sampler2D tex0;
-
-            varying vec2 vTexCoord;
-
-            void main() {
-                vec4 tcolor = texture2D(tex0, vTexCoord);
-                for (int i = 0; i < 3; i++) {
-                    if (tcolor[i] >= 0.99) {
-                        gl_FragColor[i] = tcolor[i] * gl_Color[i];
-                    } else {
-                        gl_FragColor[i] = tcolor[i] * gl_Color[i] * gl_Color[i];                    
-                    }
-                }
-                gl_FragColor.w = tcolor.w * gl_Color.w;
-                
-            }
-            ''')
-
-    def set_vertices_enabled(self, val):
-        if val:
-            glEnableClientState(GL_VERTEX_ARRAY)
-        else:
-            glDisableClientState(GL_VERTEX_ARRAY)
-
-    def set_vertices(self, data):
-        glVertexPointer(2, GL_FLOAT, 0, data)
-
-    def set_texture_coords_enabled(self, val):
-        if val:
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-        else:
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY)
-
-    def set_texture_coords(self, data):
-        glTexCoordPointer(2, GL_FLOAT, 0, data)
-
-    def set_colors_enabled(self, val):
-        if val:
-            glEnableClientState(GL_COLOR_ARRAY)
-        else:
-            glDisableClientState(GL_COLOR_ARRAY)
-
-    def set_colors(self, data):
-        glColorPointer(3, GL_FLOAT, 0, data)
-
-    def setup_shader(self):
-        glUniform1i(glGetUniformLocation(self.get_shader().get_program(), "tex0"), 0)
-
-    def set_matrix_offset(self, x, y):
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glTranslatef(x, y, 0.0)
-
-    def resize_internal(self):
-        width, height = self.size
-        glMatrixMode(GL_PROJECTION)
-        glLoadIdentity()
-        glOrtho(0, width, height, 0, 1, -1)
-
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glViewport(0, 0, width, height)
-
-
 def translation_matrix(x, y):
     res = numpy.identity(4, dtype=numpy.float32)
     res.itemset((0, 3), float(x))
@@ -634,7 +546,7 @@ class RenderEngine130(RenderEngine):
 
     def _assert_valid_var(self, varname, loc):
         if loc < 0:
-            raise ValueError("invalid uniform or attribute: {}".format(varname))
+            raise ValueError("invalid uniform or attribute: {}, loc={}".format(varname, loc))
 
     def setup_shader(self):
         prog_id = self.get_shader().get_program()
@@ -695,9 +607,6 @@ class RenderEngine130(RenderEngine):
         glViewport(0, 0, vp_width, vp_height)
         printOpenGLError()
 
-        #print("INFO: set render engine size to ({}, {}), game_size to ({}, {})".format(
-        #    window_width, window_height, game_width, game_height))
-
     def _calc_optimal_vp_size(self, window_size, px_scale):
         """
             finds the smallest dimensions greater than or equal to window_size
@@ -750,3 +659,56 @@ class RenderEngine130(RenderEngine):
     def set_colors(self, data):
         glVertexAttribPointer(self._color_attrib_loc, 3, GL_FLOAT, GL_FALSE, 0, data)
         printOpenGLError()
+
+
+class RenderEngine120(RenderEngine130):
+
+    def get_glsl_version(self):
+        return "120"
+
+    def build_shader(self):
+        return Shader(
+            '''
+            # version 120
+            attribute vec2 position;
+
+            uniform mat4 modelview;
+            uniform mat4 proj;
+
+            attribute vec2 vTexCoord;
+            varying vec2 texCoord;
+
+            attribute vec3 vColor;
+            varying vec3 color;
+
+            void main()
+            {
+                texCoord = vTexCoord;
+                color = vColor;
+                gl_Position = proj * modelview * vec4(position.x, position.y, 0.0, 1.0);
+            }
+            ''',
+            '''
+            #version 120
+            varying vec2 texCoord;
+            varying vec3 color;
+
+            uniform vec2 texSize;
+            uniform sampler2D tex0;
+
+            void main(void) {
+                vec2 texPos = vec2(texCoord.x / texSize.x, texCoord.y / texSize.y);
+                vec4 tcolor = texture2D(tex0, texPos);
+
+                for (int i = 0; i < 3; i++) {
+                    if (tcolor[i] >= 0.99) {
+                        gl_FragColor[i] = tcolor[i] * color[i];
+                    } else {
+                        gl_FragColor[i] = tcolor[i] * color[i] * color[i];                    
+                    }
+                }
+
+                gl_FragColor.w = tcolor.w;
+            }
+            '''
+        )
