@@ -1242,7 +1242,7 @@ class ControlsMenu(OptionsMenu):
         ("move right", settings.KeyBindings.KEY_RIGHT),
         ("skip turn", settings.KeyBindings.KEY_SKIP_TURN),
         ("rotate item", settings.KeyBindings.KEY_ROTATE_CW),
-        ("inventory", settings.KeyBindings.KEY_INVENTORY),
+        ("equipment", settings.KeyBindings.KEY_INVENTORY),
         ("map", settings.KeyBindings.KEY_MAP)
     ]
     BACK_OPT_IDX = (len(OPTS), 0)

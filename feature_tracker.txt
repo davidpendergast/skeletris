@@ -18,6 +18,7 @@
     - not sure if I want to parse the files on game start
         - what if you have a crazy number of them?
  - telling potions apart is probably impossible for colorblind people
+ - on mac, when you adjust the window's size it also snaps to the center
         
 [story bugs]
  

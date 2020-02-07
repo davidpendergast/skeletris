@@ -359,7 +359,7 @@ class HowToOpenInventoryPanelStage(EntityNotificationTutorialStage):
             inv_key = Utils.stringify_key(inv_keys[0])
         else:
             inv_key = "None"
-        return "Press [{}] to open Inventory.".format(inv_key)
+        return "Press [{}] to open Equipment panel.".format(inv_key)
 
 
 class HowToOpenMapPanelStage(EntityNotificationTutorialStage):

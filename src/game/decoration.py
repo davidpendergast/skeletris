@@ -153,7 +153,7 @@ class DecorationFactory:
 
         how_to_play_text = [
             "You can rotate the item on your cursor! It's important! Just press [{}].".format(rotate_key),
-            "Open your inventory by pressing [{}].".format(inv_key),
+            "Open your equipment by pressing [{}].".format(inv_key),
             "Resting enemies don't slap back! Look for the Zzz's!",
             "Death is permanent, so watch your step.",
             "You can customize the controls if you don't like them! Press [{}]".format(esc_key)]

@@ -38,9 +38,6 @@ class ActorState(StatProvider):
         self.alignment = alignment  # what "team" the actor is on.
 
     def get_all_mappable_action_providers(self):
-        # yield ItemActions.UNARMED_ATTACK  # this is unnecessary, confusing
-        # unless...?
-        # TODO - but how does the player know that slapping has 2 damage?
         for item in self.inventory().all_equipped_items():
             for action_provider in item.all_actions():
                 if action_provider.is_mappable():

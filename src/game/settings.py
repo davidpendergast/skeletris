@@ -77,8 +77,8 @@ class KeyBindings:
     KEY_DOWN = Setting("move down", "DOWN", [pygame.K_s], cleaner=clean_keys, filename=KEYS_FILENAME)
     KEY_SKIP_TURN = Setting("skip turn", "SKIP", [pygame.K_SPACE], cleaner=clean_keys, filename=KEYS_FILENAME)
 
-    KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_r], cleaner=clean_keys, filename=KEYS_FILENAME)
-    KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_e], cleaner=clean_keys, filename=KEYS_FILENAME)
+    KEY_INVENTORY = Setting("inventory", "INVENTORY", [pygame.K_e], cleaner=clean_keys, filename=KEYS_FILENAME)
+    KEY_ROTATE_CW = Setting("rotate item", "ROTATE_CW", [pygame.K_r], cleaner=clean_keys, filename=KEYS_FILENAME)
     KEY_MAP = Setting("map", "MAP", [pygame.K_m], cleaner=clean_keys, filename=KEYS_FILENAME)
 
     # not configurable
