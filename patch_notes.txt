@@ -21,7 +21,7 @@ v1.0.2-BETA
     - added mac support
     - added OpenGL 2.1 support
     
-v1.0.2-BETA
+v1.0.3-BETA
     - inventory panel is now called "Equipment" in all user-facing text
     - default keybinding for item rotation is now "R" (changed from "E")
     - default keybinding to open equipment panel is now "E" (changed from "R")

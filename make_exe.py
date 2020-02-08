@@ -90,11 +90,11 @@ Controls:
  Move: W, A, S, D
  Attack & Interact: Walk into the enemy/object or click it.
  Skip Turn: Space
- Open Inventory: R
+ Open Equipment Panel: E
  Open Map: M
  Pick up Item: Click it
  Use, Trade, or Throw Item: While the item is on the cursor, click the target. 
- Rotate Item on Cursor: E
+ Rotate Item on Cursor: R
  Activate Weapon: 1-6
 
  Toggle Fullscreen: F4

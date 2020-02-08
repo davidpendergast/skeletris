@@ -36,10 +36,6 @@
     - (more secret key commands?)
   - having an item on the cursor shouldn't prevent you from attacking
     - this gets in the way a lot when you're weapon swapping mid-fight
-  - rename "Inventory" to "Equipment" in all places, switch default keybinding to [E], and change
-  	UI button to say [e]
-  - change rotate's default keybinding to [R] 
-  - Add some info text to the controls menu that says "click to edit" or similar
 
 
 [testing]
