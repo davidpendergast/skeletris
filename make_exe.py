@@ -79,7 +79,7 @@ def _get_icon_path(os_version_str):
     if os_version_str == _MAC:
         return str(pathlib.Path('assets/icon.icns'))
     else:
-        return str(pathlib.Path('assets/icon.icn'))
+        return str(pathlib.Path('assets/icon.ico'))
 
 
 def _get_info_text(system_str, bit_count_str, version_str, date_str):
