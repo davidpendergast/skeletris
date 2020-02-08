@@ -1,0 +1,11 @@
+I just released my first game, "Skeletris", made with pygame. See comments for details!
+
+First of all, you can download it here if you like: https://ghastly.itch.io/skeletris
+
+Second of all, hi! I'm Ghast. This is my first post on reddit. I'm a software developer and pixel artist and I've been working on Skeletris for the better part of a year and a half (probably around ~1000 hours in total, if I had to guess). It's a turn-based dungeon crawler with roguelike elements and an inventory system inspired by tetris. It's got skeletons, robots, boss fights, a story, crafting, procedural generation, and fun, hopefully~
+
+I made all the art myself and spent a pretty significant amount of time fighting with the minutiae of pygame and PyOpenGL, so I'm happy to answer any questions you might have about that sort of thing. Or just gamedev stuff in general. And both the source for the game itself and my custom pygame "engine" can be viewed on github, if you're curious to see the nuts and bolts. Sorry if this is too self-promotey -- the game is free though! Thanks!
+
+https://github.com/davidpendergast/skeletris
+
+https://github.com/davidpendergast/pyengine
