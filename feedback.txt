@@ -1,6 +1,86 @@
 
 [beta release feedback]
 
+ - Driftwood Gaming (1/27/2020 v1.0.0, streamer, rec'd a video, I found by googling)
+   https://www.youtube.com/watch?v=2hrn55cTqtg
+    Drifty:
+        "An RPG, but the gimmick is that it's like Tetris"
+         - went through sound + controls menu first
+         - kind of implied that I had paid $20 to have my game played (???)
+            - very weird, not sure if it was intentional
+            - "if you'd like to see your game played too, you can pay $25 or enter a contest"
+        "I have no idea what engine they used, if any, it might just be some 
+         libraries and c++ or something" - lol
+         - went through all controls + inventory before starting
+         - liked the map!
+         "8-bit music"
+         "our equipment is lego - err Tetris"
+         - first item went very well
+         "this is interesting, I like it already"
+         "can I rotate this at all?"
+         - tried to slot the potion into the hotbar, and it didn't work
+         - kept trying to put the dagger in the hotbar... but it was locked
+            - figured it out, like instantly
+         - put the potion in the equipment grid, expected it to appear in
+             hotbar. and it didn't. (this is quite a sensible idea honestly lol)
+             "aparently it lets me"
+         - "[i] doesn't appear to open the inventory"
+            - this guy is making me feel dumb
+            - saw the tooltip though
+            - "i but you push R is a little confusing"
+         
+         - OK, so there was a small muncher, with 8 hp, he hit it for 7, then
+           another small muncher threw a healing potion at it, which dealt one 
+           damage, killing it  --> "oh, so ghosts are weak to healing potions"
+           
+            MMMssdfmsmmMMM not good~~
+            
+         - seemed to enjoy the tetis inventory the first time it got tough!
+            - and chat did too
+            
+         - equipped two daggers, "does that give me more damage, I don't think
+            it does"  - phew
+         - tried to throw, couldn't figure it out
+         
+         - "I like it, I'm not gunna lie. And the music is good, a little repetitive, but I'm 
+            not sick of it"
+            
+         - do we level up?
+         - "the simple art style is good"
+         - "all the weapons are the same, that's a little disappointing"
+         - "tried to grab the mushrooms after the "
+         - "ah it's a bank of mushrooms, that's the currency"
+            - he gets it!
+         - the %66.6 made him wonder whether you lose %66.6 of your items,
+            - that's interesting. potentially not a bad idea?
+         - did not see the slug's status effect
+         - the "Press [m] to open Map." tutorial stayed onscreen literally forever..
+            - because he couldn't see it?
+         - it's a cool game, I actually really like it
+         - when you die, it should respawn you, but take some kind of currency 
+           from you. stay where you were, maybe take one item randomly. ok so I'm
+           basically back where I was 10 minutes ago, that's not fun. And it doesn't
+           let you go back and save it? that's the problem with it. Should 
+           let the player exit the dungeon whenever they want to go back and
+           save it, and or add experience because lets face it the idea behind this
+           game is you wanna make your character stonger, keep that whole pieces 
+           idea, really good idea there, there's a lot to be desired here, maybe
+           an experience system, as you get more levels your equipment expands
+           3x3 -> 4x4 -> 5x5. fantastic first look, love it, pretty good.
+         
+    Chat:
+        "Minimalistic title screen"
+        "anyoing but fun at the same time... hard to say x,D" - on inventory
+        "creative idea. I kind of like it"
+        "I really like the art style, too!"
+        "Really well done in a cool style."
+        "Reminds me of the original Rogue, except the graphics are more 
+         than just letters on screen, a few dots to indicate walls, and 
+         a 5 by 4 pixel smily face or whatever to indicate the player."
+         "Why does that fat guy look like Fat Papyrus"
+         "the writing is pretty good too"
+         "Fun stuff! Great job, dev!"
+
  - Game Curator (through DMs, i sent a thank you message, and he replied:)
     "About your game: I wasn't really frustrated overall, though I appreciated 
      that you afterwards posted some gameplay hints on itch. The only thing I 

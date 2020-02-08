@@ -1,0 +1,25 @@
+
+*-------------------------*
+|  Skeletris Post-mortem  |
+*-------------------------*
+
+I'm writing this mostly as a reference for my future self, but also in the hopes that it might be useful to someone else who's also planning to release their first game sometime in the future. It may get a little rambly so sorry for that in advance.
+
+Part 1: Suffering, and Ego
+
+In all honesty, this game was not very fun to make. Satisfying in the end, sure, but not fun. It took way, way, longer than it should have, and I made many decisions, sort of intentionally, to make things more difficult for myself along the way. The idea, I guess, was that the more "pure" the result was, the more of a triumph it would be and the more praise I would "deserve" in the end. This was stupid.
+
+I decided to use pygame, which, for those who don't know, is a python game development library that you'll never hear anyone recommend. It's mainly used by day-1 novices who got lost on their way to Unity, amateur python programmers who didn't do enough research, and masochists with unlimitted time who feel driven to prove. everyone. wrong. about. pygame.
+
+Pygame, on the surface, is fine. It isn't great, but it's fine. It can make windows, draw lines and sprites, grab user inputs, play sounds, and do a handful of other minimalist game engine-y things. And for someone like me, who's ego is larger than the Sun, it feels like it provides the bare essentials I need to realize my vision without giving so much that it would siphon away any of the "credit".
+
+It probably goes without saying, but around this time, I looked down upon so-called "engine kiddies" (anyone who uses powerful game engines to make games), which, is a pretty stupid and toxic opinion that I don't hold today and I'm not very proud of. 
+
+It's kind of a phenomenon among certain types of programmers and CS students in particular, where, for whatever reason it starts to feel very good to judge other people for the tools they use, especially if those tools are "higher-level" and "do more for you" than the ones you use. Thankfully, it's an opinion that mainly hurts and limits the person who holds it, and so by natural selection I think those people end up achieving less and being less relevant, so it's probably somewhat self-correcting in that regard.
+
+But anyways, yeah, I'm getting off track here. Pygame is a big struggle to use if you want to make a professional-looking game. The first problem is that the built-in drawing API is very slow. It's, in my opinion, impossible to get 60 FPS on a modest computer with ~200 moving sprites on the screen. Maybe you can do it, but I can't. I tried every optimization technique I could think of. Extensive caching and culling, reducing the amount of alpha blitting to the absolute minimum, pre-building of all sorts of sprites to save on draw calls, etc., it just doesn't work. The FPS will drop below 60 at least every couple of minutes and the profiler will say that it's because of Surface.blit. 
+
+At the end of the day, pygame essentially requires one GPU draw call per "thing" on the screen, and it can't be fast enough. To really get things running smoothly, you need to hook into a lower-level API like raw OpenGL, which means you have to start from "scratch", writing your own shaders and designing your own rendering framework and such. Which of course was fine with me because it was yet another opportunity to flex my programmer muscles and hack my way through a challenging obstacle. This misadventure required maintenence for most of the project and easily doubled the amount of time everything ended up taking. But all in all I'm pretty proud of my "engine" and I don't really regret spending the extra time on it. 
+
+
+

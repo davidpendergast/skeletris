@@ -965,9 +965,9 @@ class HotbarInventoryButton(HotbarSidePanelButton):
     def get_tooltip_target_at(self, x, y):
         inv_keys = gs.get_instance().settings().inventory_key()
         if len(inv_keys) == 0:
-            text = "Inventory"
+            text = "Equipment"
         else:
-            text = "Inventory [{}]".format(Utils.stringify_key(inv_keys[0]))
+            text = "Equipment [{}]".format(Utils.stringify_key(inv_keys[0]))
 
         res = TextBuilder()
         res.add(text)

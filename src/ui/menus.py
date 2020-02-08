@@ -107,7 +107,10 @@ class MenuManager:
                     xy = input_state.mouse_pos()
                     cursor = self.get_active_menu().cursor_style_at(world, xy)
                 else:
-                    cursor = None
+                    # this matters on mac because you continue controlling the cursor's image
+                    # as long as the window has focus, even after the cursor has left.
+                    cursor = spriteref.UI.Cursors.arrow_cursor
+
                 if cursor is None:
                     pygame.mouse.set_cursor(*spriteref.UI.Cursors.invisible_cursor)
                 else:
@@ -1239,7 +1242,7 @@ class ControlsMenu(OptionsMenu):
         ("move right", settings.KeyBindings.KEY_RIGHT),
         ("skip turn", settings.KeyBindings.KEY_SKIP_TURN),
         ("rotate item", settings.KeyBindings.KEY_ROTATE_CW),
-        ("inventory", settings.KeyBindings.KEY_INVENTORY),
+        ("equipment", settings.KeyBindings.KEY_INVENTORY),
         ("map", settings.KeyBindings.KEY_MAP)
     ]
     BACK_OPT_IDX = (len(OPTS), 0)
