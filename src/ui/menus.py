@@ -1233,7 +1233,7 @@ class SoundSettingsMenu(OptionsMenu):
         self.option_activated(SoundSettingsMenu.BACK_IDX)
 
 
-class ControlsMenu(OptionsMenu):
+class ControlsMenu(OptionsMenuWithTextBlurb):
 
     OPTS = [
         ("move up", settings.KeyBindings.KEY_UP),
@@ -1248,9 +1248,15 @@ class ControlsMenu(OptionsMenu):
     BACK_OPT_IDX = (len(OPTS), 0)
 
     def __init__(self, prev_id, selected_idx=(0, 0)):
-        OptionsMenu.__init__(self, MenuManager.CONTROLS_MENU, "controls", ["~unused~"])
+        OptionsMenuWithTextBlurb.__init__(self, MenuManager.CONTROLS_MENU, "", ["~unused~"], info_text_size=1.0)
         self.prev_id = prev_id
         self.set_selected(selected_idx)
+
+    def get_blurb_text(self):
+        return "(click to change)"
+
+    def get_blurb_text_color(self, i=-1):
+        return colors.LIGHT_GRAY
 
     def get_option_text(self, idx):
         if idx == ControlsMenu.BACK_OPT_IDX:
