@@ -16,6 +16,11 @@ _MAC = "Darwin"
 
 
 ICON_PATH_KEY = "~ICON_PATH~"
+BINARIES_TO_EXCLUDE_KEY = "~BINARIES_TO_EXCLUDE~"
+
+OUTPUT_DEPENDENCIES_TO_DIR = False  # if True, will also create a non-bundled version of the exe.
+
+EXCLUDE_LIBSTDC_ON_LINUX = True  # if we include this, linux users on newer version of Arch seem to have issues
 
 
 SPEC_CONTENTS = f"""
@@ -23,6 +28,7 @@ SPEC_CONTENTS = f"""
 # WARNING: This file is auto-generated (see make_exe.py)
 
 block_cipher = None
+
 
 a = Analysis(['skeletris.py'],
              pathex=[''],
@@ -35,6 +41,19 @@ a = Analysis(['skeletris.py'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher)
+
+import re           
+
+binaries_to_exclude = {BINARIES_TO_EXCLUDE_KEY}
+# print('INFO: Ignoring binaries based on regexes: ' + str(binaries_to_exclude))
+binaries_to_include = []
+for b in a.binaries:
+    if not any(re.match(ex_regex, b[0]) for ex_regex in binaries_to_exclude):
+        binaries_to_include.append(b)
+        # print('INFO: Including binary: ' + str(b))
+    else:
+        print('INFO: *** Excluding binary file: ' + str(b))
+a.binaries = binaries_to_include
              
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
@@ -56,6 +75,18 @@ app = BUNDLE(exe,
          icon='{ICON_PATH_KEY}',
          bundle_identifier=None)
 """
+
+if OUTPUT_DEPENDENCIES_TO_DIR:
+    SPEC_CONTENTS = (SPEC_CONTENTS +
+    """
+coll = COLLECT(exe,
+       a.binaries,
+       a.zipfiles,
+       a.datas,
+       strip=False,
+       upx=True,
+       name='deps')
+    """)
 
 
 def _ask_yes_or_no_question(question):
@@ -80,6 +111,15 @@ def _get_icon_path(os_version_str):
         return str(pathlib.Path('assets/icon.icns'))
     else:
         return str(pathlib.Path('assets/icon.ico'))
+
+
+def _get_exclusions(os_version_str):
+    """returns: a list of regexes that match the binary files that should be excluded."""
+    res = []
+    if os_version_str == _LINUX:
+        if EXCLUDE_LIBSTDC_ON_LINUX:
+            res.append('libstdc.*')
+    return "[" + ", ".join("'" + t + "'" for t in res) + "]"
 
 
 def _get_info_text(system_str, bit_count_str, version_str, date_str):
@@ -199,10 +239,17 @@ def do_it():
     spec_filename = pathlib.Path("skeletris.spec")
     print("INFO: creating spec file {}".format(spec_filename))
 
+    global SPEC_CONTENTS
+
     icon_path = _get_icon_path(os_system_str)
+    print("INFO: using icon path: {}".format(icon_path))
+    SPEC_CONTENTS = SPEC_CONTENTS.replace(ICON_PATH_KEY, icon_path)
+
+    exclusions = _get_exclusions(os_system_str)
+    SPEC_CONTENTS = SPEC_CONTENTS.replace(BINARIES_TO_EXCLUDE_KEY, exclusions)
 
     with open(spec_filename, "w") as f:
-        f.write(SPEC_CONTENTS.replace(ICON_PATH_KEY, icon_path))
+        f.write(SPEC_CONTENTS)
 
     version_num_str_no_dots = version_num_str.replace(".", "_").replace("-", "_")
 
@@ -240,7 +287,7 @@ def do_it():
         date_str = datetime.datetime.today()
         f.write(_get_info_text(pretty_os_str, os_bit_count_str, version_num_str, date_str))
 
-    if os_system_str == _LINUX:
+    if os_system_str == _LINUX and not OUTPUT_DEPENDENCIES_TO_DIR:
         print("INFO: chmod'ing execution permissions to all users (linux)")
         exe_path = pathlib.Path("{}/Skeletris".format(dist_dir_subdir))
         if not os.path.exists(str(exe_path)):
