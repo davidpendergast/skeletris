@@ -1,6 +1,12 @@
 
 [beta release feedback]
 
+ - KeronCyst (comment on itch)
+    - font is too small
+        - possibly fullscreening will fix this?
+    - saving system isn't well explained
+        - true
+
  - Driftwood Gaming (1/27/2020 v1.0.0, streamer, rec'd a video, I found by googling)
    https://www.youtube.com/watch?v=2hrn55cTqtg
     Drifty:

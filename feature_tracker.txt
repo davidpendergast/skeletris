@@ -19,6 +19,8 @@
         - what if you have a crazy number of them?
  - telling potions apart is probably impossible for colorblind people
  - on mac, when you adjust the window's size it also snaps to the center
+ - saving system isn't explained anywhere in the game
+    - people are quitting out of zones and expecting it to auto-save I guess?
         
 [story bugs]
  
