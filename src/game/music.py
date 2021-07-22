@@ -85,7 +85,8 @@ def set_master_volume(val):
     if val != _MASTER_VOLUME:
         print("INFO: setting master music volume to {}".format(val))
         _MASTER_VOLUME = Utils.bound(val, 0.0, 1.0)
-        pygame.mixer.music.set_volume(_MASTER_VOLUME * CURRENT_SONG.volume)
+        if pygame.mixer.get_init():
+            pygame.mixer.music.set_volume(_MASTER_VOLUME * CURRENT_SONG.volume)
 
 
 # y'all better acquire the lock before you do anything involving fading
@@ -104,7 +105,8 @@ def _do_fadeout(fade_duration_millis):
     # if needed. Otherwise we'll slam away the fading song too soon.
 
     old_time_millis = int(round(time.time() * 1000))
-    pygame.mixer.music.fadeout(fade_duration_millis)
+    if pygame.mixer.get_init():
+        pygame.mixer.music.fadeout(fade_duration_millis)
     cur_time_millis = int(round(time.time() * 1000))
 
     if cur_time_millis - old_time_millis < fade_duration_millis:
@@ -165,7 +167,8 @@ def _play_song_forcefully(song):
     if not CURRENT_SONG.is_silence():
         if CURRENT_SONG != song:
             print("INFO: stopping song {}".format(CURRENT_SONG))
-        pygame.mixer.music.stop()
+        if pygame.mixer.get_init():
+            pygame.mixer.music.stop()
 
     if song.is_silence():
         CURRENT_SONG = Songs.SILENCE
@@ -175,10 +178,11 @@ def _play_song_forcefully(song):
         else:
             print("INFO: starting song {}".format(song))
 
-        real_filename = Utils.resource_path(os.path.join("assets", "songs", song.filename))
-        pygame.mixer.music.set_volume(_MASTER_VOLUME * song.volume)
-        pygame.mixer.music.load(real_filename)
-        pygame.mixer.music.play(-1, 0)
+        if pygame.mixer.get_init():
+            real_filename = Utils.resource_path(os.path.join("assets", "songs", song.filename))
+            pygame.mixer.music.set_volume(_MASTER_VOLUME * song.volume)
+            pygame.mixer.music.load(real_filename)
+            pygame.mixer.music.play(-1, 0)
 
         CURRENT_SONG = song
 

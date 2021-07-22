@@ -60,8 +60,9 @@ def play_sound(sound):
 
     if effect_path in _LOADED_EFFECTS:
         effect = _LOADED_EFFECTS[effect_path]
-        effect.set_volume(_MASTER_VOLUME * volume)
-    else:
+        if effect is not None:
+            effect.set_volume(_MASTER_VOLUME * volume)
+    elif pygame.mixer.get_init():
         try:
             effect = pygame.mixer.Sound(effect_path)
             effect.set_volume(_MASTER_VOLUME * volume)
@@ -70,9 +71,10 @@ def play_sound(sound):
             traceback.print_exc()
             effect = None
         _LOADED_EFFECTS[effect_path] = effect
+    else:
+        _LOADED_EFFECTS[effect_path] = effect = None
 
+    _RECENTLY_PLAYED[effect_path] = 0
     if effect is not None:
-        _RECENTLY_PLAYED[effect_path] = 0
-        # print("INFO: playing sound effect: {}".format(effect_path))
         effect.play()
 

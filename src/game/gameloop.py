@@ -1,4 +1,5 @@
 import pygame
+import traceback
 
 import src.game.spriteref as spriteref
 from src.utils.util import Utils
@@ -14,7 +15,13 @@ def init(name_of_game):
     print("INFO: initializing sounds...")
     pygame.mixer.pre_init(44100, -16, 1, 2048)
 
-    pygame.mixer.init()
+    try:
+        pygame.mixer.init()
+    except pygame.error:
+        print("ERROR: failed to initialize pygame.mixer (sounds and music). Game will continue with no sound."
+              " This can occur when all audio devices are disabled or unavailable.")
+        traceback.print_exc()
+
     pygame.init()
 
     window_icon = pygame.image.load(Utils.resource_path("assets/icon.png"))
