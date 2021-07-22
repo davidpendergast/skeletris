@@ -20,8 +20,6 @@ BINARIES_TO_EXCLUDE_KEY = "~BINARIES_TO_EXCLUDE~"
 
 OUTPUT_DEPENDENCIES_TO_DIR = False  # if True, will also create a non-bundled version of the exe.
 
-EXCLUDE_LIBSTDC_ON_LINUX = True  # if we include this, linux users on newer version of Arch seem to have issues
-
 
 SPEC_CONTENTS = f"""
 # -*- mode: python -*-
@@ -115,10 +113,8 @@ def _get_icon_path(os_version_str):
 
 def _get_exclusions(os_version_str):
     """returns: a list of regexes that match the binary files that should be excluded."""
+    # Not excluding any, this was a failed attempt to make cross-compilation work on Arch
     res = []
-    if os_version_str == _LINUX:
-        if EXCLUDE_LIBSTDC_ON_LINUX:
-            res.append('libstdc.*')
     return "[" + ", ".join("'" + t + "'" for t in res) + "]"
 
 
